@@ -1,0 +1,54 @@
+{
+  "configurations": {
+    "FIX.4.2": {
+      "fixVersion": "FIX.4.2",
+      "dictionaryLocation": "assets/FIX42.xml",
+      "environments": {
+        "DEV": {
+          "name": "FIX.4.2-DEV",
+          "ipAddress": "127.0.0.1",
+          "port": 5001,
+          "hbInterval": 30,
+          "senderCompID": "YOUR_SENDER_ID",
+          "targetCompID": "YOUR_TARGET_ID",
+          "account": "YOUR_ACCOUNT"
+        },
+        "Staging": {
+          "name": "FIX.4.2-STAGING",
+          "ipAddress": "your.staging.server.com",
+          "port": 5001,
+          "hbInterval": 30,
+          "senderCompID": "YOUR_STAGING_SENDER_ID",
+          "targetCompID": "YOUR_STAGING_TARGET_ID",
+          "account": "YOUR_STAGING_ACCOUNT"
+        }
+      },
+      "messageDefaults": {
+        "Logon": {
+          "EncryptMethod": "0",
+          "HeartBtInt": "30",
+          "RawData": "{\"provider\":\"your_provider\",\"auth_token_type\":\"jwt\",\"auth_token\":\"your_auth_token\"}",
+          "ResetSeqNumFlag": "Y"
+        },
+        "NewOrderSingle": {
+          "HandlInst": "3",
+          "Symbol": "SYMBOL",
+          "Side": "1",
+          "OrderQty": "100",
+          "OrdType": "2",
+          "Price": "10.00",
+          "Currency": "USD",
+          "TimeInForce": "0",
+          "Text": "New order"
+        },
+        "SecurityDefinitionRequest": {
+          "SecurityRequestType": "3"
+        },
+        "OrderCancelRequest": {
+          "Symbol": "SYMBOL",
+          "Side": "1"
+        }
+      }
+    }
+  }
+}
