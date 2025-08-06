@@ -34,15 +34,7 @@ A Flutter-based FIX protocol client application for macOS and Windows, designed 
    ```
 
 3. **Create your configuration file**:
-   ```bash
-   cp Config.template.json Config.json
-   ```
-
-4. **Edit Config.json** with your FIX server details:
-   - Update `ipAddress` and `port` for your FIX servers
-   - Set your `senderCompID`, `targetCompID`, and `account` values
-   - Modify `messageDefaults` as needed for your trading requirements
-   - Update `RawData` with your authentication token
+   Create a `Config.json` file in the project root with your FIX server connection details and message defaults.
 
 ### Building
 
@@ -66,37 +58,16 @@ flutter build windows --release
 
 The application uses an external `Config.json` file that must be placed beside the executable. This allows for easy configuration changes without rebuilding the app.
 
-### Config.json Structure
+### Required Configuration
 
-```json
-{
-  "configurations": {
-    "FIX.4.2": {
-      "fixVersion": "FIX.4.2",
-      "dictionaryLocation": "assets/FIX42.xml",
-      "environments": {
-        "DEV": {
-          "name": "FIX.4.2-DEV",
-          "ipAddress": "127.0.0.1",
-          "port": 5001,
-          "hbInterval": 30,
-          "senderCompID": "YOUR_SENDER_ID",
-          "targetCompID": "YOUR_TARGET_ID",
-          "account": "YOUR_ACCOUNT"
-        }
-      },
-      "messageDefaults": {
-        "Logon": {
-          "EncryptMethod": "0",
-          "HeartBtInt": "30",
-          "RawData": "{\"provider\":\"your_provider\",\"auth_token_type\":\"jwt\",\"auth_token\":\"your_token\"}",
-          "ResetSeqNumFlag": "Y"
-        }
-      }
-    }
-  }
-}
-```
+Create a `Config.json` file in your project root with the following structure:
+- FIX version and protocol settings
+- Environment configurations (DEV/Staging/Production)
+- Connection details (IP addresses, ports, credentials)
+- Message defaults for different FIX message types
+- Authentication settings
+
+**Note**: The `Config.json` file contains sensitive information and should never be committed to version control.
 
 ## Usage
 
@@ -135,7 +106,7 @@ lib/
 
 1. Add message definition to `models/fix_definitions.dart`
 2. Create new screen in `screens/` folder
-3. Add message defaults to Config.json
+3. 3. **Add message defaults to your local Config.json**
 4. Update field mapping in `home_page.dart`
 
 ### Customizing Logo
