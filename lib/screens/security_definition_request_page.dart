@@ -3,6 +3,7 @@ import 'package:provider/provider.dart';
 import '../main.dart';
 import '../widgets/fix_message_form.dart';
 import '../services/fix_client_service.dart';
+import '../services/fix_message_service.dart';
 import '../config/environment_config.dart';
 
 class SecurityDefinitionRequestPage extends StatefulWidget {
@@ -79,48 +80,9 @@ class _SecurityDefinitionRequestPageState extends State<SecurityDefinitionReques
       return;
     }
 
-    // Prepare FIX field values for security definition request
-    final fixFields = <String, String>{
-      '35': 'c', // MsgType=Security Definition Request
-    };
-    
-    // Use the current field values (which include the defaults)
-    final allValues = Map<String, String>.from(_fieldValues);
-
-    // Debug: Print the values being used
-    print('DEBUG: allValues = $allValues');
-    
-    // Add all fields
-    for (final entry in allValues.entries) {
-      if (entry.value.isNotEmpty) {
-        // Map display names to FIX field tags if needed
-        switch (entry.key) {
-          case 'SecurityReqID':
-            fixFields['320'] = entry.value;
-            print('DEBUG: Setting SecurityReqID (320) = ${entry.value}');
-            break;
-          case 'SecurityRequestType':
-            fixFields['321'] = entry.value;
-            print('DEBUG: Setting SecurityRequestType (321) = ${entry.value}');
-            break;
-          case 'Symbol':
-            fixFields['55'] = entry.value;
-            break;
-          case 'SecurityType':
-            fixFields['167'] = entry.value;
-            break;
-          case 'SecurityExchange':
-            fixFields['207'] = entry.value;
-            break;
-          default:
-            // If it's already a numeric field tag, use as is
-            if (RegExp(r'^\d+$').hasMatch(entry.key)) {
-              fixFields[entry.key] = entry.value;
-            }
-            break;
-        }
-      }
-    }
+    // Convert field names to FIX tags and display preview
+    final convertedFields = FixMessageService.convertFieldNamesToTags(_fieldValues);
+    final fixFields = <String, String>{'35': 'c', ...convertedFields};
     
     // Debug: Print final fixFields
     print('DEBUG: Final fixFields = $fixFields');
@@ -171,9 +133,9 @@ class _SecurityDefinitionRequestPageState extends State<SecurityDefinitionReques
               onPressed: () async {
                 Navigator.of(context).pop();
                 
-                // Send actual security definition request
+                // Send actual security definition request using centralized service
                 try {
-                  final success = await _fixClientService.sendMessage(fixFields);
+                  final success = await FixMessageService.sendSecurityDefinitionRequestMessage(_fieldValues);
                   
                   if (success) {
                     ScaffoldMessenger.of(context).showSnackBar(

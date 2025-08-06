@@ -5,6 +5,7 @@ import 'package:provider/provider.dart';
 import '../config/environment_config.dart';
 import '../main.dart';
 import '../services/fix_client_service.dart';
+import '../services/fix_message_service.dart';
 import 'logon_page.dart';
 import 'new_order_single_page.dart';
 import 'order_cancel_request_page.dart';
@@ -1452,109 +1453,26 @@ class _HomePageState extends State<HomePage> {
     }
 
     try {
-      Map<String, String> fixFields = {'35': msgType}; // MsgType
-
-      // Helper function to convert field names to tag numbers
-      Map<String, String> convertFieldNamesToTags(Map<String, String> fieldDefaults) {
-        Map<String, String> convertedFields = {};
-        
-        // FIX field name to tag number mapping
-        final fieldMapping = {
-          'EncryptMethod': '98',
-          'HeartBtInt': '108', 
-          'RawDataLength': '95',
-          'RawData': '96',
-          'ResetSeqNumFlag': '141',
-          'HandlInst': '21',
-          'Symbol': '55',
-          'Side': '54',
-          'OrderQty': '38',
-          'OrdType': '40',
-          'Price': '44',
-          'Currency': '15',
-          'TimeInForce': '59',
-          'Text': '58',
-          'SecurityRequestType': '321',
-          'SecurityReqID': '320',
-          'NoRelatedSym': '146',
-        };
-
-        fieldDefaults.forEach((fieldName, value) {
-          String? tagNumber = fieldMapping[fieldName];
-          if (tagNumber != null) {
-            convertedFields[tagNumber] = value;
-          } else {
-            // If no mapping found, assume it's already a tag number
-            convertedFields[fieldName] = value;
-          }
-        });
-
-        return convertedFields;
-      }
-
-      // Set default values based on message type
+      bool success = false;
+      
+      // Use centralized service for sending messages
       switch (msgType) {
         case 'A': // Logon
-          final logonDefaults = EnvironmentConfig.getMessageDefaults('Logon');
-          final convertedDefaults = convertFieldNamesToTags(logonDefaults);
-          fixFields.addAll(convertedDefaults);
-          // Calculate RawDataLength if RawData is present
-          if (convertedDefaults.containsKey('96')) {
-            fixFields['95'] = convertedDefaults['96']!.length.toString(); // RawDataLength
-          }
+          success = await FixMessageService.sendQuickLogon();
           break;
         case '5': // Logout
-          fixFields.addAll({
-            '58': 'User requested logout', // Text
-          });
+          success = await FixMessageService.sendQuickLogout();
           break;
         case 'D': // New Order Single
-          final configs = EnvironmentConfig.getConfigs();
-          final currentConfig = configs[selectedEnvironment];
-          if (currentConfig == null) {
-            _addLogMessage('Configuration not found for $selectedEnvironment environment');
-            return;
-          }
-          final orderDefaults = EnvironmentConfig.getMessageDefaults('NewOrderSingle');
-          final convertedOrderDefaults = convertFieldNamesToTags(orderDefaults);
-          fixFields.addAll(convertedOrderDefaults);
-          // Add dynamic values
-          fixFields.addAll({
-            '11': DateTime.now().millisecondsSinceEpoch.toString(), // ClOrdID
-            '1': currentConfig.account, // Account
-            '60': _getCurrentTimestamp(), // TransactTime
-            '168': _getCurrentTimestamp(), // EffectiveTime
-            '126': _getExpireTimestamp(), // ExpireTime (1 day from now)
-          });
+          success = await FixMessageService.sendQuickNewOrderSingle(selectedEnvironment);
           break;
         case 'c': // Security Definition Request
-          final secDefDefaults = EnvironmentConfig.getMessageDefaults('SecurityDefinitionRequest');
-          final convertedSecDefDefaults = convertFieldNamesToTags(secDefDefaults);
-          fixFields.addAll(convertedSecDefDefaults);
-          // Add dynamic SecurityReqID
-          fixFields['320'] = DateTime.now().millisecondsSinceEpoch.toString();
+          success = await FixMessageService.sendQuickSecurityDefinitionRequest();
           break;
         case 'F': // Order Cancel Request
-          final configs = EnvironmentConfig.getConfigs();
-          final currentConfig = configs[selectedEnvironment];
-          if (currentConfig == null) {
-            _addLogMessage('Configuration not found for $selectedEnvironment environment');
-            return;
-          }
-          final cancelDefaults = EnvironmentConfig.getMessageDefaults('OrderCancelRequest');
-          final convertedCancelDefaults = convertFieldNamesToTags(cancelDefaults);
-          fixFields.addAll(convertedCancelDefaults);
-          // Add dynamic values
-          fixFields.addAll({
-            '11': 'ClOrdID', // ClOrdID (new unique ID)
-            '41': 'Enter the Order Id you want to cancel', // OrigClOrdID (would need to be provided)
-            '1': currentConfig.account, // Account
-            '60': _getCurrentTimestamp(), // TransactTime
-          });
+          success = await FixMessageService.sendQuickOrderCancelRequest(selectedEnvironment);
           break;
       }
-
-      final success = await _fixClientService.sendMessage(fixFields);
       
       if (success) {
         _addLogMessage('$messageName message sent successfully!');
@@ -1579,25 +1497,5 @@ class _HomePageState extends State<HomePage> {
         ),
       ),
     );
-  }
-
-  String _getCurrentTimestamp() {
-    final now = DateTime.now().toUtc();
-    return '${now.year.toString().padLeft(4, '0')}'
-           '${now.month.toString().padLeft(2, '0')}'
-           '${now.day.toString().padLeft(2, '0')}-'
-           '${now.hour.toString().padLeft(2, '0')}:'
-           '${now.minute.toString().padLeft(2, '0')}:'
-           '${now.second.toString().padLeft(2, '0')}';
-  }
-
-  String _getExpireTimestamp() {
-    final expireTime = DateTime.now().add(const Duration(days: 1)).toUtc();
-    return '${expireTime.year.toString().padLeft(4, '0')}'
-           '${expireTime.month.toString().padLeft(2, '0')}'
-           '${expireTime.day.toString().padLeft(2, '0')}-'
-           '${expireTime.hour.toString().padLeft(2, '0')}:'
-           '${expireTime.minute.toString().padLeft(2, '0')}:'
-           '${expireTime.second.toString().padLeft(2, '0')}';
   }
 }

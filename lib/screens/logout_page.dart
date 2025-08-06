@@ -3,6 +3,7 @@ import 'package:provider/provider.dart';
 import '../main.dart';
 import '../widgets/fix_message_form.dart';
 import '../services/fix_client_service.dart';
+import '../services/fix_message_service.dart';
 
 class LogoutPage extends StatefulWidget {
   const LogoutPage({super.key});
@@ -50,27 +51,29 @@ class _LogoutPageState extends State<LogoutPage> {
     );
   }
 
-  void _sendMessage(BuildContext context) {
+  void _sendMessage(BuildContext context) async {
+    // Convert field names to FIX tags and display preview
+    final convertedFields = FixMessageService.convertFieldNamesToTags(_fieldValues);
+    final fixFields = <String, String>{'35': '5', ...convertedFields};
+    
     final messageData = StringBuffer();
     messageData.writeln('Logout Message (MsgType=5)');
     messageData.writeln('=========================');
     
-    for (final entry in _fieldValues.entries) {
-      if (entry.value.isNotEmpty) {
-        messageData.writeln('${entry.key}: ${entry.value}');
-      }
+    for (final entry in fixFields.entries) {
+      messageData.writeln('Field ${entry.key}: ${entry.value}');
     }
 
     showDialog(
       context: context,
       builder: (BuildContext context) {
         return AlertDialog(
-          title: const Text('Message Ready to Send'),
+          title: const Text('Send Logout Message'),
           content: Column(
             mainAxisSize: MainAxisSize.min,
             crossAxisAlignment: CrossAxisAlignment.start,
             children: [
-              const Text('The following message would be sent:'),
+              const Text('Ready to send Logout message:'),
               const SizedBox(height: 16),
               Container(
                 padding: const EdgeInsets.all(12),
@@ -96,16 +99,33 @@ class _LogoutPageState extends State<LogoutPage> {
               child: const Text('Cancel'),
             ),
             ElevatedButton(
-              onPressed: () {
+              onPressed: () async {
                 Navigator.of(context).pop();
-                ScaffoldMessenger.of(context).showSnackBar(
-                  const SnackBar(
-                    content: Text('Logout message sent! (simulated)'),
-                    backgroundColor: Colors.orange,
-                  ),
-                );
+                
+                try {
+                  // Send using centralized service
+                  final success = await FixMessageService.sendLogoutMessage(_fieldValues);
+                  
+                  ScaffoldMessenger.of(context).showSnackBar(
+                    SnackBar(
+                      content: Text(
+                        success 
+                          ? 'Logout message sent successfully!' 
+                          : 'Failed to send logout message'
+                      ),
+                      backgroundColor: success ? Colors.green : Colors.red,
+                    ),
+                  );
+                } catch (e) {
+                  ScaffoldMessenger.of(context).showSnackBar(
+                    SnackBar(
+                      content: Text('Error sending logout: $e'),
+                      backgroundColor: Colors.red,
+                    ),
+                  );
+                }
               },
-              child: const Text('Send'),
+              child: const Text('Send Logout'),
             ),
           ],
         );

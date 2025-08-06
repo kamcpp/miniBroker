@@ -3,6 +3,7 @@ import 'package:provider/provider.dart';
 import '../main.dart';
 import '../widgets/fix_message_form.dart';
 import '../services/fix_client_service.dart';
+import '../services/fix_message_service.dart';
 import '../config/environment_config.dart';
 
 class NewOrderSinglePage extends StatefulWidget {
@@ -51,9 +52,9 @@ class _NewOrderSinglePageState extends State<NewOrderSinglePage> {
     defaultValues.addAll({
       'ClOrdID': DateTime.now().millisecondsSinceEpoch.toString(),
       'Account': environmentAccount,
-      'TransactTime': _getCurrentTimestamp(),
-      'EffectiveTime': _getCurrentTimestamp(),
-      'ExpireTime': _getExpireTimestamp(),
+      'TransactTime': FixMessageService.getCurrentTimestamp(),
+      'EffectiveTime': FixMessageService.getCurrentTimestamp(),
+      'ExpireTime': FixMessageService.getExpireTimestamp(),
     });
 
     return Scaffold(
@@ -88,27 +89,7 @@ class _NewOrderSinglePageState extends State<NewOrderSinglePage> {
         onSend: () => _sendMessage(context),
       ),
     );
-  }
-
-  String _getCurrentTimestamp() {
-    final now = DateTime.now().toUtc();
-    return '${now.year.toString().padLeft(4, '0')}'
-           '${now.month.toString().padLeft(2, '0')}'
-           '${now.day.toString().padLeft(2, '0')}-'
-           '${now.hour.toString().padLeft(2, '0')}:'
-           '${now.minute.toString().padLeft(2, '0')}:'
-           '${now.second.toString().padLeft(2, '0')}';
-  }
-
-  String _getExpireTimestamp() {
-    final expireTime = DateTime.now().add(const Duration(days: 1)).toUtc();
-    return '${expireTime.year.toString().padLeft(4, '0')}'
-           '${expireTime.month.toString().padLeft(2, '0')}'
-           '${expireTime.day.toString().padLeft(2, '0')}-'
-           '${expireTime.hour.toString().padLeft(2, '0')}:'
-           '${expireTime.minute.toString().padLeft(2, '0')}:'
-           '${expireTime.second.toString().padLeft(2, '0')}';
-  }
+}
 
   void _sendMessage(BuildContext context) async {
     // Check if we have a FIX connection
@@ -122,67 +103,9 @@ class _NewOrderSinglePageState extends State<NewOrderSinglePage> {
       return;
     }
 
-    // Prepare FIX field values for new order single
-    final fixFields = <String, String>{
-      '35': 'D', // MsgType=New Order Single
-    };
-
-    // Add all fields with proper FIX tag mapping
-    for (final entry in _fieldValues.entries) {
-      if (entry.value.isNotEmpty) {
-        // Map display names to FIX field tags
-        switch (entry.key) {
-          case 'Account':
-            fixFields['1'] = entry.value;
-            break;
-          case 'ClOrdID':
-            fixFields['11'] = entry.value;
-            break;
-          case 'HandlInst':
-            fixFields['21'] = entry.value;
-            break;
-          case 'Symbol':
-            fixFields['55'] = entry.value;
-            break;
-          case 'Side':
-            fixFields['54'] = entry.value;
-            break;
-          case 'TransactTime':
-            fixFields['60'] = entry.value;
-            break;
-          case 'OrdType':
-            fixFields['40'] = entry.value;
-            break;
-          case 'Price':
-            fixFields['44'] = entry.value;
-            break;
-          case 'OrderQty':
-            fixFields['38'] = entry.value;
-            break;
-          case 'Currency':
-            fixFields['15'] = entry.value;
-            break;
-          case 'Text':
-            fixFields['58'] = entry.value;
-            break;
-          case 'EffectiveTime':
-            fixFields['168'] = entry.value;
-            break;
-          case 'ExpireTime':
-            fixFields['126'] = entry.value;
-            break;
-          case 'TimeInForce':
-            fixFields['59'] = entry.value;
-            break;
-          default:
-            // If it's already a numeric field tag, use as is
-            if (RegExp(r'^\d+$').hasMatch(entry.key)) {
-              fixFields[entry.key] = entry.value;
-            }
-            break;
-        }
-      }
-    }
+    // Convert field names to FIX tags and display preview
+    final convertedFields = FixMessageService.convertFieldNamesToTags(_fieldValues);
+    final fixFields = <String, String>{'35': 'D', ...convertedFields};
 
     final messageData = StringBuffer();
     messageData.writeln('New Order Single (MsgType=D)');
@@ -228,9 +151,9 @@ class _NewOrderSinglePageState extends State<NewOrderSinglePage> {
             ElevatedButton(
               onPressed: () async {
                 Navigator.of(context).pop();
-                // Send actual new order single
+                // Send actual new order single using centralized service
                 try {
-                  final success = await _fixClientService.sendMessage(fixFields);
+                  final success = await FixMessageService.sendNewOrderSingleMessage(_fieldValues, widget.selectedEnvironment);
                   if (success) {
                     ScaffoldMessenger.of(context).showSnackBar(
                       const SnackBar(

@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 import '../main.dart';
 import '../services/fix_client_service.dart';
+import '../services/fix_message_service.dart';
 import '../widgets/fix_message_form.dart';
 import '../config/environment_config.dart';
 
@@ -51,7 +52,7 @@ class _OrderCancelRequestPageState extends State<OrderCancelRequestPage> {
       'ClOrdID': _fieldValues['ClOrdID'] ?? 'ClOrdID',
       'OrigClOrdID': _fieldValues['OrigClOrdID'] ?? 'Enter the Order Id you want to cancel',
       'Account': _fieldValues['Account'] ?? environmentAccount,
-      'TransactTime': _fieldValues['TransactTime'] ?? _getCurrentTimestamp(),
+      'TransactTime': _fieldValues['TransactTime'] ?? FixMessageService.getCurrentTimestamp(),
     });
 
     return Scaffold(
@@ -88,11 +89,6 @@ class _OrderCancelRequestPageState extends State<OrderCancelRequestPage> {
       return;
     }
 
-    // Prepare FIX field values for order cancel request
-    final fixFields = <String, String>{
-      '35': 'F', // MsgType=Order Cancel Request
-    };
-    
     // Use the current field values (which include the defaults)
     final allValues = Map<String, String>.from(_fieldValues);
     
@@ -109,38 +105,9 @@ class _OrderCancelRequestPageState extends State<OrderCancelRequestPage> {
     // Debug: Print the values being used
     print('DEBUG: allValues = $allValues');
     
-    // Add all fields
-    for (final entry in allValues.entries) {
-      if (entry.value.isNotEmpty) {
-        // Map display names to FIX field tags if needed
-        switch (entry.key) {
-          case 'ClOrdID':
-            fixFields['11'] = entry.value;
-            break;
-          case 'OrigClOrdID':
-            fixFields['41'] = entry.value;
-            break;
-          case 'Account':
-            fixFields['1'] = entry.value;
-            break;
-          case 'Symbol':
-            fixFields['55'] = entry.value;
-            break;
-          case 'Side':
-            fixFields['54'] = entry.value;
-            break;
-          case 'TransactTime':
-            fixFields['60'] = entry.value;
-            break;
-          default:
-            // If it's already a numeric field tag, use as is
-            if (RegExp(r'^\d+$').hasMatch(entry.key)) {
-              fixFields[entry.key] = entry.value;
-            }
-            break;
-        }
-      }
-    }
+    // Convert field names to FIX tags and display preview
+    final convertedFields = FixMessageService.convertFieldNamesToTags(allValues);
+    final fixFields = <String, String>{'35': 'F', ...convertedFields};
     
     // Debug: Print final fixFields
     print('DEBUG: Final fixFields = $fixFields');
@@ -191,7 +158,8 @@ class _OrderCancelRequestPageState extends State<OrderCancelRequestPage> {
                 Navigator.of(context).pop();
                 
                 try {
-                  final success = await _fixClientService.sendMessage(fixFields);
+                  // Send using centralized service
+                  final success = await FixMessageService.sendOrderCancelRequestMessage(allValues, widget.selectedEnvironment);
                   
                   if (mounted) {
                     ScaffoldMessenger.of(context).showSnackBar(
@@ -222,15 +190,5 @@ class _OrderCancelRequestPageState extends State<OrderCancelRequestPage> {
         );
       },
     );
-  }
-
-  String _getCurrentTimestamp() {
-    final now = DateTime.now().toUtc();
-    return '${now.year.toString().padLeft(4, '0')}'
-           '${now.month.toString().padLeft(2, '0')}'
-           '${now.day.toString().padLeft(2, '0')}-'
-           '${now.hour.toString().padLeft(2, '0')}:'
-           '${now.minute.toString().padLeft(2, '0')}:'
-           '${now.second.toString().padLeft(2, '0')}';
-  }
+}
 }
