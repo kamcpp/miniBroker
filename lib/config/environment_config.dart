@@ -10,6 +10,11 @@ class EnvironmentConfig {
   static bool _isLoaded = false;
 
   static Future<void> loadConfigurations() async {
+    // Prevent multiple simultaneous loads
+    if (_isLoaded) {
+      return;
+    }
+    
     try {
       // Calculate the path to Config.json beside the FIXYL Quick.app
       final String executablePath = Platform.resolvedExecutable;
@@ -27,9 +32,18 @@ class EnvironmentConfig {
       
       String jsonString;
       
-      // Read directly from external Config.json only
-      jsonString = await File(externalConfigPath).readAsString();
-      print('✅ SUCCESS: Reading from external Config.json');
+      try {
+        // Try to read from external Config.json
+        jsonString = await File(externalConfigPath).readAsString();
+        print('✅ SUCCESS: Reading from external Config.json');
+      } catch (e) {
+        print('❌ Cannot read Config.json: $e');
+        print('💡 Note: In production, Config.json must be placed beside FIXYL Quick.app');
+        print('⚠️ No built-in configuration available');
+        
+        // No built-in configuration - must use external Config.json
+        throw Exception('Config.json not found and no fallback configuration available');
+      }
       
       print('📋 Config.json content preview: ${jsonString.substring(0, jsonString.length > 200 ? 200 : jsonString.length)}...');
       
@@ -76,19 +90,21 @@ class EnvironmentConfig {
       print('✅ SUCCESS: Loaded ${_configs.length} configurations');
       print('📝 Available configurations: ${_configs.keys.join(', ')}');
       print('🎯 Loaded message defaults: ${_messageDefaults.keys.join(', ')}');
-      if (_configs.containsKey('FIX.4.2-DEV')) {
-        print('🔧 FIX.4.2-DEV config name: ${_configs['FIX.4.2-DEV']?.name}');
+      if (_configs.containsKey('fix42-development')) {
+        print('🔧 fix42-development config loaded successfully');
       }
       _isLoaded = true;
     } catch (e) {
-      print('❌ Cannot read Config.json: $e');
-      print('💡 Note: In production, Config.json must be placed beside FIXYL Quick.app');
+      print('❌ Failed to load configurations: $e');
+      print('💡 Note: Config.json must be placed beside FIXYL Quick.app');
+      print('⚠️ No fallback configuration available');
       
-      // No fallback - app requires external Config.json
+      // No fallback configuration - Config.json is required
       _configs = <String, ConfigModel>{};
-      _isLoaded = true;
+      _messageDefaults = <String, Map<String, String>>{};
+      _isLoaded = false;
       
-      print('⚠️ No configuration loaded - external Config.json required');
+      throw Exception('Failed to load configurations: $e');
     }
   }
 
