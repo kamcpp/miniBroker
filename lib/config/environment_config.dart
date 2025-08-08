@@ -16,15 +16,15 @@ class EnvironmentConfig {
     }
     
     try {
-      // Calculate the path to Config.json beside the FIXYL Quick.app
+      // Calculate the path to Config.json beside the mini Broker.app
       final String executablePath = Platform.resolvedExecutable;
       print('Executable path: $executablePath');
       
-      // For macOS app bundle: executable is at FIXYL Quick.app/Contents/MacOS/FIXYL Quick
-      // We want Config.json beside FIXYL Quick.app
+      // For macOS app bundle: executable is at mini Broker.app/Contents/MacOS/mini Broker
+      // We want Config.json beside mini Broker.app
       final String macOSDir = path.dirname(executablePath);        // Contents/MacOS
       final String contentsDir = path.dirname(macOSDir);          // Contents  
-      final String appBundlePath = path.dirname(contentsDir);     // FIXYL Quick.app
+      final String appBundlePath = path.dirname(contentsDir);     // mini Broker.app
       final String appDirectory = path.dirname(appBundlePath);    // Directory containing the app
       final String externalConfigPath = path.join(appDirectory, 'Config.json');
       
@@ -38,7 +38,7 @@ class EnvironmentConfig {
         print('✅ SUCCESS: Reading from external Config.json');
       } catch (e) {
         print('❌ Cannot read Config.json: $e');
-        print('💡 Note: In production, Config.json must be placed beside FIXYL Quick.app');
+        print('💡 Note: In production, Config.json must be placed beside mini Broker.app');
         print('⚠️ No built-in configuration available');
         
         // No built-in configuration - must use external Config.json
@@ -96,7 +96,7 @@ class EnvironmentConfig {
       _isLoaded = true;
     } catch (e) {
       print('❌ Failed to load configurations: $e');
-      print('💡 Note: Config.json must be placed beside FIXYL Quick.app');
+      print('💡 Note: Config.json must be placed beside mini Broker.app');
       print('⚠️ No fallback configuration available');
       
       // No fallback configuration - Config.json is required

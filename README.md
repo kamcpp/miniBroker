@@ -1,4 +1,4 @@
-# FIXYL Quick - FIX Protocol Client
+# mini Broker - Connect by FIX protocol
 
 A Flutter-based FIX protocol client application for macOS and Windows, designed for trading and financial messaging.
 

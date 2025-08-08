@@ -1,5 +1,5 @@
 name: fixyl_quick
-description: FIXYL Quick - FIX Protocol Client for macOS
+description: mini Broker - Connect by FIX protocol
 publish_to: 'none'
 version: 1.0.0+1
 

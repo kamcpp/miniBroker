@@ -22,7 +22,7 @@ class MyApp extends StatelessWidget {
         ChangeNotifierProvider(create: (_) => AuthService()),
       ],
       child: MaterialApp(
-        title: 'FIXYL Quick V1.0',
+        title: 'mini Broker V1.0',
         debugShowCheckedModeBanner: false, // Remove DEBUG banner
         theme: ThemeData(
           colorScheme: ColorScheme.fromSeed(seedColor: const Color(0xFF1a1754)),
@@ -110,7 +110,7 @@ class _AppInitializerState extends State<AppInitializer> {
                         ),
                         const SizedBox(height: 24),
                         const Text(
-                          'Please ensure Config.json is placed beside the FIXYL Quick.app bundle.',
+                          'Please ensure Config.json is placed beside the mini Broker.app bundle.',
                           textAlign: TextAlign.center,
                           style: TextStyle(
                             fontSize: 14,
@@ -150,7 +150,7 @@ class _AppInitializerState extends State<AppInitializer> {
       return InitData(fixDictionary: fixDictionaryData);
     } catch (e) {
       throw Exception('Failed to load configurations: $e\n\n'
-          'Please ensure Config.json is placed beside the FIXYL Quick.app bundle.\n'
+          'Please ensure Config.json is placed beside the mini Broker.app bundle.\n'
           'For development builds, place it in the same directory as the .app file.');
     }
   }
