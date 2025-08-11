@@ -47,7 +47,7 @@ class _MiniBrokerPageState extends State<MiniBrokerPage> {
             const SnackBar(
               content: Text('✅ Connected to FIX staging environment'),
               backgroundColor: Colors.green,
-              duration: Duration(seconds: 3),
+              duration: Duration(milliseconds: 1500), // Reduced from 3 seconds to 1.5 seconds
             ),
           );
         } else {
@@ -57,7 +57,7 @@ class _MiniBrokerPageState extends State<MiniBrokerPage> {
               const SnackBar(
                 content: Text('⚠️ FIX connection lost'),
                 backgroundColor: Colors.orange,
-                duration: Duration(seconds: 2),
+                duration: Duration(seconds: 1), // Reduced from 2 seconds to 1 second
               ),
             );
           }
@@ -71,7 +71,7 @@ class _MiniBrokerPageState extends State<MiniBrokerPage> {
           const SnackBar(
             content: Text('🎉 FIX Logon successful - Ready to trade!'),
             backgroundColor: Colors.green,
-            duration: Duration(seconds: 4),
+            duration: Duration(seconds: 2), // Reduced from 4 seconds to 2 seconds
           ),
         );
         
@@ -100,15 +100,7 @@ class _MiniBrokerPageState extends State<MiniBrokerPage> {
     try {
       print('🌐 Fetching pairs from API...');
       
-      if (mounted) {
-        ScaffoldMessenger.of(context).showSnackBar(
-          const SnackBar(
-            content: Text('🌐 Fetching available trading pairs...'),
-            backgroundColor: Colors.blue,
-            duration: Duration(seconds: 2),
-          ),
-        );
-      }
+      // Removed notification for fetching pairs to reduce UI noise
       
       final response = await http.get(
         Uri.parse('https://brokerage-api-stage.tokenise.io/api/services/app/Pair/GetPairs'),
@@ -159,15 +151,7 @@ class _MiniBrokerPageState extends State<MiniBrokerPage> {
           
           _hasRequestedSecurityDefinitions = true;
           
-          if (mounted) {
-            ScaffoldMessenger.of(context).showSnackBar(
-              SnackBar(
-                content: Text('✅ Loaded ${_assets.length} trading pairs'),
-                backgroundColor: Colors.green,
-                duration: Duration(seconds: 3),
-              ),
-            );
-          }
+          // Removed notification for loaded pairs count to reduce UI noise
           
           print('🎉 Successfully loaded ${_assets.length} trading pairs');
         } else {
@@ -185,7 +169,7 @@ class _MiniBrokerPageState extends State<MiniBrokerPage> {
           SnackBar(
             content: Text('⚠️ Failed to load trading pairs: ${e.toString()}'),
             backgroundColor: Colors.orange,
-            duration: Duration(seconds: 4),
+            duration: Duration(seconds: 2), // Reduced from 4 seconds to 2 seconds
           ),
         );
       }
