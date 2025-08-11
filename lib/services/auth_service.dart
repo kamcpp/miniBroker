@@ -3,42 +3,42 @@ import 'package:shared_preferences/shared_preferences.dart';
 
 class AuthService extends ChangeNotifier {
   bool _isLoggedIn = false;
-  String _userEmail = '';
+  String _username = '';
   
   bool get isLoggedIn => _isLoggedIn;
-  String get userEmail => _userEmail;
+  String get username => _username;
 
   Future<void> init() async {
     // Always start with logged-out state - user must login each time
     _isLoggedIn = false;
-    _userEmail = '';
+    _username = '';
     notifyListeners();
   }
 
-  Future<bool> login(String email, String password) async {
+  Future<bool> login(String user, String password) async {
     // Simple validation - in real app you'd validate against a server
-    if (email.isNotEmpty && password.isNotEmpty) {
+    if (user.isNotEmpty && password.isNotEmpty) {
       final prefs = await SharedPreferences.getInstance();
       await prefs.setBool('isLoggedIn', true);
-      await prefs.setString('userEmail', email);
+      await prefs.setString('username', user);
       
       _isLoggedIn = true;
-      _userEmail = email;
+      _username = user;
       notifyListeners();
       return true;
     }
     return false;
   }
 
-  Future<bool> signup(String email, String password, String confirmPassword) async {
+  Future<bool> signup(String user, String password, String confirmPassword) async {
     // Simple validation
-    if (email.isNotEmpty && password.isNotEmpty && password == confirmPassword) {
+    if (user.isNotEmpty && password.isNotEmpty && password == confirmPassword) {
       final prefs = await SharedPreferences.getInstance();
       await prefs.setBool('isLoggedIn', true);
-      await prefs.setString('userEmail', email);
+      await prefs.setString('username', user);
       
       _isLoggedIn = true;
-      _userEmail = email;
+      _username = user;
       notifyListeners();
       return true;
     }
@@ -48,10 +48,10 @@ class AuthService extends ChangeNotifier {
   Future<void> logout() async {
     final prefs = await SharedPreferences.getInstance();
     await prefs.setBool('isLoggedIn', false);
-    await prefs.remove('userEmail');
+    await prefs.remove('username');
     
     _isLoggedIn = false;
-    _userEmail = '';
+    _username = '';
     notifyListeners();
   }
 }

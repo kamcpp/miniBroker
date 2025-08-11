@@ -10,7 +10,7 @@ class SignupPage extends StatefulWidget {
 }
 
 class _SignupPageState extends State<SignupPage> {
-  final _emailController = TextEditingController();
+  final _userController = TextEditingController();
   final _passwordController = TextEditingController();
   final _confirmPasswordController = TextEditingController();
   final _formKey = GlobalKey<FormState>();
@@ -18,7 +18,7 @@ class _SignupPageState extends State<SignupPage> {
 
   @override
   void dispose() {
-    _emailController.dispose();
+    _userController.dispose();
     _passwordController.dispose();
     _confirmPasswordController.dispose();
     super.dispose();
@@ -33,7 +33,7 @@ class _SignupPageState extends State<SignupPage> {
 
     final authService = Provider.of<AuthService>(context, listen: false);
     final success = await authService.signup(
-      _emailController.text.trim(),
+      _userController.text.trim(),
       _passwordController.text,
       _confirmPasswordController.text,
     );
@@ -86,12 +86,12 @@ class _SignupPageState extends State<SignupPage> {
                     ),
                     const SizedBox(height: 32),
 
-                    // Email Field
+                    // Username Field
                     TextFormField(
-                      controller: _emailController,
-                      keyboardType: TextInputType.emailAddress,
+                      controller: _userController,
+                      keyboardType: TextInputType.text,
                       decoration: InputDecoration(
-                        hintText: 'Enter your email',
+                        hintText: 'Enter your username',
                         hintStyle: const TextStyle(color: Colors.grey),
                         border: OutlineInputBorder(
                           borderRadius: BorderRadius.circular(8),
@@ -112,10 +112,7 @@ class _SignupPageState extends State<SignupPage> {
                       ),
                       validator: (value) {
                         if (value == null || value.trim().isEmpty) {
-                          return 'Please enter your email';
-                        }
-                        if (!value.contains('@')) {
-                          return 'Please enter a valid email';
+                          return 'Please enter your username';
                         }
                         return null;
                       },

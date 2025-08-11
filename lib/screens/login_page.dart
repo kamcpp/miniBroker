@@ -11,14 +11,15 @@ class LoginPage extends StatefulWidget {
 }
 
 class _LoginPageState extends State<LoginPage> {
-  final _emailController = TextEditingController();
-  final _passwordController = TextEditingController();
   final _formKey = GlobalKey<FormState>();
+  final _userController = TextEditingController();
+  final _passwordController = TextEditingController();
+  bool _isPasswordVisible = false;
   bool _isLoading = false;
 
   @override
   void dispose() {
-    _emailController.dispose();
+    _userController.dispose();
     _passwordController.dispose();
     super.dispose();
   }
@@ -32,7 +33,7 @@ class _LoginPageState extends State<LoginPage> {
 
     final authService = Provider.of<AuthService>(context, listen: false);
     final success = await authService.login(
-      _emailController.text.trim(),
+      _userController.text.trim(),
       _passwordController.text,
     );
 
@@ -43,7 +44,7 @@ class _LoginPageState extends State<LoginPage> {
     if (!success) {
       ScaffoldMessenger.of(context).showSnackBar(
         const SnackBar(
-          content: Text('Invalid email or password'),
+          content: Text('Invalid username or password'),
           backgroundColor: Colors.red,
         ),
       );
@@ -81,36 +82,20 @@ class _LoginPageState extends State<LoginPage> {
                     ),
                     const SizedBox(height: 32),
 
-                    // Email Field
+                    // Username Field
                     TextFormField(
-                      controller: _emailController,
-                      keyboardType: TextInputType.emailAddress,
+                      controller: _userController,
+                      keyboardType: TextInputType.text,
                       decoration: InputDecoration(
-                        hintText: 'Enter your email',
-                        hintStyle: const TextStyle(color: Colors.grey),
+                        labelText: 'Username',
                         border: OutlineInputBorder(
-                          borderRadius: BorderRadius.circular(8),
-                          borderSide: const BorderSide(color: Colors.grey),
+                          borderRadius: BorderRadius.circular(12),
                         ),
-                        enabledBorder: OutlineInputBorder(
-                          borderRadius: BorderRadius.circular(8),
-                          borderSide: const BorderSide(color: Colors.grey),
-                        ),
-                        focusedBorder: OutlineInputBorder(
-                          borderRadius: BorderRadius.circular(8),
-                          borderSide: const BorderSide(color: Color(0xFF1a1754)),
-                        ),
-                        contentPadding: const EdgeInsets.symmetric(
-                          horizontal: 16,
-                          vertical: 16,
-                        ),
+                        prefixIcon: Icon(Icons.person),
                       ),
                       validator: (value) {
-                        if (value == null || value.trim().isEmpty) {
-                          return 'Please enter your email';
-                        }
-                        if (!value.contains('@')) {
-                          return 'Please enter a valid email';
+                        if (value == null || value.isEmpty) {
+                          return 'Please enter your username';
                         }
                         return null;
                       },
