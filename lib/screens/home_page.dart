@@ -10,6 +10,7 @@ import 'logon_page.dart';
 import 'new_order_single_page.dart';
 import 'order_cancel_request_page.dart';
 import 'security_definition_request_page.dart';
+import 'users_admin_page.dart';
 
 // FIX Message class for tracking messages
 class FixMessage {
@@ -504,6 +505,32 @@ class _HomePageState extends State<HomePage> {
       appBar: AppBar(
         backgroundColor: Theme.of(context).colorScheme.inversePrimary,
         title: const Text('mini Broker - Connect by FIX protocol'),
+        actions: [
+          PopupMenuButton<String>(
+            onSelected: (value) {
+              if (value == 'users') {
+                Navigator.push(
+                  context,
+                  MaterialPageRoute(
+                    builder: (context) => const UsersAdminPage(),
+                  ),
+                );
+              }
+            },
+            itemBuilder: (BuildContext context) => [
+              const PopupMenuItem<String>(
+                value: 'users',
+                child: Row(
+                  children: [
+                    Icon(Icons.people),
+                    SizedBox(width: 8),
+                    Text('View Users'),
+                  ],
+                ),
+              ),
+            ],
+          ),
+        ],
       ),
       body: Scrollbar(
         thumbVisibility: true,

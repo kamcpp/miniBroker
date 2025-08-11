@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 import '../services/auth_service.dart';
+import '../main.dart';
 import 'signup_page.dart';
 
 class LoginPage extends StatefulWidget {
@@ -31,23 +32,43 @@ class _LoginPageState extends State<LoginPage> {
       _isLoading = true;
     });
 
-    final authService = Provider.of<AuthService>(context, listen: false);
-    final success = await authService.login(
-      _userController.text.trim(),
-      _passwordController.text,
-    );
-
-    setState(() {
-      _isLoading = false;
-    });
-
-    if (!success) {
-      ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(
-          content: Text('Invalid username or password'),
-          backgroundColor: Colors.red,
-        ),
+    try {
+      final authService = Provider.of<AuthService>(context, listen: false);
+      final success = await authService.login(
+        _userController.text.trim(),
+        _passwordController.text,
       );
+
+      if (success) {
+        if (mounted) {
+          // The Consumer<AuthService> in the main app will automatically detect the state change
+          // and rebuild to show the home page - no navigation needed
+        }
+      } else {
+        if (mounted) {
+          ScaffoldMessenger.of(context).showSnackBar(
+            const SnackBar(
+              content: Text('Invalid username or password'),
+              backgroundColor: Colors.red,
+            ),
+          );
+        }
+      }
+    } catch (e) {
+      if (mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(
+            content: Text('Login failed: ${e.toString()}'),
+            backgroundColor: Colors.red,
+          ),
+        );
+      }
+    } finally {
+      if (mounted) {
+        setState(() {
+          _isLoading = false;
+        });
+      }
     }
   }
 

@@ -31,27 +31,49 @@ class _SignupPageState extends State<SignupPage> {
       _isLoading = true;
     });
 
-    final authService = Provider.of<AuthService>(context, listen: false);
-    final success = await authService.signup(
-      _userController.text.trim(),
-      _passwordController.text,
-      _confirmPasswordController.text,
-    );
-
-    setState(() {
-      _isLoading = false;
-    });
-
-    if (success) {
-      // Navigate back to main app since user is now logged in
-      Navigator.of(context).pop();
-    } else {
-      ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(
-          content: Text('Please check your details and try again'),
-          backgroundColor: Colors.red,
-        ),
+    try {
+      final authService = Provider.of<AuthService>(context, listen: false);
+      final success = await authService.signup(
+        _userController.text.trim(),
+        _passwordController.text,
+        _confirmPasswordController.text,
       );
+
+      if (success) {
+        if (mounted) {
+          // Show success message
+          ScaffoldMessenger.of(context).showSnackBar(
+            const SnackBar(
+              content: Text('Account created successfully!'),
+              backgroundColor: Colors.green,
+              duration: Duration(seconds: 4),
+            ),
+          );
+          
+          // Clear the form fields
+          _userController.clear();
+          _passwordController.clear();
+          _confirmPasswordController.clear();
+          
+          // Navigate back to login page
+          Navigator.of(context).pop();
+        }
+      }
+    } catch (e) {
+      if (mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(
+            content: Text(e.toString()),
+            backgroundColor: Colors.red,
+          ),
+        );
+      }
+    } finally {
+      if (mounted) {
+        setState(() {
+          _isLoading = false;
+        });
+      }
     }
   }
 
