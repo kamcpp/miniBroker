@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 import '../services/auth_service.dart';
+import '../main.dart';
 import 'home_page.dart';
 
 class MiniBrokerPage extends StatefulWidget {
@@ -136,8 +137,16 @@ class _MiniBrokerPageState extends State<MiniBrokerPage> {
           // FIX Protocol button
           ElevatedButton(
             onPressed: () {
+              // Get the current FixDictionaryProvider to pass it to HomePage
+              final dictionaryProvider = Provider.of<FixDictionaryProvider>(context, listen: false);
+              
               Navigator.of(context).push(
-                MaterialPageRoute(builder: (context) => const HomePage()),
+                MaterialPageRoute(
+                  builder: (context) => ChangeNotifierProvider.value(
+                    value: dictionaryProvider,
+                    child: const HomePage(),
+                  ),
+                ),
               );
             },
             style: ElevatedButton.styleFrom(
