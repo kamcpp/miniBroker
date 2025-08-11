@@ -1,6 +1,7 @@
 import 'package:flutter/foundation.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 import 'database_helper.dart';
+import 'auto_connect_service.dart';
 
 class AuthService extends ChangeNotifier {
   static final AuthService _instance = AuthService._internal();
@@ -56,6 +57,11 @@ class AuthService extends ChangeNotifier {
         _isLoggedIn = true;
         _username = userData['username'];
         notifyListeners();
+        
+        // Automatically connect to staging and send logon
+        print('🚀 Login successful for ${userData['username']} - starting auto-connect to staging...');
+        _autoConnectToStaging();
+        
         return true;
       }
       
@@ -63,6 +69,26 @@ class AuthService extends ChangeNotifier {
     } catch (e) {
       print('Login error: $e');
       return false;
+    }
+  }
+
+  // Auto-connect to staging environment (async, non-blocking)
+  void _autoConnectToStaging() async {
+    try {
+      final autoConnectService = AutoConnectService();
+      
+      // Run in background without blocking the login UI - give more time for app to stabilize
+      Future.delayed(const Duration(milliseconds: 2000), () async {
+        print('🚀 Starting auto-connect to staging after login...');
+        final success = await autoConnectService.connectToStagingAndLogon();
+        if (success) {
+          print('✅ Auto-connect to staging completed successfully');
+        } else {
+          print('⚠️ Auto-connect to staging failed - user can connect manually');
+        }
+      });
+    } catch (e) {
+      print('❌ Error in auto-connect process: $e');
     }
   }
 
@@ -103,6 +129,15 @@ class AuthService extends ChangeNotifier {
   }
 
   Future<void> logout() async {
+    // Disconnect from staging environment
+    try {
+      final autoConnectService = AutoConnectService();
+      await autoConnectService.disconnect();
+      print('📤 Disconnected from staging environment during logout');
+    } catch (e) {
+      print('❌ Error disconnecting from staging during logout: $e');
+    }
+    
     final prefs = await SharedPreferences.getInstance();
     await prefs.setBool('isLoggedIn', false);
     await prefs.remove('username');

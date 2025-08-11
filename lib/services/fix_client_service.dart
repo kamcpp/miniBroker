@@ -227,14 +227,14 @@ class FixClientService {
   }
 
   // Manual logon method - call this explicitly when user wants to logon
-  Future<bool> sendLogon() async {
+  Future<bool> sendLogon([Map<String, String>? logonDefaults]) async {
     if (!_isConnected || _socket == null) {
       print('Not connected to FIX server - cannot send logon');
       return false;
     }
 
     try {
-      await _sendLogonMessage();
+      await _sendLogonMessage(logonDefaults);
       return true;
     } catch (e) {
       print('Error sending logon: $e');
@@ -269,17 +269,46 @@ class FixClientService {
       print('Error sending manual heartbeat: $e');
       return false;
     }
-  }  Future<void> _sendLogonMessage() async {
+  }  Future<void> _sendLogonMessage([Map<String, String>? logonDefaults]) async {
     try {
       print('Sending FIX Logon message...');
       
-      // Build FIX Logon message (MsgType=A)
-      final logonFields = {
+      // Start with basic logon fields
+      final logonFields = <String, String>{
         '35': 'A', // MsgType=Logon
         '98': '0', // EncryptMethod=None
         '108': '30', // HeartBtInt=30 seconds
-        // Removed password field - many servers don't require it for dev environments
+        '141': 'Y', // ResetSeqNumFlag=Y (default for new sessions)
       };
+      
+      // Add defaults from Config.json if provided
+      if (logonDefaults != null) {
+        logonDefaults.forEach((key, value) {
+          // Map known field names to FIX tag numbers
+          switch (key) {
+            case 'EncryptMethod':
+              logonFields['98'] = value;
+              break;
+            case 'HeartBtInt':
+              logonFields['108'] = value;
+              break;
+            case 'RawData':
+              logonFields['95'] = value.length.toString(); // RawDataLength
+              logonFields['96'] = value; // RawData
+              print('🔐 Including authentication RawData in logon');
+              break;
+            case 'ResetSeqNumFlag':
+              logonFields['141'] = value;
+              break;
+            default:
+              // For any other fields, try to add them directly if they're numeric tags
+              if (key.contains(RegExp(r'^\d+$'))) {
+                logonFields[key] = value;
+              }
+              break;
+          }
+        });
+      }
       
       final logonMessage = _buildFixMessage(logonFields);
       

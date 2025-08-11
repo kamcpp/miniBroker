@@ -6,6 +6,7 @@ import '../config/environment_config.dart';
 import '../main.dart';
 import '../services/fix_client_service.dart';
 import '../services/fix_message_service.dart';
+import '../services/auto_connect_service.dart';
 import 'logon_page.dart';
 import 'new_order_single_page.dart';
 import 'order_cancel_request_page.dart';
@@ -68,6 +69,7 @@ class _HomePageState extends State<HomePage> {
   StreamSubscription<bool>? _connectionStatusSubscription;
   StreamSubscription<bool>? _logonStatusSubscription;
   StreamSubscription<String>? _messageSubscription; // Add message tracking subscription
+  StreamSubscription<String>? _autoConnectEnvironmentSubscription; // Add auto-connect environment subscription
   
   // Use singleton instance to share connection across screens
   FixClientService get _fixClientService => FixClientService.instance;
@@ -206,6 +208,14 @@ class _HomePageState extends State<HomePage> {
       selectedEnvironment = configs.keys.first;
     }
     
+    // Check if already connected to staging via auto-connect
+    final autoConnectService = AutoConnectService();
+    final currentStagingEnv = autoConnectService.currentStagingEnvironment;
+    if (currentStagingEnv != null && configs.containsKey(currentStagingEnv)) {
+      selectedEnvironment = currentStagingEnv;
+      print('🔄 UI initialized with current staging environment: $currentStagingEnv');
+    }
+    
     // Initialize connection status from the service
     isConnected = _fixClientService.isConnected;
     isLoggedOn = _fixClientService.isLoggedOn;
@@ -244,6 +254,17 @@ class _HomePageState extends State<HomePage> {
     _messageSubscription = _fixClientService.messageStream.listen((String message) {
       if (mounted) {
         _processFixMessage(message);
+      }
+    });
+    
+    // Listen to auto-connect environment changes
+    _autoConnectEnvironmentSubscription = AutoConnectService().currentEnvironmentStream.listen((String environment) {
+      if (mounted) {
+        setState(() {
+          selectedEnvironment = environment;
+        });
+        _addLogMessage('Auto-connected to $environment environment');
+        print('🔄 UI updated to show staging environment: $environment');
       }
     });
   }
@@ -395,6 +416,7 @@ class _HomePageState extends State<HomePage> {
     _connectionStatusSubscription?.cancel();
     _logonStatusSubscription?.cancel();
     _messageSubscription?.cancel();
+    _autoConnectEnvironmentSubscription?.cancel();
     super.dispose();
   }
 

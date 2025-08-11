@@ -1,6 +1,12 @@
+import 'dart:async';
+import 'dart:convert';
+import 'dart:io';
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
+import 'package:http/http.dart' as http;
 import '../services/auth_service.dart';
+import '../services/fix_client_service.dart';
+import '../config/environment_config.dart';
 import '../main.dart';
 import 'home_page.dart';
 
@@ -13,18 +19,218 @@ class MiniBrokerPage extends StatefulWidget {
 
 class _MiniBrokerPageState extends State<MiniBrokerPage> {
   bool _isDarkTheme = true;
-  String _selectedSymbol = 'AAPL';
+  String _selectedSymbol = '';  // Will be set when assets are loaded
   String _orderType = 'Market';
   bool _isBuySelected = true;
   final TextEditingController _quantityController = TextEditingController();
   final TextEditingController _priceController = TextEditingController();
   
+  // Message stream subscription
+  StreamSubscription<String>? _messageSubscription;
+  bool _hasRequestedSecurityDefinitions = false;
+  Timer? _securityRequestTimeout;
+  
+  @override
+  void initState() {
+    super.initState();
+    // Listen for connection status changes and show notifications
+    _listenToConnectionStatus();
+    // Listen for FIX messages to handle Security Definition Responses
+    _listenToFixMessages();
+  }
+  
+  void _listenToConnectionStatus() {
+    FixClientService.instance.connectionStatusStream.listen((isConnected) {
+      if (mounted) {
+        if (isConnected) {
+          ScaffoldMessenger.of(context).showSnackBar(
+            const SnackBar(
+              content: Text('✅ Connected to FIX staging environment'),
+              backgroundColor: Colors.green,
+              duration: Duration(seconds: 3),
+            ),
+          );
+        } else {
+          // Only show disconnection message if we were previously connected
+          if (FixClientService.instance.isConnected == false) {
+            ScaffoldMessenger.of(context).showSnackBar(
+              const SnackBar(
+                content: Text('⚠️ FIX connection lost'),
+                backgroundColor: Colors.orange,
+                duration: Duration(seconds: 2),
+              ),
+            );
+          }
+        }
+      }
+    });
+    
+    FixClientService.instance.logonStatusStream.listen((isLoggedOn) {
+      if (mounted && isLoggedOn) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          const SnackBar(
+            content: Text('🎉 FIX Logon successful - Ready to trade!'),
+            backgroundColor: Colors.green,
+            duration: Duration(seconds: 4),
+          ),
+        );
+        
+        // Automatically fetch pairs from API after successful logon
+        _fetchPairsFromAPI();
+      }
+    });
+  }
+  
+  void _listenToFixMessages() {
+    // Keep the message subscription for potential future FIX message handling
+    // Currently not needed since we're using REST API for pairs
+    _messageSubscription = FixClientService.instance.messageStream.listen((message) {
+      if (mounted) {
+        // Process other FIX messages if needed in the future
+        print('📨 FIX Message: $message');
+      }
+    });
+  }
+  
+  Future<void> _fetchPairsFromAPI() async {
+    if (_hasRequestedSecurityDefinitions) {
+      return; // Already requested
+    }
+    
+    try {
+      print('🌐 Fetching pairs from API...');
+      
+      if (mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          const SnackBar(
+            content: Text('🌐 Fetching available trading pairs...'),
+            backgroundColor: Colors.blue,
+            duration: Duration(seconds: 2),
+          ),
+        );
+      }
+      
+      final response = await http.get(
+        Uri.parse('https://brokerage-api-stage.tokenise.io/api/services/app/Pair/GetPairs'),
+        headers: {
+          'Content-Type': 'application/json',
+          'Accept': 'application/json',
+        },
+      ).timeout(
+        const Duration(seconds: 10),
+        onTimeout: () {
+          throw TimeoutException('API request timed out', const Duration(seconds: 10));
+        },
+      );
+      
+      if (response.statusCode == 200) {
+        final Map<String, dynamic> jsonData = json.decode(response.body);
+        
+        if (jsonData['success'] == true && jsonData['result'] != null) {
+          final List<dynamic> pairs = jsonData['result'];
+          
+          print('✅ Received ${pairs.length} trading pairs from API');
+          
+          setState(() {
+            _assets.clear(); // Clear any existing assets
+            
+            for (final pair in pairs) {
+              final symbol = pair['symbol']?.toString() ?? '';
+              final title = pair['title']?.toString() ?? symbol;
+              final logoAddress = pair['logoAddress']?.toString() ?? '';
+              
+              if (symbol.isNotEmpty) {
+                _assets.add({
+                  'symbol': symbol,
+                  'name': title,
+                  'logoAddress': logoAddress,
+                  'price': '-', // Will be updated with market data later
+                  'change': '-',
+                  'changeColor': Colors.grey,
+                });
+              }
+            }
+            
+            // Update selected symbol if this is the first time or current is empty
+            if (_selectedSymbol.isEmpty && _assets.isNotEmpty) {
+              _selectedSymbol = _assets.first['symbol'];
+            }
+          });
+          
+          _hasRequestedSecurityDefinitions = true;
+          
+          if (mounted) {
+            ScaffoldMessenger.of(context).showSnackBar(
+              SnackBar(
+                content: Text('✅ Loaded ${_assets.length} trading pairs'),
+                backgroundColor: Colors.green,
+                duration: Duration(seconds: 3),
+              ),
+            );
+          }
+          
+          print('🎉 Successfully loaded ${_assets.length} trading pairs');
+        } else {
+          throw Exception('API response indicates failure: ${jsonData['error'] ?? 'Unknown error'}');
+        }
+      } else {
+        throw Exception('HTTP ${response.statusCode}: ${response.reasonPhrase}');
+      }
+      
+    } catch (e) {
+      print('❌ Error fetching pairs from API: $e');
+      
+      if (mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(
+            content: Text('⚠️ Failed to load trading pairs: ${e.toString()}'),
+            backgroundColor: Colors.orange,
+            duration: Duration(seconds: 4),
+          ),
+        );
+      }
+      
+      // Fallback: Add some default pairs if API fails
+      setState(() {
+        if (_assets.isEmpty) {
+          _assets.addAll([
+            {
+              'symbol': 'BTC-USD',
+              'name': 'Bitcoin / US Dollar',
+              'logoAddress': '',
+              'price': '-',
+              'change': '-',
+              'changeColor': Colors.grey,
+            },
+            {
+              'symbol': 'ETH-USD', 
+              'name': 'Ethereum / US Dollar',
+              'logoAddress': '',
+              'price': '-',
+              'change': '-',
+              'changeColor': Colors.grey,
+            },
+          ]);
+          
+          if (_selectedSymbol.isEmpty) {
+            _selectedSymbol = _assets.first['symbol'];
+          }
+        }
+      });
+    }
+  }
+  
+  @override
+  void dispose() {
+    _messageSubscription?.cancel();
+    _securityRequestTimeout?.cancel();
+    _quantityController.dispose();
+    _priceController.dispose();
+    super.dispose();
+  }
+  
   final List<Map<String, dynamic>> _assets = [
-    {'symbol': 'AAPL', 'name': 'Apple Inc.', 'price': '\$175.42', 'change': '+2.5%', 'changeColor': Colors.green},
-    {'symbol': 'GOOGL', 'name': 'Alphabet Inc.', 'price': '\$2,845.30', 'change': '+1.8%', 'changeColor': Colors.green},
-    {'symbol': 'MSFT', 'name': 'Microsoft Corp.', 'price': '\$405.67', 'change': '-0.5%', 'changeColor': Colors.red},
-    {'symbol': 'TSLA', 'name': 'Tesla Inc.', 'price': '\$248.90', 'change': '+3.2%', 'changeColor': Colors.green},
-    {'symbol': 'AMZN', 'name': 'Amazon.com Inc.', 'price': '\$155.20', 'change': '-1.1%', 'changeColor': Colors.red},
+    // This list will be populated dynamically from API call
   ];
 
   final List<Map<String, dynamic>> _orderHistory = [
@@ -117,6 +323,64 @@ class _MiniBrokerPageState extends State<MiniBrokerPage> {
               ),
             ),
           ),
+          
+          // FIX Connection Status Indicator
+                StreamBuilder<bool>(
+                  stream: FixClientService.instance.connectionStatusStream,
+                  initialData: false,
+                  builder: (context, snapshot) {
+                    final isConnected = snapshot.data ?? false;
+                    return StreamBuilder<bool>(
+                      stream: FixClientService.instance.logonStatusStream,
+                      initialData: false,
+                      builder: (context, logonSnapshot) {
+                        final isLoggedOn = logonSnapshot.data ?? false;
+                        
+                        String statusText;
+                        Color statusColor;
+                        IconData statusIcon;
+                        
+                        if (isConnected && isLoggedOn) {
+                          statusText = 'FIX: Logon';
+                          statusColor = Colors.green;
+                          statusIcon = Icons.check_circle;
+                        } else if (isConnected && !isLoggedOn) {
+                          statusText = 'FIX: Connected';
+                          statusColor = Colors.orange;
+                          statusIcon = Icons.sync;
+                        } else {
+                          statusText = 'FIX: Disconnected';
+                          statusColor = Colors.grey;
+                          statusIcon = Icons.cloud_off;
+                        }
+                        
+                        return Container(
+                          padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
+                          decoration: BoxDecoration(
+                            color: statusColor.withOpacity(0.1),
+                            borderRadius: BorderRadius.circular(12),
+                            border: Border.all(color: statusColor, width: 1),
+                          ),
+                          child: Row(
+                            mainAxisSize: MainAxisSize.min,
+                            children: [
+                              Icon(statusIcon, size: 14, color: statusColor),
+                              const SizedBox(width: 4),
+                              Text(
+                                statusText,
+                                style: TextStyle(
+                                  fontSize: 12,
+                                  fontWeight: FontWeight.w600,
+                                  color: statusColor,
+                                ),
+                              ),
+                            ],
+                          ),
+                        );
+                      },
+                    );
+                  },
+                ),          const SizedBox(width: 16),
           
           // Theme toggle
           IconButton(
@@ -213,9 +477,9 @@ class _MiniBrokerPageState extends State<MiniBrokerPage> {
             ),
             child: DropdownButtonHideUnderline(
               child: DropdownButton<String>(
-                value: _selectedSymbol,
+                value: _assets.isEmpty ? '' : _selectedSymbol,
                 isExpanded: true,
-                onChanged: (String? newValue) {
+                onChanged: _assets.isEmpty ? null : (String? newValue) {
                   setState(() {
                     _selectedSymbol = newValue!;
                   });
@@ -224,13 +488,18 @@ class _MiniBrokerPageState extends State<MiniBrokerPage> {
                 style: TextStyle(
                   color: _isDarkTheme ? Colors.white : Colors.black,
                 ),
-                items: ['AAPL', 'GOOGL', 'MSFT', 'TSLA', 'AMZN']
-                    .map<DropdownMenuItem<String>>((String value) {
-                  return DropdownMenuItem<String>(
-                    value: value,
-                    child: Text(value),
-                  );
-                }).toList(),
+                items: _assets.isEmpty 
+                    ? [DropdownMenuItem<String>(
+                        value: '',
+                        child: Text('Loading symbols...'),
+                      )]
+                    : _assets.map<DropdownMenuItem<String>>((asset) {
+                        final symbol = asset['symbol'] as String;
+                        return DropdownMenuItem<String>(
+                          value: symbol,
+                          child: Text(symbol),
+                        );
+                      }).toList(),
               ),
             ),
           ),
@@ -520,10 +789,39 @@ class _MiniBrokerPageState extends State<MiniBrokerPage> {
           ),
           const SizedBox(height: 16),
           Expanded(
-            child: ListView.builder(
-              scrollDirection: Axis.horizontal,
-              itemCount: _assets.length,
-              itemBuilder: (context, index) {
+            child: _assets.isEmpty 
+                ? Center(
+                    child: Column(
+                      mainAxisAlignment: MainAxisAlignment.center,
+                      children: [
+                        Icon(
+                          Icons.hourglass_empty,
+                          size: 48,
+                          color: _isDarkTheme ? Colors.grey[400] : Colors.grey[600],
+                        ),
+                        const SizedBox(height: 12),
+                        Text(
+                          'Loading trading pairs...',
+                          style: TextStyle(
+                            fontSize: 16,
+                            color: _isDarkTheme ? Colors.grey[400] : Colors.grey[600],
+                          ),
+                        ),
+                        const SizedBox(height: 8),
+                        Text(
+                          'Fetching from API...',
+                          style: TextStyle(
+                            fontSize: 12,
+                            color: _isDarkTheme ? Colors.grey[500] : Colors.grey[500],
+                          ),
+                        ),
+                      ],
+                    ),
+                  )
+                : ListView.builder(
+                    scrollDirection: Axis.horizontal,
+                    itemCount: _assets.length,
+                    itemBuilder: (context, index) {
                 final asset = _assets[index];
                 final isSelected = asset['symbol'] == _selectedSymbol;
                 
