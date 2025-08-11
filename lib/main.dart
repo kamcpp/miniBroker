@@ -1,7 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:provider/provider.dart';
-import 'screens/home_page.dart';
+import 'screens/minibroker_page.dart';
 import 'screens/login_page.dart';
 import 'services/fix_dictionary_parser.dart';
 import 'services/auth_service.dart';
@@ -132,7 +132,7 @@ class _AppInitializerState extends State<AppInitializer> {
             
             return ChangeNotifierProvider(
               create: (_) => FixDictionaryProvider(snapshot.data?.fixDictionary ?? {}),
-              child: const HomePage(),
+              child: const MiniBrokerPage(),
             );
           },
         );
