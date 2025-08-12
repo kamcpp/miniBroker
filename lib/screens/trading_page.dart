@@ -8,7 +8,7 @@ import '../services/auth_service.dart';
 import '../services/fix_client_service.dart';
 import '../config/environment_config.dart';
 import '../main.dart';
-import 'home_page.dart';
+import 'fix_client_page.dart';
 import 'portfolio_page.dart';
 
 class TradingPage extends StatefulWidget {
@@ -559,14 +559,14 @@ class _TradingPageState extends State<TradingPage> {
                 // FIX Client Button
                 GestureDetector(
                   onTap: () {
-                    // Get the current FixDictionaryProvider to pass it to HomePage
+                    // Get the current FixDictionaryProvider to pass it to FIXClientPage
                     final dictionaryProvider = Provider.of<FixDictionaryProvider>(context, listen: false);
                     
                     Navigator.of(context).push(
                       MaterialPageRoute(
                         builder: (context) => ChangeNotifierProvider.value(
                           value: dictionaryProvider,
-                          child: const HomePage(),
+                          child: const FIXClientPage(),
                         ),
                       ),
                     );

@@ -50,14 +50,14 @@ class FixMessage {
   }
 }
 
-class HomePage extends StatefulWidget {
-  const HomePage({super.key});
+class FIXClientPage extends StatefulWidget {
+  const FIXClientPage({super.key});
 
   @override
-  State<HomePage> createState() => _HomePageState();
+  State<FIXClientPage> createState() => _FIXClientPageState();
 }
 
-class _HomePageState extends State<HomePage> {
+class _FIXClientPageState extends State<FIXClientPage> {
   String selectedFixVersion = 'FIX.4.2';
   String selectedEnvironment = 'DEV'; // Updated to match new config structure
   bool isConnected = false;
