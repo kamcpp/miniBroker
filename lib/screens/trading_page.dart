@@ -511,8 +511,10 @@ class _TradingPageState extends State<TradingPage> {
                 GestureDetector(
                   onTap: () {
                     Navigator.of(context).push(
-                      MaterialPageRoute(
-                        builder: (context) => const PortfolioPage(),
+                      PageRouteBuilder(
+                        pageBuilder: (context, animation, secondaryAnimation) => const PortfolioPage(),
+                        transitionDuration: Duration.zero,
+                        reverseTransitionDuration: Duration.zero,
                       ),
                     );
                   },
@@ -563,11 +565,13 @@ class _TradingPageState extends State<TradingPage> {
                     final dictionaryProvider = Provider.of<FixDictionaryProvider>(context, listen: false);
                     
                     Navigator.of(context).push(
-                      MaterialPageRoute(
-                        builder: (context) => ChangeNotifierProvider.value(
+                      PageRouteBuilder(
+                        pageBuilder: (context, animation, secondaryAnimation) => ChangeNotifierProvider.value(
                           value: dictionaryProvider,
                           child: const FIXClientPage(),
                         ),
+                        transitionDuration: Duration.zero,
+                        reverseTransitionDuration: Duration.zero,
                       ),
                     );
                   },

@@ -533,8 +533,10 @@ class _FIXClientPageState extends State<FIXClientPage> {
               if (value == 'users') {
                 Navigator.push(
                   context,
-                  MaterialPageRoute(
-                    builder: (context) => const UsersAdminPage(),
+                  PageRouteBuilder(
+                    pageBuilder: (context, animation, secondaryAnimation) => const UsersAdminPage(),
+                    transitionDuration: Duration.zero,
+                    reverseTransitionDuration: Duration.zero,
                   ),
                 );
               }
@@ -1539,11 +1541,13 @@ class _FIXClientPageState extends State<FIXClientPage> {
     
     Navigator.push(
       context,
-      MaterialPageRoute(
-        builder: (newContext) => ChangeNotifierProvider.value(
+      PageRouteBuilder(
+        pageBuilder: (context, animation, secondaryAnimation) => ChangeNotifierProvider.value(
           value: dictionaryProvider,
           child: page,
         ),
+        transitionDuration: Duration.zero,
+        reverseTransitionDuration: Duration.zero,
       ),
     );
   }
