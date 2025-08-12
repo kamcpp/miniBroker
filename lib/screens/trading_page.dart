@@ -11,14 +11,14 @@ import '../main.dart';
 import 'home_page.dart';
 import 'portfolio_page.dart';
 
-class MiniBrokerPage extends StatefulWidget {
-  const MiniBrokerPage({super.key});
+class TradingPage extends StatefulWidget {
+  const TradingPage({super.key});
 
   @override
-  State<MiniBrokerPage> createState() => _MiniBrokerPageState();
+  State<TradingPage> createState() => _TradingPageState();
 }
 
-class _MiniBrokerPageState extends State<MiniBrokerPage> {
+class _TradingPageState extends State<TradingPage> {
   bool _isDarkTheme = true;
   String _selectedSymbol = '';  // Will be set when assets are loaded
   String _orderType = 'Market';
