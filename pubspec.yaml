@@ -1,5 +1,5 @@
 name: fixyl_quick
-description: mini Broker - Connect by FIX protocol
+description: FIX Client
 publish_to: 'none'
 version: 1.0.0+1
 

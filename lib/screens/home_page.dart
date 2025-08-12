@@ -526,7 +526,7 @@ class _HomePageState extends State<HomePage> {
     return Scaffold(
       appBar: AppBar(
         backgroundColor: Theme.of(context).colorScheme.inversePrimary,
-        title: const Text('mini Broker - Connect by FIX protocol'),
+        title: const Text('FIX Client'),
         actions: [
           PopupMenuButton<String>(
             onSelected: (value) {

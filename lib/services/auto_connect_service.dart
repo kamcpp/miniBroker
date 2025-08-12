@@ -100,7 +100,7 @@ class AutoConnectService {
       
       if (!connected) {
         print('❌ Auto-connect to staging failed after $maxRetries attempts');
-        print('💡 You can connect manually using the FIX Protocol page');
+        print('💡 You can connect manually using the FIX Client page');
         return false;
       }
       
@@ -173,7 +173,7 @@ class AutoConnectService {
       
     } catch (e) {
       print('❌ Error during auto-connect to staging: $e');
-      print('💡 Auto-connect failed - you can connect manually via FIX Protocol page');
+      print('💡 Auto-connect failed - you can connect manually via FIX Client page');
       return false;
     }
   }

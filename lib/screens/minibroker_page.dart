@@ -24,6 +24,7 @@ class _MiniBrokerPageState extends State<MiniBrokerPage> {
   bool _isBuySelected = true;
   final TextEditingController _quantityController = TextEditingController();
   final TextEditingController _priceController = TextEditingController();
+  final ScrollController _scrollController = ScrollController();
   
   // Message stream subscription
   StreamSubscription<String>? _messageSubscription;
@@ -130,14 +131,20 @@ class _MiniBrokerPageState extends State<MiniBrokerPage> {
               final symbol = pair['symbol']?.toString() ?? '';
               final title = pair['title']?.toString() ?? symbol;
               final logoAddress = pair['logoAddress']?.toString() ?? '';
+              final coverAddress = pair['coverAddress']?.toString() ?? '';
+              
+              // Debug print to see what fields we're getting
+              print('Asset: $symbol, Title: $title, Logo: $logoAddress, Cover: $coverAddress');
               
               if (symbol.isNotEmpty) {
                 _assets.add({
                   'symbol': symbol,
                   'name': title,
+                  'title': title,
                   'logoAddress': logoAddress,
-                  'price': '-', // Will be updated with market data later
-                  'change': '-',
+                  'coverAddress': coverAddress.isNotEmpty ? coverAddress : 'https://picsum.photos/112/120?random=${_assets.length}', // Test image if no cover
+                  'price': '\$0.00', // Will be updated with market data later
+                  'change': '+0.00%',
                   'changeColor': Colors.grey,
                 });
               }
@@ -210,7 +217,79 @@ class _MiniBrokerPageState extends State<MiniBrokerPage> {
     _securityRequestTimeout?.cancel();
     _quantityController.dispose();
     _priceController.dispose();
+    _scrollController.dispose();
     super.dispose();
+  }
+  
+  void _scrollLeft() {
+    if (_assets.isNotEmpty) {
+      final currentIndex = _assets.indexWhere((asset) => asset['symbol'] == _selectedSymbol);
+      final newIndex = currentIndex > 0 ? currentIndex - 1 : _assets.length - 1;
+      
+      setState(() {
+        _selectedSymbol = _assets[newIndex]['symbol'];
+      });
+      
+      // Scroll to center the selected asset (162px width + 16px margin = 178px per card)
+      _scrollToIndex(newIndex);
+    }
+  }
+  
+  void _scrollRight() {
+    if (_assets.isNotEmpty) {
+      final currentIndex = _assets.indexWhere((asset) => asset['symbol'] == _selectedSymbol);
+      final newIndex = currentIndex < _assets.length - 1 ? currentIndex + 1 : 0;
+      
+      setState(() {
+        _selectedSymbol = _assets[newIndex]['symbol'];
+      });
+      
+      // Scroll to center the selected asset (162px width + 16px margin = 178px per card)
+      _scrollToIndex(newIndex);
+    }
+  }
+  
+  void _scrollToSelectedAsset() {
+    if (_assets.isNotEmpty && _scrollController.hasClients) {
+      final currentIndex = _assets.indexWhere((asset) => asset['symbol'] == _selectedSymbol);
+      if (currentIndex >= 0) {
+        // Add a small delay to ensure the UI has updated
+        Future.delayed(const Duration(milliseconds: 50), () {
+          _scrollToIndex(currentIndex);
+        });
+      }
+    }
+  }
+  
+  void _scrollToIndex(int index) {
+    if (_scrollController.hasClients) {
+      // Calculate position to center the selected asset
+      final cardWidth = 162.0; // Width of each card
+      final cardMargin = 16.0; // margin between cards (only right margin)
+      final totalCardWidth = cardWidth + cardMargin;
+      
+      // Get the available width of the ListView viewport
+      final viewportWidth = _scrollController.position.viewportDimension;
+      
+      // Calculate the scroll offset to center the card
+      // Position of the left edge of the card in the ListView content
+      final cardLeftPosition = index * totalCardWidth;
+      
+      // To center the card:
+      // We want the card center to be at the center of the ListView viewport
+      // Card center position = cardLeftPosition + (cardWidth / 2)
+      // Viewport center = viewportWidth / 2
+      // Required scroll offset = cardLeftPosition + (cardWidth / 2) - (viewportWidth / 2)
+      final targetOffset = cardLeftPosition + (cardWidth / 2) - (viewportWidth / 2);
+      
+      print('📍 Centering card $index: cardLeft=$cardLeftPosition, viewportWidth=$viewportWidth, targetOffset=$targetOffset');
+      
+      _scrollController.animateTo(
+        targetOffset.clamp(0.0, _scrollController.position.maxScrollExtent),
+        duration: const Duration(milliseconds: 400),
+        curve: Curves.easeInOut,
+      );
+    }
   }
   
   final List<Map<String, dynamic>> _assets = [
@@ -296,77 +375,215 @@ class _MiniBrokerPageState extends State<MiniBrokerPage> {
       ),
       child: Row(
         children: [
-          // Welcome message
-          Expanded(
-            child: Text(
-              'Welcome, ${authService.username}',
-              style: const TextStyle(
-                color: Colors.white,
-                fontSize: 18,
-                fontWeight: FontWeight.w600,
+          // Logo on the left
+          Container(
+            width: 40,
+            height: 40,
+            decoration: BoxDecoration(
+              shape: BoxShape.circle,
+              color: const Color(0xFF1E88E5), // Blue background for the logo
+            ),
+            child: ClipOval(
+              child: Padding(
+                padding: const EdgeInsets.all(4.0), // Small padding for the logo
+                child: Container(
+                  decoration: const BoxDecoration(
+                    color: Color(0xFF1E88E5), // Blue background matching the logo
+                    shape: BoxShape.circle,
+                  ),
+                  child: Center(
+                    child: RichText(
+                      textAlign: TextAlign.center,
+                      text: const TextSpan(
+                        children: [
+                          TextSpan(
+                            text: 'mini\n',
+                            style: TextStyle(
+                              color: Colors.white,
+                              fontSize: 8,
+                              fontWeight: FontWeight.w500,
+                              height: 0.8,
+                            ),
+                          ),
+                          TextSpan(
+                            text: 'Broker',
+                            style: TextStyle(
+                              color: Colors.white,
+                              fontSize: 8,
+                              fontWeight: FontWeight.bold,
+                              height: 0.8,
+                            ),
+                          ),
+                        ],
+                      ),
+                    ),
+                  ),
+                ),
               ),
             ),
           ),
           
-          // FIX Connection Status Indicator
-                StreamBuilder<bool>(
-                  stream: FixClientService.instance.connectionStatusStream,
-                  initialData: false,
-                  builder: (context, snapshot) {
-                    final isConnected = snapshot.data ?? false;
-                    return StreamBuilder<bool>(
-                      stream: FixClientService.instance.logonStatusStream,
-                      initialData: false,
-                      builder: (context, logonSnapshot) {
-                        final isLoggedOn = logonSnapshot.data ?? false;
-                        
-                        String statusText;
-                        Color statusColor;
-                        IconData statusIcon;
-                        
-                        if (isConnected && isLoggedOn) {
-                          statusText = 'FIX: Logon';
-                          statusColor = Colors.green;
-                          statusIcon = Icons.check_circle;
-                        } else if (isConnected && !isLoggedOn) {
-                          statusText = 'FIX: Connected';
-                          statusColor = Colors.orange;
-                          statusIcon = Icons.sync;
-                        } else {
-                          statusText = 'FIX: Disconnected';
-                          statusColor = Colors.grey;
-                          statusIcon = Icons.cloud_off;
-                        }
-                        
-                        return Container(
-                          padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
-                          decoration: BoxDecoration(
-                            color: statusColor.withOpacity(0.1),
-                            borderRadius: BorderRadius.circular(12),
-                            border: Border.all(color: statusColor, width: 1),
-                          ),
-                          child: Row(
-                            mainAxisSize: MainAxisSize.min,
-                            children: [
-                              Icon(statusIcon, size: 14, color: statusColor),
-                              const SizedBox(width: 4),
-                              Text(
-                                statusText,
-                                style: TextStyle(
-                                  fontSize: 12,
-                                  fontWeight: FontWeight.w600,
-                                  color: statusColor,
-                                ),
-                              ),
-                            ],
-                          ),
-                        );
-                      },
-                    );
-                  },
-                ),          const SizedBox(width: 16),
+          const SizedBox(width: 16),
           
-          // Theme toggle
+          // Vertical divider line
+          Container(
+            height: 30,
+            width: 1,
+            color: Colors.white.withOpacity(0.3),
+          ),
+          
+          const SizedBox(width: 16),
+          
+          // FIX Connection Status Indicator (same size as FIX Client button)
+          StreamBuilder<bool>(
+            stream: FixClientService.instance.connectionStatusStream,
+            initialData: false,
+            builder: (context, snapshot) {
+              final isConnected = snapshot.data ?? false;
+              return StreamBuilder<bool>(
+                stream: FixClientService.instance.logonStatusStream,
+                initialData: false,
+                builder: (context, logonSnapshot) {
+                  final isLoggedOn = logonSnapshot.data ?? false;
+                  
+                  String statusText;
+                  Color statusColor;
+                  IconData statusIcon;
+                  
+                  if (isConnected && isLoggedOn) {
+                    statusText = 'FIX: Logon';
+                    statusColor = Colors.green;
+                    statusIcon = Icons.check_circle;
+                  } else if (isConnected && !isLoggedOn) {
+                    statusText = 'FIX: Connected';
+                    statusColor = Colors.orange;
+                    statusIcon = Icons.sync;
+                  } else {
+                    statusText = 'FIX: Disconnected';
+                    statusColor = Colors.grey;
+                    statusIcon = Icons.cloud_off;
+                  }
+                  
+                  return Container(
+                    height: 32, // Same height as FIX Client button
+                    padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 6),
+                    decoration: BoxDecoration(
+                      color: statusColor.withOpacity(0.1),
+                      borderRadius: BorderRadius.circular(6),
+                      border: Border.all(color: statusColor, width: 1),
+                    ),
+                    child: Row(
+                      mainAxisSize: MainAxisSize.min,
+                      children: [
+                        Icon(statusIcon, size: 14, color: statusColor),
+                        const SizedBox(width: 6),
+                        Text(
+                          statusText,
+                          style: TextStyle(
+                            fontSize: 12,
+                            fontWeight: FontWeight.w600,
+                            color: statusColor,
+                          ),
+                        ),
+                      ],
+                    ),
+                  );
+                },
+              );
+            },
+          ),
+          
+          // Spacer to push right-side items to the end
+          const Spacer(),
+          
+          // FIX Client button (same size as status indicator)
+          SizedBox(
+            height: 32, // Same height as status indicator
+            child: ElevatedButton(
+              onPressed: () {
+                // Get the current FixDictionaryProvider to pass it to HomePage
+                final dictionaryProvider = Provider.of<FixDictionaryProvider>(context, listen: false);
+                
+                Navigator.of(context).push(
+                  MaterialPageRoute(
+                    builder: (context) => ChangeNotifierProvider.value(
+                      value: dictionaryProvider,
+                      child: const HomePage(),
+                    ),
+                  ),
+                );
+              },
+              style: ElevatedButton.styleFrom(
+                backgroundColor: Colors.white,
+                foregroundColor: const Color(0xFF1a1754),
+                padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 6),
+                shape: RoundedRectangleBorder(
+                  borderRadius: BorderRadius.circular(6),
+                ),
+              ),
+              child: const Text(
+                'FIX Client',
+                style: TextStyle(
+                  fontSize: 12,
+                  fontWeight: FontWeight.w600,
+                ),
+              ),
+            ),
+          ),
+          
+          const SizedBox(width: 16),
+          
+          // Vertical divider line
+          Container(
+            height: 30,
+            width: 1,
+            color: Colors.white.withOpacity(0.3),
+          ),
+          
+          const SizedBox(width: 16),
+          
+          // User icon and username
+          Row(
+            mainAxisSize: MainAxisSize.min,
+            children: [
+              Container(
+                width: 24,
+                height: 24,
+                decoration: BoxDecoration(
+                  shape: BoxShape.circle,
+                  color: Colors.white.withOpacity(0.2),
+                  border: Border.all(color: Colors.white, width: 1),
+                ),
+                child: const Icon(
+                  Icons.person,
+                  color: Colors.white,
+                  size: 14,
+                ),
+              ),
+              const SizedBox(width: 8),
+              Text(
+                authService.username,
+                style: const TextStyle(
+                  color: Colors.white,
+                  fontSize: 16,
+                  fontWeight: FontWeight.w500,
+                ),
+              ),
+            ],
+          ),
+          
+          const SizedBox(width: 16),
+          
+          // Vertical divider line
+          Container(
+            height: 30,
+            width: 1,
+            color: Colors.white.withOpacity(0.3),
+          ),
+          
+          const SizedBox(width: 16),
+          
+          // Theme toggle button
           IconButton(
             onPressed: () {
               setState(() {
@@ -376,48 +593,35 @@ class _MiniBrokerPageState extends State<MiniBrokerPage> {
             icon: Icon(
               _isDarkTheme ? Icons.wb_sunny : Icons.nights_stay,
               color: Colors.white,
+              size: 20,
             ),
             tooltip: _isDarkTheme ? 'Light Theme' : 'Dark Theme',
+            padding: const EdgeInsets.all(8),
           ),
           
-          const SizedBox(width: 16),
+          const SizedBox(width: 8),
           
-          // FIX Protocol button
-          ElevatedButton(
-            onPressed: () {
-              // Get the current FixDictionaryProvider to pass it to HomePage
-              final dictionaryProvider = Provider.of<FixDictionaryProvider>(context, listen: false);
-              
-              Navigator.of(context).push(
-                MaterialPageRoute(
-                  builder: (context) => ChangeNotifierProvider.value(
-                    value: dictionaryProvider,
-                    child: const HomePage(),
-                  ),
-                ),
-              );
-            },
-            style: ElevatedButton.styleFrom(
-              backgroundColor: Colors.white,
-              foregroundColor: const Color(0xFF1a1754),
-              padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
-            ),
-            child: const Text('FIX Protocol'),
+          // Vertical divider line
+          Container(
+            height: 30,
+            width: 1,
+            color: Colors.white.withOpacity(0.3),
           ),
           
-          const SizedBox(width: 16),
+          const SizedBox(width: 8),
           
-          // Logout button
-          ElevatedButton(
+          // Logout icon button
+          IconButton(
             onPressed: () async {
               await authService.logout();
             },
-            style: ElevatedButton.styleFrom(
-              backgroundColor: Colors.red,
-              foregroundColor: Colors.white,
-              padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
+            icon: const Icon(
+              Icons.logout,
+              color: Colors.white,
+              size: 20,
             ),
-            child: const Text('Logout'),
+            tooltip: 'Logout',
+            padding: const EdgeInsets.all(8),
           ),
         ],
       ),
@@ -466,6 +670,14 @@ class _MiniBrokerPageState extends State<MiniBrokerPage> {
                 onChanged: _assets.isEmpty ? null : (String? newValue) {
                   setState(() {
                     _selectedSymbol = newValue!;
+                  });
+                  // Scroll to the selected asset in market overview with a slight delay
+                  WidgetsBinding.instance.addPostFrameCallback((_) {
+                    Future.delayed(const Duration(milliseconds: 200), () {
+                      if (mounted && _scrollController.hasClients) {
+                        _scrollToSelectedAsset();
+                      }
+                    });
                   });
                 },
                 dropdownColor: _isDarkTheme ? const Color(0xFF2d2d2d) : Colors.white,
@@ -802,79 +1014,330 @@ class _MiniBrokerPageState extends State<MiniBrokerPage> {
                       ],
                     ),
                   )
-                : ListView.builder(
-                    scrollDirection: Axis.horizontal,
-                    itemCount: _assets.length,
-                    itemBuilder: (context, index) {
-                final asset = _assets[index];
-                final isSelected = asset['symbol'] == _selectedSymbol;
-                
-                return Container(
-                  width: 150,
-                  margin: const EdgeInsets.only(right: 12),
-                  child: GestureDetector(
-                    onTap: () {
-                      setState(() {
-                        _selectedSymbol = asset['symbol'];
-                      });
-                    },
-                    child: Container(
-                      padding: const EdgeInsets.all(12),
-                      decoration: BoxDecoration(
-                        color: isSelected 
-                            ? const Color(0xFF1a1754).withOpacity(0.2)
-                            : (_isDarkTheme ? const Color(0xFF2d2d2d) : Colors.grey[100]),
-                        borderRadius: BorderRadius.circular(8),
-                        border: isSelected 
-                            ? Border.all(color: const Color(0xFF1a1754), width: 2)
-                            : null,
-                      ),
-                      child: Column(
-                        crossAxisAlignment: CrossAxisAlignment.start,
-                        children: [
-                          Text(
-                            asset['symbol'],
-                            style: TextStyle(
-                              fontSize: 16,
-                              fontWeight: FontWeight.bold,
-                              color: _isDarkTheme ? Colors.white : Colors.black,
+                : SizedBox(
+                    height: 200, // Increased height for bigger square boxes (180px + margins)
+                    child: Stack(
+                      children: [
+                        // Main scrollable list
+                        ListView.builder(
+                          controller: _scrollController,
+                          scrollDirection: Axis.horizontal,
+                          padding: const EdgeInsets.symmetric(horizontal: 50),
+                          itemCount: _assets.length,
+                          itemBuilder: (context, index) {
+                            final asset = _assets[index];
+                            final isSelected = asset['symbol'] == _selectedSymbol;
+                            
+                            return Container(
+                              width: 162, // Decreased by 10% from 180 to 162 for better fit
+                              height: 162,
+                              margin: const EdgeInsets.only(right: 16),
+                              child: GestureDetector(
+                                onTap: () {
+                                  setState(() {
+                                    _selectedSymbol = asset['symbol'];
+                                  });
+                                },
+                                child: AnimatedContainer(
+                                  duration: const Duration(milliseconds: 200),
+                                  decoration: BoxDecoration(
+                                    gradient: LinearGradient(
+                                      begin: Alignment.topLeft,
+                                      end: Alignment.bottomRight,
+                                      colors: isSelected 
+                                        ? [
+                                            const Color(0xFF1a1754),
+                                            const Color(0xFF2a2764),
+                                          ]
+                                        : _isDarkTheme 
+                                        ? [
+                                            const Color(0xFF2d2d2d),
+                                            const Color(0xFF1e1e1e),
+                                          ]
+                                        : [
+                                            Colors.white,
+                                            Colors.grey[50]!,
+                                          ],
+                                    ),
+                                    borderRadius: BorderRadius.circular(12),
+                                    border: isSelected 
+                                        ? Border.all(color: const Color(0xFF4CAF50), width: 2)
+                                        : Border.all(
+                                            color: _isDarkTheme ? Colors.grey[700]! : Colors.grey[300]!,
+                                            width: 1,
+                                          ),
+                                    boxShadow: [
+                                      BoxShadow(
+                                        color: Colors.black.withOpacity(0.1),
+                                        blurRadius: 8,
+                                        offset: const Offset(0, 4),
+                                      ),
+                                    ],
+                                  ),
+                                  child: Stack(
+                                    children: [
+                                      // Cover photo background (faded)
+                                      Positioned.fill(
+                                        child: ClipRRect(
+                                          borderRadius: BorderRadius.circular(12),
+                                          child: Opacity(
+                                            opacity: 0.4, // Fade the cover image
+                                            child: asset['coverAddress'] != null && asset['coverAddress'].isNotEmpty
+                                                ? Image.network(
+                                                    asset['coverAddress'],
+                                                    fit: BoxFit.cover,
+                                                    errorBuilder: (context, error, stackTrace) {
+                                                      return Container(
+                                                        decoration: BoxDecoration(
+                                                          gradient: LinearGradient(
+                                                            begin: Alignment.topLeft,
+                                                            end: Alignment.bottomRight,
+                                                            colors: [
+                                                              const Color(0xFF1a1754).withOpacity(0.3),
+                                                              const Color(0xFF2a2764).withOpacity(0.6),
+                                                            ],
+                                                          ),
+                                                        ),
+                                                      );
+                                                    },
+                                                  )
+                                                : Container(
+                                                    decoration: BoxDecoration(
+                                                      gradient: LinearGradient(
+                                                        begin: Alignment.topLeft,
+                                                        end: Alignment.bottomRight,
+                                                        colors: [
+                                                          const Color(0xFF1a1754).withOpacity(0.3),
+                                                          const Color(0xFF2a2764).withOpacity(0.6),
+                                                        ],
+                                                      ),
+                                                    ),
+                                                  ),
+                                          ),
+                                        ),
+                                      ),
+                                      
+                                      // Overlay gradient for text readability
+                                      Positioned.fill(
+                                        child: Container(
+                                          decoration: BoxDecoration(
+                                            borderRadius: BorderRadius.circular(12),
+                                            gradient: LinearGradient(
+                                              begin: Alignment.topCenter,
+                                              end: Alignment.bottomCenter,
+                                              colors: [
+                                                Colors.black.withOpacity(0.3),
+                                                Colors.black.withOpacity(0.7),
+                                              ],
+                                            ),
+                                          ),
+                                        ),
+                                      ),
+                                      
+                                      // Content
+                                      Padding(
+                                        padding: const EdgeInsets.all(20), // Increased padding for bigger box (180px)
+                                        child: Column(
+                                          crossAxisAlignment: CrossAxisAlignment.start,
+                                          children: [
+                                            // Header with logo and symbol
+                                            Row(
+                                              children: [
+                                                Container(
+                                                  width: 32, // Bigger logo for 180px box
+                                                  height: 32,
+                                                  decoration: BoxDecoration(
+                                                    color: Colors.white.withOpacity(0.2),
+                                                    borderRadius: BorderRadius.circular(10),
+                                                  ),
+                                                  child: asset['logoAddress'] != null && asset['logoAddress'].isNotEmpty
+                                                      ? ClipRRect(
+                                                          borderRadius: BorderRadius.circular(10),
+                                                          child: Image.network(
+                                                            asset['logoAddress'],
+                                                            width: 32,
+                                                            height: 32,
+                                                            fit: BoxFit.cover,
+                                                            errorBuilder: (context, error, stackTrace) {
+                                                              return const Icon(
+                                                                Icons.currency_exchange,
+                                                                color: Colors.white,
+                                                                size: 18,
+                                                              );
+                                                            },
+                                                          ),
+                                                        )
+                                                      : const Icon(
+                                                          Icons.currency_exchange,
+                                                          color: Colors.white,
+                                                          size: 18,
+                                                        ),
+                                                ),
+                                                const SizedBox(width: 12),
+                                                Expanded(
+                                                  child: Text(
+                                                    asset['symbol'],
+                                                    style: TextStyle(
+                                                      fontSize: asset['symbol'].length > 8 ? 14.0 : 18.0, // Smaller font for longer names
+                                                      fontWeight: FontWeight.bold,
+                                                      color: Colors.white,
+                                                    ),
+                                                    maxLines: asset['symbol'].length > 12 ? 2 : 1, // Use 2 lines for very long names
+                                                    overflow: TextOverflow.visible, // Show full text instead of ellipsis
+                                                  ),
+                                                ),
+                                              ],
+                                            ),
+                                            const SizedBox(height: 8),
+                                            
+                                            // Title (second row)
+                                            Text(
+                                              asset['title'] ?? asset['name'] ?? '',
+                                              style: TextStyle(
+                                                fontSize: (asset['title'] ?? asset['name'] ?? '').length > 20 ? 12.0 : 14.0, // Smaller font for longer titles
+                                                color: Colors.white,
+                                                fontWeight: FontWeight.w500,
+                                              ),
+                                              maxLines: 2, // Allow 2 lines for titles
+                                              overflow: TextOverflow.visible, // Show full text instead of ellipsis
+                                            ),
+                                            
+                                            const Spacer(),
+                                            
+                                            // Price
+                                            Text(
+                                              asset['price'],
+                                              style: const TextStyle(
+                                                fontSize: 20, // Bigger price text for 180px box
+                                                fontWeight: FontWeight.bold,
+                                                color: Colors.white,
+                                              ),
+                                            ),
+                                            const SizedBox(height: 8),
+                                            
+                                            // Change
+                                            Container(
+                                              padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 4),
+                                              decoration: BoxDecoration(
+                                                color: asset['change'] == '-' 
+                                                    ? Colors.grey.withOpacity(0.3)
+                                                    : asset['changeColor'].withOpacity(0.3),
+                                                borderRadius: BorderRadius.circular(12),
+                                              ),
+                                              child: Text(
+                                                asset['change'],
+                                                style: TextStyle(
+                                                  fontSize: 12,
+                                                  fontWeight: FontWeight.w600,
+                                                  color: asset['change'] == '-' 
+                                                      ? Colors.white
+                                                      : asset['changeColor'],
+                                                ),
+                                              ),
+                                            ),
+                                          ],
+                                        ),
+                                      ),
+                                    ],
+                                  ),
+                                ),
+                              ),
+                            );
+                          },
+                        ),
+                        
+                        // Left fade and button
+                        Positioned(
+                          left: 0,
+                          top: 0,
+                          bottom: 0,
+                          child: Container(
+                            width: 50,
+                            decoration: BoxDecoration(
+                              gradient: LinearGradient(
+                                begin: Alignment.centerLeft,
+                                end: Alignment.centerRight,
+                                colors: [
+                                  _isDarkTheme ? const Color(0xFF1e1e1e) : Colors.grey[50]!,
+                                  (_isDarkTheme ? const Color(0xFF1e1e1e) : Colors.grey[50]!).withOpacity(0),
+                                ],
+                              ),
+                            ),
+                            child: Center(
+                              child: GestureDetector(
+                                onTap: _scrollLeft,
+                                child: Container(
+                                  width: 32,
+                                  height: 32,
+                                  decoration: BoxDecoration(
+                                    color: _isDarkTheme ? Colors.grey[800] : Colors.white,
+                                    borderRadius: BorderRadius.circular(16),
+                                    boxShadow: [
+                                      BoxShadow(
+                                        color: Colors.black.withOpacity(0.1),
+                                        blurRadius: 4,
+                                        offset: const Offset(0, 2),
+                                      ),
+                                    ],
+                                  ),
+                                  child: Icon(
+                                    Icons.chevron_left,
+                                    color: _isDarkTheme ? Colors.white : Colors.black,
+                                    size: 20,
+                                  ),
+                                ),
+                              ),
                             ),
                           ),
-                          const SizedBox(height: 4),
-                          Text(
-                            asset['name'],
-                            style: TextStyle(
-                              fontSize: 12,
-                              color: _isDarkTheme ? Colors.grey[400] : Colors.grey[600],
+                        ),
+                        
+                        // Right fade and button
+                        Positioned(
+                          right: 0,
+                          top: 0,
+                          bottom: 0,
+                          child: Container(
+                            width: 50,
+                            decoration: BoxDecoration(
+                              gradient: LinearGradient(
+                                begin: Alignment.centerRight,
+                                end: Alignment.centerLeft,
+                                colors: [
+                                  _isDarkTheme ? const Color(0xFF1e1e1e) : Colors.grey[50]!,
+                                  (_isDarkTheme ? const Color(0xFF1e1e1e) : Colors.grey[50]!).withOpacity(0),
+                                ],
+                              ),
                             ),
-                            maxLines: 1,
-                            overflow: TextOverflow.ellipsis,
-                          ),
-                          const SizedBox(height: 8),
-                          Text(
-                            asset['price'],
-                            style: TextStyle(
-                              fontSize: 14,
-                              fontWeight: FontWeight.w600,
-                              color: _isDarkTheme ? Colors.white : Colors.black,
+                            child: Center(
+                              child: GestureDetector(
+                                onTap: _scrollRight,
+                                child: Container(
+                                  width: 32,
+                                  height: 32,
+                                  decoration: BoxDecoration(
+                                    color: _isDarkTheme ? Colors.grey[800] : Colors.white,
+                                    borderRadius: BorderRadius.circular(16),
+                                    boxShadow: [
+                                      BoxShadow(
+                                        color: Colors.black.withOpacity(0.1),
+                                        blurRadius: 4,
+                                        offset: const Offset(0, 2),
+                                      ),
+                                    ],
+                                  ),
+                                  child: Icon(
+                                    Icons.chevron_right,
+                                    color: _isDarkTheme ? Colors.white : Colors.black,
+                                    size: 20,
+                                  ),
+                                ),
+                              ),
                             ),
                           ),
-                          const SizedBox(height: 4),
-                          Text(
-                            asset['change'],
-                            style: TextStyle(
-                              fontSize: 12,
-                              fontWeight: FontWeight.w500,
-                              color: asset['changeColor'],
-                            ),
-                          ),
-                        ],
-                      ),
+                        ),
+                      ],
                     ),
                   ),
-                );
-              },
-            ),
           ),
         ],
       ),

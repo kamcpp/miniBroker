@@ -1,4 +1,4 @@
-# mini Broker - Connect by FIX protocol
+# FIX Client
 
 A Flutter-based FIX protocol client application for macOS and Windows, designed for trading and financial messaging.
 
