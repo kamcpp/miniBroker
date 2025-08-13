@@ -103,11 +103,6 @@ class _ProfilePageState extends State<ProfilePage> {
                 _buildPasswordSection(
                   isDarkTheme: _isDarkTheme,
                 ),
-                
-                const SizedBox(height: 32),
-                
-                // Theme Toggle Section
-                _buildThemeSection(themeService, _isDarkTheme),
               ],
             ),
           ),
@@ -157,7 +152,7 @@ class _ProfilePageState extends State<ProfilePage> {
                   child: Text(
                     'Edit',
                     style: TextStyle(
-                      color: const Color(0xFF1a1754),
+                      color: isDarkTheme ? Colors.lightBlue : const Color(0xFF1a1754),
                       fontSize: 14,
                       fontWeight: FontWeight.w500,
                     ),
@@ -254,7 +249,7 @@ class _ProfilePageState extends State<ProfilePage> {
                   child: Text(
                     'Edit',
                     style: TextStyle(
-                      color: const Color(0xFF1a1754),
+                      color: isDarkTheme ? Colors.lightBlue : const Color(0xFF1a1754),
                       fontSize: 14,
                       fontWeight: FontWeight.w500,
                     ),
@@ -354,51 +349,6 @@ class _ProfilePageState extends State<ProfilePage> {
               ),
             ),
           ],
-        ],
-      ),
-    );
-  }
-
-  Widget _buildThemeSection(ThemeService themeService, bool isDarkTheme) {
-    return Container(
-      padding: const EdgeInsets.all(20),
-      decoration: BoxDecoration(
-        color: isDarkTheme ? const Color(0xFF2A2A2A) : Colors.white,
-        borderRadius: BorderRadius.circular(12),
-        border: Border.all(
-          color: isDarkTheme ? Colors.grey[700]! : Colors.grey[300]!,
-          width: 1,
-        ),
-      ),
-      child: Row(
-        mainAxisAlignment: MainAxisAlignment.spaceBetween,
-        children: [
-          Column(
-            crossAxisAlignment: CrossAxisAlignment.start,
-            children: [
-              Text(
-                'Theme',
-                style: TextStyle(
-                  fontSize: 14,
-                  fontWeight: FontWeight.w500,
-                  color: isDarkTheme ? Colors.grey[400] : Colors.grey[600],
-                ),
-              ),
-              const SizedBox(height: 4),
-              Text(
-                isDarkTheme ? 'Dark Mode' : 'Light Mode',
-                style: TextStyle(
-                  fontSize: 16,
-                  color: isDarkTheme ? Colors.white : Colors.black,
-                ),
-              ),
-            ],
-          ),
-          Switch(
-            value: isDarkTheme,
-            onChanged: (value) => themeService.toggleTheme(),
-            activeColor: const Color(0xFF1a1754),
-          ),
         ],
       ),
     );
