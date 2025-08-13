@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 import '../services/auth_service.dart';
 import '../services/fix_client_service.dart';
+import '../services/theme_service.dart';
 import '../main.dart';
 import 'trading_page.dart';
 import 'fix_client_page.dart';
@@ -14,11 +15,11 @@ class PortfolioPage extends StatefulWidget {
 }
 
 class _PortfolioPageState extends State<PortfolioPage> {
-  bool _isDarkTheme = true;
-
   @override
   Widget build(BuildContext context) {
     final authService = Provider.of<AuthService>(context);
+    final themeService = Provider.of<ThemeService>(context);
+    final _isDarkTheme = themeService.isDarkTheme; // Use theme from service
     
     return Theme(
       data: _isDarkTheme ? ThemeData.dark() : ThemeData.light(),
@@ -27,7 +28,7 @@ class _PortfolioPageState extends State<PortfolioPage> {
         body: Column(
           children: [
             // Header Section
-            _buildHeader(authService),
+            _buildHeader(authService, themeService),
             
             // Main Content
             Expanded(
@@ -174,6 +175,7 @@ class _PortfolioPageState extends State<PortfolioPage> {
                               child: ListView(
                                 children: [
                                   _buildHoldingItem(
+                                    themeService,
                                     'SFG',
                                     'San Francisco Giants',
                                     '100',
@@ -187,6 +189,7 @@ class _PortfolioPageState extends State<PortfolioPage> {
                                   ),
                                   const SizedBox(height: 16),
                                   _buildHoldingItem(
+                                    themeService,
                                     'AC1',
                                     'AC Milan',
                                     '100',
@@ -215,7 +218,7 @@ class _PortfolioPageState extends State<PortfolioPage> {
     );
   }
 
-  Widget _buildHeader(AuthService authService) {
+  Widget _buildHeader(AuthService authService, ThemeService themeService) {
     return Container(
       height: 60,
       padding: const EdgeInsets.symmetric(horizontal: 20),
@@ -505,16 +508,14 @@ class _PortfolioPageState extends State<PortfolioPage> {
             alignment: Alignment.center,
             child: IconButton(
               onPressed: () {
-                setState(() {
-                  _isDarkTheme = !_isDarkTheme;
-                });
+                themeService.toggleTheme();
               },
               icon: Icon(
-                _isDarkTheme ? Icons.wb_sunny : Icons.nights_stay,
+                themeService.isDarkTheme ? Icons.wb_sunny : Icons.nights_stay,
                 color: Colors.white,
                 size: 20,
               ),
-              tooltip: _isDarkTheme ? 'Light Theme' : 'Dark Theme',
+              tooltip: themeService.isDarkTheme ? 'Light Theme' : 'Dark Theme',
               padding: const EdgeInsets.all(8),
             ),
           ),
@@ -568,6 +569,7 @@ class _PortfolioPageState extends State<PortfolioPage> {
   }
 
   Widget _buildHoldingItem(
+    ThemeService themeService,
     String symbol,
     String name,
     String total,
@@ -579,6 +581,7 @@ class _PortfolioPageState extends State<PortfolioPage> {
     String marketValue,
     Color iconColor,
   ) {
+    final _isDarkTheme = themeService.isDarkTheme;
     return Container(
       padding: const EdgeInsets.all(16),
       decoration: BoxDecoration(

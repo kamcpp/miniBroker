@@ -6,6 +6,7 @@ import 'package:provider/provider.dart';
 import 'package:http/http.dart' as http;
 import '../services/auth_service.dart';
 import '../services/fix_client_service.dart';
+import '../services/theme_service.dart';
 import '../config/environment_config.dart';
 import '../main.dart';
 import 'fix_client_page.dart';
@@ -19,7 +20,6 @@ class TradingPage extends StatefulWidget {
 }
 
 class _TradingPageState extends State<TradingPage> {
-  bool _isDarkTheme = true;
   String _selectedSymbol = '';  // Will be set when assets are loaded
   String _orderType = 'Limit';
   bool _isBuySelected = true;
@@ -318,6 +318,8 @@ class _TradingPageState extends State<TradingPage> {
   @override
   Widget build(BuildContext context) {
     final authService = Provider.of<AuthService>(context);
+    final themeService = Provider.of<ThemeService>(context);
+    final _isDarkTheme = themeService.isDarkTheme; // Use theme from service
     
     return Theme(
       data: _isDarkTheme ? ThemeData.dark() : ThemeData.light(),
@@ -326,7 +328,7 @@ class _TradingPageState extends State<TradingPage> {
         body: Column(
           children: [
             // Header Section
-            _buildHeader(authService),
+            _buildHeader(authService, themeService),
             
             // Main Content
             Expanded(
@@ -335,7 +337,7 @@ class _TradingPageState extends State<TradingPage> {
                   // Left Panel - Trading Controls
                   Container(
                     width: 300,
-                    child: _buildTradingPanel(),
+                    child: _buildTradingPanel(themeService),
                   ),
                   
                   // Middle Panel - Asset Selection and Chart
@@ -346,11 +348,11 @@ class _TradingPageState extends State<TradingPage> {
                         // Asset Selection
                         Container(
                           height: 250,
-                          child: _buildAssetSection(),
+                          child: _buildAssetSection(themeService),
                         ),
                         // Chart Section
                         Expanded(
-                          child: _buildChartSection(),
+                          child: _buildChartSection(themeService),
                         ),
                       ],
                     ),
@@ -359,7 +361,7 @@ class _TradingPageState extends State<TradingPage> {
                   // Right Panel - Order Book & Activity
                   Container(
                     width: 300,
-                    child: _buildActivitySection(),
+                    child: _buildActivitySection(themeService),
                   ),
                 ],
               ),
@@ -370,7 +372,7 @@ class _TradingPageState extends State<TradingPage> {
     );
   }
 
-  Widget _buildHeader(AuthService authService) {
+  Widget _buildHeader(AuthService authService, ThemeService themeService) {
     return Container(
       height: 60,
       padding: const EdgeInsets.symmetric(horizontal: 20),
@@ -660,16 +662,14 @@ class _TradingPageState extends State<TradingPage> {
             alignment: Alignment.center,
             child: IconButton(
               onPressed: () {
-                setState(() {
-                  _isDarkTheme = !_isDarkTheme;
-                });
+                themeService.toggleTheme();
               },
               icon: Icon(
-                _isDarkTheme ? Icons.wb_sunny : Icons.nights_stay,
+                themeService.isDarkTheme ? Icons.wb_sunny : Icons.nights_stay,
                 color: Colors.white,
                 size: 20,
               ),
-              tooltip: _isDarkTheme ? 'Light Theme' : 'Dark Theme',
+              tooltip: themeService.isDarkTheme ? 'Light Theme' : 'Dark Theme',
               padding: const EdgeInsets.all(8),
             ),
           ),
@@ -722,7 +722,8 @@ class _TradingPageState extends State<TradingPage> {
     );
   }
   
-  Widget _buildTradingPanel() {
+  Widget _buildTradingPanel(ThemeService themeService) {
+    final _isDarkTheme = themeService.isDarkTheme;
     return Container(
       padding: const EdgeInsets.all(20),
       decoration: BoxDecoration(
@@ -1055,7 +1056,8 @@ class _TradingPageState extends State<TradingPage> {
     );
   }
 
-  Widget _buildAssetSection() {
+  Widget _buildAssetSection(ThemeService themeService) {
+    final _isDarkTheme = themeService.isDarkTheme;
     return Container(
       padding: const EdgeInsets.all(20),
       decoration: BoxDecoration(
@@ -1439,7 +1441,8 @@ class _TradingPageState extends State<TradingPage> {
     );
   }
 
-  Widget _buildChartSection() {
+  Widget _buildChartSection(ThemeService themeService) {
+    final _isDarkTheme = themeService.isDarkTheme;
     return Container(
       padding: const EdgeInsets.all(20),
       decoration: BoxDecoration(
@@ -1509,7 +1512,8 @@ class _TradingPageState extends State<TradingPage> {
     );
   }
 
-  Widget _buildActivitySection() {
+  Widget _buildActivitySection(ThemeService themeService) {
+    final _isDarkTheme = themeService.isDarkTheme;
     return Container(
       padding: const EdgeInsets.all(20),
       decoration: BoxDecoration(

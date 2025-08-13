@@ -6,6 +6,7 @@ import 'screens/portfolio_page.dart';
 import 'screens/login_page.dart';
 import 'services/fix_dictionary_parser.dart';
 import 'services/auth_service.dart';
+import 'services/theme_service.dart';
 import 'models/fix_definitions.dart';
 import 'config/environment_config.dart';
 
@@ -21,6 +22,7 @@ class MyApp extends StatelessWidget {
     return MultiProvider(
       providers: [
         ChangeNotifierProvider.value(value: AuthService()),
+        ChangeNotifierProvider(create: (_) => ThemeService()),
       ],
       child: MaterialApp(
         title: 'mini Broker V1.0',
