@@ -290,7 +290,7 @@ class _PortfolioPageState extends State<PortfolioPage> {
           
           const SizedBox(width: 16),
           
-          // FIX Connection Status Indicator (same size as FIX Client button)
+          // FIX Connection Status Indicator (fixed size, clickable)
           StreamBuilder<bool>(
             stream: FixClientService.instance.connectionStatusStream,
             initialData: FixClientService.instance.isConnected,
@@ -316,32 +316,67 @@ class _PortfolioPageState extends State<PortfolioPage> {
                     statusIcon = Icons.sync;
                   } else {
                     statusText = 'FIX: Disconnected';
-                    statusColor = Colors.grey;
-                    statusIcon = Icons.cloud_off;
+                    statusColor = Colors.red;
+                    statusIcon = Icons.cancel;
                   }
                   
-                  return Container(
-                    height: 32, // Same height as FIX Client button
-                    padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 6),
-                    decoration: BoxDecoration(
-                      color: statusColor.withOpacity(0.1),
-                      borderRadius: BorderRadius.circular(6),
-                      border: Border.all(color: statusColor, width: 1),
-                    ),
-                    child: Row(
-                      mainAxisSize: MainAxisSize.min,
-                      children: [
-                        Icon(statusIcon, size: 14, color: statusColor),
-                        const SizedBox(width: 6),
-                        Text(
-                          statusText,
-                          style: TextStyle(
-                            fontSize: 12,
-                            fontWeight: FontWeight.w600,
-                            color: statusColor,
-                          ),
+                  return MouseRegion(
+                    cursor: SystemMouseCursors.click,
+                    child: GestureDetector(
+                      onTap: () {
+                        try {
+                          // Get the current FixDictionaryProvider to pass it to FIXClientPage
+                          final dictionaryProvider = Provider.of<FixDictionaryProvider>(context, listen: false);
+                          
+                          Navigator.of(context).push(
+                            PageRouteBuilder(
+                              pageBuilder: (context, animation, secondaryAnimation) => ChangeNotifierProvider.value(
+                                value: dictionaryProvider,
+                                child: const FIXClientPage(),
+                              ),
+                              transitionDuration: Duration.zero,
+                              reverseTransitionDuration: Duration.zero,
+                            ),
+                          );
+                        } catch (e) {
+                          print('Error accessing FixDictionaryProvider: $e');
+                          // Fallback: navigate without the provider
+                          Navigator.of(context).push(
+                            PageRouteBuilder(
+                              pageBuilder: (context, animation, secondaryAnimation) => const FIXClientPage(),
+                              transitionDuration: Duration.zero,
+                              reverseTransitionDuration: Duration.zero,
+                            ),
+                          );
+                        }
+                      },
+                      child: Container(
+                        width: 160, // Increased width to accommodate "FIX: Disconnected"
+                        height: 32, // Same height as FIX Client button
+                        padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 6),
+                        decoration: BoxDecoration(
+                          color: statusColor.withOpacity(0.1),
+                          borderRadius: BorderRadius.circular(6),
+                          border: Border.all(color: statusColor, width: 1),
                         ),
-                      ],
+                        child: Row(
+                          mainAxisSize: MainAxisSize.min,
+                          children: [
+                            Icon(statusIcon, size: 14, color: statusColor),
+                            const SizedBox(width: 6),
+                            Expanded(
+                              child: Text(
+                                statusText,
+                                style: TextStyle(
+                                  fontSize: 12,
+                                  fontWeight: FontWeight.w600,
+                                  color: statusColor,
+                                ),
+                              ),
+                            ),
+                          ],
+                        ),
+                      ),
                     ),
                   );
                 },
@@ -363,19 +398,22 @@ class _PortfolioPageState extends State<PortfolioPage> {
               mainAxisSize: MainAxisSize.min,
               children: [
                 // Portfolio Button (current page)
-                Container(
-                  height: 32,
-                  padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 6),
-                  decoration: BoxDecoration(
-                    color: Colors.white,
-                    borderRadius: BorderRadius.circular(6),
-                  ),
-                  child: const Text(
-                    'Portfolio',
-                    style: TextStyle(
-                      fontSize: 12,
-                      fontWeight: FontWeight.w600,
-                      color: Color(0xFF1a1754),
+                MouseRegion(
+                  cursor: SystemMouseCursors.click,
+                  child: Container(
+                    height: 32,
+                    padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 6),
+                    decoration: BoxDecoration(
+                      color: Colors.white,
+                      borderRadius: BorderRadius.circular(6),
+                    ),
+                    child: const Text(
+                      'Portfolio',
+                      style: TextStyle(
+                        fontSize: 12,
+                        fontWeight: FontWeight.w600,
+                        color: Color(0xFF1a1754),
+                      ),
                     ),
                   ),
                 ),
@@ -383,78 +421,32 @@ class _PortfolioPageState extends State<PortfolioPage> {
                 const SizedBox(width: 8),
                 
                 // Trading Button
-                GestureDetector(
-                  onTap: () {
-                    Navigator.of(context).push(
-                      PageRouteBuilder(
-                        pageBuilder: (context, animation, secondaryAnimation) => const TradingPage(),
-                        transitionDuration: Duration.zero,
-                        reverseTransitionDuration: Duration.zero,
-                      ),
-                    );
-                  },
-                  child: Container(
-                    height: 32,
-                    padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 6),
-                    decoration: BoxDecoration(
-                      color: Colors.transparent,
-                      borderRadius: BorderRadius.circular(6),
-                    ),
-                    child: const Text(
-                      'Trading',
-                      style: TextStyle(
-                        fontSize: 12,
-                        fontWeight: FontWeight.w600,
-                        color: Colors.white,
-                      ),
-                    ),
-                  ),
-                ),
-                
-                const SizedBox(width: 8),
-                
-                // FIX Client Button
-                GestureDetector(
-                  onTap: () {
-                    try {
-                      // Get the current FixDictionaryProvider to pass it to FIXClientPage
-                      final dictionaryProvider = Provider.of<FixDictionaryProvider>(context, listen: false);
-                      
+                MouseRegion(
+                  cursor: SystemMouseCursors.click,
+                  child: GestureDetector(
+                    onTap: () {
                       Navigator.of(context).push(
                         PageRouteBuilder(
-                          pageBuilder: (context, animation, secondaryAnimation) => ChangeNotifierProvider.value(
-                            value: dictionaryProvider,
-                            child: const FIXClientPage(),
-                          ),
+                          pageBuilder: (context, animation, secondaryAnimation) => const TradingPage(),
                           transitionDuration: Duration.zero,
                           reverseTransitionDuration: Duration.zero,
                         ),
                       );
-                    } catch (e) {
-                      print('Error accessing FixDictionaryProvider: $e');
-                      // Fallback: navigate without the provider
-                      Navigator.of(context).push(
-                        PageRouteBuilder(
-                          pageBuilder: (context, animation, secondaryAnimation) => const FIXClientPage(),
-                          transitionDuration: Duration.zero,
-                          reverseTransitionDuration: Duration.zero,
+                    },
+                    child: Container(
+                      height: 32,
+                      padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 6),
+                      decoration: BoxDecoration(
+                        color: Colors.transparent,
+                        borderRadius: BorderRadius.circular(6),
+                      ),
+                      child: const Text(
+                        'Trading',
+                        style: TextStyle(
+                          fontSize: 12,
+                          fontWeight: FontWeight.w600,
+                          color: Colors.white,
                         ),
-                      );
-                    }
-                  },
-                  child: Container(
-                    height: 32,
-                    padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 6),
-                    decoration: BoxDecoration(
-                      color: Colors.transparent,
-                      borderRadius: BorderRadius.circular(6),
-                    ),
-                    child: const Text(
-                      'FIX Client',
-                      style: TextStyle(
-                        fontSize: 12,
-                        fontWeight: FontWeight.w600,
-                        color: Colors.white,
                       ),
                     ),
                   ),
@@ -507,20 +499,24 @@ class _PortfolioPageState extends State<PortfolioPage> {
           
           const SizedBox(width: 16),
           
-          // Theme toggle button
-          IconButton(
-            onPressed: () {
-              setState(() {
-                _isDarkTheme = !_isDarkTheme;
-              });
-            },
-            icon: Icon(
-              _isDarkTheme ? Icons.wb_sunny : Icons.nights_stay,
-              color: Colors.white,
-              size: 20,
+          // Theme toggle button (centered)
+          Container(
+            width: 36,
+            alignment: Alignment.center,
+            child: IconButton(
+              onPressed: () {
+                setState(() {
+                  _isDarkTheme = !_isDarkTheme;
+                });
+              },
+              icon: Icon(
+                _isDarkTheme ? Icons.wb_sunny : Icons.nights_stay,
+                color: Colors.white,
+                size: 20,
+              ),
+              tooltip: _isDarkTheme ? 'Light Theme' : 'Dark Theme',
+              padding: const EdgeInsets.all(8),
             ),
-            tooltip: _isDarkTheme ? 'Light Theme' : 'Dark Theme',
-            padding: const EdgeInsets.all(8),
           ),
           
           const SizedBox(width: 8),
