@@ -447,7 +447,7 @@ class _TradingPageState extends State<TradingPage> {
           
           const SizedBox(width: 16),
           
-          // FIX Connection Status Indicator (fixed size, clickable)
+          // FIX Connection Status Indicator (admin-only clickable)
           StreamBuilder<bool>(
             stream: FixClientService.instance.connectionStatusStream,
             initialData: FixClientService.instance.isConnected,
@@ -477,65 +477,76 @@ class _TradingPageState extends State<TradingPage> {
                     statusIcon = Icons.cancel;
                   }
                   
-                  return MouseRegion(
-                    cursor: SystemMouseCursors.click,
-                    child: GestureDetector(
-                      onTap: () {
-                        try {
-                          // Get the current FixDictionaryProvider to pass it to FIXClientPage
-                          final dictionaryProvider = Provider.of<FixDictionaryProvider>(context, listen: false);
-                          
-                          Navigator.of(context).push(
-                            PageRouteBuilder(
-                              pageBuilder: (context, animation, secondaryAnimation) => ChangeNotifierProvider.value(
-                                value: dictionaryProvider,
-                                child: const FIXClientPage(),
-                              ),
-                              transitionDuration: Duration.zero,
-                              reverseTransitionDuration: Duration.zero,
+                  // Check if current user is admin
+                  final isAdmin = authService.username.toLowerCase() == 'admin';
+                  
+                  Widget statusWidget = Container(
+                    width: 160,
+                    height: 32,
+                    padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 6),
+                    decoration: BoxDecoration(
+                      color: statusColor.withOpacity(0.1),
+                      borderRadius: BorderRadius.circular(6),
+                      border: Border.all(color: statusColor, width: 1),
+                    ),
+                    child: Row(
+                      mainAxisSize: MainAxisSize.min,
+                      children: [
+                        Icon(statusIcon, size: 14, color: statusColor),
+                        const SizedBox(width: 6),
+                        Expanded(
+                          child: Text(
+                            statusText,
+                            style: TextStyle(
+                              fontSize: 12,
+                              fontWeight: FontWeight.w600,
+                              color: statusColor,
                             ),
-                          );
-                        } catch (e) {
-                          print('Error accessing FixDictionaryProvider: $e');
-                          // Fallback: navigate without the provider
-                          Navigator.of(context).push(
-                            PageRouteBuilder(
-                              pageBuilder: (context, animation, secondaryAnimation) => const FIXClientPage(),
-                              transitionDuration: Duration.zero,
-                              reverseTransitionDuration: Duration.zero,
-                            ),
-                          );
-                        }
-                      },
-                      child: Container(
-                        width: 160, // Increased width to accommodate "FIX: Disconnected"
-                        height: 32, // Same height as FIX Client button
-                        padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 6),
-                        decoration: BoxDecoration(
-                          color: statusColor.withOpacity(0.1),
-                          borderRadius: BorderRadius.circular(6),
-                          border: Border.all(color: statusColor, width: 1),
+                          ),
                         ),
-                        child: Row(
-                          mainAxisSize: MainAxisSize.min,
-                          children: [
-                            Icon(statusIcon, size: 14, color: statusColor),
-                            const SizedBox(width: 6),
-                            Expanded(
-                              child: Text(
-                                statusText,
-                                style: TextStyle(
-                                  fontSize: 12,
-                                  fontWeight: FontWeight.w600,
-                                  color: statusColor,
-                                ),
-                              ),
-                            ),
-                          ],
-                        ),
-                      ),
+                      ],
                     ),
                   );
+                  
+                  // Only make it clickable for admin users
+                  if (isAdmin) {
+                    return MouseRegion(
+                      cursor: SystemMouseCursors.click,
+                      child: GestureDetector(
+                        onTap: () {
+                          try {
+                            // Get the current FixDictionaryProvider to pass it to FIXClientPage
+                            final dictionaryProvider = Provider.of<FixDictionaryProvider>(context, listen: false);
+                            
+                            Navigator.of(context).push(
+                              PageRouteBuilder(
+                                pageBuilder: (context, animation, secondaryAnimation) => ChangeNotifierProvider.value(
+                                  value: dictionaryProvider,
+                                  child: const FIXClientPage(),
+                                ),
+                                transitionDuration: Duration.zero,
+                                reverseTransitionDuration: Duration.zero,
+                              ),
+                            );
+                          } catch (e) {
+                            print('Error accessing FixDictionaryProvider: $e');
+                            // Fallback: navigate without the provider
+                            Navigator.of(context).push(
+                              PageRouteBuilder(
+                                pageBuilder: (context, animation, secondaryAnimation) => const FIXClientPage(),
+                                transitionDuration: Duration.zero,
+                                reverseTransitionDuration: Duration.zero,
+                              ),
+                            );
+                          }
+                        },
+                        child: statusWidget,
+                      ),
+                    );
+                  } else {
+                    // For non-admin users, return the status as non-clickable text
+                    return statusWidget;
+                  }
                 },
               );
             },
