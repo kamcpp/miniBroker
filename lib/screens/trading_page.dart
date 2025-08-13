@@ -1240,7 +1240,7 @@ class _TradingPageState extends State<TradingPage> {
                                         child: ClipRRect(
                                           borderRadius: BorderRadius.circular(12),
                                           child: Opacity(
-                                            opacity: 0.4, // Fade the cover image
+                                            opacity: _isDarkTheme ? 0.4 : 0.2, // More faded in light theme
                                             child: asset['coverAddress'] != null && asset['coverAddress'].isNotEmpty
                                                 ? Image.network(
                                                     asset['coverAddress'],
@@ -1284,10 +1284,15 @@ class _TradingPageState extends State<TradingPage> {
                                             gradient: LinearGradient(
                                               begin: Alignment.topCenter,
                                               end: Alignment.bottomCenter,
-                                              colors: [
-                                                Colors.black.withOpacity(0.3),
-                                                Colors.black.withOpacity(0.7),
-                                              ],
+                                              colors: _isDarkTheme 
+                                                ? [
+                                                    Colors.black.withOpacity(0.3),
+                                                    Colors.black.withOpacity(0.7),
+                                                  ]
+                                                : [
+                                                    Colors.white.withOpacity(0.1),
+                                                    Colors.black.withOpacity(0.3),
+                                                  ],
                                             ),
                                           ),
                                         ),
