@@ -40,6 +40,46 @@ class DatabaseHelper {
         last_login TEXT
       )
     ''');
+    
+    // Create default admin user
+    await _createDefaultAdminUser(db);
+  }
+
+  // Create the default admin user that cannot be deleted
+  Future<void> _createDefaultAdminUser(Database db) async {
+    try {
+      final hashedPassword = _hashPassword('111111');
+      
+      await db.insert(
+        'users',
+        {
+          'username': 'admin',
+          'password': hashedPassword,
+          'created_at': DateTime.now().toIso8601String(),
+        },
+        conflictAlgorithm: ConflictAlgorithm.ignore, // Ignore if admin already exists
+      );
+      
+      print('✅ Default admin user created/verified');
+    } catch (e) {
+      print('Error creating default admin user: $e');
+    }
+  }
+
+  // Ensure admin user exists (call this on app startup)
+  Future<void> ensureAdminUserExists() async {
+    try {
+      final db = await database;
+      
+      // Check if admin user exists
+      final adminExists = await isUsernameExists('admin');
+      
+      if (!adminExists) {
+        await _createDefaultAdminUser(db);
+      }
+    } catch (e) {
+      print('Error ensuring admin user exists: $e');
+    }
   }
 
   // Hash password using SHA-256
@@ -148,9 +188,15 @@ class DatabaseHelper {
     }
   }
 
-  // Delete user
+  // Delete user (prevents deletion of admin user)
   Future<bool> deleteUser(String username) async {
     try {
+      // Prevent deletion of admin user
+      if (username.toLowerCase().trim() == 'admin') {
+        print('❌ Cannot delete admin user - admin user is protected');
+        return false;
+      }
+      
       final db = await database;
       final result = await db.delete(
         'users',
@@ -163,6 +209,11 @@ class DatabaseHelper {
       print('Error deleting user: $e');
       return false;
     }
+  }
+
+  // Check if user is the protected admin user
+  bool isAdminUser(String username) {
+    return username.toLowerCase().trim() == 'admin';
   }
 
   // Close database

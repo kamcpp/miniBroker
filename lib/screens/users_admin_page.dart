@@ -39,6 +39,17 @@ class _UsersAdminPageState extends State<UsersAdminPage> {
   }
 
   Future<void> _deleteUser(String username) async {
+    // Check if trying to delete admin user
+    if (_databaseHelper.isAdminUser(username)) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(
+          content: Text('❌ Cannot delete admin user - admin user is protected'),
+          backgroundColor: Colors.red,
+        ),
+      );
+      return;
+    }
+
     final confirmed = await showDialog<bool>(
       context: context,
       builder: (context) => AlertDialog(
@@ -126,9 +137,29 @@ class _UsersAdminPageState extends State<UsersAdminPage> {
                             ),
                           ),
                         ),
-                        title: Text(
-                          user['username'] ?? 'Unknown',
-                          style: const TextStyle(fontWeight: FontWeight.bold),
+                        title: Row(
+                          children: [
+                            Text(
+                              user['username'] ?? 'Unknown',
+                              style: const TextStyle(fontWeight: FontWeight.bold),
+                            ),
+                            if (_databaseHelper.isAdminUser(user['username'] ?? '')) ...[
+                              const SizedBox(width: 8),
+                              const Icon(
+                                Icons.admin_panel_settings,
+                                color: Colors.amber,
+                                size: 20,
+                              ),
+                              const Text(
+                                ' (Admin)',
+                                style: TextStyle(
+                                  color: Colors.amber,
+                                  fontWeight: FontWeight.w500,
+                                  fontSize: 12,
+                                ),
+                              ),
+                            ],
+                          ],
                         ),
                         subtitle: Column(
                           crossAxisAlignment: CrossAxisAlignment.start,
@@ -142,10 +173,18 @@ class _UsersAdminPageState extends State<UsersAdminPage> {
                               const Text('Last Login: Never'),
                           ],
                         ),
-                        trailing: IconButton(
-                          icon: const Icon(Icons.delete, color: Colors.red),
-                          onPressed: () => _deleteUser(user['username']),
-                        ),
+                        trailing: _databaseHelper.isAdminUser(user['username'] ?? '')
+                            ? const Tooltip(
+                                message: 'Admin user cannot be deleted',
+                                child: Icon(
+                                  Icons.shield,
+                                  color: Colors.amber,
+                                ),
+                              )
+                            : IconButton(
+                                icon: const Icon(Icons.delete, color: Colors.red),
+                                onPressed: () => _deleteUser(user['username']),
+                              ),
                         isThreeLine: true,
                       ),
                     );
