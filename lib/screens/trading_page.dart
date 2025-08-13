@@ -21,7 +21,7 @@ class TradingPage extends StatefulWidget {
 class _TradingPageState extends State<TradingPage> {
   bool _isDarkTheme = true;
   String _selectedSymbol = '';  // Will be set when assets are loaded
-  String _orderType = 'Market';
+  String _orderType = 'Limit';
   bool _isBuySelected = true;
   final TextEditingController _quantityController = TextEditingController();
   final TextEditingController _priceController = TextEditingController();
