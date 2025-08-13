@@ -155,4 +155,41 @@ class AuthService extends ChangeNotifier {
     _username = '';
     notifyListeners();
   }
+
+  // Update current user's password
+  Future<bool> updatePassword(String newPassword) async {
+    try {
+      if (!_isLoggedIn || _username.isEmpty) {
+        return false;
+      }
+
+      final success = await _databaseHelper.updateUserPassword(_username, newPassword);
+      return success;
+    } catch (e) {
+      print('Error updating password: $e');
+      return false;
+    }
+  }
+
+  // Update current user's username
+  Future<bool> updateUsername(String newUsername) async {
+    try {
+      if (!_isLoggedIn || _username.isEmpty) {
+        return false;
+      }
+
+      final success = await _databaseHelper.updateUsername(_username, newUsername);
+      if (success) {
+        // Update the stored username in preferences and local state
+        final prefs = await SharedPreferences.getInstance();
+        await prefs.setString('username', newUsername.toLowerCase().trim());
+        _username = newUsername.toLowerCase().trim();
+        notifyListeners();
+      }
+      return success;
+    } catch (e) {
+      print('Error updating username: $e');
+      return false;
+    }
+  }
 }

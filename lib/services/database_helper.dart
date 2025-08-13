@@ -216,6 +216,57 @@ class DatabaseHelper {
     return username.toLowerCase().trim() == 'admin';
   }
 
+  // Update user password
+  Future<bool> updateUserPassword(String username, String newPassword) async {
+    try {
+      final db = await database;
+      final hashedPassword = _hashPassword(newPassword);
+      
+      final result = await db.update(
+        'users',
+        {'password': hashedPassword},
+        where: 'username = ?',
+        whereArgs: [username.toLowerCase().trim()],
+      );
+      
+      return result > 0;
+    } catch (e) {
+      print('Error updating user password: $e');
+      return false;
+    }
+  }
+
+  // Update username (if not admin)
+  Future<bool> updateUsername(String oldUsername, String newUsername) async {
+    try {
+      // Prevent updating admin username
+      if (isAdminUser(oldUsername)) {
+        print('❌ Cannot update admin username');
+        return false;
+      }
+
+      // Check if new username already exists
+      final exists = await isUsernameExists(newUsername);
+      if (exists) {
+        print('❌ Username already exists');
+        return false;
+      }
+
+      final db = await database;
+      final result = await db.update(
+        'users',
+        {'username': newUsername.toLowerCase().trim()},
+        where: 'username = ?',
+        whereArgs: [oldUsername.toLowerCase().trim()],
+      );
+      
+      return result > 0;
+    } catch (e) {
+      print('Error updating username: $e');
+      return false;
+    }
+  }
+
   // Close database
   Future<void> close() async {
     final db = await database;
