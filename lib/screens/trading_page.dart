@@ -12,6 +12,7 @@ import '../main.dart';
 import 'fix_client_page.dart';
 import 'portfolio_page.dart';
 import 'profile_page.dart';
+import 'users_admin_page.dart';
 
 class TradingPage extends StatefulWidget {
   const TradingPage({super.key});
@@ -636,20 +637,40 @@ class _TradingPageState extends State<TradingPage> {
                     builder: (context) => const ProfilePage(),
                   ),
                 );
+              } else if (value == 'users') {
+                Navigator.of(context).push(
+                  MaterialPageRoute(
+                    builder: (context) => const UsersAdminPage(),
+                  ),
+                );
               }
             },
-            itemBuilder: (BuildContext context) => [
-              const PopupMenuItem<String>(
-                value: 'profile',
-                child: Row(
-                  children: [
-                    Icon(Icons.person, size: 18),
-                    SizedBox(width: 8),
-                    Text('Profile'),
-                  ],
+            itemBuilder: (BuildContext context) {
+              final isAdmin = authService.username.toLowerCase() == 'admin';
+              return [
+                const PopupMenuItem<String>(
+                  value: 'profile',
+                  child: Row(
+                    children: [
+                      Icon(Icons.person, size: 18),
+                      SizedBox(width: 8),
+                      Text('Profile'),
+                    ],
+                  ),
                 ),
-              ),
-            ],
+                if (isAdmin)
+                  const PopupMenuItem<String>(
+                    value: 'users',
+                    child: Row(
+                      children: [
+                        Icon(Icons.people, size: 18),
+                        SizedBox(width: 8),
+                        Text('View Users'),
+                      ],
+                    ),
+                  ),
+              ];
+            },
             child: Row(
               mainAxisSize: MainAxisSize.min,
               children: [

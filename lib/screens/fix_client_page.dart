@@ -547,34 +547,6 @@ class _FIXClientPageState extends State<FIXClientPage> {
       appBar: AppBar(
         backgroundColor: Theme.of(context).colorScheme.inversePrimary,
         title: const Text('FIX Client'),
-        actions: [
-          PopupMenuButton<String>(
-            onSelected: (value) {
-              if (value == 'users') {
-                Navigator.push(
-                  context,
-                  PageRouteBuilder(
-                    pageBuilder: (context, animation, secondaryAnimation) => const UsersAdminPage(),
-                    transitionDuration: Duration.zero,
-                    reverseTransitionDuration: Duration.zero,
-                  ),
-                );
-              }
-            },
-            itemBuilder: (BuildContext context) => [
-              const PopupMenuItem<String>(
-                value: 'users',
-                child: Row(
-                  children: [
-                    Icon(Icons.people),
-                    SizedBox(width: 8),
-                    Text('View Users'),
-                  ],
-                ),
-              ),
-            ],
-          ),
-        ],
       ),
       body: Scrollbar(
         thumbVisibility: true,
