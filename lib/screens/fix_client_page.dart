@@ -4,6 +4,7 @@ import 'package:flutter/services.dart';
 import 'package:provider/provider.dart';
 import '../config/environment_config.dart';
 import '../main.dart';
+import '../models/fix_definitions.dart';
 import '../services/fix_client_service.dart';
 import '../services/fix_message_service.dart';
 import '../services/auto_connect_service.dart';
@@ -521,7 +522,26 @@ class _FIXClientPageState extends State<FIXClientPage> {
   @override
   Widget build(BuildContext context) {
     final configs = EnvironmentConfig.getConfigs();
-    final dictionaryProvider = Provider.of<FixDictionaryProvider>(context);
+    
+    // Safely access FixDictionaryProvider with fallback
+    FixDictionaryProvider dictionaryProvider;
+    try {
+      dictionaryProvider = Provider.of<FixDictionaryProvider>(context, listen: false);
+    } catch (e) {
+      print('Warning: FixDictionaryProvider not available in context: $e');
+      // Create a fallback provider with basic message definitions
+      final basicDefinitions = <String, FixMessageDefinition>{
+        'A': FixMessageDefinition(msgType: 'A', name: 'Logon', msgCat: 'admin', fields: []),
+        'c': FixMessageDefinition(msgType: 'c', name: 'Security Definition Request', msgCat: 'app', fields: []),
+        'D': FixMessageDefinition(msgType: 'D', name: 'New Order Single', msgCat: 'app', fields: []),
+        'F': FixMessageDefinition(msgType: 'F', name: 'Order Cancel Request', msgCat: 'app', fields: []),
+        '5': FixMessageDefinition(msgType: '5', name: 'Logout', msgCat: 'admin', fields: []),
+        '0': FixMessageDefinition(msgType: '0', name: 'Heartbeat', msgCat: 'admin', fields: []),
+        '1': FixMessageDefinition(msgType: '1', name: 'Test Request', msgCat: 'admin', fields: []),
+        '8': FixMessageDefinition(msgType: '8', name: 'Execution Report', msgCat: 'app', fields: []),
+      };
+      dictionaryProvider = FixDictionaryProvider(basicDefinitions);
+    }
     
     return Scaffold(
       appBar: AppBar(
@@ -1536,14 +1556,31 @@ class _FIXClientPageState extends State<FIXClientPage> {
   }
 
   void _navigateToMessage(BuildContext context, String msgType, Widget page) {
-    // Capture the Provider value before navigation
-    final dictionaryProvider = Provider.of<FixDictionaryProvider>(context, listen: false);
+    // Safely capture the Provider value before navigation
+    FixDictionaryProvider? dictionaryProvider;
+    try {
+      dictionaryProvider = Provider.of<FixDictionaryProvider>(context, listen: false);
+    } catch (e) {
+      print('Warning: FixDictionaryProvider not available for navigation: $e');
+      // Create a fallback provider with basic message definitions
+      final basicDefinitions = <String, FixMessageDefinition>{
+        'A': FixMessageDefinition(msgType: 'A', name: 'Logon', msgCat: 'admin', fields: []),
+        'c': FixMessageDefinition(msgType: 'c', name: 'Security Definition Request', msgCat: 'app', fields: []),
+        'D': FixMessageDefinition(msgType: 'D', name: 'New Order Single', msgCat: 'app', fields: []),
+        'F': FixMessageDefinition(msgType: 'F', name: 'Order Cancel Request', msgCat: 'app', fields: []),
+        '5': FixMessageDefinition(msgType: '5', name: 'Logout', msgCat: 'admin', fields: []),
+        '0': FixMessageDefinition(msgType: '0', name: 'Heartbeat', msgCat: 'admin', fields: []),
+        '1': FixMessageDefinition(msgType: '1', name: 'Test Request', msgCat: 'admin', fields: []),
+        '8': FixMessageDefinition(msgType: '8', name: 'Execution Report', msgCat: 'app', fields: []),
+      };
+      dictionaryProvider = FixDictionaryProvider(basicDefinitions);
+    }
     
     Navigator.push(
       context,
       PageRouteBuilder(
         pageBuilder: (context, animation, secondaryAnimation) => ChangeNotifierProvider.value(
-          value: dictionaryProvider,
+          value: dictionaryProvider!,
           child: page,
         ),
         transitionDuration: Duration.zero,

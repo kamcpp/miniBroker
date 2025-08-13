@@ -29,6 +29,8 @@ class _TradingPageState extends State<TradingPage> {
   
   // Message stream subscription
   StreamSubscription<String>? _messageSubscription;
+  StreamSubscription<bool>? _connectionStatusSubscription;
+  StreamSubscription<bool>? _logonStatusSubscription;
   bool _hasRequestedSecurityDefinitions = false;
   Timer? _securityRequestTimeout;
   
@@ -39,10 +41,15 @@ class _TradingPageState extends State<TradingPage> {
     _listenToConnectionStatus();
     // Listen for FIX messages to handle Security Definition Responses
     _listenToFixMessages();
+    
+    // If we're already logged on when this widget is created, fetch pairs immediately
+    if (FixClientService.instance.isLoggedOn && _assets.isEmpty) {
+      _fetchPairsFromAPI();
+    }
   }
   
   void _listenToConnectionStatus() {
-    FixClientService.instance.connectionStatusStream.listen((isConnected) {
+    _connectionStatusSubscription = FixClientService.instance.connectionStatusStream.listen((isConnected) {
       if (mounted) {
         if (isConnected) {
           ScaffoldMessenger.of(context).showSnackBar(
@@ -67,7 +74,7 @@ class _TradingPageState extends State<TradingPage> {
       }
     });
     
-    FixClientService.instance.logonStatusStream.listen((isLoggedOn) {
+    _logonStatusSubscription = FixClientService.instance.logonStatusStream.listen((isLoggedOn) {
       if (mounted && isLoggedOn) {
         ScaffoldMessenger.of(context).showSnackBar(
           const SnackBar(
@@ -95,8 +102,9 @@ class _TradingPageState extends State<TradingPage> {
   }
   
   Future<void> _fetchPairsFromAPI() async {
-    if (_hasRequestedSecurityDefinitions) {
-      return; // Already requested
+    // Only skip if we already have data AND we've already requested it
+    if (_hasRequestedSecurityDefinitions && _assets.isNotEmpty) {
+      return; // Already requested and have data
     }
     
     try {
@@ -215,6 +223,8 @@ class _TradingPageState extends State<TradingPage> {
   @override
   void dispose() {
     _messageSubscription?.cancel();
+    _connectionStatusSubscription?.cancel();
+    _logonStatusSubscription?.cancel();
     _securityRequestTimeout?.cancel();
     _quantityController.dispose();
     _priceController.dispose();
@@ -438,14 +448,14 @@ class _TradingPageState extends State<TradingPage> {
           // FIX Connection Status Indicator (same size as FIX Client button)
           StreamBuilder<bool>(
             stream: FixClientService.instance.connectionStatusStream,
-            initialData: false,
+            initialData: FixClientService.instance.isConnected,
             builder: (context, snapshot) {
-              final isConnected = snapshot.data ?? false;
+              final isConnected = snapshot.data ?? FixClientService.instance.isConnected;
               return StreamBuilder<bool>(
                 stream: FixClientService.instance.logonStatusStream,
-                initialData: false,
+                initialData: FixClientService.instance.isLoggedOn,
                 builder: (context, logonSnapshot) {
-                  final isLoggedOn = logonSnapshot.data ?? false;
+                  final isLoggedOn = logonSnapshot.data ?? FixClientService.instance.isLoggedOn;
                   
                   String statusText;
                   Color statusColor;
@@ -561,19 +571,31 @@ class _TradingPageState extends State<TradingPage> {
                 // FIX Client Button
                 GestureDetector(
                   onTap: () {
-                    // Get the current FixDictionaryProvider to pass it to FIXClientPage
-                    final dictionaryProvider = Provider.of<FixDictionaryProvider>(context, listen: false);
-                    
-                    Navigator.of(context).push(
-                      PageRouteBuilder(
-                        pageBuilder: (context, animation, secondaryAnimation) => ChangeNotifierProvider.value(
-                          value: dictionaryProvider,
-                          child: const FIXClientPage(),
+                    try {
+                      // Get the current FixDictionaryProvider to pass it to FIXClientPage
+                      final dictionaryProvider = Provider.of<FixDictionaryProvider>(context, listen: false);
+                      
+                      Navigator.of(context).push(
+                        PageRouteBuilder(
+                          pageBuilder: (context, animation, secondaryAnimation) => ChangeNotifierProvider.value(
+                            value: dictionaryProvider,
+                            child: const FIXClientPage(),
+                          ),
+                          transitionDuration: Duration.zero,
+                          reverseTransitionDuration: Duration.zero,
                         ),
-                        transitionDuration: Duration.zero,
-                        reverseTransitionDuration: Duration.zero,
-                      ),
-                    );
+                      );
+                    } catch (e) {
+                      print('Error accessing FixDictionaryProvider: $e');
+                      // Fallback: navigate without the provider
+                      Navigator.of(context).push(
+                        PageRouteBuilder(
+                          pageBuilder: (context, animation, secondaryAnimation) => const FIXClientPage(),
+                          transitionDuration: Duration.zero,
+                          reverseTransitionDuration: Duration.zero,
+                        ),
+                      );
+                    }
                   },
                   child: Container(
                     height: 32,
@@ -670,7 +692,26 @@ class _TradingPageState extends State<TradingPage> {
           // Logout icon button
           IconButton(
             onPressed: () async {
-              await authService.logout();
+              try {
+                print('🚪 Trading page logout initiated...');
+                await authService.logout();
+                print('✅ Logout completed, should redirect to login');
+                
+                // Navigate back to root to ensure proper app state reset
+                if (mounted) {
+                  Navigator.of(context).popUntil((route) => route.isFirst);
+                }
+              } catch (e) {
+                print('❌ Error during logout: $e');
+                if (mounted) {
+                  ScaffoldMessenger.of(context).showSnackBar(
+                    SnackBar(
+                      content: Text('Logout failed: $e'),
+                      backgroundColor: Colors.red,
+                    ),
+                  );
+                }
+              }
             },
             icon: const Icon(
               Icons.logout,
@@ -858,7 +899,7 @@ class _TradingPageState extends State<TradingPage> {
                 style: TextStyle(
                   color: _isDarkTheme ? Colors.white : Colors.black,
                 ),
-                items: ['Market', 'Limit', 'Stop']
+                items: ['Limit', 'Market']
                     .map<DropdownMenuItem<String>>((String value) {
                   return DropdownMenuItem<String>(
                     value: value,
