@@ -44,9 +44,9 @@ class _TradingPageState extends State<TradingPage> {
   bool _isDraggingRight = false;
   
   // Panel height variables for resizable horizontal sections
-  double _orderbookHeight = 150.0; // Reduced from 300.0 to 150.0 for smaller orderbook
+  double _orderbookHeight = 150.0; // Default orderbook height
   bool _isDraggingHorizontal = false;
-  double _marketOverviewHeight = 250.0; // Height for market overview section
+  double _marketOverviewHeight = 237.0; // Increased by 1.1x (215 * 1.1 = 236.5)
   bool _isDraggingMarketOverview = false; // State for market overview splitter
   
   @override
@@ -403,32 +403,47 @@ class _TradingPageState extends State<TradingPage> {
                                 
                                 // Chart and Orderbook area
                                 Expanded(
-                                  child: Column(
-                                    children: [
-                                      // Chart Section (top)
-                                      Expanded(
-                                        child: _buildChartSection(themeService),
-                                      ),
+                                  child: LayoutBuilder(
+                                    builder: (context, constraints) {
+                                      final availableHeight = constraints.maxHeight;
+                                      final minOrderbookHeight = 100.0;
+                                      final maxOrderbookHeight = availableHeight - 100; // Leave space for chart
                                       
-                                      // Horizontal Splitter between Chart and Orderbook
-                                      _buildHorizontalSplitter(
-                                        onDrag: (delta) {
-                                          setState(() {
-                                            _orderbookHeight = (_orderbookHeight - delta).clamp(minOrderbookHeight, maxOrderbookHeight);
-                                          });
-                                        },
-                                        onDragStart: () => setState(() => _isDraggingHorizontal = true),
-                                        onDragEnd: () => setState(() => _isDraggingHorizontal = false),
-                                        isDragging: _isDraggingHorizontal,
-                                        themeService: themeService,
-                                      ),
+                                      // Set equal heights for chart and orderbook by default
+                                      if (_orderbookHeight == 150.0) { // If still at default
+                                        _orderbookHeight = availableHeight / 2; // Half of available space
+                                      }
                                       
-                                      // Orderbook Section (Red area)
-                                      Container(
-                                        height: _orderbookHeight,
-                                        child: _buildOrderbookSection(themeService),
-                                      ),
-                                    ],
+                                      _orderbookHeight = _orderbookHeight.clamp(minOrderbookHeight, maxOrderbookHeight);
+                                      
+                                      return Column(
+                                        children: [
+                                          // Chart Section (top) - takes remaining space
+                                          Expanded(
+                                            child: _buildChartSection(themeService),
+                                          ),
+                                          
+                                          // Horizontal Splitter between Chart and Orderbook
+                                          _buildHorizontalSplitter(
+                                            onDrag: (delta) {
+                                              setState(() {
+                                                _orderbookHeight = (_orderbookHeight - delta).clamp(minOrderbookHeight, maxOrderbookHeight);
+                                              });
+                                            },
+                                            onDragStart: () => setState(() => _isDraggingHorizontal = true),
+                                            onDragEnd: () => setState(() => _isDraggingHorizontal = false),
+                                            isDragging: _isDraggingHorizontal,
+                                            themeService: themeService,
+                                          ),
+                                          
+                                          // Orderbook Section (Red area)
+                                          Container(
+                                            height: _orderbookHeight,
+                                            child: _buildOrderbookSection(themeService),
+                                          ),
+                                        ],
+                                      );
+                                    },
                                   ),
                                 ),
                               ],
@@ -1526,7 +1541,7 @@ class _TradingPageState extends State<TradingPage> {
                     ),
                   )
                 : SizedBox(
-                    height: 200, // Increased height for bigger square boxes (180px + margins)
+                    height: 100, // Reduced from 200 to 100 for half-size boxes
                     child: Stack(
                       children: [
                         // Main scrollable list
@@ -1540,9 +1555,9 @@ class _TradingPageState extends State<TradingPage> {
                             final isSelected = asset['symbol'] == _selectedSymbol;
                             
                             return Container(
-                              width: 162, // Decreased by 10% from 180 to 162 for better fit
-                              height: 162,
-                              margin: const EdgeInsets.only(right: 16),
+                              width: 139, // 1.2 times wider (116 * 1.2 = 139.2)
+                              height: 500, // Reduced from 1552 to 500
+                              margin: const EdgeInsets.only(right: 8), // Reduced margin
                               child: GestureDetector(
                                 onTap: () {
                                   setState(() {
@@ -1694,7 +1709,7 @@ class _TradingPageState extends State<TradingPage> {
                                                   child: Text(
                                                     asset['symbol'],
                                                     style: TextStyle(
-                                                      fontSize: asset['symbol'].length > 8 ? 14.0 : 18.0, // Smaller font for longer names
+                                                      fontSize: asset['symbol'].length > 8 ? 11.0 : 14.0, // Smaller font for longer names
                                                       fontWeight: FontWeight.bold,
                                                       color: Colors.white,
                                                     ),
@@ -1710,7 +1725,7 @@ class _TradingPageState extends State<TradingPage> {
                                             Text(
                                               asset['title'] ?? asset['name'] ?? '',
                                               style: TextStyle(
-                                                fontSize: (asset['title'] ?? asset['name'] ?? '').length > 20 ? 12.0 : 14.0, // Smaller font for longer titles
+                                                fontSize: (asset['title'] ?? asset['name'] ?? '').length > 20 ? 10.0 : 11.0, // Smaller font for longer titles
                                                 color: Colors.white,
                                                 fontWeight: FontWeight.w500,
                                               ),
@@ -1724,7 +1739,7 @@ class _TradingPageState extends State<TradingPage> {
                                             Text(
                                               asset['price'],
                                               style: const TextStyle(
-                                                fontSize: 20, // Bigger price text for 180px box
+                                                fontSize: 16, // Smaller price text
                                                 fontWeight: FontWeight.bold,
                                                 color: Colors.white,
                                               ),
@@ -1743,7 +1758,7 @@ class _TradingPageState extends State<TradingPage> {
                                               child: Text(
                                                 asset['change'],
                                                 style: TextStyle(
-                                                  fontSize: 12,
+                                                  fontSize: 10, // Smaller change text
                                                   fontWeight: FontWeight.w600,
                                                   color: asset['change'] == '-' 
                                                       ? Colors.white
@@ -1876,15 +1891,6 @@ class _TradingPageState extends State<TradingPage> {
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
-          Text(
-            '$_selectedSymbol Chart',
-            style: TextStyle(
-              fontSize: 18,
-              fontWeight: FontWeight.bold,
-              color: _isDarkTheme ? Colors.white : Colors.black,
-            ),
-          ),
-          const SizedBox(height: 16),
           Expanded(
             child: Container(
               width: double.infinity,
