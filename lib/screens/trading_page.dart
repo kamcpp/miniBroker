@@ -36,6 +36,16 @@ class _TradingPageState extends State<TradingPage> {
   bool _hasRequestedSecurityDefinitions = false;
   Timer? _securityRequestTimeout;
   
+  // Panel width variables for resizable panels
+  double _leftPanelWidth = 300.0;
+  double _rightPanelWidth = 300.0;
+  bool _isDraggingLeft = false;
+  bool _isDraggingRight = false;
+  
+  // Panel height variables for resizable horizontal sections
+  double _orderbookHeight = 300.0;
+  bool _isDraggingHorizontal = false;
+  
   @override
   void initState() {
     super.initState();
@@ -291,6 +301,18 @@ class _TradingPageState extends State<TradingPage> {
     {'type': 'BUY', 'symbol': 'AMZN', 'quantity': '25', 'price': '\$156.20', 'time': '14:15:30'},
   ];
 
+  // Orderbook data
+  final List<Map<String, dynamic>> _sellOrders = [
+    {'price': 5.7, 'quantity': 550},
+    {'price': 6.0, 'quantity': 1000},
+    {'price': 7.0, 'quantity': 100},
+  ];
+
+  final List<Map<String, dynamic>> _buyOrders = [
+    {'price': 1.0, 'quantity': 10},
+    {'price': 1.0, 'quantity': 10},
+  ];
+
   @override
   Widget build(BuildContext context) {
     final authService = Provider.of<AuthService>(context);
@@ -308,41 +330,193 @@ class _TradingPageState extends State<TradingPage> {
             
             // Main Content
             Expanded(
-              child: Row(
-                children: [
-                  // Left Panel - Trading Controls
-                  Container(
-                    width: 300,
-                    child: _buildTradingPanel(themeService),
-                  ),
+              child: LayoutBuilder(
+                builder: (context, constraints) {
+                  final maxWidth = constraints.maxWidth;
+                  final maxHeight = constraints.maxHeight;
+                  final minPanelWidth = 200.0;
+                  final minOrderbookHeight = 150.0;
+                  final maxOrderbookHeight = maxHeight - 100; // Leave space for main content
+                  final maxLeftPanelWidth = maxWidth - _rightPanelWidth - minPanelWidth - 8; // 8 for splitters
+                  final maxRightPanelWidth = maxWidth - _leftPanelWidth - minPanelWidth - 8;
                   
-                  // Middle Panel - Asset Selection and Chart
-                  Expanded(
-                    flex: 2,
-                    child: Column(
-                      children: [
-                        // Asset Selection
-                        Container(
-                          height: 250,
-                          child: _buildAssetSection(themeService),
-                        ),
-                        // Chart Section
-                        Expanded(
-                          child: _buildChartSection(themeService),
-                        ),
-                      ],
-                    ),
-                  ),
+                  // Constrain panel widths and heights
+                  _leftPanelWidth = _leftPanelWidth.clamp(minPanelWidth, maxLeftPanelWidth);
+                  _rightPanelWidth = _rightPanelWidth.clamp(minPanelWidth, maxRightPanelWidth);
+                  _orderbookHeight = _orderbookHeight.clamp(minOrderbookHeight, maxOrderbookHeight);
                   
-                  // Right Panel - Order Book & Activity
-                  Container(
-                    width: 300,
-                    child: _buildActivitySection(themeService),
-                  ),
-                ],
+                  return Column(
+                    children: [
+                      // Top section with main content
+                      Expanded(
+                        child: Row(
+                          children: [
+                            // Left Panel - Trading Controls
+                            Container(
+                              width: _leftPanelWidth,
+                              child: _buildTradingPanel(themeService),
+                            ),
+                            
+                            // Left Splitter
+                            _buildVerticalSplitter(
+                              onDrag: (delta) {
+                                setState(() {
+                                  _leftPanelWidth = (_leftPanelWidth + delta).clamp(minPanelWidth, maxLeftPanelWidth);
+                                });
+                              },
+                              onDragStart: () => setState(() => _isDraggingLeft = true),
+                              onDragEnd: () => setState(() => _isDraggingLeft = false),
+                              isDragging: _isDraggingLeft,
+                              themeService: themeService,
+                            ),
+                            
+                            // Middle Panel - Asset Selection and Chart
+                            Expanded(
+                              child: Column(
+                                children: [
+                                  // Asset Selection
+                                  Container(
+                                    height: 250,
+                                    child: _buildAssetSection(themeService),
+                                  ),
+                                  // Chart Section
+                                  Expanded(
+                                    child: _buildChartSection(themeService),
+                                  ),
+                                ],
+                              ),
+                            ),
+                            
+                            // Right Splitter
+                            _buildVerticalSplitter(
+                              onDrag: (delta) {
+                                setState(() {
+                                  _rightPanelWidth = (_rightPanelWidth - delta).clamp(minPanelWidth, maxRightPanelWidth);
+                                });
+                              },
+                              onDragStart: () => setState(() => _isDraggingRight = true),
+                              onDragEnd: () => setState(() => _isDraggingRight = false),
+                              isDragging: _isDraggingRight,
+                              themeService: themeService,
+                            ),
+                            
+                            // Right Panel - Order Book & Activity
+                            Container(
+                              width: _rightPanelWidth,
+                              child: _buildActivitySection(themeService),
+                            ),
+                          ],
+                        ),
+                      ),
+                      
+                      // Horizontal Splitter
+                      _buildHorizontalSplitter(
+                        onDrag: (delta) {
+                          setState(() {
+                            _orderbookHeight = (_orderbookHeight - delta).clamp(minOrderbookHeight, maxOrderbookHeight);
+                          });
+                        },
+                        onDragStart: () => setState(() => _isDraggingHorizontal = true),
+                        onDragEnd: () => setState(() => _isDraggingHorizontal = false),
+                        isDragging: _isDraggingHorizontal,
+                        themeService: themeService,
+                      ),
+                      
+                      // Orderbook Section at the bottom
+                      Container(
+                        height: _orderbookHeight,
+                        child: _buildOrderbookSection(themeService),
+                      ),
+                    ],
+                  );
+                },
               ),
             ),
           ],
+        ),
+      ),
+    );
+  }
+
+  Widget _buildVerticalSplitter({
+    required Function(double) onDrag,
+    required VoidCallback onDragStart,
+    required VoidCallback onDragEnd,
+    required bool isDragging,
+    required ThemeService themeService,
+  }) {
+    final _isDarkTheme = themeService.isDarkTheme;
+    
+    return GestureDetector(
+      onPanStart: (_) => onDragStart(),
+      onPanUpdate: (details) => onDrag(details.delta.dx),
+      onPanEnd: (_) => onDragEnd(),
+      child: MouseRegion(
+        cursor: SystemMouseCursors.resizeColumn,
+        child: Container(
+          width: 4, // Reduced from 10 to 4 to make it thinner
+          decoration: BoxDecoration(
+            color: isDragging 
+                ? Colors.blue.withOpacity(0.3)
+                : (_isDarkTheme ? Colors.grey[700] : Colors.grey[300]),
+            border: isDragging
+                ? Border.all(color: Colors.blue, width: 1) // Reduced border width
+                : null,
+          ),
+          child: Center(
+            child: Container(
+              width: 1, // Reduced from 2 to 1 for thinner line
+              height: double.infinity,
+              decoration: BoxDecoration(
+                color: isDragging 
+                    ? Colors.blue
+                    : (_isDarkTheme ? Colors.grey[600] : Colors.grey[400]),
+                borderRadius: BorderRadius.circular(0.5),
+              ),
+            ),
+          ),
+        ),
+      ),
+    );
+  }
+
+  Widget _buildHorizontalSplitter({
+    required Function(double) onDrag,
+    required VoidCallback onDragStart,
+    required VoidCallback onDragEnd,
+    required bool isDragging,
+    required ThemeService themeService,
+  }) {
+    final _isDarkTheme = themeService.isDarkTheme;
+    
+    return GestureDetector(
+      onPanStart: (_) => onDragStart(),
+      onPanUpdate: (details) => onDrag(details.delta.dy),
+      onPanEnd: (_) => onDragEnd(),
+      child: MouseRegion(
+        cursor: SystemMouseCursors.resizeRow,
+        child: Container(
+          height: 4, // Consistent with vertical splitter
+          decoration: BoxDecoration(
+            color: isDragging 
+                ? Colors.blue.withOpacity(0.3)
+                : (_isDarkTheme ? Colors.grey[700] : Colors.grey[300]),
+            border: isDragging
+                ? Border.all(color: Colors.blue, width: 1)
+                : null,
+          ),
+          child: Center(
+            child: Container(
+              height: 1, // Thin horizontal line
+              width: double.infinity,
+              decoration: BoxDecoration(
+                color: isDragging 
+                    ? Colors.blue
+                    : (_isDarkTheme ? Colors.grey[600] : Colors.grey[400]),
+                borderRadius: BorderRadius.circular(0.5),
+              ),
+            ),
+          ),
         ),
       ),
     );
@@ -761,15 +935,10 @@ class _TradingPageState extends State<TradingPage> {
   Widget _buildTradingPanel(ThemeService themeService) {
     final _isDarkTheme = themeService.isDarkTheme;
     return Container(
-      padding: const EdgeInsets.all(20),
+      padding: const EdgeInsets.all(16), // Reduced from 20 to 16
       decoration: BoxDecoration(
         color: _isDarkTheme ? const Color(0xFF1e1e1e) : Colors.white,
-        border: Border(
-          right: BorderSide(
-            color: _isDarkTheme ? Colors.grey[700]! : Colors.grey[300]!,
-            width: 1,
-          ),
-        ),
+        // Removed right border since we have a splitter now
       ),
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
@@ -778,17 +947,17 @@ class _TradingPageState extends State<TradingPage> {
           Text(
             'Trade',
             style: TextStyle(
-              fontSize: 20,
+              fontSize: 18, // Reduced from 20 to 18
               fontWeight: FontWeight.bold,
               color: _isDarkTheme ? Colors.white : Colors.black,
             ),
           ),
           
-          const SizedBox(height: 20),
+          const SizedBox(height: 12), // Reduced from 20 to 12
           
           // Symbol Selection
           Container(
-            padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
+            padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 6), // Reduced vertical padding from 8 to 6
             decoration: BoxDecoration(
               border: Border.all(
                 color: _isDarkTheme ? Colors.grey[600]! : Colors.grey[400]!,
@@ -832,7 +1001,7 @@ class _TradingPageState extends State<TradingPage> {
             ),
           ),
           
-          const SizedBox(height: 20),
+          const SizedBox(height: 12), // Reduced from 20 to 12
           
           // Buy/Sell Tabs
           Container(
@@ -846,7 +1015,7 @@ class _TradingPageState extends State<TradingPage> {
                   child: GestureDetector(
                     onTap: () => setState(() => _isBuySelected = true),
                     child: Container(
-                      padding: const EdgeInsets.symmetric(vertical: 12),
+                      padding: const EdgeInsets.symmetric(vertical: 10), // Reduced from 12 to 10
                       decoration: BoxDecoration(
                         color: _isBuySelected 
                             ? Colors.green 
@@ -873,7 +1042,7 @@ class _TradingPageState extends State<TradingPage> {
                   child: GestureDetector(
                     onTap: () => setState(() => _isBuySelected = false),
                     child: Container(
-                      padding: const EdgeInsets.symmetric(vertical: 12),
+                      padding: const EdgeInsets.symmetric(vertical: 10), // Reduced from 12 to 10
                       decoration: BoxDecoration(
                         color: !_isBuySelected 
                             ? Colors.red 
@@ -900,20 +1069,20 @@ class _TradingPageState extends State<TradingPage> {
             ),
           ),
           
-          const SizedBox(height: 20),
+          const SizedBox(height: 12), // Reduced from 20 to 12
           
           // Order Type
           Text(
             'Order Type',
             style: TextStyle(
-              fontSize: 14,
+              fontSize: 13, // Reduced from 14 to 13
               fontWeight: FontWeight.w500,
               color: _isDarkTheme ? Colors.grey[300] : Colors.grey[600],
             ),
           ),
-          const SizedBox(height: 8),
+          const SizedBox(height: 6), // Reduced from 8 to 6
           Container(
-            padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
+            padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 6), // Reduced vertical padding from 8 to 6
             decoration: BoxDecoration(
               border: Border.all(
                 color: _isDarkTheme ? Colors.grey[600]! : Colors.grey[400]!,
@@ -944,18 +1113,18 @@ class _TradingPageState extends State<TradingPage> {
             ),
           ),
           
-          const SizedBox(height: 16),
+          const SizedBox(height: 12), // Reduced from 16 to 12
           
           // Quantity
           Text(
             'Quantity',
             style: TextStyle(
-              fontSize: 14,
+              fontSize: 13, // Reduced from 14 to 13
               fontWeight: FontWeight.w500,
               color: _isDarkTheme ? Colors.grey[300] : Colors.grey[600],
             ),
           ),
-          const SizedBox(height: 8),
+          const SizedBox(height: 6), // Reduced from 8 to 6
           TextField(
             controller: _quantityController,
             keyboardType: TextInputType.number,
@@ -984,16 +1153,16 @@ class _TradingPageState extends State<TradingPage> {
           ),
           
           if (_orderType == 'Limit') ...[
-            const SizedBox(height: 16),
+            const SizedBox(height: 12), // Reduced from 16 to 12
             Text(
               'Price',
               style: TextStyle(
-                fontSize: 14,
+                fontSize: 13, // Reduced from 14 to 13
                 fontWeight: FontWeight.w500,
                 color: _isDarkTheme ? Colors.grey[300] : Colors.grey[600],
               ),
             ),
-            const SizedBox(height: 8),
+            const SizedBox(height: 6), // Reduced from 8 to 6
             TextField(
               controller: _priceController,
               keyboardType: TextInputType.number,
@@ -1022,7 +1191,7 @@ class _TradingPageState extends State<TradingPage> {
             ),
           ],
           
-          const SizedBox(height: 24),
+          const SizedBox(height: 16), // Reduced from 24 to 16
           
           // Place Order Button
           SizedBox(
@@ -1032,7 +1201,7 @@ class _TradingPageState extends State<TradingPage> {
               style: ElevatedButton.styleFrom(
                 backgroundColor: _isBuySelected ? Colors.green : Colors.red,
                 foregroundColor: Colors.white,
-                padding: const EdgeInsets.symmetric(vertical: 16),
+                padding: const EdgeInsets.symmetric(vertical: 12), // Reduced from 16 to 12
                 shape: RoundedRectangleBorder(
                   borderRadius: BorderRadius.circular(8),
                 ),
@@ -1040,18 +1209,18 @@ class _TradingPageState extends State<TradingPage> {
               child: Text(
                 _isBuySelected ? 'PLACE BUY ORDER' : 'PLACE SELL ORDER',
                 style: const TextStyle(
-                  fontSize: 16,
+                  fontSize: 14, // Reduced from 16 to 14
                   fontWeight: FontWeight.bold,
                 ),
               ),
             ),
           ),
           
-          const SizedBox(height: 20),
+          const SizedBox(height: 12), // Reduced from 20 to 12
           
           // Account info
           Container(
-            padding: const EdgeInsets.all(16),
+            padding: const EdgeInsets.all(12), // Reduced from 16 to 12
             decoration: BoxDecoration(
               color: _isDarkTheme ? const Color(0xFF2d2d2d) : Colors.grey[100],
               borderRadius: BorderRadius.circular(8),
@@ -1062,25 +1231,25 @@ class _TradingPageState extends State<TradingPage> {
                 Text(
                   'Account Balance',
                   style: TextStyle(
-                    fontSize: 14,
+                    fontSize: 13, // Reduced from 14 to 13
                     fontWeight: FontWeight.w500,
                     color: _isDarkTheme ? Colors.grey[300] : Colors.grey[600],
                   ),
                 ),
-                const SizedBox(height: 8),
+                const SizedBox(height: 6), // Reduced from 8 to 6
                 Text(
                   '\$125,450.00',
                   style: TextStyle(
-                    fontSize: 20,
+                    fontSize: 18, // Reduced from 20 to 18
                     fontWeight: FontWeight.bold,
                     color: _isDarkTheme ? Colors.white : Colors.black,
                   ),
                 ),
-                const SizedBox(height: 8),
+                const SizedBox(height: 6), // Reduced from 8 to 6
                 Text(
                   'Available: \$89,320.00',
                   style: TextStyle(
-                    fontSize: 12,
+                    fontSize: 11, // Reduced from 12 to 11
                     color: _isDarkTheme ? Colors.grey[400] : Colors.grey[600],
                   ),
                 ),
@@ -1559,12 +1728,7 @@ class _TradingPageState extends State<TradingPage> {
       padding: const EdgeInsets.all(20),
       decoration: BoxDecoration(
         color: _isDarkTheme ? const Color(0xFF1e1e1e) : Colors.white,
-        border: Border(
-          left: BorderSide(
-            color: _isDarkTheme ? Colors.grey[700]! : Colors.grey[300]!,
-            width: 1,
-          ),
-        ),
+        // Removed left border since we have a splitter now
       ),
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
@@ -1646,6 +1810,207 @@ class _TradingPageState extends State<TradingPage> {
                   ),
                 );
               },
+            ),
+          ),
+        ],
+      ),
+    );
+  }
+
+  Widget _buildOrderbookSection(ThemeService themeService) {
+    final _isDarkTheme = themeService.isDarkTheme;
+    return Container(
+      padding: const EdgeInsets.all(20),
+      decoration: BoxDecoration(
+        color: _isDarkTheme ? const Color(0xFF1e1e1e) : Colors.white,
+        border: Border(
+          top: BorderSide(
+            color: _isDarkTheme ? Colors.grey[700]! : Colors.grey[300]!,
+            width: 1,
+          ),
+        ),
+      ),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          Text(
+            'Orderbook',
+            style: TextStyle(
+              fontSize: 20,
+              fontWeight: FontWeight.bold,
+              color: _isDarkTheme ? Colors.white : Colors.black,
+            ),
+          ),
+          const SizedBox(height: 16),
+          Expanded(
+            child: Row(
+              children: [
+                // Sell Orders (Left side)
+                Expanded(
+                  child: Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      Text(
+                        'Sell Orders',
+                        style: TextStyle(
+                          fontSize: 18,
+                          fontWeight: FontWeight.bold,
+                          color: _isDarkTheme ? Colors.white : Colors.black,
+                        ),
+                      ),
+                      const SizedBox(height: 12),
+                      Row(
+                        children: [
+                          Expanded(
+                            child: Text(
+                              'price',
+                              style: TextStyle(
+                                fontSize: 14,
+                                color: _isDarkTheme ? Colors.grey[400] : Colors.grey[600],
+                              ),
+                            ),
+                          ),
+                          Expanded(
+                            child: Text(
+                              'Quantity',
+                              textAlign: TextAlign.right,
+                              style: TextStyle(
+                                fontSize: 14,
+                                color: _isDarkTheme ? Colors.grey[400] : Colors.grey[600],
+                              ),
+                            ),
+                          ),
+                        ],
+                      ),
+                      const SizedBox(height: 8),
+                      Container(
+                        height: 1,
+                        color: _isDarkTheme ? Colors.grey[700] : Colors.grey[300],
+                      ),
+                      const SizedBox(height: 12),
+                      Expanded(
+                        child: ListView.builder(
+                          itemCount: _sellOrders.length,
+                          itemBuilder: (context, index) {
+                            final order = _sellOrders[index];
+                            return Padding(
+                              padding: const EdgeInsets.only(bottom: 8),
+                              child: Row(
+                                children: [
+                                  Expanded(
+                                    child: Text(
+                                      order['price'].toString(),
+                                      style: const TextStyle(
+                                        fontSize: 16,
+                                        color: Colors.red,
+                                        fontWeight: FontWeight.w500,
+                                      ),
+                                    ),
+                                  ),
+                                  Expanded(
+                                    child: Text(
+                                      order['quantity'].toString(),
+                                      textAlign: TextAlign.right,
+                                      style: TextStyle(
+                                        fontSize: 16,
+                                        color: _isDarkTheme ? Colors.white : Colors.black,
+                                      ),
+                                    ),
+                                  ),
+                                ],
+                              ),
+                            );
+                          },
+                        ),
+                      ),
+                    ],
+                  ),
+                ),
+                
+                const SizedBox(width: 40),
+                
+                // Buy Orders (Right side)
+                Expanded(
+                  child: Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      Text(
+                        'Buy Orders',
+                        style: TextStyle(
+                          fontSize: 18,
+                          fontWeight: FontWeight.bold,
+                          color: _isDarkTheme ? Colors.white : Colors.black,
+                        ),
+                      ),
+                      const SizedBox(height: 12),
+                      Row(
+                        children: [
+                          Expanded(
+                            child: Text(
+                              'price',
+                              style: TextStyle(
+                                fontSize: 14,
+                                color: _isDarkTheme ? Colors.grey[400] : Colors.grey[600],
+                              ),
+                            ),
+                          ),
+                          Expanded(
+                            child: Text(
+                              'Quantity',
+                              textAlign: TextAlign.right,
+                              style: TextStyle(
+                                fontSize: 14,
+                                color: _isDarkTheme ? Colors.grey[400] : Colors.grey[600],
+                              ),
+                            ),
+                          ),
+                        ],
+                      ),
+                      const SizedBox(height: 8),
+                      Container(
+                        height: 1,
+                        color: _isDarkTheme ? Colors.grey[700] : Colors.grey[300],
+                      ),
+                      const SizedBox(height: 12),
+                      Expanded(
+                        child: ListView.builder(
+                          itemCount: _buyOrders.length,
+                          itemBuilder: (context, index) {
+                            final order = _buyOrders[index];
+                            return Padding(
+                              padding: const EdgeInsets.only(bottom: 8),
+                              child: Row(
+                                children: [
+                                  Expanded(
+                                    child: Text(
+                                      order['price'].toString(),
+                                      style: const TextStyle(
+                                        fontSize: 16,
+                                        color: Colors.green,
+                                        fontWeight: FontWeight.w500,
+                                      ),
+                                    ),
+                                  ),
+                                  Expanded(
+                                    child: Text(
+                                      order['quantity'].toString(),
+                                      textAlign: TextAlign.right,
+                                      style: TextStyle(
+                                        fontSize: 16,
+                                        color: _isDarkTheme ? Colors.white : Colors.black,
+                                      ),
+                                    ),
+                                  ),
+                                ],
+                              ),
+                            );
+                          },
+                        ),
+                      ),
+                    ],
+                  ),
+                ),
+              ],
             ),
           ),
         ],
