@@ -94,7 +94,7 @@ class _LoginPageState extends State<LoginPage> {
                   children: [
                     // Login Title
                     const Text(
-                      'Login',
+                      'Login to mini Broker',
                       style: TextStyle(
                         fontSize: 32,
                         fontWeight: FontWeight.bold,

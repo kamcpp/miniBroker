@@ -53,39 +53,13 @@ class _TradingPageState extends State<TradingPage> {
   void _listenToConnectionStatus() {
     _connectionStatusSubscription = FixClientService.instance.connectionStatusStream.listen((isConnected) {
       if (mounted) {
-        if (isConnected) {
-          ScaffoldMessenger.of(context).showSnackBar(
-            const SnackBar(
-              content: Text('✅ Connected to FIX staging environment'),
-              backgroundColor: Colors.green,
-              duration: Duration(milliseconds: 1500), // Reduced from 3 seconds to 1.5 seconds
-            ),
-          );
-        } else {
-          // Only show disconnection message if we were previously connected
-          if (FixClientService.instance.isConnected == false) {
-            ScaffoldMessenger.of(context).showSnackBar(
-              const SnackBar(
-                content: Text('⚠️ FIX connection lost'),
-                backgroundColor: Colors.orange,
-                duration: Duration(seconds: 1), // Reduced from 2 seconds to 1 second
-              ),
-            );
-          }
-        }
+        // Connection status changes are tracked but no notifications shown
+        // to reduce UI noise in the trading page
       }
     });
     
     _logonStatusSubscription = FixClientService.instance.logonStatusStream.listen((isLoggedOn) {
       if (mounted && isLoggedOn) {
-        ScaffoldMessenger.of(context).showSnackBar(
-          const SnackBar(
-            content: Text('🎉 FIX Logon successful - Ready to trade!'),
-            backgroundColor: Colors.green,
-            duration: Duration(seconds: 2), // Reduced from 4 seconds to 2 seconds
-          ),
-        );
-        
         // Automatically fetch pairs from API after successful logon
         _fetchPairsFromAPI();
       }
