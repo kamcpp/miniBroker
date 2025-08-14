@@ -44,8 +44,10 @@ class _TradingPageState extends State<TradingPage> {
   bool _isDraggingRight = false;
   
   // Panel height variables for resizable horizontal sections
-  double _orderbookHeight = 300.0;
+  double _orderbookHeight = 150.0; // Reduced from 300.0 to 150.0 for smaller orderbook
   bool _isDraggingHorizontal = false;
+  double _marketOverviewHeight = 250.0; // Height for market overview section
+  bool _isDraggingMarketOverview = false; // State for market overview splitter
   
   @override
   void initState() {
@@ -346,87 +348,112 @@ class _TradingPageState extends State<TradingPage> {
                   _rightPanelWidth = _rightPanelWidth.clamp(minPanelWidth, maxRightPanelWidth);
                   _orderbookHeight = _orderbookHeight.clamp(minOrderbookHeight, maxOrderbookHeight);
                   
-                  return Column(
+                  return Row(
                     children: [
-                      // Top section with main content
-                      Expanded(
-                        child: Row(
-                          children: [
-                            // Left Panel - Trading Controls
-                            Container(
-                              width: _leftPanelWidth,
-                              child: _buildTradingPanel(themeService),
-                            ),
-                            
-                            // Left Splitter
-                            _buildVerticalSplitter(
-                              onDrag: (delta) {
-                                setState(() {
-                                  _leftPanelWidth = (_leftPanelWidth + delta).clamp(minPanelWidth, maxLeftPanelWidth);
-                                });
-                              },
-                              onDragStart: () => setState(() => _isDraggingLeft = true),
-                              onDragEnd: () => setState(() => _isDraggingLeft = false),
-                              isDragging: _isDraggingLeft,
-                              themeService: themeService,
-                            ),
-                            
-                            // Middle Panel - Asset Selection and Chart
-                            Expanded(
-                              child: Column(
-                                children: [
-                                  // Asset Selection
-                                  Container(
-                                    height: 250,
-                                    child: _buildAssetSection(themeService),
-                                  ),
-                                  // Chart Section
-                                  Expanded(
-                                    child: _buildChartSection(themeService),
-                                  ),
-                                ],
-                              ),
-                            ),
-                            
-                            // Right Splitter
-                            _buildVerticalSplitter(
-                              onDrag: (delta) {
-                                setState(() {
-                                  _rightPanelWidth = (_rightPanelWidth - delta).clamp(minPanelWidth, maxRightPanelWidth);
-                                });
-                              },
-                              onDragStart: () => setState(() => _isDraggingRight = true),
-                              onDragEnd: () => setState(() => _isDraggingRight = false),
-                              isDragging: _isDraggingRight,
-                              themeService: themeService,
-                            ),
-                            
-                            // Right Panel - Order Book & Activity
-                            Container(
-                              width: _rightPanelWidth,
-                              child: _buildActivitySection(themeService),
-                            ),
-                          ],
-                        ),
+                      // Left Panel - Trading Controls (Yellow area)
+                      Container(
+                        width: _leftPanelWidth,
+                        child: _buildTradingPanel(themeService),
                       ),
                       
-                      // Horizontal Splitter
-                      _buildHorizontalSplitter(
+                      // Left Splitter
+                      _buildVerticalSplitter(
                         onDrag: (delta) {
                           setState(() {
-                            _orderbookHeight = (_orderbookHeight - delta).clamp(minOrderbookHeight, maxOrderbookHeight);
+                            _leftPanelWidth = (_leftPanelWidth + delta).clamp(minPanelWidth, maxLeftPanelWidth);
                           });
                         },
-                        onDragStart: () => setState(() => _isDraggingHorizontal = true),
-                        onDragEnd: () => setState(() => _isDraggingHorizontal = false),
-                        isDragging: _isDraggingHorizontal,
+                        onDragStart: () => setState(() => _isDraggingLeft = true),
+                        onDragEnd: () => setState(() => _isDraggingLeft = false),
+                        isDragging: _isDraggingLeft,
                         themeService: themeService,
                       ),
                       
-                      // Orderbook Section at the bottom
+                      // Middle Panel - Asset Selection, Chart and Orderbook
+                      Expanded(
+                        child: LayoutBuilder(
+                          builder: (context, constraints) {
+                            final maxMiddleHeight = constraints.maxHeight;
+                            final minMarketOverviewHeight = 150.0;
+                            final maxMarketOverviewHeight = maxMiddleHeight - 200; // Leave space for chart and orderbook
+                            
+                            // Constrain market overview height
+                            _marketOverviewHeight = _marketOverviewHeight.clamp(minMarketOverviewHeight, maxMarketOverviewHeight);
+                            
+                            return Column(
+                              children: [
+                                // Asset Selection at the top of middle panel only
+                                Container(
+                                  height: _marketOverviewHeight,
+                                  child: _buildAssetSection(themeService),
+                                ),
+                                
+                                // Horizontal Splitter between Market Overview and Chart
+                                _buildHorizontalSplitter(
+                                  onDrag: (delta) {
+                                    setState(() {
+                                      _marketOverviewHeight = (_marketOverviewHeight + delta).clamp(minMarketOverviewHeight, maxMarketOverviewHeight);
+                                    });
+                                  },
+                                  onDragStart: () => setState(() => _isDraggingMarketOverview = true),
+                                  onDragEnd: () => setState(() => _isDraggingMarketOverview = false),
+                                  isDragging: _isDraggingMarketOverview,
+                                  themeService: themeService,
+                                ),
+                                
+                                // Chart and Orderbook area
+                                Expanded(
+                                  child: Column(
+                                    children: [
+                                      // Chart Section (top)
+                                      Expanded(
+                                        child: _buildChartSection(themeService),
+                                      ),
+                                      
+                                      // Horizontal Splitter between Chart and Orderbook
+                                      _buildHorizontalSplitter(
+                                        onDrag: (delta) {
+                                          setState(() {
+                                            _orderbookHeight = (_orderbookHeight - delta).clamp(minOrderbookHeight, maxOrderbookHeight);
+                                          });
+                                        },
+                                        onDragStart: () => setState(() => _isDraggingHorizontal = true),
+                                        onDragEnd: () => setState(() => _isDraggingHorizontal = false),
+                                        isDragging: _isDraggingHorizontal,
+                                        themeService: themeService,
+                                      ),
+                                      
+                                      // Orderbook Section (Red area)
+                                      Container(
+                                        height: _orderbookHeight,
+                                        child: _buildOrderbookSection(themeService),
+                                      ),
+                                    ],
+                                  ),
+                                ),
+                              ],
+                            );
+                          },
+                        ),
+                      ),
+                      
+                      // Right Splitter
+                      _buildVerticalSplitter(
+                        onDrag: (delta) {
+                          setState(() {
+                            _rightPanelWidth = (_rightPanelWidth - delta).clamp(minPanelWidth, maxRightPanelWidth);
+                          });
+                        },
+                        onDragStart: () => setState(() => _isDraggingRight = true),
+                        onDragEnd: () => setState(() => _isDraggingRight = false),
+                        isDragging: _isDraggingRight,
+                        themeService: themeService,
+                      ),
+                      
+                      // Right Panel - Order History (Green area)
                       Container(
-                        height: _orderbookHeight,
-                        child: _buildOrderbookSection(themeService),
+                        width: _rightPanelWidth,
+                        child: _buildActivitySection(themeService),
                       ),
                     ],
                   );
