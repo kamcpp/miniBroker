@@ -2872,9 +2872,56 @@ class SimpleLinePainter extends CustomPainter {
       );
     }
 
+    // Draw horizontal date scale
+    if (data.isNotEmpty) {
+      final labelStyle = TextStyle(
+        color: isDarkTheme ? Colors.white : Colors.black,
+        fontSize: 10,
+      );
+      final labelHeight = 16.0;
+      final labelY = size.height + 2;
+      int labelCount = 6;
+      for (int i = 0; i < labelCount; i++) {
+        final dataIdx = ((i / (labelCount - 1)) * (data.length - 1)).round();
+        final point = data[dataIdx];
+        final ts = point['timestamp'] ?? 0;
+        DateTime dt = DateTime.fromMillisecondsSinceEpoch(ts * 1000);
+        String label;
+        if (_is1dPeriod()) {
+          label = _formatHour(dt);
+        } else {
+          label = _formatDay(dt);
+        }
+        final tp = TextPainter(
+          text: TextSpan(text: label, style: labelStyle),
+          textDirection: TextDirection.ltr,
+        )..layout();
+        final x = (dataIdx / (data.length - 1)) * size.width - tp.width / 2;
+        tp.paint(canvas, Offset(x, labelY));
+      }
+    }
     print('🎨 CustomPainter: Chart painting completed');
+
   }
 
+  bool _is1dPeriod() {
+    // You may want to pass the period as a parameter, but for now infer from data
+    // If data covers less than 2 days, treat as intraday
+    if (data.length < 2) return true;
+    final first = DateTime.fromMillisecondsSinceEpoch((data.first['timestamp'] ?? 0) * 1000);
+    final last = DateTime.fromMillisecondsSinceEpoch((data.last['timestamp'] ?? 0) * 1000);
+    return last.difference(first).inDays < 2;
+  }
+  String _formatHour(DateTime dt) {
+    return '${dt.hour.toString().padLeft(2, '0')}:00';
+  }
+  String _formatDay(DateTime dt) {
+    return '${dt.day} ${_monthShort(dt.month)}';
+  }
+  String _monthShort(int m) {
+    const months = ['Jan','Feb','Mar','Apr','May','Jun','Jul','Aug','Sep','Oct','Nov','Dec'];
+    return months[m-1];
+  }
   // Helper method to safely convert values to double
   double _safeToDouble(dynamic value) {
     if (value == null) return 0.0;
