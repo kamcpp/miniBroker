@@ -1185,9 +1185,9 @@ class _TradingPageState extends State<TradingPage> {
           
           const SizedBox(height: 16), // Reduced space after order type
           
-          // Available Balance
+          // Available Balance / Buying Power
           Text(
-            'Available',
+            _isBuySelected ? 'Buying power' : 'Available',
             style: TextStyle(
               fontSize: 14,
               color: _isDarkTheme ? Colors.grey[400] : Colors.grey[600],
@@ -1195,7 +1195,7 @@ class _TradingPageState extends State<TradingPage> {
           ),
           const SizedBox(height: 8),
           Text(
-            '100 ${_getSelectedAssetSymbol()}', // Dynamic asset symbol
+            _isBuySelected ? '100 \$' : '100 ${_getSelectedAssetSymbol()}', // Show $ for buy, asset symbol for sell
             style: TextStyle(
               fontSize: 18,
               fontWeight: FontWeight.w600,
