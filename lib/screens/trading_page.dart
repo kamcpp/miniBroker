@@ -1500,7 +1500,7 @@ class _TradingPageState extends State<TradingPage> {
                         cursor: SystemMouseCursors.click, // Pointer cursor for Max button
                         child: GestureDetector(
                           onTap: () {
-                            // Set quantity to maximum available (100)
+                            // Set quantity to maximum (100) for now
                             setState(() {
                               _quantityController.text = '100';
                             });
@@ -2804,20 +2804,24 @@ class SimpleLinePainter extends CustomPainter {
 
     final linePath = Path();
     final fillPath = Path();
-    final priceRange = maxPrice - minPrice;
-    
-    if (priceRange <= 0) {
-      print('❌ CustomPainter: Invalid price range: $priceRange');
-      return;
+    double minYPrice = minPrice;
+    double maxYPrice = maxPrice;
+    // If only one price, show a range around it (±2%)
+    if ((maxPrice - minPrice).abs() < 1e-6) {
+      minYPrice = minPrice * 0.98;
+      maxYPrice = maxPrice * 1.02;
     }
-    
+    final priceRange = maxYPrice - minYPrice;
+    if (priceRange <= 0) {
+      minYPrice -= 1;
+      maxYPrice += 1;
+    }
     // Create paths for line and fill
     for (int i = 0; i < data.length; i++) {
       final x = (i / (data.length - 1)) * size.width;
       final closePrice = _safeToDouble(data[i]['close']);
-      final normalizedPrice = (closePrice - minPrice) / priceRange;
+      final normalizedPrice = (closePrice - minYPrice) / priceRange;
       final y = size.height - (normalizedPrice * size.height);
-
       if (i == 0) {
         linePath.moveTo(x, y);
         fillPath.moveTo(x, size.height); // Start fill from bottom
@@ -2827,11 +2831,9 @@ class SimpleLinePainter extends CustomPainter {
         fillPath.lineTo(x, y);
       }
     }
-    
     // Complete the fill path
     fillPath.lineTo(size.width, size.height);
     fillPath.close();
-
     // Draw fill first, then line
     canvas.drawPath(fillPath, fillPaint);
     canvas.drawPath(linePath, linePaint);
@@ -2840,7 +2842,6 @@ class SimpleLinePainter extends CustomPainter {
     final minMaxPaint = Paint()
       ..strokeWidth = 1.0
       ..style = PaintingStyle.stroke;
-
     // Max line (top)
     final maxY = 0.0;
     canvas.drawLine(
@@ -2848,7 +2849,6 @@ class SimpleLinePainter extends CustomPainter {
       Offset(size.width, maxY),
       minMaxPaint..color = isDarkTheme ? Colors.green[400]! : Colors.green[600]!,
     );
-
     // Min line (bottom)
     final minY = size.height;
     canvas.drawLine(
@@ -2856,6 +2856,7 @@ class SimpleLinePainter extends CustomPainter {
       Offset(size.width, minY),
       minMaxPaint..color = isDarkTheme ? Colors.red[400]! : Colors.red[600]!,
     );
+  // Vertical price scale numbers are hidden as requested
 
     // Draw subtle grid lines
     final gridPaint = Paint()
