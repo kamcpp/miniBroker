@@ -47,7 +47,7 @@ class _TradingPageState extends State<TradingPage> {
   // Panel height variables for resizable horizontal sections
   double _orderbookHeight = 150.0; // Default orderbook height
   bool _isDraggingHorizontal = false;
-  double _marketOverviewHeight = 237.0; // Increased by 1.1x (215 * 1.1 = 236.5)
+  double _marketOverviewHeight = 190.0; // Increased by 1.1x (215 * 1.1 = 236.5)
   bool _isDraggingMarketOverview = false; // State for market overview splitter
   
   // Chart data variables
@@ -1764,6 +1764,7 @@ class _TradingPageState extends State<TradingPage> {
               color: _isDarkTheme ? Colors.white : Colors.black,
             ),
           ),
+          const SizedBox(height: 10), // Space between title and asset boxes
           Expanded(
             child: _assets.isEmpty 
                 ? Center(
@@ -1795,7 +1796,7 @@ class _TradingPageState extends State<TradingPage> {
                     ),
                   )
                 : SizedBox(
-                    height: 100, // Reduced from 200 to 100 for half-size boxes
+                    height: 70, // Reduced from 200 to 100 for half-size boxes
                     child: Stack(
                       children: [
                         // Main scrollable list
@@ -1809,8 +1810,8 @@ class _TradingPageState extends State<TradingPage> {
                             final isSelected = asset['symbol'] == _selectedSymbol;
                             
                             return Container(
-                              width: 139, // 1.2 times wider (116 * 1.2 = 139.2)
-                              height: 500, // Reduced from 1552 to 500
+                              width: 145,
+                              height: 140,
                               margin: const EdgeInsets.only(right: 8), // Reduced margin
                               child: GestureDetector(
                                 onTap: () {
@@ -1963,7 +1964,7 @@ class _TradingPageState extends State<TradingPage> {
                                                 ),
                                               ],
                                             ),
-                                            const SizedBox(height: 8),
+                                            const SizedBox(height: 10),
                                             // Title (second row)
                                             Text(
                                               asset['title'] ?? asset['name'] ?? '',
