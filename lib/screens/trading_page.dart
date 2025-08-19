@@ -2865,24 +2865,26 @@ class SimpleLinePainter extends CustomPainter {
     canvas.drawPath(fillPath, fillPaint);
     canvas.drawPath(linePath, linePaint);
 
-    // Draw min/max lines
-    final minMaxPaint = Paint()
-      ..strokeWidth = 1.0
-      ..style = PaintingStyle.stroke;
-    // Max line (top)
-    final maxY = 0.0;
-    canvas.drawLine(
-      Offset(0, maxY),
-      Offset(size.width, maxY),
-      minMaxPaint..color = Colors.green,
-    );
-    // Min line (bottom)
-    final minY = size.height;
-    canvas.drawLine(
-      Offset(0, minY),
-      Offset(size.width, minY),
-      minMaxPaint..color = Colors.red,
-    );
+    // Draw min/max lines only if maxPrice != minPrice
+    if ((maxPrice - minPrice).abs() > 1e-6) {
+      final minMaxPaint = Paint()
+        ..strokeWidth = 1.0
+        ..style = PaintingStyle.stroke;
+      // Max line (top)
+      final maxY = 0.0;
+      canvas.drawLine(
+        Offset(0, maxY),
+        Offset(size.width, maxY),
+        minMaxPaint..color = Colors.green,
+      );
+      // Min line (bottom)
+      final minY = size.height;
+      canvas.drawLine(
+        Offset(0, minY),
+        Offset(size.width, minY),
+        minMaxPaint..color = Colors.red,
+      );
+    }
 
     // Draw subtle grid lines
     final gridPaint = Paint()
