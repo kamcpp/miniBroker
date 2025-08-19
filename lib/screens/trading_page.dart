@@ -1898,7 +1898,6 @@ class _TradingPageState extends State<TradingPage> {
                                           ),
                                         ),
                                       ),
-                                      
                                       // Overlay gradient for text readability
                                       Positioned.fill(
                                         child: Container(
@@ -1920,46 +1919,35 @@ class _TradingPageState extends State<TradingPage> {
                                           ),
                                         ),
                                       ),
-                                      
                                       // Content
                                       Padding(
-                                        padding: const EdgeInsets.all(20), // Increased padding for bigger box (180px)
+                                        padding: const EdgeInsets.all(12.0),
                                         child: Column(
                                           crossAxisAlignment: CrossAxisAlignment.start,
                                           children: [
-                                            // Header with logo and symbol
                                             Row(
                                               children: [
-                                                Container(
-                                                  width: 32, // Bigger logo for 180px box
-                                                  height: 32,
-                                                  decoration: BoxDecoration(
-                                                    color: Colors.white.withOpacity(0.2),
-                                                    borderRadius: BorderRadius.circular(10),
-                                                  ),
-                                                  child: asset['logoAddress'] != null && asset['logoAddress'].isNotEmpty
-                                                      ? ClipRRect(
-                                                          borderRadius: BorderRadius.circular(10),
-                                                          child: Image.network(
-                                                            asset['logoAddress'],
-                                                            width: 32,
-                                                            height: 32,
-                                                            fit: BoxFit.cover,
-                                                            errorBuilder: (context, error, stackTrace) {
-                                                              return const Icon(
-                                                                Icons.currency_exchange,
-                                                                color: Colors.white,
-                                                                size: 18,
-                                                              );
-                                                            },
-                                                          ),
-                                                        )
-                                                      : const Icon(
-                                                          Icons.currency_exchange,
-                                                          color: Colors.white,
-                                                          size: 18,
+                                                asset['logoAddress'] != null && asset['logoAddress'].isNotEmpty
+                                                    ? ClipOval(
+                                                        child: Image.network(
+                                                          asset['logoAddress'],
+                                                          width: 32,
+                                                          height: 32,
+                                                          fit: BoxFit.cover,
+                                                          errorBuilder: (context, error, stackTrace) {
+                                                            return const Icon(
+                                                              Icons.currency_exchange,
+                                                              color: Colors.white,
+                                                              size: 18,
+                                                            );
+                                                          },
                                                         ),
-                                                ),
+                                                      )
+                                                    : const Icon(
+                                                        Icons.currency_exchange,
+                                                        color: Colors.white,
+                                                        size: 18,
+                                                      ),
                                                 const SizedBox(width: 12),
                                                 Expanded(
                                                   child: Text(
@@ -1976,7 +1964,6 @@ class _TradingPageState extends State<TradingPage> {
                                               ],
                                             ),
                                             const SizedBox(height: 8),
-                                            
                                             // Title (second row)
                                             Text(
                                               asset['title'] ?? asset['name'] ?? '',
@@ -1988,9 +1975,7 @@ class _TradingPageState extends State<TradingPage> {
                                               maxLines: 2, // Allow 2 lines for titles
                                               overflow: TextOverflow.visible, // Show full text instead of ellipsis
                                             ),
-                                            
                                             const Spacer(),
-                                            
                                             // Price
                                             Text(
                                               asset['price'],
@@ -1998,28 +1983,6 @@ class _TradingPageState extends State<TradingPage> {
                                                 fontSize: 16, // Smaller price text
                                                 fontWeight: FontWeight.bold,
                                                 color: Colors.white,
-                                              ),
-                                            ),
-                                            const SizedBox(height: 8),
-                                            
-                                            // Change
-                                            Container(
-                                              padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 4),
-                                              decoration: BoxDecoration(
-                                                color: asset['change'] == '-' 
-                                                    ? Colors.grey.withOpacity(0.3)
-                                                    : asset['changeColor'].withOpacity(0.3),
-                                                borderRadius: BorderRadius.circular(12),
-                                              ),
-                                              child: Text(
-                                                asset['change'],
-                                                style: TextStyle(
-                                                  fontSize: 10, // Smaller change text
-                                                  fontWeight: FontWeight.w600,
-                                                  color: asset['change'] == '-' 
-                                                      ? Colors.white
-                                                      : asset['changeColor'],
-                                                ),
                                               ),
                                             ),
                                           ],
