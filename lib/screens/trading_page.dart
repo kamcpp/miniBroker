@@ -2901,18 +2901,16 @@ class SimpleLinePainter extends CustomPainter {
       // Draw min spot (red)
       final spotPaintMin = Paint()..color = Colors.red;
       canvas.drawCircle(Offset(minX, minYSpot), spotRadius, spotPaintMin);
-      // Max line (top)
-      final maxY = 0.0;
+      // Max line at maxYSpot
       canvas.drawLine(
-        Offset(0, maxY),
-        Offset(size.width, maxY),
+        Offset(0, maxYSpot),
+        Offset(size.width, maxYSpot),
         minMaxPaint..color = Colors.green,
       );
-      // Min line (bottom)
-      final minY = size.height;
+      // Min line at minYSpot
       canvas.drawLine(
-        Offset(0, minY),
-        Offset(size.width, minY),
+        Offset(0, minYSpot),
+        Offset(size.width, minYSpot),
         minMaxPaint..color = Colors.red,
       );
     }
