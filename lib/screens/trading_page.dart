@@ -2280,9 +2280,9 @@ class _TradingPageState extends State<TradingPage> {
     
     for (final point in data) {
       final low = _safeToDouble(point['low']);
-      final high = _safeToDouble(point['high']);
+      final close = _safeToDouble(point['close']);
       if (low < minPrice) minPrice = low;
-      if (high > maxPrice) maxPrice = high;
+      if (close > maxPrice) maxPrice = close;
     }
     
     double priceRange = maxPrice - minPrice;
@@ -2428,13 +2428,17 @@ class _TradingPageState extends State<TradingPage> {
         ],
       );
     }
-    final steps = 5;
-    final priceRange = maxPrice - minPrice;
+    final labelCount = 5;
+    final labels = <double>[];
+    for (int i = 0; i < labelCount; i++) {
+      // Linear interpolation between min and max, so top is max, bottom is min, never exceeding max
+      double value = minPrice + (maxPrice - minPrice) * (labelCount - 1 - i) / (labelCount - 1);
+      labels.add(value);
+    }
     return Column(
       mainAxisAlignment: MainAxisAlignment.spaceBetween,
       crossAxisAlignment: CrossAxisAlignment.end,
-      children: List.generate(steps + 1, (index) {
-        final price = maxPrice - (priceRange * index / steps);
+      children: labels.map((price) {
         Color priceColor;
         if (price.toStringAsFixed(2) == maxPrice.toStringAsFixed(2)) {
           priceColor = Colors.green;
@@ -2454,7 +2458,7 @@ class _TradingPageState extends State<TradingPage> {
             ),
           ),
         );
-      }),
+      }).toList(),
     );
   }
 
