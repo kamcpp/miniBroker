@@ -1,3 +1,4 @@
+import 'dart:math';
 import 'dart:async';
 import 'dart:convert';
 import 'dart:io';
@@ -138,10 +139,9 @@ class _TradingPageState extends State<TradingPage> {
               final coverAddress = pair['coverAddress']?.toString() ?? '';
               final orderbook = pair['orderbook']?.toString() ?? '';
               final exchangePairId = pair['exchangePairId']?.toString() ?? '';
-              
+              final quoteTokenDecimal = pair['quoteTokenDecimal']?.toString() ?? '0';
               // Debug print to see what fields we're getting
-              print('Asset: $symbol, Title: $title, Orderbook: $orderbook, ExchangePairId: $exchangePairId');
-              
+              print('Asset: $symbol, Title: $title, Orderbook: $orderbook, ExchangePairId: $exchangePairId, quoteTokenDecimal: $quoteTokenDecimal');
               if (symbol.isNotEmpty) {
                 _assets.add({
                   'symbol': symbol,
@@ -151,6 +151,7 @@ class _TradingPageState extends State<TradingPage> {
                   'coverAddress': coverAddress.isNotEmpty ? coverAddress : 'https://picsum.photos/112/120?random=${_assets.length}', // Test image if no cover
                   'orderbook': orderbook,
                   'exchangePairId': exchangePairId,
+                  'quoteTokenDecimal': quoteTokenDecimal,
                   'price': '\$0.00', // Will be updated with market data later
                   'change': '+0.00%',
                   'changeColor': Colors.grey,
@@ -244,9 +245,9 @@ class _TradingPageState extends State<TradingPage> {
       (asset) => asset['symbol'] == symbol,
       orElse: () => {},
     );
-    
+
     print('🔍 DEBUG: Found asset: $asset');
-    
+
     if (asset.isEmpty) {
       print('❌ Asset not found for symbol: $symbol');
       setState(() {
@@ -254,15 +255,16 @@ class _TradingPageState extends State<TradingPage> {
       });
       return;
     }
-    
+
     final orderbook = asset['orderbook']?.toString() ?? '';
     final exchangePairId = asset['exchangePairId']?.toString() ?? '';
-    
-    print('🔍 DEBUG: orderbook="$orderbook", exchangePairId="$exchangePairId"');
-    
+    // Get quoteTokenDecimal for normalization
+    final quoteTokenDecimal = int.tryParse(asset['quoteTokenDecimal']?.toString() ?? '0') ?? 0;
+
+    print('🔍 DEBUG: orderbook="$orderbook", exchangePairId="$exchangePairId", quoteTokenDecimal=$quoteTokenDecimal');
+
     if (orderbook.isEmpty || exchangePairId.isEmpty) {
       print('❌ Missing required fields for $symbol: orderbook="$orderbook", exchangePairId="$exchangePairId"');
-      
       // For testing - create fake chart data if API fields are missing
       print('🧪 Creating test chart data for $symbol ($_selectedTimePeriod)');
       setState(() {
@@ -366,12 +368,13 @@ class _TradingPageState extends State<TradingPage> {
           for (var point in ohlcData) {
             try {
               if (point is Map<String, dynamic>) {
+                final decimalDiv = quoteTokenDecimal > 0 ? pow(10, quoteTokenDecimal).toDouble() : 1.0;
                 chartPoints.add({
                   'timestamp': (point['timestamp'] ?? 0).toInt(),
-                  'open': _safeToDouble(point['open']),
-                  'high': _safeToDouble(point['high']), 
-                  'low': _safeToDouble(point['low']),
-                  'close': _safeToDouble(point['close']),
+                  'open': _safeToDouble(point['open']) / decimalDiv,
+                  'high': _safeToDouble(point['high']) / decimalDiv,
+                  'low': _safeToDouble(point['low']) / decimalDiv,
+                  'close': _safeToDouble(point['close']) / decimalDiv,
                   'volume': _safeToDouble(point['volume']),
                 });
               }
