@@ -1761,7 +1761,6 @@ class _TradingPageState extends State<TradingPage> {
               color: _isDarkTheme ? Colors.white : Colors.black,
             ),
           ),
-          const SizedBox(height: 16),
           Expanded(
             child: _assets.isEmpty 
                 ? Center(
@@ -1773,7 +1772,7 @@ class _TradingPageState extends State<TradingPage> {
                           size: 48,
                           color: _isDarkTheme ? Colors.grey[400] : Colors.grey[600],
                         ),
-                        const SizedBox(height: 12),
+                        SizedBox(height: 12),
                         Text(
                           'Loading trading pairs...',
                           style: TextStyle(
@@ -2409,21 +2408,46 @@ class _TradingPageState extends State<TradingPage> {
   }
 
   Widget _buildPriceScale(double minPrice, double maxPrice, bool isDarkTheme) {
+    if (minPrice == maxPrice) {
+      // Only show one label if min and max are equal
+      return Column(
+        mainAxisAlignment: MainAxisAlignment.center,
+        crossAxisAlignment: CrossAxisAlignment.end,
+        children: [
+          Text(
+            '\$${minPrice.toStringAsFixed(2)}',
+            style: TextStyle(
+              fontSize: 10,
+              color: Colors.green,
+              fontWeight: FontWeight.bold,
+            ),
+          ),
+        ],
+      );
+    }
     final steps = 5;
     final priceRange = maxPrice - minPrice;
-    
     return Column(
       mainAxisAlignment: MainAxisAlignment.spaceBetween,
       crossAxisAlignment: CrossAxisAlignment.end,
       children: List.generate(steps + 1, (index) {
         final price = maxPrice - (priceRange * index / steps);
+        Color priceColor;
+        if (price.toStringAsFixed(2) == maxPrice.toStringAsFixed(2)) {
+          priceColor = Colors.green;
+        } else if (price.toStringAsFixed(2) == minPrice.toStringAsFixed(2)) {
+          priceColor = Colors.red;
+        } else {
+          priceColor = isDarkTheme ? Colors.grey[400]! : Colors.grey[600]!;
+        }
         return Padding(
           padding: const EdgeInsets.symmetric(vertical: 2),
           child: Text(
             '\$${price.toStringAsFixed(2)}',
             style: TextStyle(
               fontSize: 10,
-              color: isDarkTheme ? Colors.grey[400] : Colors.grey[600],
+              color: priceColor,
+              fontWeight: (priceColor == Colors.green || priceColor == Colors.red) ? FontWeight.bold : FontWeight.normal,
             ),
           ),
         );
@@ -2850,16 +2874,15 @@ class SimpleLinePainter extends CustomPainter {
     canvas.drawLine(
       Offset(0, maxY),
       Offset(size.width, maxY),
-      minMaxPaint..color = isDarkTheme ? Colors.green[400]! : Colors.green[600]!,
+      minMaxPaint..color = Colors.green,
     );
     // Min line (bottom)
     final minY = size.height;
     canvas.drawLine(
       Offset(0, minY),
       Offset(size.width, minY),
-      minMaxPaint..color = isDarkTheme ? Colors.red[400]! : Colors.red[600]!,
+      minMaxPaint..color = Colors.red,
     );
-  // Vertical price scale numbers are hidden as requested
 
     // Draw subtle grid lines
     final gridPaint = Paint()
