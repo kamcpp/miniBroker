@@ -2865,11 +2865,39 @@ class SimpleLinePainter extends CustomPainter {
     canvas.drawPath(fillPath, fillPaint);
     canvas.drawPath(linePath, linePaint);
 
-    // Draw min/max lines only if maxPrice != minPrice
+    // Draw min/max lines and spots only if maxPrice != minPrice
     if ((maxPrice - minPrice).abs() > 1e-6) {
       final minMaxPaint = Paint()
         ..strokeWidth = 1.0
         ..style = PaintingStyle.stroke;
+      // Find max and min points
+      int maxIdx = 0;
+      int minIdx = 0;
+      double maxVal = _safeToDouble(data[0]['close']);
+      double minVal = _safeToDouble(data[0]['close']);
+      for (int i = 1; i < data.length; i++) {
+        double val = _safeToDouble(data[i]['close']);
+        if (val > maxVal) {
+          maxVal = val;
+          maxIdx = i;
+        }
+        if (val < minVal) {
+          minVal = val;
+          minIdx = i;
+        }
+      }
+      // Calculate positions
+      final maxX = (maxIdx / (data.length - 1)) * size.width;
+      final maxYSpot = size.height - ((maxVal - minYPrice) / priceRange * size.height);
+      final minX = (minIdx / (data.length - 1)) * size.width;
+      final minYSpot = size.height - ((minVal - minYPrice) / priceRange * size.height);
+      // Draw max spot (green)
+      final spotRadius = 6.0;
+      final spotPaintMax = Paint()..color = Colors.green;
+      canvas.drawCircle(Offset(maxX, maxYSpot), spotRadius, spotPaintMax);
+      // Draw min spot (red)
+      final spotPaintMin = Paint()..color = Colors.red;
+      canvas.drawCircle(Offset(minX, minYSpot), spotRadius, spotPaintMin);
       // Max line (top)
       final maxY = 0.0;
       canvas.drawLine(
