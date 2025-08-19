@@ -2291,31 +2291,34 @@ class _TradingPageState extends State<TradingPage> {
     return Padding(
       padding: const EdgeInsets.all(16.0),
       child: Column(
-        crossAxisAlignment: CrossAxisAlignment.start,
+        crossAxisAlignment: CrossAxisAlignment.center,
         children: [
-          // Chart title only
-          Text(
-            '$_selectedSymbol',
-            style: TextStyle(
-              fontSize: 18,
-              fontWeight: FontWeight.bold,
-              color: isDarkTheme ? Colors.white : Colors.black,
-            ),
-          ),
-          const SizedBox(height: 8),
-          
-          // Current price
-          if (data.isNotEmpty)
-            Text(
-              '\$${_safeToDouble(data.last['close']).toStringAsFixed(2)}',
-              style: TextStyle(
-                fontSize: 24,
-                fontWeight: FontWeight.bold,
-                color: isDarkTheme ? Colors.white : Colors.black,
+          // Symbol and price on one centered line
+          Row(
+            mainAxisAlignment: MainAxisAlignment.start,
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              Text(
+                '$_selectedSymbol',
+                style: TextStyle(
+                  fontSize: 22,
+                  fontWeight: FontWeight.bold,
+                  color: isDarkTheme ? Colors.white : Colors.black,
+                ),
               ),
-            ),
+              const SizedBox(width: 16),
+              if (data.isNotEmpty)
+                Text(
+                  '\$${_safeToDouble(data.last['close']).toStringAsFixed(2)}',
+                  style: TextStyle(
+                    fontSize: 22,
+                    fontWeight: FontWeight.bold,
+                    color: isDarkTheme ? Colors.white : Colors.black,
+                  ),
+                ),
+            ],
+          ),
           const SizedBox(height: 16),
-          
           // Chart with scale and min/max lines
           Expanded(
             child: Container(
