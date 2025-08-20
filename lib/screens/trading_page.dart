@@ -183,6 +183,12 @@ class _TradingPageState extends State<TradingPage> {
     if (FixClientService.instance.isLoggedOn && _assets.isEmpty) {
       _fetchPairsFromAPI();
     }
+      // Fetch trade history for default symbol when page is shown and assets are loaded
+      WidgetsBinding.instance.addPostFrameCallback((_) {
+        if (_selectedSymbol.isNotEmpty) {
+          _fetchTradeHistoryForAsset(_selectedSymbol);
+        }
+      });
   }
   
   void _listenToConnectionStatus() {
@@ -316,6 +322,7 @@ class _TradingPageState extends State<TradingPage> {
                 Future.delayed(const Duration(milliseconds: 500), () {
                   if (mounted) {
                     _fetchChartData(_selectedSymbol);
+                    _fetchTradeHistoryForAsset(_selectedSymbol);
                   }
                 });
               });
@@ -1396,11 +1403,8 @@ class _TradingPageState extends State<TradingPage> {
                   setState(() {
                     _selectedSymbol = newValue!;
                   });
-                  // Fetch chart data for newly selected symbol
                   _fetchChartData(newValue!);
-                  // Fetch trade history for newly selected symbol
                   _fetchTradeHistoryForAsset(newValue!);
-                  // Scroll to the selected asset in market overview with a slight delay
                   WidgetsBinding.instance.addPostFrameCallback((_) {
                     Future.delayed(const Duration(milliseconds: 200), () {
                       if (mounted && _scrollController.hasClients) {
@@ -1948,8 +1952,8 @@ class _TradingPageState extends State<TradingPage> {
                                   setState(() {
                                     _selectedSymbol = asset['symbol'];
                                   });
-                                  // Fetch chart data for newly selected symbol
                                   _fetchChartData(asset['symbol']);
+                                  _fetchTradeHistoryForAsset(asset['symbol']);
                                 },
                                 child: AnimatedContainer(
                                   duration: const Duration(milliseconds: 200),
