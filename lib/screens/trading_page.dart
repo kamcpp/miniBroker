@@ -25,9 +25,17 @@ class TradingPage extends StatefulWidget {
 
 class _TradingPageState extends State<TradingPage> {
   String _tradeHistoryApiDebug = '';
-  Future<void> _fetchTradeHistoryForAsset(String symbol) async {
-  print('[TradeHistory] Fetching for symbol: $symbol');
+  Future<void> _fetchTradeHistoryForAsset(String symbol, {int page = 1, bool append = false}) async {
+  print('[TradeHistory] Fetching for symbol: $symbol, page: $page');
   print('[TradeHistory] Asset list: ${_assets.map((a) => a['symbol']).toList()}');
+    
+    if (!append) {
+      setState(() {
+        _isLoadingTradeHistory = true;
+        _currentTradeHistoryPage = page;
+      });
+    }
+    
     // Find the asset data for this symbol
     final asset = _assets.firstWhere(
       (asset) => asset['symbol'] == symbol,
@@ -41,6 +49,7 @@ class _TradingPageState extends State<TradingPage> {
               'time': 'No trades available for this asset.'
             }
           ];
+          _isLoadingTradeHistory = false;
         });
         return <String, dynamic>{};
       },
@@ -57,6 +66,7 @@ class _TradingPageState extends State<TradingPage> {
             'time': 'No trades available for this asset.'
           }
         ];
+        _isLoadingTradeHistory = false;
       });
       return;
     }
@@ -65,8 +75,8 @@ class _TradingPageState extends State<TradingPage> {
       final orderbook = asset['orderbook']?.toString() ?? '';
       final payload = {
         "account": "",
-        "page": 1,
-        "page_size": 20,
+        "page": page,
+        "page_size": _tradeHistoryPageSize,
         "chain_id": "131074",
         "orderbook": orderbook,
         "pair_id": exchangePairId
@@ -135,18 +145,28 @@ class _TradingPageState extends State<TradingPage> {
               };
             }).toList();
             setState(() {
-              _tradeHistory = parsedTrades;
+              if (append) {
+                _tradeHistory.addAll(parsedTrades);
+              } else {
+                _tradeHistory = parsedTrades;
+              }
+              _hasMoreTradeHistory = parsedTrades.length == _tradeHistoryPageSize;
+              _isLoadingTradeHistory = false;
               print('[TradeHistory] Parsed trades: $_tradeHistory');
             });
           } else {
             setState(() {
-              _tradeHistory = [
-                {
-                  'price': '-',
-                  'quantity': '-',
-                  'time': 'No trades available for this asset.'
-                }
-              ];
+              if (!append) {
+                _tradeHistory = [
+                  {
+                    'price': '-',
+                    'quantity': '-',
+                    'time': 'No trades available for this asset.'
+                  }
+                ];
+              }
+              _hasMoreTradeHistory = false;
+              _isLoadingTradeHistory = false;
               _tradeHistoryApiDebug = 'Full API response:\n${response.body}';
             });
           }
@@ -155,10 +175,26 @@ class _TradingPageState extends State<TradingPage> {
     } catch (e) {
       print('❌ Error fetching trade history for $symbol: $e');
       setState(() {
-        _tradeHistory = [];
-    _tradeHistoryApiDebug = 'Error: $e';
+        if (!append) {
+          _tradeHistory = [];
+        }
+        _isLoadingTradeHistory = false;
+        _tradeHistoryApiDebug = 'Error: $e';
       });
     }
+  }
+  
+  void _loadMoreTradeHistory() {
+    if (!_isLoadingTradeHistory && _hasMoreTradeHistory && _selectedSymbol.isNotEmpty) {
+      _fetchTradeHistoryForAsset(_selectedSymbol, page: _currentTradeHistoryPage + 1, append: true);
+      _currentTradeHistoryPage++;
+    }
+  }
+  
+  void _resetAndFetchTradeHistory(String symbol) {
+    _currentTradeHistoryPage = 1;
+    _hasMoreTradeHistory = true;
+    _fetchTradeHistoryForAsset(symbol, page: 1, append: false);
   }
   final List<Map<String, dynamic>> _assets = [];
   List<Map<String, dynamic>> _tradeHistory = [];
@@ -166,6 +202,12 @@ class _TradingPageState extends State<TradingPage> {
   String _orderType = 'Limit';
   String _expiryPeriod = '1 Month'; // Add expiry period variable
   bool _isBuySelected = true;
+  
+  // Trade history pagination
+  int _currentTradeHistoryPage = 1;
+  int _tradeHistoryPageSize = 10;
+  bool _hasMoreTradeHistory = true;
+  bool _isLoadingTradeHistory = false;
   final TextEditingController _quantityController = TextEditingController();
   final TextEditingController _priceController = TextEditingController();
   final ScrollController _scrollController = ScrollController();
@@ -209,7 +251,7 @@ class _TradingPageState extends State<TradingPage> {
       // Fetch trade history for default symbol when page is shown and assets are loaded
       WidgetsBinding.instance.addPostFrameCallback((_) {
         if (_selectedSymbol.isNotEmpty) {
-          _fetchTradeHistoryForAsset(_selectedSymbol);
+          _resetAndFetchTradeHistory(_selectedSymbol);
         }
       });
   }
@@ -345,7 +387,7 @@ class _TradingPageState extends State<TradingPage> {
                 Future.delayed(const Duration(milliseconds: 500), () {
                   if (mounted) {
                     _fetchChartData(_selectedSymbol);
-                    _fetchTradeHistoryForAsset(_selectedSymbol);
+                    _resetAndFetchTradeHistory(_selectedSymbol);
                   }
                 });
               });
@@ -659,7 +701,7 @@ class _TradingPageState extends State<TradingPage> {
   // Fetch chart data for newly selected symbol
   _fetchChartData(_assets[newIndex]['symbol']);
   // Fetch trade history for newly selected symbol
-  _fetchTradeHistoryForAsset(_assets[newIndex]['symbol']);
+  _resetAndFetchTradeHistory(_assets[newIndex]['symbol']);
       
       // Scroll to center the selected asset (162px width + 16px margin = 178px per card)
       _scrollToIndex(newIndex);
@@ -678,7 +720,7 @@ class _TradingPageState extends State<TradingPage> {
   // Fetch chart data for newly selected symbol
   _fetchChartData(_assets[newIndex]['symbol']);
   // Fetch trade history for newly selected symbol
-  _fetchTradeHistoryForAsset(_assets[newIndex]['symbol']);
+  _resetAndFetchTradeHistory(_assets[newIndex]['symbol']);
       
       // Scroll to center the selected asset (162px width + 16px margin = 178px per card)
       _scrollToIndex(newIndex);
@@ -1427,7 +1469,7 @@ class _TradingPageState extends State<TradingPage> {
                     _selectedSymbol = newValue!;
                   });
                   _fetchChartData(newValue!);
-                  _fetchTradeHistoryForAsset(newValue!);
+                  _resetAndFetchTradeHistory(newValue!);
                   WidgetsBinding.instance.addPostFrameCallback((_) {
                     Future.delayed(const Duration(milliseconds: 200), () {
                       if (mounted && _scrollController.hasClients) {
@@ -2013,7 +2055,7 @@ class _TradingPageState extends State<TradingPage> {
                                     _selectedSymbol = asset['symbol'];
                                   });
                                   _fetchChartData(asset['symbol']);
-                                  _fetchTradeHistoryForAsset(asset['symbol']);
+                                  _resetAndFetchTradeHistory(asset['symbol']);
                                 },
                                 child: AnimatedContainer(
                                   duration: const Duration(milliseconds: 200),
@@ -2691,7 +2733,7 @@ class _TradingPageState extends State<TradingPage> {
                   mainAxisAlignment: MainAxisAlignment.spaceBetween,
                   children: [
                     SizedBox(
-                      width: 60,
+                      width: 50,
                       child: Text(
                         'Price',
                         style: TextStyle(
@@ -2703,7 +2745,7 @@ class _TradingPageState extends State<TradingPage> {
                       ),
                     ),
                     SizedBox(
-                      width: 70,
+                      width: 60,
                       child: Text(
                         'Quantity',
                         style: TextStyle(
@@ -2738,8 +2780,33 @@ class _TradingPageState extends State<TradingPage> {
           ),
           Expanded(
             child: ListView.builder(
-              itemCount: _tradeHistory.length,
+              itemCount: _tradeHistory.length + (_hasMoreTradeHistory ? 1 : 0),
               itemBuilder: (context, index) {
+                if (index == _tradeHistory.length) {
+                  // Load more button
+                  return Container(
+                    margin: const EdgeInsets.symmetric(vertical: 8),
+                    child: _isLoadingTradeHistory
+                        ? const Center(
+                            child: SizedBox(
+                              width: 20,
+                              height: 20,
+                              child: CircularProgressIndicator(strokeWidth: 2),
+                            ),
+                          )
+                        : TextButton(
+                            onPressed: _loadMoreTradeHistory,
+                            child: Text(
+                              'Load More',
+                              style: TextStyle(
+                                color: _isDarkTheme ? Colors.blue[300] : Colors.blue,
+                                fontSize: 14,
+                              ),
+                            ),
+                          ),
+                  );
+                }
+                
                 final trade = _tradeHistory[index];
                 Color priceColor = trade['priceColor'] ?? (_isDarkTheme ? Colors.white : Colors.black);
                 return Container(
@@ -2752,7 +2819,7 @@ class _TradingPageState extends State<TradingPage> {
                     mainAxisAlignment: MainAxisAlignment.spaceBetween,
                     children: [
                       SizedBox(
-                        width: 60,
+                        width: 50,
                         child: Text(
                           trade['price'].toString(),
                           style: TextStyle(
@@ -2764,7 +2831,7 @@ class _TradingPageState extends State<TradingPage> {
                         ),
                       ),
                       SizedBox(
-                        width: 70,
+                        width: 60,
                         child: Text(
                           trade['quantity'].toString(),
                           style: TextStyle(
