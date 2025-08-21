@@ -242,6 +242,13 @@ class _TradingPageState extends State<TradingPage> {
   List<Map<String, dynamic>> _buyOrders = [];
   bool _isLoadingOrderbook = false;
   
+  // Orderbook pagination
+  int _currentSellOrdersPage = 1;
+  int _currentBuyOrdersPage = 1;
+  int _orderbookPageSize = 4;
+  bool _hasMoreSellOrders = true;
+  bool _hasMoreBuyOrders = true;
+  
   @override
   void initState() {
     super.initState();
@@ -681,14 +688,26 @@ class _TradingPageState extends State<TradingPage> {
   Future<void> _fetchOrderbookData(String symbol) async {
     print('📊 Fetching orderbook data for symbol: $symbol');
     
+    // Reset pagination when fetching new symbol
+    _currentSellOrdersPage = 1;
+    _currentBuyOrdersPage = 1;
+    _hasMoreSellOrders = true;
+    _hasMoreBuyOrders = true;
+    
+    await _fetchSellOrders(symbol, page: 1, append: false);
+    await _fetchBuyOrders(symbol, page: 1, append: false);
+  }
+  
+  Future<void> _fetchSellOrders(String symbol, {int page = 1, bool append = false}) async {
+    print('📊 Fetching sell orders for symbol: $symbol, page: $page');
+    
     // Find the asset data for this symbol
     final asset = _assets.firstWhere(
       (asset) => asset['symbol'] == symbol,
       orElse: () {
         print('[Orderbook] Asset not found for symbol: $symbol');
         setState(() {
-          _sellOrders = [];
-          _buyOrders = [];
+          if (!append) _sellOrders = [];
           _isLoadingOrderbook = false;
         });
         return <String, dynamic>{};
@@ -696,7 +715,7 @@ class _TradingPageState extends State<TradingPage> {
     );
 
     if (asset.isEmpty) {
-      print('❌ Asset not found for orderbook: $symbol');
+      print('❌ Asset not found for sell orders: $symbol');
       return;
     }
 
@@ -704,76 +723,54 @@ class _TradingPageState extends State<TradingPage> {
     final exchangePairId = asset['exchangePairId']?.toString() ?? '';
     final quoteTokenDecimal = int.tryParse(asset['quoteTokenDecimal']?.toString() ?? '0') ?? 0;
 
-    print('[Orderbook] orderbook="$orderbook", exchangePairId="$exchangePairId", quoteTokenDecimal=$quoteTokenDecimal');
+    print('[Orderbook-Sell] $symbol: orderbook="$orderbook", exchangePairId="$exchangePairId"');
 
     if (orderbook.isEmpty || exchangePairId.isEmpty) {
-      print('❌ Missing required fields for orderbook $symbol: orderbook="$orderbook", exchangePairId="$exchangePairId"');
+      print('❌ Missing required fields for sell orders $symbol - no orderbook data available');
       setState(() {
-        _sellOrders = [];
-        _buyOrders = [];
+        if (!append) _sellOrders = [];
+        _hasMoreSellOrders = false; // No more data to load
         _isLoadingOrderbook = false;
       });
       return;
     }
     
-    setState(() {
-      _isLoadingOrderbook = true;
-    });
+    if (!append) {
+      setState(() {
+        _isLoadingOrderbook = true;
+      });
+    }
     
     try {
-      // Fetch both bids (sell orders) and asks (buy orders) in parallel
-      final List<Future<http.Response>> futures = [
-        // Fetch bids (sell orders)
-        http.post(
-          Uri.parse('https://brokerage-api-stage.tokenise.io/api/services/app/Agora/OrderbookQueue'),
-          headers: {
-            'Content-Type': 'application/json',
-            'Accept': 'application/json',
-          },
-          body: json.encode({
-            "page": 1,
-            "page_size": 5,
-            "chain_id": "131074",
-            "orderbook": orderbook,
-            "pair_id": exchangePairId,
-            "queue_id": "bids"
-          }),
-        ).timeout(const Duration(seconds: 10)),
-        
-        // Fetch asks (buy orders)
-        http.post(
-          Uri.parse('https://brokerage-api-stage.tokenise.io/api/services/app/Agora/OrderbookQueue'),
-          headers: {
-            'Content-Type': 'application/json',
-            'Accept': 'application/json',
-          },
-          body: json.encode({
-            "page": 1,
-            "page_size": 5,
-            "chain_id": "131074",
-            "orderbook": orderbook,
-            "pair_id": exchangePairId,
-            "queue_id": "asks"
-          }),
-        ).timeout(const Duration(seconds: 10)),
-      ];
-      
-      final responses = await Future.wait(futures);
-      final bidsResponse = responses[1];
-      final asksResponse = responses[0];
+      final response = await http.post(
+        Uri.parse('https://brokerage-api-stage.tokenise.io/api/services/app/Agora/OrderbookQueue'),
+        headers: {
+          'Content-Type': 'application/json',
+          'Accept': 'application/json',
+        },
+        body: json.encode({
+          "page": page,
+          "page_size": _orderbookPageSize,
+          "chain_id": "131074",
+          "orderbook": orderbook,
+          "pair_id": exchangePairId,
+          "queue_id": "bids"
+        }),
+      ).timeout(const Duration(seconds: 10));
       
       List<Map<String, dynamic>> sellOrders = [];
-      List<Map<String, dynamic>> buyOrders = [];
       
-      // Process bids (sell orders)
-      if (bidsResponse.statusCode == 200) {
-        final Map<String, dynamic> bidsData = json.decode(bidsResponse.body);
-        print('[Orderbook] Bids API response: ${bidsResponse.body}');
+      if (response.statusCode == 200) {
+        final Map<String, dynamic> bidsData = json.decode(response.body);
+        print('[Orderbook-Sell] $symbol API response: ${response.body}');
         
         if (bidsData['success'] == true && bidsData['result'] != null) {
           final result = bidsData['result'];
+          print('[Orderbook-Sell] $symbol result structure: ${result.keys}');
+          
           if (result is Map && result.containsKey('orders') && result['orders'] is List) {
             final List<dynamic> orders = result['orders'];
+            print('[Orderbook-Sell] $symbol found ${orders.length} orders');
             sellOrders = orders.map<Map<String, dynamic>>((order) {
               final priceRaw = order['price'];
               final quantityRaw = order['quantity'];
@@ -789,21 +786,112 @@ class _TradingPageState extends State<TradingPage> {
                 'quantity': quantity,
               };
             }).toList();
+          } else {
+            print('[Orderbook-Sell] $symbol: No orders field found or orders is not a list. Result: $result');
           }
+        } else {
+          print('[Orderbook-Sell] $symbol: API response not successful or result is null. Response: $bidsData');
         }
       } else {
-        print('❌ Bids API error: ${bidsResponse.statusCode} - ${bidsResponse.body}');
+        print('❌ Sell orders API error: ${response.statusCode} - ${response.body}');
       }
       
-      // Process asks (buy orders)
-      if (asksResponse.statusCode == 200) {
-        final Map<String, dynamic> asksData = json.decode(asksResponse.body);
-        print('[Orderbook] Asks API response: ${asksResponse.body}');
+      setState(() {
+        if (append) {
+          _sellOrders.addAll(sellOrders);
+        } else {
+          _sellOrders = sellOrders;
+        }
+        _hasMoreSellOrders = sellOrders.length == _orderbookPageSize;
+        _currentSellOrdersPage = page;
+        if (!append) _isLoadingOrderbook = false;
+      });
+      
+    } catch (e) {
+      print('❌ Error fetching sell orders for $symbol: $e');
+      setState(() {
+        if (!append) {
+          _sellOrders = [];
+          _hasMoreSellOrders = false; // No more data to load due to error
+          _isLoadingOrderbook = false;
+        }
+      });
+    }
+  }
+  
+  Future<void> _fetchBuyOrders(String symbol, {int page = 1, bool append = false}) async {
+    print('📊 Fetching buy orders for symbol: $symbol, page: $page');
+    
+    // Find the asset data for this symbol
+    final asset = _assets.firstWhere(
+      (asset) => asset['symbol'] == symbol,
+      orElse: () {
+        print('[Orderbook] Asset not found for symbol: $symbol');
+        setState(() {
+          if (!append) _buyOrders = [];
+          _isLoadingOrderbook = false;
+        });
+        return <String, dynamic>{};
+      },
+    );
+
+    if (asset.isEmpty) {
+      print('❌ Asset not found for buy orders: $symbol');
+      return;
+    }
+
+    final orderbook = asset['orderbook']?.toString() ?? '';
+    final exchangePairId = asset['exchangePairId']?.toString() ?? '';
+    final quoteTokenDecimal = int.tryParse(asset['quoteTokenDecimal']?.toString() ?? '0') ?? 0;
+
+    print('[Orderbook-Buy] $symbol: orderbook="$orderbook", exchangePairId="$exchangePairId"');
+
+    if (orderbook.isEmpty || exchangePairId.isEmpty) {
+      print('❌ Missing required fields for buy orders $symbol - no orderbook data available');
+      setState(() {
+        if (!append) _buyOrders = [];
+        _hasMoreBuyOrders = false; // No more data to load
+        _isLoadingOrderbook = false;
+      });
+      return;
+    }
+    
+    if (!append) {
+      setState(() {
+        _isLoadingOrderbook = true;
+      });
+    }
+    
+    try {
+      final response = await http.post(
+        Uri.parse('https://brokerage-api-stage.tokenise.io/api/services/app/Agora/OrderbookQueue'),
+        headers: {
+          'Content-Type': 'application/json',
+          'Accept': 'application/json',
+        },
+        body: json.encode({
+          "page": page,
+          "page_size": _orderbookPageSize,
+          "chain_id": "131074",
+          "orderbook": orderbook,
+          "pair_id": exchangePairId,
+          "queue_id": "asks"
+        }),
+      ).timeout(const Duration(seconds: 10));
+      
+      List<Map<String, dynamic>> buyOrders = [];
+      
+      if (response.statusCode == 200) {
+        final Map<String, dynamic> asksData = json.decode(response.body);
+        print('[Orderbook-Buy] $symbol API response: ${response.body}');
         
         if (asksData['success'] == true && asksData['result'] != null) {
           final result = asksData['result'];
+          print('[Orderbook-Buy] $symbol result structure: ${result.keys}');
+          
           if (result is Map && result.containsKey('orders') && result['orders'] is List) {
             final List<dynamic> orders = result['orders'];
+            print('[Orderbook-Buy] $symbol found ${orders.length} orders');
             buyOrders = orders.map<Map<String, dynamic>>((order) {
               final priceRaw = order['price'];
               final quantityRaw = order['quantity'];
@@ -819,37 +907,48 @@ class _TradingPageState extends State<TradingPage> {
                 'quantity': quantity,
               };
             }).toList();
+          } else {
+            print('[Orderbook-Buy] $symbol: No orders field found or orders is not a list. Result: $result');
           }
+        } else {
+          print('[Orderbook-Buy] $symbol: API response not successful or result is null. Response: $asksData');
         }
       } else {
-        print('❌ Asks API error: ${asksResponse.statusCode} - ${asksResponse.body}');
+        print('❌ Buy orders API error: ${response.statusCode} - ${response.body}');
       }
       
       setState(() {
-        _sellOrders = sellOrders;
-        _buyOrders = buyOrders;
-        _isLoadingOrderbook = false;
+        if (append) {
+          _buyOrders.addAll(buyOrders);
+        } else {
+          _buyOrders = buyOrders;
+        }
+        _hasMoreBuyOrders = buyOrders.length == _orderbookPageSize;
+        _currentBuyOrdersPage = page;
+        if (!append) _isLoadingOrderbook = false;
       });
-      
-      print('✅ Successfully loaded orderbook data for $symbol: ${sellOrders.length} sell orders, ${buyOrders.length} buy orders');
       
     } catch (e) {
-      print('❌ Error fetching orderbook data for $symbol: $e');
+      print('❌ Error fetching buy orders for $symbol: $e');
       setState(() {
-        _sellOrders = [];
-        _buyOrders = [];
-        _isLoadingOrderbook = false;
+        if (!append) {
+          _buyOrders = [];
+          _hasMoreBuyOrders = false; // No more data to load due to error
+          _isLoadingOrderbook = false;
+        }
       });
-      
-      if (mounted) {
-        ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(
-            content: Text('⚠️ Failed to load orderbook data: ${e.toString()}'),
-            backgroundColor: Colors.orange,
-            duration: Duration(seconds: 2),
-          ),
-        );
-      }
+    }
+  }
+  
+  void _loadMoreSellOrders() {
+    if (_hasMoreSellOrders && _selectedSymbol.isNotEmpty) {
+      _fetchSellOrders(_selectedSymbol, page: _currentSellOrdersPage + 1, append: true);
+    }
+  }
+  
+  void _loadMoreBuyOrders() {
+    if (_hasMoreBuyOrders && _selectedSymbol.isNotEmpty) {
+      _fetchBuyOrders(_selectedSymbol, page: _currentBuyOrdersPage + 1, append: true);
     }
   }
   
@@ -3158,39 +3257,68 @@ class _TradingPageState extends State<TradingPage> {
                                       ),
                                     ),
                                   )
-                                : ListView.builder(
-                                    itemCount: _sellOrders.length,
-                                    itemBuilder: (context, index) {
-                                      final order = _sellOrders[index];
-                                      return Padding(
-                                        padding: const EdgeInsets.only(bottom: 8),
-                                        child: Row(
-                                          children: [
-                                            Expanded(
-                                              child: Text(
-                                                _formatPrice(order['price']),
-                                                style: const TextStyle(
-                                                  fontSize: 16,
-                                                  color: Color(0xFFFF4081),
-                                                  fontWeight: FontWeight.w500,
-                                                ),
+                                : Column(
+                                    children: [
+                                      Expanded(
+                                        child: ListView.builder(
+                                          itemCount: _sellOrders.length,
+                                          itemBuilder: (context, index) {
+                                            final order = _sellOrders[index];
+                                            return Padding(
+                                              padding: const EdgeInsets.only(bottom: 8),
+                                              child: Row(
+                                                children: [
+                                                  Expanded(
+                                                    child: Text(
+                                                      _formatPrice(order['price']),
+                                                      style: const TextStyle(
+                                                        fontSize: 16,
+                                                        color: Color(0xFFFF4081),
+                                                        fontWeight: FontWeight.w500,
+                                                      ),
+                                                    ),
+                                                  ),
+                                                  Expanded(
+                                                    child: Text(
+                                                      order['quantity'].toString(),
+                                                      textAlign: TextAlign.right,
+                                                      style: TextStyle(
+                                                        fontSize: 16,
+                                                        color: _isDarkTheme ? Colors.white : Colors.black,
+                                                      ),
+                                                    ),
+                                                  ),
+                                                ],
                                               ),
-                                            ),
-                                            Expanded(
-                                              child: Text(
-                                                order['quantity'].toString(),
-                                                textAlign: TextAlign.right,
-                                                style: TextStyle(
-                                                  fontSize: 16,
-                                                  color: _isDarkTheme ? Colors.white : Colors.black,
-                                                ),
-                                              ),
-                                            ),
-                                          ],
+                                            );
+                                          },
                                         ),
-                            );
-                          },
-                        ),
+                                      ),
+                                      if (_hasMoreSellOrders)
+                                        Padding(
+                                          padding: const EdgeInsets.only(top: 8),
+                                          child: SizedBox(
+                                            width: double.infinity,
+                                            height: 32,
+                                            child: ElevatedButton(
+                                              onPressed: _loadMoreSellOrders,
+                                              style: ElevatedButton.styleFrom(
+                                                backgroundColor: _isDarkTheme ? Colors.grey[700] : Colors.grey[200],
+                                                foregroundColor: _isDarkTheme ? Colors.white : Colors.black,
+                                                elevation: 0,
+                                                shape: RoundedRectangleBorder(
+                                                  borderRadius: BorderRadius.circular(6),
+                                                ),
+                                              ),
+                                              child: Text(
+                                                'Load More',
+                                                style: TextStyle(fontSize: 12),
+                                              ),
+                                            ),
+                                          ),
+                                        ),
+                                    ],
+                                  ),
                       ),
                     ],
                   ),
@@ -3256,38 +3384,67 @@ class _TradingPageState extends State<TradingPage> {
                                       ),
                                     ),
                                   )
-                                : ListView.builder(
-                                    itemCount: _buyOrders.length,
-                                    itemBuilder: (context, index) {
-                                      final order = _buyOrders[index];
-                                      return Padding(
-                                        padding: const EdgeInsets.only(bottom: 8),
-                                        child: Row(
-                                          children: [
-                                            Expanded(
-                                              child: Text(
-                                                _formatPrice(order['price']),
-                                                style: const TextStyle(
-                                                  fontSize: 16,
-                                                  color: Color(0xFF00D4AA),
-                                                  fontWeight: FontWeight.w500,
-                                                ),
+                                : Column(
+                                    children: [
+                                      Expanded(
+                                        child: ListView.builder(
+                                          itemCount: _buyOrders.length,
+                                          itemBuilder: (context, index) {
+                                            final order = _buyOrders[index];
+                                            return Padding(
+                                              padding: const EdgeInsets.only(bottom: 8),
+                                              child: Row(
+                                                children: [
+                                                  Expanded(
+                                                    child: Text(
+                                                      _formatPrice(order['price']),
+                                                      style: const TextStyle(
+                                                        fontSize: 16,
+                                                        color: Color(0xFF00D4AA),
+                                                        fontWeight: FontWeight.w500,
+                                                      ),
+                                                    ),
+                                                  ),
+                                                  Expanded(
+                                                    child: Text(
+                                                      order['quantity'].toString(),
+                                                      textAlign: TextAlign.right,
+                                                      style: TextStyle(
+                                                        fontSize: 16,
+                                                        color: _isDarkTheme ? Colors.white : Colors.black,
+                                                      ),
+                                                    ),
+                                                  ),
+                                                ],
                                               ),
-                                            ),
-                                            Expanded(
-                                              child: Text(
-                                                order['quantity'].toString(),
-                                                textAlign: TextAlign.right,
-                                                style: TextStyle(
-                                                  fontSize: 16,
-                                                  color: _isDarkTheme ? Colors.white : Colors.black,
-                                                ),
-                                              ),
-                                            ),
-                                          ],
+                                            );
+                                          },
                                         ),
-                                      );
-                                    },
+                                      ),
+                                      if (_hasMoreBuyOrders)
+                                        Padding(
+                                          padding: const EdgeInsets.only(top: 8),
+                                          child: SizedBox(
+                                            width: double.infinity,
+                                            height: 32,
+                                            child: ElevatedButton(
+                                              onPressed: _loadMoreBuyOrders,
+                                              style: ElevatedButton.styleFrom(
+                                                backgroundColor: _isDarkTheme ? Colors.grey[700] : Colors.grey[200],
+                                                foregroundColor: _isDarkTheme ? Colors.white : Colors.black,
+                                                elevation: 0,
+                                                shape: RoundedRectangleBorder(
+                                                  borderRadius: BorderRadius.circular(6),
+                                                ),
+                                              ),
+                                              child: Text(
+                                                'Load More',
+                                                style: TextStyle(fontSize: 12),
+                                              ),
+                                            ),
+                                          ),
+                                        ),
+                                    ],
                                   ),
                       ),
                     ],
