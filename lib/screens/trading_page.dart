@@ -248,6 +248,8 @@ class _TradingPageState extends State<TradingPage> {
   int _orderbookPageSize = 4;
   bool _hasMoreSellOrders = true;
   bool _hasMoreBuyOrders = true;
+  int _totalSellOrdersPages = 1;
+  int _totalBuyOrdersPages = 1;
   
   @override
   void initState() {
@@ -693,6 +695,8 @@ class _TradingPageState extends State<TradingPage> {
     _currentBuyOrdersPage = 1;
     _hasMoreSellOrders = true;
     _hasMoreBuyOrders = true;
+    _totalSellOrdersPages = 1;
+    _totalBuyOrdersPages = 1;
     
     await _fetchSellOrders(symbol, page: 1, append: false);
     await _fetchBuyOrders(symbol, page: 1, append: false);
@@ -730,6 +734,7 @@ class _TradingPageState extends State<TradingPage> {
       setState(() {
         if (!append) _sellOrders = [];
         _hasMoreSellOrders = false; // No more data to load
+        _totalSellOrdersPages = 1; // Reset total pages
         _isLoadingOrderbook = false;
       });
       return;
@@ -804,6 +809,15 @@ class _TradingPageState extends State<TradingPage> {
         }
         _hasMoreSellOrders = sellOrders.length == _orderbookPageSize;
         _currentSellOrdersPage = page;
+        
+        // Calculate total pages for pagination
+        if (!_hasMoreSellOrders) {
+          _totalSellOrdersPages = page;
+        } else {
+          // If we have more orders, estimate total pages (will be updated as user navigates)
+          _totalSellOrdersPages = page + 1;
+        }
+        
         if (!append) _isLoadingOrderbook = false;
       });
       
@@ -813,6 +827,7 @@ class _TradingPageState extends State<TradingPage> {
         if (!append) {
           _sellOrders = [];
           _hasMoreSellOrders = false; // No more data to load due to error
+          _totalSellOrdersPages = 1; // Reset total pages
           _isLoadingOrderbook = false;
         }
       });
@@ -851,6 +866,7 @@ class _TradingPageState extends State<TradingPage> {
       setState(() {
         if (!append) _buyOrders = [];
         _hasMoreBuyOrders = false; // No more data to load
+        _totalBuyOrdersPages = 1; // Reset total pages
         _isLoadingOrderbook = false;
       });
       return;
@@ -925,6 +941,15 @@ class _TradingPageState extends State<TradingPage> {
         }
         _hasMoreBuyOrders = buyOrders.length == _orderbookPageSize;
         _currentBuyOrdersPage = page;
+        
+        // Calculate total pages for pagination
+        if (!_hasMoreBuyOrders) {
+          _totalBuyOrdersPages = page;
+        } else {
+          // If we have more orders, estimate total pages (will be updated as user navigates)
+          _totalBuyOrdersPages = page + 1;
+        }
+        
         if (!append) _isLoadingOrderbook = false;
       });
       
@@ -934,22 +959,130 @@ class _TradingPageState extends State<TradingPage> {
         if (!append) {
           _buyOrders = [];
           _hasMoreBuyOrders = false; // No more data to load due to error
+          _totalBuyOrdersPages = 1; // Reset total pages
           _isLoadingOrderbook = false;
         }
       });
     }
   }
   
-  void _loadMoreSellOrders() {
-    if (_hasMoreSellOrders && _selectedSymbol.isNotEmpty) {
-      _fetchSellOrders(_selectedSymbol, page: _currentSellOrdersPage + 1, append: true);
+  void _goToSellOrdersPage(int page) {
+    if (page >= 1 && page <= _totalSellOrdersPages && page != _currentSellOrdersPage && _selectedSymbol.isNotEmpty) {
+      _fetchSellOrders(_selectedSymbol, page: page, append: false);
     }
   }
   
-  void _loadMoreBuyOrders() {
-    if (_hasMoreBuyOrders && _selectedSymbol.isNotEmpty) {
-      _fetchBuyOrders(_selectedSymbol, page: _currentBuyOrdersPage + 1, append: true);
+  void _goToBuyOrdersPage(int page) {
+    if (page >= 1 && page <= _totalBuyOrdersPages && page != _currentBuyOrdersPage && _selectedSymbol.isNotEmpty) {
+      _fetchBuyOrders(_selectedSymbol, page: page, append: false);
     }
+  }
+  
+  Widget _buildPaginationControls(int currentPage, int totalPages, Function(int) onPageTap) {
+    if (totalPages <= 1) return SizedBox.shrink();
+    
+    final themeService = Provider.of<ThemeService>(context, listen: false);
+    final isDarkTheme = themeService.isDarkTheme;
+    
+    List<Widget> pageButtons = [];
+    
+    // Previous button
+    pageButtons.add(
+      InkWell(
+        onTap: currentPage > 1 ? () => onPageTap(currentPage - 1) : null,
+        child: Container(
+          width: 24,
+          height: 24,
+          decoration: BoxDecoration(
+            color: currentPage > 1 ? (isDarkTheme ? Colors.grey[700] : Colors.grey[300]) : Colors.transparent,
+            borderRadius: BorderRadius.circular(4),
+          ),
+          child: Icon(
+            Icons.chevron_left,
+            size: 16,
+            color: currentPage > 1 ? (isDarkTheme ? Colors.white : Colors.black) : Colors.grey,
+          ),
+        ),
+      ),
+    );
+    
+    // Page numbers
+    for (int i = 1; i <= totalPages; i++) {
+      if (i == 1 || i == totalPages || (i >= currentPage - 1 && i <= currentPage + 1)) {
+        pageButtons.add(
+          InkWell(
+            onTap: () => onPageTap(i),
+            child: Container(
+              width: 24,
+              height: 24,
+              margin: EdgeInsets.symmetric(horizontal: 2),
+              decoration: BoxDecoration(
+                color: i == currentPage 
+                  ? Colors.blue 
+                  : (isDarkTheme ? Colors.grey[700] : Colors.grey[300]),
+                borderRadius: BorderRadius.circular(4),
+              ),
+              child: Center(
+                child: Text(
+                  i.toString(),
+                  style: TextStyle(
+                    fontSize: 12,
+                    color: i == currentPage 
+                      ? Colors.white 
+                      : (isDarkTheme ? Colors.white : Colors.black),
+                  ),
+                ),
+              ),
+            ),
+          ),
+        );
+      } else if (i == currentPage - 2 || i == currentPage + 2) {
+        pageButtons.add(
+          Container(
+            width: 24,
+            height: 24,
+            margin: EdgeInsets.symmetric(horizontal: 2),
+            child: Center(
+              child: Text(
+                '...',
+                style: TextStyle(
+                  fontSize: 12,
+                  color: isDarkTheme ? Colors.white70 : Colors.black54,
+                ),
+              ),
+            ),
+          ),
+        );
+      }
+    }
+    
+    // Next button
+    pageButtons.add(
+      InkWell(
+        onTap: currentPage < totalPages ? () => onPageTap(currentPage + 1) : null,
+        child: Container(
+          width: 24,
+          height: 24,
+          decoration: BoxDecoration(
+            color: currentPage < totalPages ? (isDarkTheme ? Colors.grey[700] : Colors.grey[300]) : Colors.transparent,
+            borderRadius: BorderRadius.circular(4),
+          ),
+          child: Icon(
+            Icons.chevron_right,
+            size: 16,
+            color: currentPage < totalPages ? (isDarkTheme ? Colors.white : Colors.black) : Colors.grey,
+          ),
+        ),
+      ),
+    );
+    
+    return Padding(
+      padding: const EdgeInsets.only(top: 8),
+      child: Row(
+        mainAxisAlignment: MainAxisAlignment.center,
+        children: pageButtons,
+      ),
+    );
   }
   
   double _safeToDouble(dynamic value) {
@@ -3294,29 +3427,11 @@ class _TradingPageState extends State<TradingPage> {
                                           },
                                         ),
                                       ),
-                                      if (_hasMoreSellOrders)
-                                        Padding(
-                                          padding: const EdgeInsets.only(top: 8),
-                                          child: SizedBox(
-                                            width: double.infinity,
-                                            height: 32,
-                                            child: ElevatedButton(
-                                              onPressed: _loadMoreSellOrders,
-                                              style: ElevatedButton.styleFrom(
-                                                backgroundColor: _isDarkTheme ? Colors.grey[700] : Colors.grey[200],
-                                                foregroundColor: _isDarkTheme ? Colors.white : Colors.black,
-                                                elevation: 0,
-                                                shape: RoundedRectangleBorder(
-                                                  borderRadius: BorderRadius.circular(6),
-                                                ),
-                                              ),
-                                              child: Text(
-                                                'Load More',
-                                                style: TextStyle(fontSize: 12),
-                                              ),
-                                            ),
-                                          ),
-                                        ),
+                                      _buildPaginationControls(
+                                        _currentSellOrdersPage,
+                                        _totalSellOrdersPages,
+                                        _goToSellOrdersPage,
+                                      ),
                                     ],
                                   ),
                       ),
@@ -3421,29 +3536,11 @@ class _TradingPageState extends State<TradingPage> {
                                           },
                                         ),
                                       ),
-                                      if (_hasMoreBuyOrders)
-                                        Padding(
-                                          padding: const EdgeInsets.only(top: 8),
-                                          child: SizedBox(
-                                            width: double.infinity,
-                                            height: 32,
-                                            child: ElevatedButton(
-                                              onPressed: _loadMoreBuyOrders,
-                                              style: ElevatedButton.styleFrom(
-                                                backgroundColor: _isDarkTheme ? Colors.grey[700] : Colors.grey[200],
-                                                foregroundColor: _isDarkTheme ? Colors.white : Colors.black,
-                                                elevation: 0,
-                                                shape: RoundedRectangleBorder(
-                                                  borderRadius: BorderRadius.circular(6),
-                                                ),
-                                              ),
-                                              child: Text(
-                                                'Load More',
-                                                style: TextStyle(fontSize: 12),
-                                              ),
-                                            ),
-                                          ),
-                                        ),
+                                      _buildPaginationControls(
+                                        _currentBuyOrdersPage,
+                                        _totalBuyOrdersPages,
+                                        _goToBuyOrdersPage,
+                                      ),
                                     ],
                                   ),
                       ),
