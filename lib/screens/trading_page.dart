@@ -103,12 +103,33 @@ class _TradingPageState extends State<TradingPage> {
               final timestampRaw = trade['timestamp'];
               final buyRaw = trade['buy'];
               final price = priceRaw != null ? double.tryParse(priceRaw.toString()) ?? 0.0 : 0.0;
-              final quantity = quantityRaw != null ? double.tryParse(quantityRaw.toString()) ?? 0.0 : 0.0;
-              final time = timestampRaw != null ? DateTime.fromMillisecondsSinceEpoch(int.tryParse(timestampRaw.toString()) ?? 0).toLocal().toString() : '';
+                final quantityDouble = quantityRaw != null ? double.tryParse(quantityRaw.toString()) ?? 0.0 : 0.0;
+                final quantity = (quantityDouble % 1 == 0)
+                    ? quantityDouble.toInt().toString()
+                    : quantityDouble.toString();
+              final time = (() {
+                if (timestampRaw == null) return '';
+                final tsInt = int.tryParse(timestampRaw.toString());
+                if (tsInt == null) return '';
+                final dt = DateTime.fromMillisecondsSinceEpoch(tsInt * 1000).toLocal();
+                // Format: Aug 12 2025 13:48:27
+                final months = [
+                  'Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun',
+                  'Jul', 'Aug', 'Sep', 'Oct', 'Nov', 'Dec'
+                ];
+                final monthStr = months[dt.month - 1];
+                final dayStr = dt.day.toString().padLeft(2, '0');
+                final yearStr = dt.year.toString();
+                final hourStr = dt.hour.toString().padLeft(2, '0');
+                final minStr = dt.minute.toString().padLeft(2, '0');
+                final secStr = dt.second.toString().padLeft(2, '0');
+                return '$monthStr $dayStr $yearStr $hourStr:$minStr:$secStr';
+              })();
               final priceColor = buyRaw == true ? Color(0xFF00D4AA) : Color(0xFFFF4081);
+              final normalizedPrice = price / pow(10, quoteTokenDecimal);
               return {
-                'price': price,
-                'quantity': quantity,
+                'price': normalizedPrice,
+                  'quantity': quantity,
                 'time': time,
                 'priceColor': priceColor,
               };
@@ -182,10 +203,9 @@ class _TradingPageState extends State<TradingPage> {
     // Listen for FIX messages to handle Security Definition Responses
     _listenToFixMessages();
     
-    // If we're already logged on when this widget is created, fetch pairs immediately
-    if (FixClientService.instance.isLoggedOn && _assets.isEmpty) {
-      _fetchPairsFromAPI();
-    }
+    // Fetch pairs from API immediately when page opens, independent of FIX connection
+    _fetchPairsFromAPI();
+    
       // Fetch trade history for default symbol when page is shown and assets are loaded
       WidgetsBinding.instance.addPostFrameCallback((_) {
         if (_selectedSymbol.isNotEmpty) {
@@ -203,9 +223,9 @@ class _TradingPageState extends State<TradingPage> {
     });
     
     _logonStatusSubscription = FixClientService.instance.logonStatusStream.listen((isLoggedOn) {
-      if (mounted && isLoggedOn) {
-        // Automatically fetch pairs from API after successful logon
-        _fetchPairsFromAPI();
+      if (mounted) {
+        // FIX logon status is tracked but API calls are independent
+        print('FIX logon status changed: $isLoggedOn');
       }
     });
   }
@@ -1586,13 +1606,39 @@ class _TradingPageState extends State<TradingPage> {
             ),
           ),
           const SizedBox(height: 8),
-          Text(
-            _isBuySelected ? '100 \$' : '100 ${_getSelectedAssetSymbol()}', // Show $ for buy, asset symbol for sell
-            style: TextStyle(
-              fontSize: 18,
-              fontWeight: FontWeight.w600,
-              color: _isDarkTheme ? Colors.white : Colors.black,
-            ),
+          Row(
+            children: [
+              Text(
+                _isBuySelected ? '100 \$' : '100',
+                style: TextStyle(
+                  fontSize: 18,
+                  fontWeight: FontWeight.w600,
+                  color: _isDarkTheme ? Colors.white : Colors.black,
+                ),
+              ),
+              const SizedBox(width: 4),
+              (!_isBuySelected && _assets.isEmpty)
+                  ? SizedBox(
+                      width: 14,
+                      height: 14,
+                      child: CircularProgressIndicator(
+                        strokeWidth: 1.5,
+                        valueColor: AlwaysStoppedAnimation<Color>(
+                          _isDarkTheme ? Colors.white : Colors.black,
+                        ),
+                      ),
+                    )
+                  : (!_isBuySelected
+                      ? Text(
+                          _getSelectedAssetSymbol(),
+                          style: TextStyle(
+                            fontSize: 18,
+                            fontWeight: FontWeight.w600,
+                            color: _isDarkTheme ? Colors.white : Colors.black,
+                          ),
+                        )
+                      : SizedBox.shrink()),
+            ],
           ),
           
           const SizedBox(height: 24),
@@ -1658,14 +1704,25 @@ class _TradingPageState extends State<TradingPage> {
                         ),
                       ),
                       const SizedBox(width: 8),
-                      Text(
-                        _getSelectedAssetSymbol(), // Dynamic asset symbol
-                        style: TextStyle(
-                          color: _isDarkTheme ? Colors.white : Colors.black,
-                          fontSize: 14,
-                          fontWeight: FontWeight.w500,
-                        ),
-                      ),
+                      _assets.isEmpty
+                          ? SizedBox(
+                              width: 14,
+                              height: 14,
+                              child: CircularProgressIndicator(
+                                strokeWidth: 1.5,
+                                valueColor: AlwaysStoppedAnimation<Color>(
+                                  _isDarkTheme ? Colors.white : Colors.black,
+                                ),
+                              ),
+                            )
+                          : Text(
+                              _getSelectedAssetSymbol(),
+                              style: TextStyle(
+                                color: _isDarkTheme ? Colors.white : Colors.black,
+                                fontSize: 14,
+                                fontWeight: FontWeight.w500,
+                              ),
+                            ),
                     ],
                   ),
                 ),
