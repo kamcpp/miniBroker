@@ -245,6 +245,10 @@ class _TradingPageState extends State<TradingPage> {
     // Listen for FIX messages to handle Security Definition Responses
     _listenToFixMessages();
     
+    // Add listeners to text controllers to update total calculation
+    _quantityController.addListener(() => setState(() {}));
+    _priceController.addListener(() => setState(() {}));
+    
     // Fetch pairs from API immediately when page opens, independent of FIX connection
     _fetchPairsFromAPI();
     
@@ -1898,7 +1902,7 @@ class _TradingPageState extends State<TradingPage> {
                       ),
                     ),
                     Text(
-                      '0 \$',
+                      '0.00 \$',
                       style: TextStyle(
                         fontSize: 14,
                         color: _isDarkTheme ? Colors.white : Colors.black,
@@ -1919,7 +1923,7 @@ class _TradingPageState extends State<TradingPage> {
                       ),
                     ),
                     Text(
-                      '0 \$',
+                      '${_calculateTotal().toStringAsFixed(2)} \$',
                       style: TextStyle(
                         fontSize: 14,
                         fontWeight: FontWeight.w600,
@@ -1974,6 +1978,20 @@ class _TradingPageState extends State<TradingPage> {
     // For example: "BTC-USD" -> "BTC", "ETH-USD" -> "ETH"
     final parts = _selectedSymbol.split('-');
     return parts.isNotEmpty ? parts[0] : 'AC1';
+  }
+  
+  // Helper method to calculate order total
+  double _calculateTotal() {
+    final quantity = double.tryParse(_quantityController.text) ?? 0.0;
+    final price = _orderType == 'Market' ? 0.0 : (double.tryParse(_priceController.text) ?? 0.0);
+    const estimatedFee = 0.0; // Fee calculation can be implemented later
+    
+    if (_orderType == 'Market') {
+      // For market orders, we can't calculate exact total without current market price
+      return 0.0;
+    }
+    
+    return estimatedFee + (quantity * price);
   }
 
   Widget _buildAssetSection(ThemeService themeService) {
@@ -2080,7 +2098,7 @@ class _TradingPageState extends State<TradingPage> {
                                     ),
                                     borderRadius: BorderRadius.circular(12),
                                     border: isSelected 
-                                        ? Border.all(color: const Color(0xFF4CAF50), width: 2)
+                                        ? Border.all(color: const Color(0xFF00b8fb), width: 2)
                                         : Border.all(
                                             color: _isDarkTheme ? Colors.grey[700]! : Colors.grey[300]!,
                                             width: 1,
