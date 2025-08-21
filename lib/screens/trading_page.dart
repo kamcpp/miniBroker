@@ -101,13 +101,16 @@ class _TradingPageState extends State<TradingPage> {
               final priceRaw = trade['price'];
               final quantityRaw = trade['quantity'];
               final timestampRaw = trade['timestamp'];
+              final buyRaw = trade['buy'];
               final price = priceRaw != null ? double.tryParse(priceRaw.toString()) ?? 0.0 : 0.0;
               final quantity = quantityRaw != null ? double.tryParse(quantityRaw.toString()) ?? 0.0 : 0.0;
               final time = timestampRaw != null ? DateTime.fromMillisecondsSinceEpoch(int.tryParse(timestampRaw.toString()) ?? 0).toLocal().toString() : '';
+              final priceColor = buyRaw == true ? Color(0xFF00D4AA) : Color(0xFFFF4081);
               return {
                 'price': price,
                 'quantity': quantity,
                 'time': time,
+                'priceColor': priceColor,
               };
             }).toList();
             setState(() {
@@ -2681,14 +2684,7 @@ class _TradingPageState extends State<TradingPage> {
               itemCount: _tradeHistory.length,
               itemBuilder: (context, index) {
                 final trade = _tradeHistory[index];
-                Color priceColor;
-                if (trade['price'] == 5.5) {
-                  priceColor = const Color(0xFFFF4081); // Custom vivid red
-                } else if (trade['price'] == 5.7 || trade['price'] == 5.6) {
-                  priceColor = Colors.tealAccent;
-                } else {
-                  priceColor = _isDarkTheme ? Colors.white : Colors.black;
-                }
+                Color priceColor = trade['priceColor'] ?? (_isDarkTheme ? Colors.white : Colors.black);
                 return Container(
                   margin: const EdgeInsets.only(bottom: 8),
                   padding: const EdgeInsets.symmetric(vertical: 8, horizontal: 4),
