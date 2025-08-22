@@ -523,25 +523,8 @@ class _FIXClientPageState extends State<FIXClientPage> {
   Widget build(BuildContext context) {
     final configs = EnvironmentConfig.getConfigs();
     
-    // Safely access FixDictionaryProvider with fallback
-    FixDictionaryProvider dictionaryProvider;
-    try {
-      dictionaryProvider = Provider.of<FixDictionaryProvider>(context, listen: false);
-    } catch (e) {
-      print('Warning: FixDictionaryProvider not available in context: $e');
-      // Create a fallback provider with basic message definitions
-      final basicDefinitions = <String, FixMessageDefinition>{
-        'A': FixMessageDefinition(msgType: 'A', name: 'Logon', msgCat: 'admin', fields: []),
-        'c': FixMessageDefinition(msgType: 'c', name: 'Security Definition Request', msgCat: 'app', fields: []),
-        'D': FixMessageDefinition(msgType: 'D', name: 'New Order Single', msgCat: 'app', fields: []),
-        'F': FixMessageDefinition(msgType: 'F', name: 'Order Cancel Request', msgCat: 'app', fields: []),
-        '5': FixMessageDefinition(msgType: '5', name: 'Logout', msgCat: 'admin', fields: []),
-        '0': FixMessageDefinition(msgType: '0', name: 'Heartbeat', msgCat: 'admin', fields: []),
-        '1': FixMessageDefinition(msgType: '1', name: 'Test Request', msgCat: 'admin', fields: []),
-        '8': FixMessageDefinition(msgType: '8', name: 'Execution Report', msgCat: 'app', fields: []),
-      };
-      dictionaryProvider = FixDictionaryProvider(basicDefinitions);
-    }
+    // Access FixDictionaryProvider directly from context
+    final dictionaryProvider = Provider.of<FixDictionaryProvider>(context, listen: false);
     
     return Scaffold(
       appBar: AppBar(
@@ -717,9 +700,13 @@ class _FIXClientPageState extends State<FIXClientPage> {
             const SizedBox(height: 10), // Much smaller spacing
             
             // Message Types Section
-            Text(
-              'FIX Messages',
-              style: Theme.of(context).textTheme.titleLarge, // Smaller title
+            Row(
+              children: [
+                Text(
+                  'FIX Messages',
+                  style: Theme.of(context).textTheme.titleLarge, // Smaller title
+                ),
+              ],
             ),
             const SizedBox(height: 8), // Much smaller spacing
             
@@ -1528,35 +1515,25 @@ class _FIXClientPageState extends State<FIXClientPage> {
   }
 
   void _navigateToMessage(BuildContext context, String msgType, Widget page) {
-    // Safely capture the Provider value before navigation
-    FixDictionaryProvider? dictionaryProvider;
-    try {
-      dictionaryProvider = Provider.of<FixDictionaryProvider>(context, listen: false);
-    } catch (e) {
-      print('Warning: FixDictionaryProvider not available for navigation: $e');
-      // Create a fallback provider with basic message definitions
-      final basicDefinitions = <String, FixMessageDefinition>{
-        'A': FixMessageDefinition(msgType: 'A', name: 'Logon', msgCat: 'admin', fields: []),
-        'c': FixMessageDefinition(msgType: 'c', name: 'Security Definition Request', msgCat: 'app', fields: []),
-        'D': FixMessageDefinition(msgType: 'D', name: 'New Order Single', msgCat: 'app', fields: []),
-        'F': FixMessageDefinition(msgType: 'F', name: 'Order Cancel Request', msgCat: 'app', fields: []),
-        '5': FixMessageDefinition(msgType: '5', name: 'Logout', msgCat: 'admin', fields: []),
-        '0': FixMessageDefinition(msgType: '0', name: 'Heartbeat', msgCat: 'admin', fields: []),
-        '1': FixMessageDefinition(msgType: '1', name: 'Test Request', msgCat: 'admin', fields: []),
-        '8': FixMessageDefinition(msgType: '8', name: 'Execution Report', msgCat: 'app', fields: []),
-      };
-      dictionaryProvider = FixDictionaryProvider(basicDefinitions);
+    final dictionaryProvider = Provider.of<FixDictionaryProvider>(context, listen: false);
+    final messageDefinition = dictionaryProvider.getMessageDefinition(msgType);
+    
+    // Debug: Check if we have the message definition and fields
+    print('Navigation Debug:');
+    print('  msgType: $msgType');
+    print('  messageDefinition: $messageDefinition');
+    print('  messageDefinition?.fields?.length: ${messageDefinition?.fields?.length}');
+    if (messageDefinition?.fields != null) {
+      print('  fields: ${messageDefinition!.fields.map((f) => '${f.number}:${f.name}').join(', ')}');
     }
     
     Navigator.push(
       context,
-      PageRouteBuilder(
-        pageBuilder: (context, animation, secondaryAnimation) => ChangeNotifierProvider.value(
-          value: dictionaryProvider!,
+      MaterialPageRoute(
+        builder: (context) => ChangeNotifierProvider.value(
+          value: dictionaryProvider,
           child: page,
         ),
-        transitionDuration: Duration.zero,
-        reverseTransitionDuration: Duration.zero,
       ),
     );
   }

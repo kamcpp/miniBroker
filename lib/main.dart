@@ -161,7 +161,19 @@ class _AppInitializerState extends State<AppInitializer> {
   Future<Map<String, FixMessageDefinition>> _parseFixDictionary() async {
     try {
       final String xmlContent = await rootBundle.loadString('assets/FIX42.xml');
-      return FixDictionaryParser.parseDictionary(xmlContent);
+      print('Loaded FIX42.xml, length: ${xmlContent.length}');
+      final dictionary = FixDictionaryParser.parseDictionary(xmlContent);
+      print('Parsed FIX dictionary with ${dictionary.length} message types');
+      
+      // Debug: Print each message definition
+      dictionary.forEach((msgType, definition) {
+        print('Message $msgType: ${definition.name} has ${definition.fields.length} fields');
+        if (msgType == 'A') {
+          print('Logon fields: ${definition.fields.map((f) => f.name).join(', ')}');
+        }
+      });
+      
+      return dictionary;
     } catch (e) {
       print('Error loading FIX dictionary: $e');
       return <String, FixMessageDefinition>{};
@@ -178,11 +190,15 @@ class InitData {
 class FixDictionaryProvider extends ChangeNotifier {
   final Map<String, FixMessageDefinition> _dictionary;
 
-  FixDictionaryProvider(this._dictionary);
+  FixDictionaryProvider(this._dictionary) {
+    print('FixDictionaryProvider created with ${_dictionary.length} message definitions');
+  }
 
   Map<String, FixMessageDefinition> get dictionary => _dictionary;
 
   FixMessageDefinition? getMessageDefinition(String msgType) {
-    return _dictionary[msgType];
+    final definition = _dictionary[msgType];
+    print('Getting message definition for $msgType: ${definition?.name}, fields: ${definition?.fields.length ?? 0}');
+    return definition;
   }
 }

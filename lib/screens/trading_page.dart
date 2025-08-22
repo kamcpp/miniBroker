@@ -1662,9 +1662,15 @@ class _TradingPageState extends State<TradingPage> {
                   cursor: SystemMouseCursors.click,
                   child: GestureDetector(
                     onTap: () {
+                      // Get the current FixDictionaryProvider to pass it to PortfolioPage
+                      final dictionaryProvider = Provider.of<FixDictionaryProvider>(context, listen: false);
+                      
                       Navigator.of(context).push(
                         PageRouteBuilder(
-                          pageBuilder: (context, animation, secondaryAnimation) => const PortfolioPage(),
+                          pageBuilder: (context, animation, secondaryAnimation) => ChangeNotifierProvider.value(
+                            value: dictionaryProvider,
+                            child: const PortfolioPage(),
+                          ),
                           transitionDuration: Duration.zero,
                           reverseTransitionDuration: Duration.zero,
                         ),
