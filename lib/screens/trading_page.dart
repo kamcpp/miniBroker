@@ -242,6 +242,8 @@ class _TradingPageState extends State<TradingPage> {
   List<Map<String, dynamic>> _buyOrders = [];
   bool _isLoadingSellOrders = false;
   bool _isLoadingBuyOrders = false;
+  bool _isLoadingMoreSellOrders = false;
+  bool _isLoadingMoreBuyOrders = false;
   
   // Orderbook pagination
   int _currentSellOrdersPage = 1;
@@ -748,6 +750,10 @@ class _TradingPageState extends State<TradingPage> {
       setState(() {
         _isLoadingSellOrders = true;
       });
+    } else {
+      setState(() {
+        _isLoadingMoreSellOrders = true;
+      });
     }
     
     try {
@@ -823,6 +829,7 @@ class _TradingPageState extends State<TradingPage> {
         }
         
         if (!append) _isLoadingSellOrders = false;
+        if (append) _isLoadingMoreSellOrders = false;
       });
       
     } catch (e) {
@@ -833,6 +840,8 @@ class _TradingPageState extends State<TradingPage> {
           _hasMoreSellOrders = false; // No more data to load due to error
           _totalSellOrdersPages = 1; // Reset total pages
           _isLoadingSellOrders = false;
+        } else {
+          _isLoadingMoreSellOrders = false;
         }
       });
     }
@@ -879,6 +888,10 @@ class _TradingPageState extends State<TradingPage> {
     if (!append) {
       setState(() {
         _isLoadingBuyOrders = true;
+      });
+    } else {
+      setState(() {
+        _isLoadingMoreBuyOrders = true;
       });
     }
     
@@ -955,6 +968,7 @@ class _TradingPageState extends State<TradingPage> {
         }
         
         if (!append) _isLoadingBuyOrders = false;
+        if (append) _isLoadingMoreBuyOrders = false;
       });
       
     } catch (e) {
@@ -965,6 +979,8 @@ class _TradingPageState extends State<TradingPage> {
           _hasMoreBuyOrders = false; // No more data to load due to error
           _totalBuyOrdersPages = 1; // Reset total pages
           _isLoadingBuyOrders = false;
+        } else {
+          _isLoadingMoreBuyOrders = false;
         }
       });
     }
@@ -3431,11 +3447,31 @@ class _TradingPageState extends State<TradingPage> {
                                           },
                                         ),
                                       ),
-                                      _buildPaginationControls(
-                                        _currentSellOrdersPage,
-                                        _totalSellOrdersPages,
-                                        _goToSellOrdersPage,
-                                      ),
+                                      // Load More button for Sell Orders
+                                      if (_hasMoreSellOrders)
+                                        Container(
+                                          margin: const EdgeInsets.symmetric(vertical: 8),
+                                          child: _isLoadingMoreSellOrders
+                                              ? const Center(
+                                                  child: SizedBox(
+                                                    width: 20,
+                                                    height: 20,
+                                                    child: CircularProgressIndicator(strokeWidth: 2),
+                                                  ),
+                                                )
+                                              : TextButton(
+                                                  onPressed: () {
+                                                    _fetchSellOrders(_selectedSymbol, page: _currentSellOrdersPage + 1, append: true);
+                                                  },
+                                                  child: Text(
+                                                    'Load More',
+                                                    style: TextStyle(
+                                                      color: _isDarkTheme ? Colors.blue[300] : Colors.blue,
+                                                      fontSize: 14,
+                                                    ),
+                                                  ),
+                                                ),
+                                        ),
                                     ],
                                   ),
                       ),
@@ -3540,11 +3576,31 @@ class _TradingPageState extends State<TradingPage> {
                                           },
                                         ),
                                       ),
-                                      _buildPaginationControls(
-                                        _currentBuyOrdersPage,
-                                        _totalBuyOrdersPages,
-                                        _goToBuyOrdersPage,
-                                      ),
+                                      // Load More button for Buy Orders
+                                      if (_hasMoreBuyOrders)
+                                        Container(
+                                          margin: const EdgeInsets.symmetric(vertical: 8),
+                                          child: _isLoadingMoreBuyOrders
+                                              ? const Center(
+                                                  child: SizedBox(
+                                                    width: 20,
+                                                    height: 20,
+                                                    child: CircularProgressIndicator(strokeWidth: 2),
+                                                  ),
+                                                )
+                                              : TextButton(
+                                                  onPressed: () {
+                                                    _fetchBuyOrders(_selectedSymbol, page: _currentBuyOrdersPage + 1, append: true);
+                                                  },
+                                                  child: Text(
+                                                    'Load More',
+                                                    style: TextStyle(
+                                                      color: _isDarkTheme ? Colors.blue[300] : Colors.blue,
+                                                      fontSize: 14,
+                                                    ),
+                                                  ),
+                                                ),
+                                        ),
                                     ],
                                   ),
                       ),
