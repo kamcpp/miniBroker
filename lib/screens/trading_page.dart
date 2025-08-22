@@ -240,7 +240,8 @@ class _TradingPageState extends State<TradingPage> {
   // Orderbook data variables
   List<Map<String, dynamic>> _sellOrders = [];
   List<Map<String, dynamic>> _buyOrders = [];
-  bool _isLoadingOrderbook = false;
+  bool _isLoadingSellOrders = false;
+  bool _isLoadingBuyOrders = false;
   
   // Orderbook pagination
   int _currentSellOrdersPage = 1;
@@ -698,8 +699,11 @@ class _TradingPageState extends State<TradingPage> {
     _totalSellOrdersPages = 1;
     _totalBuyOrdersPages = 1;
     
-    await _fetchSellOrders(symbol, page: 1, append: false);
-    await _fetchBuyOrders(symbol, page: 1, append: false);
+    // Fetch both sell and buy orders in parallel for faster loading
+    await Future.wait([
+      _fetchSellOrders(symbol, page: 1, append: false),
+      _fetchBuyOrders(symbol, page: 1, append: false),
+    ]);
   }
   
   Future<void> _fetchSellOrders(String symbol, {int page = 1, bool append = false}) async {
@@ -712,7 +716,7 @@ class _TradingPageState extends State<TradingPage> {
         print('[Orderbook] Asset not found for symbol: $symbol');
         setState(() {
           if (!append) _sellOrders = [];
-          _isLoadingOrderbook = false;
+          _isLoadingSellOrders = false;
         });
         return <String, dynamic>{};
       },
@@ -735,14 +739,14 @@ class _TradingPageState extends State<TradingPage> {
         if (!append) _sellOrders = [];
         _hasMoreSellOrders = false; // No more data to load
         _totalSellOrdersPages = 1; // Reset total pages
-        _isLoadingOrderbook = false;
+        _isLoadingSellOrders = false;
       });
       return;
     }
     
     if (!append) {
       setState(() {
-        _isLoadingOrderbook = true;
+        _isLoadingSellOrders = true;
       });
     }
     
@@ -818,7 +822,7 @@ class _TradingPageState extends State<TradingPage> {
           _totalSellOrdersPages = page + 1;
         }
         
-        if (!append) _isLoadingOrderbook = false;
+        if (!append) _isLoadingSellOrders = false;
       });
       
     } catch (e) {
@@ -828,7 +832,7 @@ class _TradingPageState extends State<TradingPage> {
           _sellOrders = [];
           _hasMoreSellOrders = false; // No more data to load due to error
           _totalSellOrdersPages = 1; // Reset total pages
-          _isLoadingOrderbook = false;
+          _isLoadingSellOrders = false;
         }
       });
     }
@@ -844,7 +848,7 @@ class _TradingPageState extends State<TradingPage> {
         print('[Orderbook] Asset not found for symbol: $symbol');
         setState(() {
           if (!append) _buyOrders = [];
-          _isLoadingOrderbook = false;
+          _isLoadingBuyOrders = false;
         });
         return <String, dynamic>{};
       },
@@ -867,14 +871,14 @@ class _TradingPageState extends State<TradingPage> {
         if (!append) _buyOrders = [];
         _hasMoreBuyOrders = false; // No more data to load
         _totalBuyOrdersPages = 1; // Reset total pages
-        _isLoadingOrderbook = false;
+        _isLoadingBuyOrders = false;
       });
       return;
     }
     
     if (!append) {
       setState(() {
-        _isLoadingOrderbook = true;
+        _isLoadingBuyOrders = true;
       });
     }
     
@@ -950,7 +954,7 @@ class _TradingPageState extends State<TradingPage> {
           _totalBuyOrdersPages = page + 1;
         }
         
-        if (!append) _isLoadingOrderbook = false;
+        if (!append) _isLoadingBuyOrders = false;
       });
       
     } catch (e) {
@@ -960,7 +964,7 @@ class _TradingPageState extends State<TradingPage> {
           _buyOrders = [];
           _hasMoreBuyOrders = false; // No more data to load due to error
           _totalBuyOrdersPages = 1; // Reset total pages
-          _isLoadingOrderbook = false;
+          _isLoadingBuyOrders = false;
         }
       });
     }
@@ -3376,7 +3380,7 @@ class _TradingPageState extends State<TradingPage> {
                       ),
                       const SizedBox(height: 12),
                       Expanded(
-                        child: _isLoadingOrderbook
+                        child: _isLoadingSellOrders
                             ? const Center(
                                 child: CircularProgressIndicator(),
                               )
@@ -3485,7 +3489,7 @@ class _TradingPageState extends State<TradingPage> {
                       ),
                       const SizedBox(height: 12),
                       Expanded(
-                        child: _isLoadingOrderbook
+                        child: _isLoadingBuyOrders
                             ? const Center(
                                 child: CircularProgressIndicator(),
                               )
