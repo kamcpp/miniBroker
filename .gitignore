@@ -57,7 +57,7 @@ Config.json
 config.json
 
 # Build artifacts and packages
-/FIXYL_Quick_Package/
+/Mini_Broker_Package/
 *.app
 *.dmg
 *.zip

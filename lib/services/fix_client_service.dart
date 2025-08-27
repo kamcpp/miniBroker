@@ -68,7 +68,7 @@ class FixClientService {
       _connectionStatusController.add(true); // Notify UI of connection
       print('FIX client connected successfully');
       
-      // DON'T send automatic Logon message - wait for user action like FIXYL app
+      // DON'T send automatic Logon message - wait for user action like mini-broker app
       // await _sendLogonMessage();
       
       return true;
