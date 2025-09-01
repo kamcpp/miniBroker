@@ -166,8 +166,10 @@ class _FixMessageFormState extends State<FixMessageForm> {
         hintText: _getHintText(field.type),
         border: const OutlineInputBorder(),
         isDense: true,
+        contentPadding: const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
       ),
       keyboardType: _getKeyboardType(field.type),
+      style: const TextStyle(fontSize: 14),
     );
   }
 
@@ -182,7 +184,9 @@ class _FixMessageFormState extends State<FixMessageForm> {
         labelText: field.name,
         border: const OutlineInputBorder(),
         isDense: true,
+        contentPadding: const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
       ),
+      style: const TextStyle(fontSize: 14),
       items: [
         if (!field.required)
           const DropdownMenuItem<String>(

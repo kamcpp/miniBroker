@@ -2258,7 +2258,7 @@ class _TradingPageState extends State<TradingPage> {
                           color: _isDarkTheme ? Colors.grey[500] : Colors.grey[400],
                         ),
                         border: InputBorder.none,
-                        contentPadding: const EdgeInsets.symmetric(horizontal: 16, vertical: 16),
+                        contentPadding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
                       ),
                     ),
                   ),
@@ -2293,34 +2293,38 @@ class _TradingPageState extends State<TradingPage> {
                 color: _isDarkTheme ? const Color(0xFF2d2d2d) : Colors.grey[100],
                 borderRadius: BorderRadius.circular(8),
               ),
-              child: DropdownButtonHideUnderline(
-                child: DropdownButton<String>(
-                  value: _expiryPeriod,
-                  isExpanded: true,
-                  onChanged: (String? newValue) {
-                    setState(() {
-                      _expiryPeriod = newValue!;
-                    });
-                  },
-                  dropdownColor: _isDarkTheme ? const Color(0xFF2d2d2d) : Colors.white,
-                  style: TextStyle(
-                    color: _isDarkTheme ? Colors.white : Colors.black,
-                    fontSize: 16,
-                  ),
-                  icon: Icon(
-                    Icons.keyboard_arrow_down,
-                    color: _isDarkTheme ? Colors.grey[400] : Colors.grey[600],
-                  ),
+              child: Padding(
+                padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
+                child: DropdownButtonHideUnderline(
+                  child: DropdownButton<String>(
+                    value: _expiryPeriod,
+                    isExpanded: true,
+                    isDense: true,
+                    onChanged: (String? newValue) {
+                      setState(() {
+                        _expiryPeriod = newValue!;
+                      });
+                    },
+                    dropdownColor: _isDarkTheme ? const Color(0xFF2d2d2d) : Colors.white,
+                    style: TextStyle(
+                      color: _isDarkTheme ? Colors.white : Colors.black,
+                      fontSize: 14,
+                    ),
+                    icon: Icon(
+                      Icons.keyboard_arrow_down,
+                      color: _isDarkTheme ? Colors.grey[400] : Colors.grey[600],
+                    ),
                   items: ['1 Day', '3 Days', '1 Week', '2 Weeks', '1 Month']
                       .map<DropdownMenuItem<String>>((String value) {
                     return DropdownMenuItem<String>(
                       value: value,
                       child: Padding(
-                        padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
+                        padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 2),
                         child: Text(value),
                       ),
                     );
                   }).toList(),
+                  ),
                 ),
               ),
             ),

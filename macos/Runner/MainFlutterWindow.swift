@@ -7,21 +7,31 @@ class MainFlutterWindow: NSWindow {
     let windowFrame = self.frame
     self.contentViewController = flutterViewController
     
-    // Set minimum window size to ensure all content is visible without scrolling
-    self.minSize = NSSize(width: 990, height: 800) // Increased width by 10% (900 -> 990)
+    // Get screen size to adapt to different monitors
+    let screenSize = NSScreen.main?.visibleFrame.size ?? NSSize(width: 1440, height: 900)
     
-    // Set initial window size if current size is too small
-    if windowFrame.size.height < 1000 || windowFrame.size.width < 990 {
-      let newFrame = NSRect(
-        x: windowFrame.origin.x,
-        y: windowFrame.origin.y,
-        width: max(windowFrame.size.width, 990), // Increased width by 10%
-        height: max(windowFrame.size.height, 1000)
-      )
-      self.setFrame(newFrame, display: true)
-    } else {
-      self.setFrame(windowFrame, display: true)
-    }
+    // Calculate responsive window size based on screen size
+    let minWidth: CGFloat = 990
+    
+    // Use 100% height for smaller screens (13-inch), 90% for larger screens
+    let heightRatio: CGFloat = screenSize.height <= 900 ? 1.0 : 0.9
+    let minHeight: CGFloat = screenSize.height * heightRatio
+    
+    // Set minimum window size to ensure all content is visible
+    self.minSize = NSSize(width: minWidth, height: minHeight)
+    
+    // Calculate optimal initial size
+    let optimalWidth = max(minWidth, min(windowFrame.size.width, screenSize.width * 0.8))
+    let optimalHeight = max(minHeight, min(windowFrame.size.height, screenSize.height * heightRatio))
+    
+    // Set initial window size
+    let newFrame = NSRect(
+      x: windowFrame.origin.x,
+      y: windowFrame.origin.y,
+      width: optimalWidth,
+      height: optimalHeight
+    )
+    self.setFrame(newFrame, display: true)
 
     RegisterGeneratedPlugins(registry: flutterViewController)
 

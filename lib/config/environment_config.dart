@@ -38,11 +38,10 @@ class EnvironmentConfig {
         print('✅ SUCCESS: Reading from external Config.json');
       } catch (e) {
         print('❌ Cannot read Config.json: $e');
-        print('💡 Note: In production, Config.json must be placed beside mini Broker.app');
-        print('⚠️ No built-in configuration available');
+        print('💡 Using fallback configuration instead');
         
-        // No built-in configuration - must use external Config.json
-        throw Exception('Config.json not found and no fallback configuration available');
+        // Use fallback configuration when Config.json is not found
+        jsonString = _getFallbackConfig();
       }
       
       print('📋 Config.json content preview: ${jsonString.substring(0, jsonString.length > 200 ? 200 : jsonString.length)}...');
@@ -96,15 +95,12 @@ class EnvironmentConfig {
       _isLoaded = true;
     } catch (e) {
       print('❌ Failed to load configurations: $e');
-      print('💡 Note: Config.json must be placed beside mini Broker.app');
-      print('⚠️ No fallback configuration available');
+      print('💡 Using minimal fallback configuration');
       
-      // No fallback configuration - Config.json is required
-      _configs = <String, ConfigModel>{};
-      _messageDefaults = <String, Map<String, String>>{};
-      _isLoaded = false;
-      
-      throw Exception('Failed to load configurations: $e');
+      // Set minimal fallback configuration
+      _configs = _getDefaultConfigs();
+      _messageDefaults = _getDefaultMessageDefaults();
+      _isLoaded = true;
     }
   }
 
@@ -139,5 +135,68 @@ class EnvironmentConfig {
     
     print('Configuration updated in memory for environment: $environment');
     print('Note: Changes are temporary and will be reset when app restarts');
+  }
+
+  static String _getFallbackConfig() {
+    return '''
+{
+  "Environments": {
+    "fix42-development": {
+      "name": "fix42-development",
+      "ipAddress": "localhost",
+      "port": "9878",
+      "hbInterval": "30",
+      "senderCompID": "MINIBROKER",
+      "targetCompID": "TOKENISE",
+      "fixVersion": "4.2",
+      "dictionaryLocation": "assets/FIX42.xml",
+      "account": "test"
+    }
+  },
+  "MessageDefaults": {
+    "NewOrderSingle": {
+      "Side": "1",
+      "TimeInForce": "0",
+      "HandlInst": "1",
+      "Symbol": "AC1",
+      "OrdType": "2",
+      "OrderQty": "1",
+      "Price": "1.0",
+      "Currency": "USD"
+    }
+  }
+}
+    ''';
+  }
+
+  static Map<String, ConfigModel> _getDefaultConfigs() {
+    return {
+      'fix42-development': ConfigModel(
+        name: 'fix42-development',
+        ipAddress: 'localhost',
+        port: 9878,
+        hbInterval: 30,
+        senderCompID: 'MINIBROKER',
+        targetCompID: 'TOKENISE',
+        fixVersion: '4.2',
+        dictionaryLocation: 'assets/FIX42.xml',
+        account: 'test',
+      ),
+    };
+  }
+
+  static Map<String, Map<String, String>> _getDefaultMessageDefaults() {
+    return {
+      'NewOrderSingle': {
+        'Side': '1',
+        'TimeInForce': '0',
+        'HandlInst': '1',
+        'Symbol': 'AC1',
+        'OrdType': '2',
+        'OrderQty': '1',
+        'Price': '1.0',
+        'Currency': 'USD',
+      },
+    };
   }
 }
