@@ -1,7 +1,6 @@
 import 'package:flutter/foundation.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 import 'database_helper.dart';
-import 'auto_connect_service.dart';
 
 class AuthService extends ChangeNotifier {
   static final AuthService _instance = AuthService._internal();
@@ -76,24 +75,10 @@ class AuthService extends ChangeNotifier {
     }
   }
 
-  // Auto-connect to staging environment (async, non-blocking)
+  // Auto-connect functionality removed - no longer needed without FIX
   void _autoConnectToStaging() async {
-    try {
-      final autoConnectService = AutoConnectService();
-      
-      // Run in background without blocking the login UI - give more time for app to stabilize
-      Future.delayed(const Duration(milliseconds: 2000), () async {
-        print('🚀 Starting auto-connect to staging after login...');
-        final success = await autoConnectService.connectToStagingAndLogon();
-        if (success) {
-          print('✅ Auto-connect to staging completed successfully');
-        } else {
-          print('⚠️ Auto-connect to staging failed - user can connect manually');
-        }
-      });
-    } catch (e) {
-      print('❌ Error in auto-connect process: $e');
-    }
+    // No auto-connection needed anymore
+    print('✅ Auto-connect disabled - FIX functionality removed');
   }
 
   Future<bool> signup(String user, String password, String confirmPassword) async {
@@ -138,14 +123,8 @@ class AuthService extends ChangeNotifier {
   }
 
   Future<void> logout() async {
-    // Disconnect from staging environment
-    try {
-      final autoConnectService = AutoConnectService();
-      await autoConnectService.disconnect();
-      print('📤 Disconnected from staging environment during logout');
-    } catch (e) {
-      print('❌ Error disconnecting from staging during logout: $e');
-    }
+    // FIX disconnect functionality removed
+    print('📤 Logout process - no external connections to disconnect');
     
     final prefs = await SharedPreferences.getInstance();
     await prefs.setBool('isLoggedIn', false);

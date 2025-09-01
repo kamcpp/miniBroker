@@ -1,5 +1,5 @@
 name: mini_broker
-description: FIX Client
+description: Mini Trading Broker Application
 publish_to: 'none'
 version: 1.0.0+1
 
@@ -8,18 +8,14 @@ environment:
   flutter: ">=3.16.0"
 
 dependencies:
-  grpc: ^4.1.0
-  protobuf: ^4.2.0
   flutter:
     sdk: flutter
   provider: ^6.1.5
-  xml: ^6.5.0
   path: ^1.8.3
   shared_preferences: ^2.5.3
   sqflite: ^2.3.3
   crypto: ^3.0.5
   http: ^1.1.0
-  fixnum: ^1.1.1
 
 dev_dependencies:
   flutter_test:

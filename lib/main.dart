@@ -1,14 +1,10 @@
 import 'package:flutter/material.dart';
-import 'package:flutter/services.dart';
 import 'package:provider/provider.dart';
 import 'screens/trading_page.dart';
 import 'screens/portfolio_page.dart';
 import 'screens/login_page.dart';
-import 'services/fix_dictionary_parser.dart';
 import 'services/auth_service.dart';
 import 'services/theme_service.dart';
-import 'models/fix_definitions.dart';
-import 'config/environment_config.dart';
 
 void main() {
   runApp(const MyApp());
@@ -26,11 +22,10 @@ class MyApp extends StatelessWidget {
       ],
       child: MaterialApp(
         title: 'mini Broker V1.0',
-        debugShowCheckedModeBanner: false, // Remove DEBUG banner
+        debugShowCheckedModeBanner: false,
         theme: ThemeData(
           colorScheme: ColorScheme.fromSeed(seedColor: const Color(0xFF1a1754)),
           useMaterial3: true,
-          // Add scrollbar theme to make scrollbars visible
           scrollbarTheme: ScrollbarThemeData(
             thumbColor: WidgetStateProperty.all(Colors.grey[400]),
             trackColor: WidgetStateProperty.all(Colors.grey[200]),
@@ -53,7 +48,7 @@ class AppInitializer extends StatefulWidget {
 }
 
 class _AppInitializerState extends State<AppInitializer> {
-  late Future<InitData> _initFuture;
+  late Future<void> _initFuture;
 
   @override
   void initState() {
@@ -66,7 +61,7 @@ class _AppInitializerState extends State<AppInitializer> {
   Widget build(BuildContext context) {
     return Consumer<AuthService>(
       builder: (context, authService, child) {
-        return FutureBuilder<InitData>(
+        return FutureBuilder<void>(
           future: _initFuture,
           builder: (context, snapshot) {
             if (snapshot.connectionState == ConnectionState.waiting) {
@@ -77,83 +72,34 @@ class _AppInitializerState extends State<AppInitializer> {
                     children: [
                       CircularProgressIndicator(),
                       SizedBox(height: 16),
-                      Text('Loading configurations and FIX dictionary...'),
+                      Text('Initializing application...'),
                     ],
                   ),
                 ),
               );
             }
             
-            
             // Check authentication state
             if (!authService.isLoggedIn) {
               return const LoginPage();
             }
             
-            return ChangeNotifierProvider(
-              create: (_) => FixDictionaryProvider(snapshot.data?.fixDictionary ?? {}),
-              child: const PortfolioPage(),
-            );
+            return const PortfolioPage();
           },
         );
       },
     );
   }
 
-  Future<InitData> _initializeApp(AuthService authService) async {
+  Future<void> _initializeApp(AuthService authService) async {
     try {
       // Initialize authentication service
       await authService.init();
       
-      await EnvironmentConfig.loadConfigurations();
-      final fixDictionaryData = await _parseFixDictionary();
-      return InitData(fixDictionary: fixDictionaryData);
+      // Add any other initialization here if needed
+      await Future.delayed(const Duration(milliseconds: 500)); // Brief delay for smooth UX
     } catch (e) {
       throw Exception('Failed to initialize application: $e');
     }
-  }
-
-  Future<Map<String, FixMessageDefinition>> _parseFixDictionary() async {
-    try {
-      final String xmlContent = await rootBundle.loadString('assets/FIX42.xml');
-      print('Loaded FIX42.xml, length: ${xmlContent.length}');
-      final dictionary = FixDictionaryParser.parseDictionary(xmlContent);
-      print('Parsed FIX dictionary with ${dictionary.length} message types');
-      
-      // Debug: Print each message definition
-      dictionary.forEach((msgType, definition) {
-        print('Message $msgType: ${definition.name} has ${definition.fields.length} fields');
-        if (msgType == 'A') {
-          print('Logon fields: ${definition.fields.map((f) => f.name).join(', ')}');
-        }
-      });
-      
-      return dictionary;
-    } catch (e) {
-      print('Error loading FIX dictionary: $e');
-      return <String, FixMessageDefinition>{};
-    }
-  }
-}
-
-class InitData {
-  final Map<String, FixMessageDefinition> fixDictionary;
-  
-  InitData({required this.fixDictionary});
-}
-
-class FixDictionaryProvider extends ChangeNotifier {
-  final Map<String, FixMessageDefinition> _dictionary;
-
-  FixDictionaryProvider(this._dictionary) {
-    print('FixDictionaryProvider created with ${_dictionary.length} message definitions');
-  }
-
-  Map<String, FixMessageDefinition> get dictionary => _dictionary;
-
-  FixMessageDefinition? getMessageDefinition(String msgType) {
-    final definition = _dictionary[msgType];
-    print('Getting message definition for $msgType: ${definition?.name}, fields: ${definition?.fields.length ?? 0}');
-    return definition;
   }
 }

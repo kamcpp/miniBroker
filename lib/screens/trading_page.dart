@@ -7,11 +7,7 @@ import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 import 'package:http/http.dart' as http;
 import '../services/auth_service.dart';
-import '../services/fix_client_service.dart';
 import '../services/theme_service.dart';
-import '../config/environment_config.dart';
-import '../main.dart';
-import 'fix_client_page.dart';
 import 'portfolio_page.dart';
 import 'profile_page.dart';
 import 'users_admin_page.dart';
@@ -279,30 +275,13 @@ class _TradingPageState extends State<TradingPage> {
   }
   
   void _listenToConnectionStatus() {
-    _connectionStatusSubscription = FixClientService.instance.connectionStatusStream.listen((isConnected) {
-      if (mounted) {
-        // Connection status changes are tracked but no notifications shown
-        // to reduce UI noise in the trading page
-      }
-    });
-    
-    _logonStatusSubscription = FixClientService.instance.logonStatusStream.listen((isLoggedOn) {
-      if (mounted) {
-        // FIX logon status is tracked but API calls are independent
-        print('FIX logon status changed: $isLoggedOn');
-      }
-    });
+    // FIX connection status removed - no longer needed
+    print('Connection status monitoring disabled - FIX functionality removed');
   }
   
   void _listenToFixMessages() {
-    // Keep the message subscription for potential future FIX message handling
-    // Currently not needed since we're using REST API for pairs
-    _messageSubscription = FixClientService.instance.messageStream.listen((message) {
-      if (mounted) {
-        // Process other FIX messages if needed in the future
-        print('📨 FIX Message: $message');
-      }
-    });
+    // FIX message listening removed - no longer needed
+    print('FIX message monitoring disabled - FIX functionality removed');
   }
   
   // Fetch last price for asset using exchangePairId
@@ -1528,124 +1507,8 @@ class _TradingPageState extends State<TradingPage> {
             ),
           ),
           
-          const SizedBox(width: 16),
-          
-          // Vertical divider line
-          Container(
-            height: 30,
-            width: 1,
-            color: Colors.white.withOpacity(0.3),
-          ),
-          
-          const SizedBox(width: 16),
-          
-          // FIX Connection Status Indicator (admin-only clickable)
-          StreamBuilder<bool>(
-            stream: FixClientService.instance.connectionStatusStream,
-            initialData: FixClientService.instance.isConnected,
-            builder: (context, snapshot) {
-              final isConnected = snapshot.data ?? FixClientService.instance.isConnected;
-              return StreamBuilder<bool>(
-                stream: FixClientService.instance.logonStatusStream,
-                initialData: FixClientService.instance.isLoggedOn,
-                builder: (context, logonSnapshot) {
-                  final isLoggedOn = logonSnapshot.data ?? FixClientService.instance.isLoggedOn;
-                  
-                  String statusText;
-                  Color statusColor;
-                  IconData statusIcon;
-                  
-                  if (isConnected && isLoggedOn) {
-                    statusText = 'FIX: Logon';
-                    statusColor = Colors.green;
-                    statusIcon = Icons.check_circle;
-                  } else if (isConnected && !isLoggedOn) {
-                    statusText = 'FIX: Connected';
-                    statusColor = Colors.orange;
-                    statusIcon = Icons.sync;
-                  } else {
-                    statusText = 'FIX: Disconnected';
-                    statusColor = Colors.red;
-                    statusIcon = Icons.cancel;
-                  }
-                  
-                  // Check if current user is admin
-                  final isAdmin = authService.username.toLowerCase() == 'admin';
-                  
-                  Widget statusWidget = Container(
-                    width: 160,
-                    height: 32,
-                    padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 6),
-                    decoration: BoxDecoration(
-                      color: statusColor.withOpacity(0.1),
-                      borderRadius: BorderRadius.circular(6),
-                      border: Border.all(color: statusColor, width: 1),
-                    ),
-                    child: Row(
-                      mainAxisSize: MainAxisSize.min,
-                      children: [
-                        Icon(statusIcon, size: 14, color: statusColor),
-                        const SizedBox(width: 6),
-                        Expanded(
-                          child: Text(
-                            statusText,
-                            style: TextStyle(
-                              fontSize: 12,
-                              fontWeight: FontWeight.w600,
-                              color: statusColor,
-                            ),
-                          ),
-                        ),
-                      ],
-                    ),
-                  );
-                  
-                  // Only make it clickable for admin users
-                  if (isAdmin) {
-                    return MouseRegion(
-                      cursor: SystemMouseCursors.click,
-                      child: GestureDetector(
-                        onTap: () {
-                          try {
-                            // Get the current FixDictionaryProvider to pass it to FIXClientPage
-                            final dictionaryProvider = Provider.of<FixDictionaryProvider>(context, listen: false);
-                            
-                            Navigator.of(context).push(
-                              PageRouteBuilder(
-                                pageBuilder: (context, animation, secondaryAnimation) => ChangeNotifierProvider.value(
-                                  value: dictionaryProvider,
-                                  child: const FIXClientPage(),
-                                ),
-                                transitionDuration: Duration.zero,
-                                reverseTransitionDuration: Duration.zero,
-                              ),
-                            );
-                          } catch (e) {
-                            print('Error accessing FixDictionaryProvider: $e');
-                            // Fallback: navigate without the provider
-                            Navigator.of(context).push(
-                              PageRouteBuilder(
-                                pageBuilder: (context, animation, secondaryAnimation) => const FIXClientPage(),
-                                transitionDuration: Duration.zero,
-                                reverseTransitionDuration: Duration.zero,
-                              ),
-                            );
-                          }
-                        },
-                        child: statusWidget,
-                      ),
-                    );
-                  } else {
-                    // For non-admin users, return the status as non-clickable text
-                    return statusWidget;
-                  }
-                },
-              );
-            },
-          ),
-          
-          // Spacer to center the navigation buttons
-          const Spacer(),
+          // Left spacer - make it larger to push buttons more to the right
+          const Expanded(flex: 2, child: SizedBox.shrink()),
           
           // Center Navigation Buttons
           Container(
@@ -1662,15 +1525,9 @@ class _TradingPageState extends State<TradingPage> {
                   cursor: SystemMouseCursors.click,
                   child: GestureDetector(
                     onTap: () {
-                      // Get the current FixDictionaryProvider to pass it to PortfolioPage
-                      final dictionaryProvider = Provider.of<FixDictionaryProvider>(context, listen: false);
-                      
                       Navigator.of(context).push(
                         PageRouteBuilder(
-                          pageBuilder: (context, animation, secondaryAnimation) => ChangeNotifierProvider.value(
-                            value: dictionaryProvider,
-                            child: const PortfolioPage(),
-                          ),
+                          pageBuilder: (context, animation, secondaryAnimation) => const PortfolioPage(),
                           transitionDuration: Duration.zero,
                           reverseTransitionDuration: Duration.zero,
                         ),
@@ -1721,8 +1578,8 @@ class _TradingPageState extends State<TradingPage> {
             ),
           ),
           
-          // Spacer to balance the layout
-          const Spacer(),
+          // Right spacer - smaller to balance the layout
+          const Expanded(flex: 1, child: SizedBox.shrink()),
           
           // User Profile with Dropdown
           PopupMenuButton<String>(
