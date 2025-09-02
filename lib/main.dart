@@ -68,37 +68,33 @@ class _AppInitializerState extends State<AppInitializer> {
               return Scaffold(
                 backgroundColor: const Color(0xFF1a1754), // Match login page background
                 body: Center(
-                  child: Container(
-                    width: 300,
-                    padding: const EdgeInsets.all(32.0),
-                    child: const Column(
-                      mainAxisSize: MainAxisSize.min,
-                      children: [
-                        CircularProgressIndicator(
+                  child: Stack(
+                    alignment: Alignment.center,
+                    children: [
+                      // Circular progress indicator around the logo
+                      SizedBox(
+                        width: 120,
+                        height: 120,
+                        child: CircularProgressIndicator(
                           color: Colors.white,
-                          strokeWidth: 3,
+                          strokeWidth: 4,
+                          backgroundColor: Colors.white.withOpacity(0.2),
                         ),
-                        SizedBox(height: 24),
-                        Text(
-                          'Initializing application...',
-                          style: TextStyle(
-                            fontSize: 16,
-                            fontWeight: FontWeight.w500,
-                            color: Colors.white,
+                      ),
+                      // Logo in the center
+                      Container(
+                        width: 120,
+                        height: 120,
+                        child: ClipOval(
+                          child: Image.asset(
+                            'assets/logo.png',
+                            width: 120,
+                            height: 120,
+                            fit: BoxFit.cover,
                           ),
-                          textAlign: TextAlign.center,
                         ),
-                        SizedBox(height: 8),
-                        Text(
-                          'Please wait a moment',
-                          style: TextStyle(
-                            fontSize: 12,
-                            color: Colors.white70,
-                          ),
-                          textAlign: TextAlign.center,
-                        ),
-                      ],
-                    ),
+                      ),
+                    ],
                   ),
                 ),
               );
