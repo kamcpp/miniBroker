@@ -108,11 +108,12 @@ class _LoginPageState extends State<LoginPage> {
                       controller: _userController,
                       keyboardType: TextInputType.text,
                       decoration: InputDecoration(
-                        labelText: 'Username',
+                        hintText: 'Enter your username',
+                        hintStyle: const TextStyle(color: Colors.grey),
                         border: OutlineInputBorder(
                           borderRadius: BorderRadius.circular(12),
                         ),
-                        prefixIcon: Icon(Icons.person),
+                        prefixIcon: const Icon(Icons.person),
                       ),
                       validator: (value) {
                         if (value == null || value.isEmpty) {
@@ -126,10 +127,21 @@ class _LoginPageState extends State<LoginPage> {
                     // Password Field
                     TextFormField(
                       controller: _passwordController,
-                      obscureText: true,
+                      obscureText: !_isPasswordVisible,
                       decoration: InputDecoration(
                         hintText: 'Enter your password',
                         hintStyle: const TextStyle(color: Colors.grey),
+                        prefixIcon: const Icon(Icons.lock),
+                        suffixIcon: IconButton(
+                          icon: Icon(
+                            _isPasswordVisible ? Icons.visibility : Icons.visibility_off,
+                          ),
+                          onPressed: () {
+                            setState(() {
+                              _isPasswordVisible = !_isPasswordVisible;
+                            });
+                          },
+                        ),
                         border: OutlineInputBorder(
                           borderRadius: BorderRadius.circular(8),
                           borderSide: const BorderSide(color: Colors.grey),
