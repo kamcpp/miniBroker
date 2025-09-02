@@ -47,14 +47,34 @@ class AppInitializer extends StatefulWidget {
   State<AppInitializer> createState() => _AppInitializerState();
 }
 
-class _AppInitializerState extends State<AppInitializer> {
+class _AppInitializerState extends State<AppInitializer> with SingleTickerProviderStateMixin {
   late Future<void> _initFuture;
+  late AnimationController _fadeController;
+  late Animation<double> _fadeAnimation;
 
   @override
   void initState() {
     super.initState();
     final authService = Provider.of<AuthService>(context, listen: false);
     _initFuture = _initializeApp(authService);
+    
+    _fadeController = AnimationController(
+      duration: const Duration(milliseconds: 800),
+      vsync: this,
+    );
+    _fadeAnimation = Tween<double>(
+      begin: 0.0,
+      end: 1.0,
+    ).animate(CurvedAnimation(
+      parent: _fadeController,
+      curve: Curves.easeInOut,
+    ));
+  }
+
+  @override
+  void dispose() {
+    _fadeController.dispose();
+    super.dispose();
   }
 
   @override
@@ -102,7 +122,12 @@ class _AppInitializerState extends State<AppInitializer> {
             
             // Check authentication state
             if (!authService.isLoggedIn) {
-              return const LoginPage();
+              // Start fade animation when showing login page
+              _fadeController.forward();
+              return FadeTransition(
+                opacity: _fadeAnimation,
+                child: const LoginPage(),
+              );
             }
             
             return const PortfolioPage();
