@@ -86,8 +86,23 @@ class _AppInitializerState extends State<AppInitializer> with SingleTickerProvid
           builder: (context, snapshot) {
             if (snapshot.connectionState == ConnectionState.waiting) {
               return Scaffold(
-                backgroundColor: const Color(0xFF1a1754), // Match login page background
-                body: Center(
+                body: Stack(
+                  children: [
+                    // Background image
+                    Container(
+                      decoration: const BoxDecoration(
+                        image: DecorationImage(
+                          image: AssetImage('assets/chart-background.jpg'),
+                          fit: BoxFit.cover,
+                        ),
+                      ),
+                    ),
+                    // Semi-transparent overlay for fading
+                    Container(
+                      color: const Color(0xFF1a1754).withOpacity(0.9), // 90% fade with dark blue
+                    ),
+                    // Main content
+                    Center(
                   child: Stack(
                     alignment: Alignment.center,
                     children: [
@@ -116,6 +131,8 @@ class _AppInitializerState extends State<AppInitializer> with SingleTickerProvid
                       ),
                     ],
                   ),
+                    ),
+                  ],
                 ),
               );
             }

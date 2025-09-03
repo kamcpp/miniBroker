@@ -180,8 +180,23 @@ class _LoginPageState extends State<LoginPage> with TickerProviderStateMixin {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      backgroundColor: const Color(0xFF1a1754), // Dark blue background
-      body: Center(
+      body: Stack(
+        children: [
+          // Background image
+          Container(
+            decoration: const BoxDecoration(
+              image: DecorationImage(
+                image: AssetImage('assets/chart-background.jpg'),
+                fit: BoxFit.cover,
+              ),
+            ),
+          ),
+          // Semi-transparent overlay for fading
+          Container(
+            color: const Color(0xFF1a1754).withOpacity(0.9), // 90% fade with dark blue
+          ),
+          // Main content
+          Center(
         child: SingleChildScrollView(
           padding: const EdgeInsets.all(24.0),
           child: AnimatedBuilder(
@@ -213,6 +228,8 @@ class _LoginPageState extends State<LoginPage> with TickerProviderStateMixin {
             },
           ),
         ),
+          ),
+        ],
       ),
     );
   }
