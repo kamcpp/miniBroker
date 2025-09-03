@@ -124,9 +124,12 @@ class _AppInitializerState extends State<AppInitializer> with SingleTickerProvid
             if (!authService.isLoggedIn) {
               // Start fade animation when showing login page
               _fadeController.forward();
-              return FadeTransition(
-                opacity: _fadeAnimation,
-                child: const LoginPage(),
+              return Container(
+                color: const Color(0xFF1a1754), // Match login page background
+                child: FadeTransition(
+                  opacity: _fadeAnimation,
+                  child: const LoginPage(),
+                ),
               );
             }
             
