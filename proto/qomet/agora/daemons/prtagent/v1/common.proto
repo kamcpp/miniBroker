@@ -1,0 +1,369 @@
+syntax = "proto3";
+
+package qomet.agora.daemons.prtagent.v1;
+
+option go_package = "pkg/daemons/prtagent/api/v1;prtagentapiv1";
+option csharp_namespace  = "Qomet.Agora.Daemons.ParticipantAgent.API.V1";
+
+import "google/protobuf/timestamp.proto";
+
+message TimeHMS {
+  // 0 to 23
+  int32 hour = 1;
+  // 0 to 59
+  int32 minute = 2;
+  // 0 to 60
+  int32 second = 3;
+  // 0 to 999,999,999
+  int32 sub_second = 4;
+}
+
+message Time {
+  oneof value {
+    TimeHMS hms = 1;
+    google.protobuf.Timestamp ts = 2;
+  }
+}
+
+message Date {
+  int32 year = 1;
+  int32 month = 2;
+  int32 day = 3;
+}
+
+message DateTime {
+  Date date = 1;
+  Time time = 2;
+}
+
+message Duration {
+  repeated string identifiers = 1;
+  repeated string names = 2;
+  string description = 3;
+  string metadata = 4;
+  oneof start {
+    Time start_time = 5;
+    Date start_date = 6;
+    DateTime start_dt = 7;
+  }
+  oneof end {
+    Time end_time = 8;
+    Date end_date = 9;
+    DateTime end_dt = 10;
+  }
+}
+
+message PaginationParams {
+  int32 page_nr = 1;
+  int32 page_size = 2;
+  string page_token = 3;
+}
+
+message PaginationInfo {
+  /*
+   * -1 means that the total_count cannot be computed or it is unavailable.
+   */
+  int64 total_count = 1;
+  /*
+   * missing or empty value means that no token is avilable for the next page.
+   */
+  string next_page_token = 2;
+}
+
+message ZonedIdentifier {
+  string zone = 1;
+  string standard_or_format = 2;
+  repeated string identifiers = 3;
+  string description = 4;
+  string metadata = 5;
+}
+
+message StringValue {
+  string value = 1;
+  bool case_insensitive = 2;
+}
+
+message EventSubscriptionParams {
+  string ref_subscription_id = 1;
+  repeated string topics = 2;
+  string type_regex = 3;
+}
+
+enum EventType {
+  EVENT_TYPE__UNKNOWN = 0;
+  EVENT_TYPE__NEWS = 1;
+  EVENT_TYPE__ANNOUNCEMENT = 2;
+  EVENT_TYPE__MARKET_UPDATE = 3;
+  EVENT_TYPE__TRADE_EXECUTION = 4;
+  EVENT_TYPE__ORDER_PLACED = 5;
+  EVENT_TYPE__ORDER_CANCELLED = 6;
+  EVENT_TYPE__ORDER_FILLED = 7;
+  EVENT_TYPE__ORDER_EXPIRED = 8;
+  EVENT_TYPE__PRICE_UPDATE = 9;
+  EVENT_TYPE__REGULATORY = 10;
+  EVENT_TYPE__SYSTEM = 11;
+}
+
+message Event {
+  string ref_subscription_id = 1;
+  string topic = 2;
+  string type = 3;
+  string data = 4;
+}
+
+message ZonedSymbol {
+  string zone = 1;
+  string standard_or_format = 2;
+  repeated StringValue symbols = 3;
+  string description = 4;
+  string metadata = 5;
+}
+
+enum AssetType {
+  ASSET_TYPE__UNKNOWN = 0;
+  ASSET_TYPE__CASH = 1;
+  ASSET_TYPE__ON_CHAIN = 2;
+  ASSET_TYPE__RWA = 3;
+  ASSET_TYPE__COMMODITY = 4;
+  ASSET_TYPE__EQUITY = 5;
+  ASSET_TYPE__FIXED_INCOME = 6;
+  ASSET_TYPE__DERIVATIVE = 7;
+  ASSET_TYPE__CRYPTO = 8;
+  ASSET_TYPE__STABLECOIN = 9;
+  ASSET_TYPE__NFT = 10;
+}
+
+message ZonedAssetType {
+  string zone = 1;
+  repeated AssetType types = 2;
+  string description = 3;
+  string metadata = 4;
+}
+
+message Asset {
+  repeated ZonedIdentifier zoned_identifiers = 1;
+  repeated ZonedSymbol zoned_symbols = 2;
+  repeated ZonedAssetType zoned_asset_types = 3;
+  int32 decimals = 4;
+  bool disabled = 5;
+  string description = 6;
+  string metadata = 7;
+}
+
+message Market {
+  repeated string identifiers = 1;
+  repeated string names = 2;
+  string description = 3;
+  string metadata = 4;
+}
+
+enum InstrumentType {
+  INSTRUMENT_TYPE__UNKNOWN = 0;
+  INSTRUMENT_TYPE__SPOT = 1;
+  INSTRUMENT_TYPE__FUTURE = 2;
+  INSTRUMENT_TYPE__OPTION = 3;
+  INSTRUMENT_TYPE__SWAP = 4;
+  INSTRUMENT_TYPE__FORWARD = 5;
+  INSTRUMENT_TYPE__BOND = 6;
+  INSTRUMENT_TYPE__INDEX = 7;
+  INSTRUMENT_TYPE__ETF = 8;
+  INSTRUMENT_TYPE__PERPETUAL = 9;
+  INSTRUMENT_TYPE__CFD = 10;
+}
+
+enum InstrumentListingStatusType {
+  INSTRUMENT_LISTING_STATUS_TYPE__UNKNOWN = 0;
+  INSTRUMENT_LISTING_STATUS_TYPE__LISTED = 1;
+  INSTRUMENT_LISTING_STATUS_TYPE__SUSPENDED = 2;
+  INSTRUMENT_LISTING_STATUS_TYPE__DELISTED = 3;
+  INSTRUMENT_LISTING_STATUS_TYPE__PENDING = 4;
+  INSTRUMENT_LISTING_STATUS_TYPE__HALTED = 5;
+  INSTRUMENT_LISTING_STATUS_TYPE__CLOSED = 6;
+  INSTRUMENT_LISTING_STATUS_TYPE__PRE_LISTING = 7;
+}
+
+message ZonedInstrumentType {
+  string zone = 1;
+  repeated InstrumentType types = 2;
+  string description = 3;
+  string metadata = 4;
+}
+
+message Instrument {
+  repeated ZonedIdentifier zoned_identifiers = 1;
+  repeated ZonedSymbol zoned_symbols = 2;
+  repeated ZonedInstrumentType zoned_instrument_types = 3;
+  Market market = 4;
+  Asset the_asset = 5;
+  Asset currency = 6;
+  InstrumentListingStatusType listing_status_type = 7;
+  string description = 8;
+  string metadata = 9;
+}
+
+enum ConfirmationStatus {
+  CONFIRMATION_STATUS__UNKNOWN = 0;
+  CONFIRMATION_STATUS__CONFIRMED = 1;
+  CONFIRMATION_STATUS__PENDING = 2;
+  CONFIRMATION_STATUS__DECLINED = 3;
+}
+
+enum OrderSide {
+  option allow_alias = true;
+  ORDER_SIDE__UNKNOWN = 0;
+  ORDER_SIDE__BUY = 1;
+  ORDER_SIDE__BID = 1;
+  ORDER_SIDE__CALL = 1;
+  ORDER_SIDE__SELL = 2;
+  ORDER_SIDE__ASK = 2;
+  ORDER_SIDE__PUT = 2;
+  ORDER_SIDE__BOTH = 3;
+  ORDER_SIDE__NO_SIDE = 4;
+}
+
+message Order {
+  string order_id = 1;
+  string order_hash = 2;
+  string participant_id = 3;
+  string participant_order_id = 4;
+  string participant_account_id = 5;
+  string investor_account_id = 6;
+  string executor_account_id = 7;
+
+  // Order details
+  string order_type = 8; // LIMIT, MARKET
+  OrderSide side = 9;
+  string symbol = 10;
+  string currency = 11;
+  string quantity = 12;
+  string remaining_quantity = 13;
+  string price = 14;
+  string volume = 15;
+  string remaining_volume = 16;
+  string slippage = 17;
+
+  // Time fields
+  string time_in_force = 18;
+  string create_timestamp = 19;
+  string effective_timestamp = 20;
+  string expire_timestamp = 21;
+
+  // Status flags
+  bool is_offer = 22;
+  bool is_directly_fillable = 23;
+  bool is_bid = 24;
+  bool is_filled = 25;
+  bool is_cancelled = 26;
+  bool is_expired = 27;
+
+  // Additional data
+  string creator_address = 28;
+  string trezor_stash_id = 29;
+  string offer_ids = 30;
+  string parent_direct_order_id = 31;
+  string alarm_abi = 32;
+  string alarm_data = 33;
+  string data = 34;
+  string data_encoding = 35;
+  string participant_data = 36;
+}
+
+message Trade {
+  string trade_id = 1;
+  string trade_hash = 2;
+  string timestamp = 3;
+  string creator_address = 4;
+  string trade_type = 5;
+  bool is_buy = 6;
+
+  // Order references
+  string bid_order_id = 7;
+  string ask_order_id = 8;
+
+  // Trade details
+  string quantity = 9;
+  string price = 10;
+  string volume = 11;
+
+  // Fees
+  string bid_fee = 12;
+  string ask_fee = 13;
+
+  // Additional data
+  string data_abi = 14;
+  string data = 15;
+}
+
+message Settlement {
+  string settlement_id = 1;
+  string settlement_hash = 2;
+  string timestamp = 3;
+
+  // Trade reference
+  string trade_id = 4;
+  string trade_hash = 5;
+
+  // Settlement status
+  ConfirmationStatus confirmation_status = 6;
+  string settlement_type = 7;
+
+  // Parties involved
+  string buyer_account = 8;
+  string seller_account = 9;
+
+  // Settlement details
+  string asset_transferred = 10;
+  string amount_transferred = 11;
+  string currency_transferred = 12;
+  string currency_amount = 13;
+
+  // Settlement location
+  string ledger_id = 14;
+  string vault_address = 15;
+  string reserve_id = 16;
+
+  // Additional data
+  string failure_reason = 17;
+  string data = 18;
+}
+
+message OrderEvent {
+  string order_event_id = 1;
+  string order_event_hash = 2;
+  string order_event_timestamp = 3;
+  string order_event_type = 4;
+  string order_event_version = 5;
+
+  // Order reference
+  Order order = 6;
+  Order other_order = 7; // For matching events
+
+  // Trade reference (if applicable)
+  Trade trade = 8;
+
+  // Chain and indexing information
+  string chain_id = 9;
+  string chain_name = 10;
+  string engine_address = 11;
+  string index_timestamp = 12;
+  string index_block_timestamp = 13;
+  string index_block_number = 14;
+  string index_tx_hash = 15;
+  int64 index_tx_log_idx = 16;
+
+  // Pair information
+  string pair_id = 17;
+  string pair_base_token_symbol = 18;
+  string pair_quote_token_symbol = 19;
+
+  // Command information (for audit)
+  string command_id = 20;
+  string command_request_id = 21;
+  string command_timestamp = 22;
+  string command_origin = 23;
+  string command_participant_id = 24;
+  string command_operation = 25;
+
+  // Additional event data
+  string order_event_data = 26;
+}

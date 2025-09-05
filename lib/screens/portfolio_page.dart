@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 import '../services/auth_service.dart';
 import '../services/theme_service.dart';
+import '../services/real_grpc_client.dart';
 import 'trading_page.dart';
 import 'profile_page.dart';
 import 'users_admin_page.dart';
@@ -14,6 +15,225 @@ class PortfolioPage extends StatefulWidget {
 }
 
 class _PortfolioPageState extends State<PortfolioPage> {
+  String _connectionStatus = 'Checking...';
+  Color _connectionStatusColor = Colors.orange;
+  String _participantInfo = 'Loading...';
+  Map<String, dynamic>? _accountListData;
+  bool _isLoadingAccounts = false;
+  bool _isPingInProgress = false;
+  
+  @override
+  void initState() {
+    super.initState();
+    _checkGrpcConnection();
+  }
+
+  Future<void> _checkGrpcConnection() async {
+    try {
+      if (realGrpcClient.isConnected) {
+        setState(() {
+          _connectionStatus = 'Connected to real simprtagent server ${realGrpcClient.currentHost}:${realGrpcClient.currentPort}';
+          _connectionStatusColor = Colors.green;
+        });
+        
+        // Try to get participant info from real server
+        try {
+          final participantInfo = await realGrpcClient.getParticipantInfo();
+          final output = participantInfo['output'] as Map<String, dynamic>;
+          setState(() {
+            _participantInfo = 'Real Participant: ${output['identifier']} (${output['status']})';
+          });
+        } catch (e) {
+          setState(() {
+            _participantInfo = 'Connected to real server but unable to get participant info';
+          });
+        }
+      } else {
+        setState(() {
+          _connectionStatus = 'Not connected to real simprtagent server';
+          _connectionStatusColor = Colors.red;
+          _participantInfo = 'N/A - Check if simprtagent is running';
+        });
+      }
+    } catch (e) {
+      setState(() {
+        _connectionStatus = 'Real server connection error: $e';
+        _connectionStatusColor = Colors.red;
+        _participantInfo = 'N/A';
+      });
+    }
+  }
+
+  Future<void> _testPingConnection() async {
+    // Prevent concurrent ping operations
+    if (_isPingInProgress) {
+      print('⚠️ Ping already in progress, ignoring button press');
+      return;
+    }
+
+    _isPingInProgress = true;
+    try {
+      setState(() {
+        _connectionStatus = 'Testing real server connection...';
+        _connectionStatusColor = Colors.orange;
+      });
+
+      // Test ping with real server - comprehensive crash protection
+      final pingResponse = await realGrpcClient.ping(
+        stringToBePonged: 'Test from Flutter Portfolio Page',
+      ).timeout(
+        const Duration(seconds: 10),
+        onTimeout: () => {
+          'input': {'ref_request_id': 'timeout', 'string_to_be_ponged': 'Test from Flutter Portfolio Page'},
+          'output': {'error': 'Request timed out', 'message': 'Ping request timed out after 10 seconds'},
+          'requestTime': DateTime.now().toIso8601String(),
+          'serverType': 'timeout',
+          'success': false,
+        },
+      );
+
+      if (mounted) {
+        final output = pingResponse['output'] as Map<String, dynamic>;
+        if (pingResponse['success'] == true) {
+          setState(() {
+            _connectionStatus = 'Real server ping successful! Response: "${output['pong_string']}"';
+            _connectionStatusColor = Colors.green;
+          });
+
+          ScaffoldMessenger.of(context).showSnackBar(
+            const SnackBar(
+              content: Text('✅ Real server connection test successful!'),
+              backgroundColor: Colors.green,
+              duration: Duration(seconds: 2),
+            ),
+          );
+        } else {
+          setState(() {
+            _connectionStatus = 'Real server ping failed: ${output['error'] ?? 'Unknown error'}';
+            _connectionStatusColor = Colors.red;
+          });
+          
+          ScaffoldMessenger.of(context).showSnackBar(
+            SnackBar(
+              content: Text('❌ Real server connection test failed: ${output['error'] ?? 'Unknown error'}'),
+              backgroundColor: Colors.red,
+              duration: const Duration(seconds: 3),
+            ),
+          );
+        }
+      }
+    } catch (e) {
+      // Ultimate crash protection - never let this method throw
+      try {
+        if (mounted) {
+          setState(() {
+            _connectionStatus = 'Ping failed with error: ${e.toString()}';
+            _connectionStatusColor = Colors.red;
+          });
+          
+          ScaffoldMessenger.of(context).showSnackBar(
+            SnackBar(
+              content: Text('❌ Ping failed: ${e.toString()}'),
+              backgroundColor: Colors.red,
+              duration: const Duration(seconds: 3),
+            ),
+          );
+        }
+      } catch (innerE) {
+        // Even UI updates can fail - print to console as last resort
+        print('❌ Critical error in _testPingConnection: $e, UI update failed: $innerE');
+      }
+    } finally {
+      _isPingInProgress = false;
+    }
+  }
+
+  Future<void> _fetchAccountList() async {
+    try {
+      if (!realGrpcClient.isConnected) {
+        if (mounted) {
+          ScaffoldMessenger.of(context).showSnackBar(
+            const SnackBar(
+              content: Text('❌ Not connected to real simprtagent server'),
+              backgroundColor: Colors.red,
+            ),
+          );
+        }
+        return;
+      }
+
+      setState(() {
+        _isLoadingAccounts = true;
+      });
+
+      // Fetch account list with comprehensive crash protection
+      final accountListResponse = await realGrpcClient.getAccountList(
+        pageNumber: 1,
+        pageSize: 10,
+        accountIdRegex: null, // Can be modified to filter accounts
+      ).timeout(
+        const Duration(seconds: 10),
+        onTimeout: () => {
+          'input': {'ref_request_id': 'timeout'},
+          'output': {'error': 'Request timed out', 'message': 'Account list request timed out after 10 seconds'},
+          'requestTime': DateTime.now().toIso8601String(),
+          'serverType': 'timeout',
+          'success': false,
+        },
+      );
+
+      if (mounted) {
+        setState(() {
+          _accountListData = accountListResponse;
+          _isLoadingAccounts = false;
+        });
+
+        if (accountListResponse['success'] == true) {
+          ScaffoldMessenger.of(context).showSnackBar(
+            const SnackBar(
+              content: Text('✅ Real server account list loaded successfully!'),
+              backgroundColor: Colors.green,
+            ),
+          );
+        } else {
+          final output = accountListResponse['output'] as Map<String, dynamic>;
+          setState(() {
+            _connectionStatus = 'Account list fetch failed: ${output['error'] ?? 'Unknown error'}';
+            _connectionStatusColor = Colors.red;
+          });
+
+          ScaffoldMessenger.of(context).showSnackBar(
+            SnackBar(
+              content: Text('❌ Failed to fetch account list: ${output['error'] ?? 'Unknown error'}'),
+              backgroundColor: Colors.red,
+            ),
+          );
+        }
+      }
+    } catch (e) {
+      // Ultimate crash protection - never let this method throw
+      try {
+        if (mounted) {
+          setState(() {
+            _isLoadingAccounts = false;
+            _connectionStatus = 'Account list fetch failed with error: ${e.toString()}';
+            _connectionStatusColor = Colors.red;
+          });
+
+          ScaffoldMessenger.of(context).showSnackBar(
+            SnackBar(
+              content: Text('❌ Failed to fetch account list: ${e.toString()}'),
+              backgroundColor: Colors.red,
+            ),
+          );
+        }
+      } catch (innerE) {
+        // Even UI updates can fail - print to console as last resort
+        print('❌ Critical error in _fetchAccountList: $e, UI update failed: $innerE');
+      }
+    }
+  }
+
   @override
   Widget build(BuildContext context) {
     final authService = Provider.of<AuthService>(context);
@@ -142,6 +362,288 @@ class _PortfolioPageState extends State<PortfolioPage> {
                     ),
                     
                     const SizedBox(height: 24),
+                    
+                    // gRPC Connection Status Card
+                    Container(
+                      padding: const EdgeInsets.all(16),
+                      decoration: BoxDecoration(
+                        color: _isDarkTheme ? const Color(0xFF2A2A2A) : Colors.white,
+                        borderRadius: BorderRadius.circular(12),
+                        boxShadow: [
+                          BoxShadow(
+                            color: Colors.black.withOpacity(0.1),
+                            blurRadius: 8,
+                            offset: const Offset(0, 2),
+                          ),
+                        ],
+                      ),
+                      child: Column(
+                        crossAxisAlignment: CrossAxisAlignment.start,
+                        children: [
+                          Row(
+                            children: [
+                              Icon(
+                                Icons.cloud_outlined,
+                                color: _connectionStatusColor,
+                                size: 20,
+                              ),
+                              const SizedBox(width: 8),
+                              Text(
+                                'Trading Server Status',
+                                style: TextStyle(
+                                  fontSize: 16,
+                                  fontWeight: FontWeight.bold,
+                                  color: _isDarkTheme ? Colors.white : Colors.black,
+                                ),
+                              ),
+                              const Spacer(),
+                              // Test Connection Button
+                              TextButton.icon(
+                                onPressed: () {
+                                  // Extra safety wrapper to prevent any possible crashes
+                                  try {
+                                    _testPingConnection();
+                                  } catch (e) {
+                                    print('❌ Critical: Ping button press failed: $e');
+                                    try {
+                                      if (mounted) {
+                                        ScaffoldMessenger.of(context).showSnackBar(
+                                          SnackBar(
+                                            content: Text('Ping failed: ${e.toString()}'),
+                                            backgroundColor: Colors.red,
+                                          ),
+                                        );
+                                      }
+                                    } catch (uiError) {
+                                      print('❌ Even UI error handling failed: $uiError');
+                                    }
+                                  }
+                                },
+                                icon: const Icon(Icons.refresh, size: 16),
+                                label: const Text('Ping'),
+                                style: TextButton.styleFrom(
+                                  foregroundColor: Colors.white,
+                                  backgroundColor: Colors.transparent,
+                                  side: const BorderSide(color: Colors.white),
+                                  padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
+                                ),
+                              ),
+                              const SizedBox(width: 8),
+                              // Get Account List Button
+                              TextButton.icon(
+                                onPressed: _isLoadingAccounts ? null : () {
+                                  // Extra safety wrapper to prevent any possible crashes
+                                  try {
+                                    _fetchAccountList();
+                                  } catch (e) {
+                                    print('❌ Critical: Account button press failed: $e');
+                                    try {
+                                      if (mounted) {
+                                        ScaffoldMessenger.of(context).showSnackBar(
+                                          SnackBar(
+                                            content: Text('Account list failed: ${e.toString()}'),
+                                            backgroundColor: Colors.red,
+                                          ),
+                                        );
+                                      }
+                                    } catch (uiError) {
+                                      print('❌ Even UI error handling failed: $uiError');
+                                    }
+                                  }
+                                },
+                                icon: _isLoadingAccounts 
+                                    ? const SizedBox(
+                                        width: 16,
+                                        height: 16,
+                                        child: CircularProgressIndicator(
+                                          strokeWidth: 2,
+                                          valueColor: AlwaysStoppedAnimation<Color>(Colors.white),
+                                        ),
+                                      )
+                                    : const Icon(Icons.list, size: 16),
+                                label: const Text('Accounts'),
+                                style: TextButton.styleFrom(
+                                  foregroundColor: Colors.white,
+                                  backgroundColor: Colors.transparent,
+                                  side: const BorderSide(color: Colors.white),
+                                  padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
+                                ),
+                              ),
+                            ],
+                          ),
+                          const SizedBox(height: 12),
+                          Row(
+                            children: [
+                              Container(
+                                width: 8,
+                                height: 8,
+                                decoration: BoxDecoration(
+                                  color: _connectionStatusColor,
+                                  shape: BoxShape.circle,
+                                ),
+                              ),
+                              const SizedBox(width: 8),
+                              Expanded(
+                                child: Text(
+                                  _connectionStatus,
+                                  style: TextStyle(
+                                    fontSize: 14,
+                                    color: _isDarkTheme ? Colors.grey[300] : Colors.grey[700],
+                                  ),
+                                ),
+                              ),
+                            ],
+                          ),
+                          const SizedBox(height: 8),
+                          Row(
+                            children: [
+                              Text(
+                                'Participant: ',
+                                style: TextStyle(
+                                  fontSize: 14,
+                                  color: _isDarkTheme ? Colors.grey[400] : Colors.grey[600],
+                                ),
+                              ),
+                              Text(
+                                _participantInfo,
+                                style: TextStyle(
+                                  fontSize: 14,
+                                  fontWeight: FontWeight.w500,
+                                  color: _isDarkTheme ? Colors.white : Colors.black,
+                                ),
+                              ),
+                            ],
+                          ),
+                        ],
+                      ),
+                    ),
+                    
+                    const SizedBox(height: 24),
+                    
+                    // GetAccountList Results Section
+                    if (_accountListData != null) ...[
+                      Container(
+                        constraints: const BoxConstraints(maxHeight: 600), // Add max height constraint
+                        padding: const EdgeInsets.all(16),
+                        decoration: BoxDecoration(
+                          color: _isDarkTheme ? const Color(0xFF2A2A2A) : Colors.white,
+                          borderRadius: BorderRadius.circular(12),
+                          boxShadow: [
+                            BoxShadow(
+                              color: Colors.black.withOpacity(0.1),
+                              blurRadius: 8,
+                              offset: const Offset(0, 2),
+                            ),
+                          ],
+                        ),
+                        child: SingleChildScrollView(
+                          child: Column(
+                            crossAxisAlignment: CrossAxisAlignment.start,
+                            children: [
+                            // Header
+                            Row(
+                              children: [
+                                Icon(
+                                  Icons.account_balance_wallet,
+                                  color: Colors.blue,
+                                  size: 20,
+                                ),
+                                const SizedBox(width: 8),
+                                Text(
+                                  'Real Server GetAccountList - gRPC Response',
+                                  style: TextStyle(
+                                    fontSize: 16,
+                                    fontWeight: FontWeight.bold,
+                                    color: _isDarkTheme ? Colors.white : Colors.black,
+                                  ),
+                                ),
+                              ],
+                            ),
+                            const SizedBox(height: 16),
+                            
+                            // Input Section
+                            Container(
+                              padding: const EdgeInsets.all(12),
+                              decoration: BoxDecoration(
+                                color: _isDarkTheme ? const Color(0xFF404040) : Colors.grey[100],
+                                borderRadius: BorderRadius.circular(8),
+                              ),
+                              child: Column(
+                                crossAxisAlignment: CrossAxisAlignment.start,
+                                children: [
+                                  Text(
+                                    '📨 Request Input:',
+                                    style: TextStyle(
+                                      fontSize: 14,
+                                      fontWeight: FontWeight.bold,
+                                      color: Colors.blue,
+                                    ),
+                                  ),
+                                  const SizedBox(height: 8),
+                                  Text(
+                                    _formatJson(_accountListData!['input']),
+                                    style: TextStyle(
+                                      fontSize: 12,
+                                      fontFamily: 'monospace',
+                                      color: _isDarkTheme ? Colors.white : Colors.black,
+                                    ),
+                                  ),
+                                ],
+                              ),
+                            ),
+                            const SizedBox(height: 12),
+                            
+                            // Output Section
+                            Container(
+                              padding: const EdgeInsets.all(12),
+                              decoration: BoxDecoration(
+                                color: _isDarkTheme ? const Color(0xFF404040) : Colors.grey[100],
+                                borderRadius: BorderRadius.circular(8),
+                              ),
+                              child: Column(
+                                crossAxisAlignment: CrossAxisAlignment.start,
+                                children: [
+                                  Text(
+                                    '📬 Response Output:',
+                                    style: TextStyle(
+                                      fontSize: 14,
+                                      fontWeight: FontWeight.bold,
+                                      color: Colors.green,
+                                    ),
+                                  ),
+                                  const SizedBox(height: 8),
+                                  Text(
+                                    _formatJson(_accountListData!['output']),
+                                    style: TextStyle(
+                                      fontSize: 12,
+                                      fontFamily: 'monospace',
+                                      color: _isDarkTheme ? Colors.white : Colors.black,
+                                    ),
+                                  ),
+                                ],
+                              ),
+                            ),
+                            const SizedBox(height: 12),
+                            
+                            // Account Summary
+                            if (_accountListData!['output']['accounts'] != null) ...[
+                              Text(
+                                '👥 Account Summary:',
+                                style: TextStyle(
+                                  fontSize: 14,
+                                  fontWeight: FontWeight.bold,
+                                  color: _isDarkTheme ? Colors.white : Colors.black,
+                                ),
+                              ),
+                              const SizedBox(height: 8),
+                              ..._buildAccountList(_accountListData!['output']['accounts'], _isDarkTheme),
+                            ],
+                            ],
+                          ),
+                        ),
+                      ),
+                      const SizedBox(height: 24),
+                    ],
                     
                     // Portfolio Holdings
                     Expanded(
@@ -758,5 +1260,111 @@ class _PortfolioPageState extends State<PortfolioPage> {
         ],
       ),
     );
+  }
+
+  // Helper method to format JSON for display
+  String _formatJson(dynamic json) {
+    if (json == null) return 'null';
+    
+    String jsonString = json.toString();
+    // Simple formatting - add line breaks after commas and braces
+    jsonString = jsonString.replaceAll('{', '{\n  ');
+    jsonString = jsonString.replaceAll('}', '\n}');
+    jsonString = jsonString.replaceAll(', ', ',\n  ');
+    return jsonString;
+  }
+
+  // Helper method to build account list widgets
+  List<Widget> _buildAccountList(List<dynamic> accounts, bool isDarkTheme) {
+    return accounts.map<Widget>((account) {
+      return Container(
+        margin: const EdgeInsets.only(bottom: 8),
+        padding: const EdgeInsets.all(12),
+        decoration: BoxDecoration(
+          color: isDarkTheme ? const Color(0xFF505050) : Colors.grey[50],
+          borderRadius: BorderRadius.circular(6),
+          border: Border.all(
+            color: isDarkTheme ? Colors.grey[600]! : Colors.grey[300]!,
+          ),
+        ),
+        child: Row(
+          children: [
+            // Account Icon
+            Container(
+              width: 32,
+              height: 32,
+              decoration: BoxDecoration(
+                color: Colors.blue,
+                borderRadius: BorderRadius.circular(6),
+              ),
+              child: const Icon(
+                Icons.account_circle,
+                color: Colors.white,
+                size: 20,
+              ),
+            ),
+            const SizedBox(width: 12),
+            
+            // Account Details
+            Expanded(
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  Row(
+                    children: [
+                      Text(
+                        account['external_id'] ?? account['externalId'] ?? 'N/A',
+                        style: TextStyle(
+                          fontSize: 14,
+                          fontWeight: FontWeight.bold,
+                          color: isDarkTheme ? Colors.white : Colors.black,
+                        ),
+                      ),
+                      const Spacer(),
+                      Container(
+                        padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 2),
+                        decoration: BoxDecoration(
+                          color: account['status'] == 'ACTIVE' ? Colors.green : Colors.orange,
+                          borderRadius: BorderRadius.circular(12),
+                        ),
+                        child: Text(
+                          account['status'] ?? 'UNKNOWN',
+                          style: const TextStyle(
+                            fontSize: 10,
+                            color: Colors.white,
+                            fontWeight: FontWeight.bold,
+                          ),
+                        ),
+                      ),
+                    ],
+                  ),
+                  const SizedBox(height: 4),
+                  Row(
+                    children: [
+                      Text(
+                        'ID: ${account['id']}',
+                        style: TextStyle(
+                          fontSize: 12,
+                          color: isDarkTheme ? Colors.grey[300] : Colors.grey[600],
+                        ),
+                      ),
+                      const Spacer(),
+                      Text(
+                        'Balance: \$${account['balance']} ${account['currency'] ?? ''}',
+                        style: TextStyle(
+                          fontSize: 12,
+                          fontWeight: FontWeight.w500,
+                          color: isDarkTheme ? Colors.green[300] : Colors.green[700],
+                        ),
+                      ),
+                    ],
+                  ),
+                ],
+              ),
+            ),
+          ],
+        ),
+      );
+    }).toList();
   }
 }

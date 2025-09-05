@@ -1,0 +1,109 @@
+syntax = "proto3";
+
+package qomet.agora.daemons.prtagent.v1;
+
+option go_package = "pkg/daemons/prtagent/api/v1;prtagentapiv1";
+option csharp_namespace  = "Qomet.Agora.Daemons.ParticipantAgent.API.V1";
+
+import "qomet/agora/daemons/prtagent/v1/common.proto";
+
+service AgentService {
+  rpc Ping(PingRequest) returns (PingResponse);
+  rpc GetParticipantInfo(GetParticipantInfoRequest) returns (GetParticipantInfoResponse);
+  rpc GetSupportedCurrencies(GetSupportedCurrenciesRequest) returns (GetSupportedCurrenciesResponse);
+  rpc GetParticipantOrders(GetParticipantOrdersRequest) returns (GetParticipantOrdersResponse);
+  rpc GetParticipantTrades(GetParticipantTradesRequest) returns (GetParticipantTradesResponse);
+  rpc GetParticipantSettlements(GetParticipantSettlementsRequest) returns (GetParticipantSettlementsResponse);
+  rpc SubscribeToAgentEvents(EventSubscriptionParams) returns (stream Event);
+}
+
+message PingRequest {
+  string ref_request_id = 1;
+  string string_to_be_ponged = 2;
+}
+
+message PingResponse {
+  string ref_request_id = 1;
+  string pong_string = 2;
+}
+
+message GetParticipantInfoRequest {
+  string ref_request_id = 1;
+}
+
+message GetParticipantInfoResponse {
+  string ref_request_id = 1;
+  string identifier = 2;
+}
+
+message GetSupportedCurrenciesRequest {
+  string ref_request_id = 1;
+  PaginationParams pagination = 2;
+}
+
+message GetSupportedCurrenciesResponse {
+  string ref_request_id = 1;
+  PaginationInfo pagination_info = 2;
+  repeated Asset currencies = 3;
+}
+
+message GetParticipantOrdersRequest {
+  string ref_request_id = 1;
+  PaginationParams pagination = 2;
+  // Optional filters
+  repeated string account_id_or_name_regexes = 3;  // Filter by specific accounts
+  repeated string market_id_or_name_regexes = 4;
+  Time from_time = 5;
+  Time to_time = 6;
+  OrderSide side = 7;  // Optional: filter by order side (not repeated)
+  repeated bool status_filters = 8;  // [is_filled, is_cancelled, is_expired]
+  repeated string instrument_id_or_symbol_regexes = 9;
+}
+
+message GetParticipantOrdersResponse {
+  string ref_request_id = 1;
+  PaginationInfo pagination_info = 2;
+  repeated Order orders = 3;
+  map<string, string> account_summaries = 4;  // account_id -> summary stats
+  Time created_at = 5;
+}
+
+message GetParticipantTradesRequest {
+  string ref_request_id = 1;
+  PaginationParams pagination = 2;
+  // Optional filters
+  repeated string account_id_or_name_regexes = 3;
+  repeated string market_id_or_name_regexes = 4;
+  Time from_time = 5;
+  Time to_time = 6;
+  OrderSide side = 7;  // Not repeated
+  repeated string instrument_id_or_symbol_regexes = 8;
+}
+
+message GetParticipantTradesResponse {
+  string ref_request_id = 1;
+  PaginationInfo pagination_info = 2;
+  repeated Trade trades = 3;
+  map<string, string> account_summaries = 4;  // account_id -> trade volume summary
+  Time created_at = 5;
+}
+
+message GetParticipantSettlementsRequest {
+  string ref_request_id = 1;
+  PaginationParams pagination = 2;
+  // Optional filters
+  repeated string account_id_or_name_regexes = 3;
+  repeated string market_id_or_name_regexes = 4;
+  Time from_time = 5;
+  Time to_time = 6;
+  ConfirmationStatus status = 7;
+  repeated string asset_id_or_name_regexes = 8;
+}
+
+message GetParticipantSettlementsResponse {
+  string ref_request_id = 1;
+  PaginationInfo pagination_info = 2;
+  repeated Settlement settlements = 3;
+  map<string, string> account_summaries = 4;  // account_id -> settlement summary
+  Time created_at = 5;
+}

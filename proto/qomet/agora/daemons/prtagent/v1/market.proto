@@ -1,0 +1,225 @@
+syntax = "proto3";
+
+package qomet.agora.daemons.prtagent.v1;
+
+option go_package = "pkg/daemons/prtagent/api/v1;prtagentapiv1";
+option csharp_namespace  = "Qomet.Agora.Daemons.ParticipantAgent.API.V1";
+
+import "qomet/agora/daemons/prtagent/v1/common.proto";
+
+service MarketService {
+  rpc GetMarketList(GetMarketListRequest) returns (GetMarketListResponse);
+  rpc GetMarketsInfo(GetMarketsInfoRequest) returns (GetMarketsInfoResponse);
+  rpc GetMarketCalendar(GetMarketCalendarRequest) returns (GetMarketCalendarResponse);
+  rpc GetMarketSupportedCurrencies(GetMarketSupportedCurrenciesRequest)
+    returns (GetMarketSupportedCurrenciesResponse);
+  rpc GetMarketInstrumentList(GetMarketInstrumentListRequest)
+    returns (GetMarketInstrumentListResponse);
+  rpc GetOrderFees(GetOrderFeesRequest) returns (GetOrderFeesResponse);
+  rpc CreateOrder(CreateOrderRequest) returns (CreateOrderResponse);
+  rpc ReplaceOrder(ReplaceOrderRequest) returns (ReplaceOrderResponse);
+  rpc CancelOrder(CancelOrderRequest) returns (CancelOrderResponse);
+}
+
+enum MarketStatus {
+  MARKET_STATUS__UNKNOWN = 0;
+  MARKET_STATUS__OPENING_AUCTION = 1;
+  MARKET_STATUS__PRE_OPEN = 2;
+  MARKET_STATUS__OPEN = 3;
+  MARKET_STATUS__PARTIALLY_OPEN = 4;
+  MARKET_STATUS__REPORTING = 5;
+  MARKET_STATUS__CLOSING_AUCTION = 6;
+  MARKET_STATUS__CLOSED = 7;
+  MARKET_STATUS__CLOSED_ON_PUBLIC_HOLIDAY = 8;
+  MARKET_STATUS__SUSPENDED = 9;
+  MARKET_STATUS__MAINTENANCE = 10;
+  MARKET_STATUS__UNAVAILABLE = 100;
+}
+
+message MarketDuration {
+  Duration duration = 1;
+  MarketStatus status = 2;
+  string metadata = 3;
+  repeated string comments = 4;
+}
+
+message MarketCalendar {
+  repeated string market_identifiers = 1;
+  Time daily_open = 2;
+  Time daily_close = 3;
+  repeated Duration calendar = 4;
+}
+
+message GetMarketListRequest {
+  string ref_request_id = 1;
+  PaginationParams pagination = 2;
+}
+
+message GetMarketListResponse {
+  string ref_request_id = 1;
+  PaginationInfo pagination_info = 2;
+  repeated Market markets = 3;
+}
+
+message GetMarketsInfoRequest {
+  string ref_request_id = 1;
+  repeated string market_ids = 2;
+}
+
+message GetMarketsInfoResponse {
+  string ref_request_id = 1;
+  repeated Market markets = 2;
+}
+
+message GetMarketCalendarRequest {
+  string ref_request_id = 1;
+  string market_id = 2;
+}
+
+message GetMarketCalendarResponse {
+  string ref_request_id = 1;
+  MarketCalendar calendar = 2;
+}
+
+message GetMarketSupportedCurrenciesRequest {
+  string ref_request_id = 1;
+  PaginationParams pagination = 2;
+  string market_id = 3;
+}
+
+message GetMarketSupportedCurrenciesResponse {
+  string ref_request_id = 1;
+  PaginationInfo pagination_info = 2;
+  repeated Asset currencies = 3;
+}
+
+message GetMarketInstrumentListRequest {
+  string ref_request_id = 1;
+  PaginationParams pagination = 2;
+  string market_id = 3;
+  string instrument_id_regex = 4;
+}
+
+message GetMarketInstrumentListResponse {
+  string ref_request_id = 1;
+  PaginationInfo pagination_info = 2;
+  repeated Instrument instruments = 3;
+}
+
+message FeeStructure {
+  string base_fee = 1;  // Base transaction fee
+  string percentage_fee = 2;  // Percentage of order value
+  string minimum_fee = 3;  // Minimum fee amount
+  string maximum_fee = 4;  // Maximum fee amount
+  string gas_fee_estimate = 5;  // Estimated gas/network fee if applicable
+  string maker_fee = 6;  // Fee for maker orders (limit orders that add liquidity)
+  string taker_fee = 7;  // Fee for taker orders (orders that remove liquidity)
+  string currency = 8;  // Currency for fee payment
+  string fee_tier = 9;  // User's fee tier/level
+  string discount_rate = 10;  // Applicable discount percentage
+  string total_estimated_fee = 11;  // Total estimated fee for the order
+}
+
+message GetOrderFeesRequest {
+  string ref_request_id = 1;
+  string account_id = 2;  // Account ID to determine fee tier
+  string fee_payer_account_id = 3;  // Optional: if different from account_id
+  string instrument_id = 4;  // Instrument for the order
+  
+  // Order details for fee calculation
+  string order_type = 5; // "LIMIT", "MARKET"
+  OrderSide side = 6;
+  string quantity = 7;  // Order quantity
+  string price = 8;  // Order price (for LIMIT orders)
+  
+  // Optional parameters that might affect fees
+  string time_in_force = 9; // "GTC", "IOC", "FOK", "DAY"
+  bool is_post_only = 10;  // If true, order will only be maker
+  string metadata = 11;
+}
+
+message GetOrderFeesResponse {
+  string ref_request_id = 1;
+  FeeStructure fee_structure = 2;
+  
+  // Additional fee information
+  repeated string fee_notes = 3;  // Any notes about fee calculation
+  Time fee_valid_until = 4;  // Fee quote validity period
+  string message = 5;  // Optional message about fees
+  
+  // Breakdown by fee type
+  map<string, string> fee_breakdown = 6;  // Detailed breakdown of all fee components
+  
+  // Alternative fee payment options
+  repeated FeeStructure alternative_fee_options = 7;  // If fees can be paid in different currencies
+}
+
+message CreateOrderRequest {
+  string ref_request_id = 1;
+  string account_id = 2;  // Account ID won't be changed
+  string fee_payer_account_id = 3;  // Fee payer account ID that can be changed
+  string instrument_id = 4;  // Instrument belongs to market, no need for market_id
+  
+  // Order details
+  string order_type = 5; // "LIMIT", "MARKET" (STOP orders not supported)
+  OrderSide side = 6;
+  string quantity = 7; // Required for both LIMIT and MARKET orders
+  string price = 8; // Required for LIMIT orders, must be zero for MARKET orders
+  
+  // Time constraints
+  string time_in_force = 9; // "GTC", "IOC", "FOK", "DAY"
+  Time expire_time = 10; // Optional: for GTT orders
+  
+  // Additional parameters
+  string participant_order_id = 11; // Required: Client's order ID
+  string metadata = 12;
+  string aux_data = 13;
+}
+
+message CreateOrderResponse {
+  string ref_request_id = 1;
+  string proposed_order_id = 2;  // Proposed order ID
+  string agent_order_id = 3;  // Agent's internal order ID
+  string order_hash = 4;
+  ConfirmationStatus status = 5;
+  string message = 6; // Optional: success or error message
+}
+
+message ReplaceOrderRequest {
+  string ref_request_id = 1;
+  string proposed_order_id = 2;  // Proposed order ID to replace
+  string new_proposed_order_id = 3;  // New proposed order ID for the replacement
+  
+  // Fields that can be modified
+  string new_quantity = 4; // Optional: new quantity
+  string new_price = 5; // Optional: new price
+  Time new_expire_time = 6; // Optional: new expiration time
+  
+  string reason = 7; // Optional: reason for modification
+  string metadata = 8;
+}
+
+message ReplaceOrderResponse {
+  string ref_request_id = 1;
+  string original_proposed_order_id = 2;  // Original proposed order ID being replaced
+  string new_proposed_order_id = 3;  // New proposed order ID
+  string new_order_hash = 4;
+  ConfirmationStatus status = 5;
+  string message = 6; // Optional: success or error message
+}
+
+message CancelOrderRequest {
+  string ref_request_id = 1;
+  string proposed_order_id = 2;  // Proposed order ID to cancel
+  string reason = 3; // Optional: reason for cancellation
+  string metadata = 4;
+}
+
+message CancelOrderResponse {
+  string ref_request_id = 1;
+  string cancelled_proposed_order_id = 2;  // Proposed order ID that was cancelled
+  string cancellation_hash = 3;  // Hash of the cancellation transaction
+  ConfirmationStatus status = 4;
+  Time cancelled_at = 5;
+  string message = 6; // Optional: success or error message
+}

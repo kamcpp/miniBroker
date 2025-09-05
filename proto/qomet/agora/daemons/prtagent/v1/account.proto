@@ -1,0 +1,267 @@
+syntax = "proto3";
+
+package qomet.agora.daemons.prtagent.v1;
+
+option go_package = "pkg/daemons/prtagent/api/v1;prtagentapiv1";
+option csharp_namespace  = "Qomet.Agora.Daemons.ParticipantAgent.API.V1";
+
+import "qomet/agora/daemons/prtagent/v1/common.proto";
+
+service AccountService {
+  rpc GetAccountInfo(GetAccountInfoRequest) returns (GetAccountInfoResponse);
+  rpc GetAccountList(GetAccountListRequest) returns (GetAccountListResponse);
+  rpc NewAccount(NewAccountRequest) returns (NewAccountResponse);
+  rpc EnableMarketForAccount(EnableMarketForAccountRequest) returns (EnableMarketForAccountResponse);
+  rpc GetAccountMarketPortfolio(GetAccountMarketPortfolioRequest) returns (GetAccountMarketPortfolioResponse);
+  rpc GetAccountCashHoldings(GetAccountCashHoldingsRequest) returns (GetAccountCashHoldingsResponse);
+  rpc DepositCash(DepositCashRequest) returns (DepositCashResponse);
+  rpc DepositAsset(DepositAssetRequest) returns (DepositAssetResponse);
+  rpc WithdrawCash(WithdrawCashRequest) returns (WithdrawCashResponse);
+  rpc GetAccountOrders(GetAccountOrdersRequest) returns (GetAccountOrdersResponse);
+  rpc GetAccountTrades(GetAccountTradesRequest) returns (GetAccountTradesResponse);
+  rpc GetAccountSettlements(GetAccountSettlementsRequest) returns (GetAccountSettlementsResponse);
+  rpc GetAccountTransactions(GetAccountTransactionsRequest) returns (GetAccountTransactionsResponse);
+}
+
+message Account {
+  string id = 1;
+  string external_id = 2;
+  string metadata = 3;
+}
+
+message NewAccountRequest {
+  string ref_request_id = 1;
+  string external_account_id = 2;
+  string aux_data = 3;
+}
+
+message NewAccountResponse {
+  string ref_request_id = 1;
+  string new_account_id = 2;
+}
+
+message GetAccountInfoRequest {
+  string ref_request_id = 1;
+  string account_id = 2;
+}
+
+message GetAccountInfoResponse {
+  string ref_request_id = 1;
+  Account account = 2;
+}
+
+message GetAccountListRequest {
+  string ref_request_id = 1;
+  PaginationParams pagination = 2;
+}
+
+message GetAccountListResponse {
+  string ref_request_id = 1;
+  PaginationInfo pagination_info = 2;
+  repeated Account accounts = 3;
+}
+
+message EnableMarketForAccountRequest {
+  string ref_request_id = 1;
+  string account_id = 2;
+  string market_id = 3;
+  string aux_data = 4;
+}
+
+message EnableMarketForAccountResponse {
+  string ref_request_id = 1;
+}
+
+message AssetHoldings {
+  // asset-id > balance
+  map<string, int64> balances = 1;
+}
+
+message GetAccountMarketPortfolioRequest {
+  string ref_request_id = 1;
+  string account_id = 2;
+  string market_id = 3;
+  repeated string asset_ids = 4;
+}
+
+message GetAccountMarketPortfolioResponse {
+  string ref_request_id = 1;
+  Time created_at = 2;
+  AssetHoldings portfolio = 3;
+}
+
+message GetAccountCashHoldingsRequest {
+  string ref_request_id = 1;
+  string account_id = 2;
+  repeated string cash_asset_ids = 3;
+}
+
+message GetAccountCashHoldingsResponse {
+  string ref_request_id = 1;
+  Time created_at = 2;
+  AssetHoldings cash_holdings = 3;
+}
+
+message DepositCashRequest {
+  string ref_request_id = 1;
+  string account_id = 2;
+  string currency_asset_id = 3;
+  string amount = 4;
+  string aux_data = 5;
+}
+
+message DepositCashResponse {
+  string ref_request_id = 1;
+}
+
+message DepositAssetRequest {
+  string ref_request_id = 1;
+  string account_id = 2;
+  string asset_id = 3;
+  int64 amount = 4;
+  string aux_data = 5;
+}
+
+message DepositAssetResponse {
+  string ref_request_id = 1;
+}
+
+message WithdrawCashRequest {
+  string ref_request_id = 1;
+  string account_id = 2;
+  string currency_asset_id = 3;
+  int64 amount = 4;
+  string aux_data = 5;
+}
+
+message WithdrawCashResponse {
+  string ref_request_id = 1;
+}
+
+enum TransactionType {
+  TRANSACTION_TYPE__UNKNOWN = 0;
+  TRANSACTION_TYPE__DEPOSIT_CASH = 1;
+  TRANSACTION_TYPE__DEPOSIT_ASSET = 2;
+  TRANSACTION_TYPE__WITHDRAW_CASH = 3;
+  TRANSACTION_TYPE__WITHDRAW_ASSET = 4;
+  TRANSACTION_TYPE__TRADE_BUY = 5;
+  TRANSACTION_TYPE__TRADE_SELL = 6;
+  TRANSACTION_TYPE__FEE = 7;
+  TRANSACTION_TYPE__SETTLEMENT = 8;
+  TRANSACTION_TYPE__TRANSFER_IN = 9;
+  TRANSACTION_TYPE__TRANSFER_OUT = 10;
+}
+
+// Transaction message reflects Activity structure with from/to accounts and stashes
+// This structure mirrors the Activity model from pkg/chain/trezor/activity.go
+message Transaction {
+  // Core identifiers
+  string transaction_id = 1;
+  string transaction_hash = 2;
+  Time timestamp = 3;
+  
+  // Transaction type and operation
+  TransactionType type = 4;
+  string operation = 5;  // Specific operation code
+  
+  // Account information (reflecting Activity structure)
+  string account_id = 6;  // Primary account for this transaction
+  string from_account = 7;  // Source account
+  string to_account = 8;  // Destination account
+  
+  // Reserve IDs (from Activity model)
+  string from_reserve_id = 9;
+  string to_reserve_id = 10;
+  
+  // Stash information (critical for the Activity model)
+  string from_stash = 11;  // Source stash
+  string to_stash = 12;  // Destination stash
+  
+  // Asset and amount
+  string asset_id = 13;  // Asset being transferred
+  string amount = 14;
+  
+  // Reference information
+  string reference_id = 15;  // Could be order_id, trade_id, settlement_id, etc.
+  string reference_type = 16;  // "order", "trade", "settlement", etc.
+  
+  // Additional fields
+  string description = 17;
+  string metadata = 18;
+}
+
+message GetAccountOrdersRequest {
+  string ref_request_id = 1;
+  string account_id = 2;
+  repeated string market_id_or_name_regexes = 3;  // Optional: filter by market
+  PaginationParams pagination = 4;
+  // Optional filters
+  Time from_time = 5;
+  Time to_time = 6;
+  OrderSide side = 7;  // Optional: filter by order side (not repeated)
+  repeated bool status_filters = 8;  // Optional: [is_filled, is_cancelled, is_expired]
+  repeated string instrument_id_or_symbol_regexes = 9;  // Optional: filter by instrument
+}
+
+message GetAccountOrdersResponse {
+  string ref_request_id = 1;
+  PaginationInfo pagination_info = 2;
+  repeated Order orders = 3;
+  Time created_at = 4;
+}
+
+message GetAccountTradesRequest {
+  string ref_request_id = 1;
+  string account_id = 2;
+  repeated string market_id_or_name_regexes = 3;  // Optional: filter by market
+  PaginationParams pagination = 4;
+  // Optional filters
+  Time from_time = 5;
+  Time to_time = 6;
+  repeated string instrument_id_or_symbol_regexes = 7;  // Optional: filter by instrument
+  OrderSide side = 8;  // Optional: filter by trade side (not repeated)
+}
+
+message GetAccountTradesResponse {
+  string ref_request_id = 1;
+  PaginationInfo pagination_info = 2;
+  repeated Trade trades = 3;
+  Time created_at = 4;
+}
+
+message GetAccountSettlementsRequest {
+  string ref_request_id = 1;
+  string account_id = 2;
+  repeated string market_id_or_name_regexes = 3;  // Optional: filter by market
+  PaginationParams pagination = 4;
+  // Optional filters
+  Time from_time = 5;
+  Time to_time = 6;
+  ConfirmationStatus status = 7;  // Optional: filter by settlement status
+  repeated string asset_id_or_name_regexes = 8;  // Optional: filter by asset
+}
+
+message GetAccountSettlementsResponse {
+  string ref_request_id = 1;
+  PaginationInfo pagination_info = 2;
+  repeated Settlement settlements = 3;
+  Time created_at = 4;
+}
+
+message GetAccountTransactionsRequest {
+  string ref_request_id = 1;
+  string account_id = 2;
+  PaginationParams pagination = 3;
+  // Optional filters
+  Time from_time = 4;
+  Time to_time = 5;
+  repeated TransactionType transaction_types = 6;  // Optional: filter by type
+  repeated string asset_id_or_name_regexes = 7;  // Optional: filter by asset
+}
+
+message GetAccountTransactionsResponse {
+  string ref_request_id = 1;
+  PaginationInfo pagination_info = 2;
+  repeated Transaction transactions = 3;
+  Time created_at = 4;
+}

@@ -1,3 +1,4 @@
+import 'dart:async';
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 import 'screens/trading_page.dart';
@@ -5,9 +6,24 @@ import 'screens/portfolio_page.dart';
 import 'screens/login_page.dart';
 import 'services/auth_service.dart';
 import 'services/theme_service.dart';
+import 'services/real_grpc_client.dart';
 
 void main() {
-  runApp(const MyApp());
+  // Add comprehensive error handling to catch ALL unhandled exceptions
+  runZonedGuarded(() {
+    runApp(const MyApp());
+  }, (error, stack) {
+    print('❌ CRITICAL: Unhandled exception caught by main zone guard: $error');
+    print('❌ CRITICAL: Stack trace: $stack');
+    // Don't rethrow - just log and continue
+  });
+  
+  // Also set Flutter-specific error handler
+  FlutterError.onError = (FlutterErrorDetails details) {
+    print('❌ CRITICAL: Flutter framework error: ${details.exception}');
+    print('❌ CRITICAL: Flutter stack trace: ${details.stack}');
+    // Don't crash - just log
+  };
 }
 
 class MyApp extends StatelessWidget {
@@ -162,10 +178,28 @@ class _AppInitializerState extends State<AppInitializer> with SingleTickerProvid
       // Initialize authentication service
       await authService.init();
       
+      // Initialize gRPC connection (re-enabled with fixes)
+      await _initializeGrpcConnection();
+      
       // Add any other initialization here if needed
       await Future.delayed(const Duration(milliseconds: 500)); // Brief delay for smooth UX
     } catch (e) {
       throw Exception('Failed to initialize application: $e');
+    }
+  }
+
+  Future<void> _initializeGrpcConnection() async {
+    try {
+      await realGrpcClient.connect(
+        host: 'localhost',
+        port: 50051,
+        useSecure: false,
+      );
+      print('✅ Real gRPC client connected to simprtagent server');
+    } catch (e) {
+      print('⚠️ Failed to connect to real gRPC server: $e');
+      // Continue with app initialization even if gRPC connection fails
+      // The app can still function with local features
     }
   }
 }
