@@ -1,4 +1,5 @@
 import 'dart:convert';
+import 'dart:io';
 import 'grpcurl_helper.dart';
 
 /// Real gRPC client that uses grpcurl to communicate with the actual simprtagent server
@@ -25,10 +26,19 @@ class RealGrpcClient {
 
       _host = host;
       _port = port;
-      _isConnected = true;
       
-      // Skip background testing completely to avoid crashes in standalone app
-      print('✅ gRPC client configured for $host:$port - background testing permanently disabled for stability');
+      // Test actual server connectivity before marking as connected
+      print('🔄 Testing server connectivity before marking as connected...');
+      final testResult = await testServerConnectivity();
+      
+      if (testResult) {
+        _isConnected = true;
+        print('✅ gRPC client successfully connected to $host:$port');
+      } else {
+        _isConnected = false;
+        print('⚠️ gRPC client configured for $host:$port but server is not reachable');
+        // Don't throw exception - let the app continue but show disconnected state
+      }
     } catch (e) {
       _isConnected = false;
       print('❌ Failed to configure gRPC client: $e');
@@ -79,56 +89,116 @@ class RealGrpcClient {
     });
   }
 
+  /// Test if server is reachable via socket connection
+  Future<bool> testServerConnectivity() async {
+    try {
+      if (_host == null || _port == null) return false;
+      
+      print('🔌 Testing socket connection to $_host:$_port...');
+      final socket = await Socket.connect(_host!, _port!, timeout: const Duration(seconds: 2));
+      await socket.close();
+      print('✅ Server is reachable via socket connection');
+      return true;
+    } catch (e) {
+      print('❌ Server not reachable via socket: $e');
+      return false;
+    }
+  }
+
   /// Real Ping call to AgentService.Ping using grpcurl
   Future<Map<String, dynamic>> ping({
     String stringToBePonged = 'Hello from Flutter!',
     Duration? timeout,
   }) async {
-    if (!_isConnected) {
+    // Always test connectivity first to prevent crashes
+    print('🔍 Testing server connectivity before ping...');
+    final isServerReachable = await testServerConnectivity();
+    
+    if (!isServerReachable) {
+      _isConnected = false; // Update connection state
       return {
         'input': {
           'ref_request_id': 'ping_${DateTime.now().millisecondsSinceEpoch}',
           'string_to_be_ponged': stringToBePonged,
         },
         'output': {
-          'error': 'Not connected to gRPC server',
-          'message': 'Please check if the server is running and connection is established.',
+          'error': 'Server not reachable',
+          'message': 'Cannot connect to the gRPC server at $_host:$_port. Please check if the server is running.',
         },
         'requestTime': DateTime.now().toIso8601String(),
-        'serverType': 'not-connected',
+        'serverType': 'not-reachable',
         'success': false,
       };
+    }
+
+    // Update connection state if server is reachable
+    if (!_isConnected) {
+      _isConnected = true;
+      print('✅ Server connection restored');
     }
 
     try {
       print('🏓 Ping button clicked - attempting real server connection');
       
-      // Try to call the real server with grpcurl, but with safety measures
+      // Try to call the real server with grpcurl, with comprehensive crash protection
       final response = await GrpcurlHelper.ping(
         stringToBePonged: stringToBePonged,
       ).timeout(
         const Duration(seconds: 5),
-        onTimeout: () => {
+        onTimeout: () {
+          print('⏰ Ping request timed out');
+          return {
+            'input': {
+              'ref_request_id': 'ping_${DateTime.now().millisecondsSinceEpoch}',
+              'string_to_be_ponged': stringToBePonged,
+            },
+            'output': {
+              'error': 'Request timed out',
+              'message': 'The ping request timed out after 5 seconds. Check if server is running properly.',
+            },
+            'requestTime': DateTime.now().toIso8601String(),
+            'serverType': 'timeout',
+            'success': false,
+          };
+        },
+      ).catchError((error) {
+        print('❌ Ping error caught: $error');
+        return {
           'input': {
             'ref_request_id': 'ping_${DateTime.now().millisecondsSinceEpoch}',
             'string_to_be_ponged': stringToBePonged,
           },
           'output': {
-            'error': 'Request timed out',
-            'message': 'The ping request timed out after 5 seconds. Check if server is running on localhost:50051.',
+            'error': 'Ping execution failed',
+            'message': 'Failed to execute ping: ${error.toString()}',
           },
           'requestTime': DateTime.now().toIso8601String(),
-          'serverType': 'timeout',
+          'serverType': 'execution-error',
           'success': false,
-        },
-      );
+        };
+      });
 
       print('📬 Real Server Ping Response: ${response['output']}');
       print('✅ Real ping completed');
 
+      // Update connection state based on response
+      if (response['success'] == true) {
+        _isConnected = true;
+      } else {
+        // Test connectivity again if ping failed
+        final stillReachable = await testServerConnectivity();
+        _isConnected = stillReachable;
+      }
+
       return response;
-    } catch (e) {
-      print('❌ Real Ping failed: $e');
+    } catch (e, stackTrace) {
+      print('❌ Critical error in ping: $e');
+      print('❌ Stack trace: $stackTrace');
+      
+      // Test connectivity to update state
+      final stillReachable = await testServerConnectivity();
+      _isConnected = stillReachable;
+      
       // Return error response instead of throwing exception to prevent app crash
       return {
         'input': {
@@ -136,11 +206,12 @@ class RealGrpcClient {
           'string_to_be_ponged': stringToBePonged,
         },
         'output': {
-          'error': 'Ping failed',
-          'message': 'Failed to execute ping: ${e.toString()}',
+          'error': 'Critical ping error',
+          'message': 'A critical error occurred during ping: ${e.toString()}',
+          'details': stackTrace.toString(),
         },
         'requestTime': DateTime.now().toIso8601String(),
-        'serverType': 'error',
+        'serverType': 'critical-error',
         'success': false,
       };
     }
@@ -153,58 +224,102 @@ class RealGrpcClient {
     String? accountIdRegex,
     Duration? timeout,
   }) async {
-    if (!_isConnected) {
+    // Always test connectivity first to prevent crashes
+    print('🔍 Testing server connectivity before GetAccountList...');
+    final isServerReachable = await testServerConnectivity();
+    
+    if (!isServerReachable) {
+      _isConnected = false; // Update connection state
       return {
         'input': {
           'ref_request_id': 'get_account_list_${DateTime.now().millisecondsSinceEpoch}',
         },
         'output': {
-          'error': 'Not connected to gRPC server',
-          'message': 'Please check if the server is running and connection is established.',
+          'error': 'Server not reachable',
+          'message': 'Cannot connect to the gRPC server at $_host:$_port. Please check if the server is running.',
         },
         'requestTime': DateTime.now().toIso8601String(),
-        'serverType': 'not-connected',
+        'serverType': 'not-reachable',
         'success': false,
       };
+    }
+
+    // Update connection state if server is reachable
+    if (!_isConnected) {
+      _isConnected = true;
+      print('✅ Server connection restored');
     }
 
     try {
       print('🔄 GetAccountList button clicked - attempting real server connection');
       
-      // Try to call the real server with grpcurl, but with safety measures
+      // Try to call the real server with grpcurl, with comprehensive crash protection
       final response = await GrpcurlHelper.getAccountList().timeout(
         const Duration(seconds: 5),
-        onTimeout: () => {
+        onTimeout: () {
+          print('⏰ GetAccountList request timed out');
+          return {
+            'input': {
+              'ref_request_id': 'get_account_list_${DateTime.now().millisecondsSinceEpoch}',
+            },
+            'output': {
+              'error': 'Request timed out',
+              'message': 'The account list request timed out after 5 seconds. Check if server is running properly.',
+            },
+            'requestTime': DateTime.now().toIso8601String(),
+            'serverType': 'timeout',
+            'success': false,
+          };
+        },
+      ).catchError((error) {
+        print('❌ GetAccountList error caught: $error');
+        return {
           'input': {
             'ref_request_id': 'get_account_list_${DateTime.now().millisecondsSinceEpoch}',
           },
           'output': {
-            'error': 'Request timed out',
-            'message': 'The account list request timed out after 5 seconds. Check if server is running on localhost:50051.',
+            'error': 'GetAccountList execution failed',
+            'message': 'Failed to execute GetAccountList: ${error.toString()}',
           },
           'requestTime': DateTime.now().toIso8601String(),
-          'serverType': 'timeout',
+          'serverType': 'execution-error',
           'success': false,
-        },
-      );
+        };
+      });
 
       print('📬 Real Server GetAccountList Response: ${response['output']}');
       print('✅ Real account list completed');
 
+      // Update connection state based on response
+      if (response['success'] == true) {
+        _isConnected = true;
+      } else {
+        // Test connectivity again if request failed
+        final stillReachable = await testServerConnectivity();
+        _isConnected = stillReachable;
+      }
+
       return response;
-    } catch (e) {
-      print('❌ Real GetAccountList failed: $e');
+    } catch (e, stackTrace) {
+      print('❌ Critical error in GetAccountList: $e');
+      print('❌ Stack trace: $stackTrace');
+      
+      // Test connectivity to update state
+      final stillReachable = await testServerConnectivity();
+      _isConnected = stillReachable;
+      
       // Return error response instead of throwing exception to prevent app crash
       return {
         'input': {
           'ref_request_id': 'get_account_list_${DateTime.now().millisecondsSinceEpoch}',
         },
         'output': {
-          'error': 'GetAccountList failed',
-          'message': 'Failed to execute GetAccountList: ${e.toString()}',
+          'error': 'Critical GetAccountList error',
+          'message': 'A critical error occurred during GetAccountList: ${e.toString()}',
+          'details': stackTrace.toString(),
         },
         'requestTime': DateTime.now().toIso8601String(),
-        'serverType': 'error',
+        'serverType': 'critical-error',
         'success': false,
       };
     }
