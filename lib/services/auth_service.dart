@@ -1,6 +1,7 @@
 import 'package:flutter/foundation.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 import 'database_helper.dart';
+import 'real_grpc_client.dart';
 
 class AuthService extends ChangeNotifier {
   static final AuthService _instance = AuthService._internal();
@@ -107,10 +108,34 @@ class AuthService extends ChangeNotifier {
         throw 'Username already exists';
       }
       
-      // Create new user in database
+      // Create new user in local database first
       final success = await _databaseHelper.createUser(user, password);
       
       if (success) {
+        // Try to create account on server as well (but don't fail signup if server is down)
+        try {
+          print('🌐 Creating server account for user: $user');
+          final serverResponse = await realGrpcClient.newAccount(
+            externalAccountId: user.toLowerCase().trim(),
+            auxData: 'Created from Flutter app signup - ${DateTime.now().toIso8601String()}',
+          );
+          
+          if (serverResponse['success'] == true) {
+            final newAccountId = serverResponse['output']['newAccountId'] ?? 
+                                serverResponse['output']['new_account_id'];
+            print('✅ Server account created successfully: $newAccountId');
+            
+            // TODO: Store the server account ID in local database if needed
+            // This could be used to link local user with server account
+          } else {
+            print('⚠️ Server account creation failed, but local signup succeeded: ${serverResponse['output']}');
+            // Continue with signup - server failure shouldn't block user registration
+          }
+        } catch (e) {
+          print('⚠️ Server account creation failed with exception, but local signup succeeded: $e');
+          // Continue with signup - server failure shouldn't block user registration
+        }
+        
         // Don't auto-login - user should login manually
         return true;
       }

@@ -217,6 +217,123 @@ class RealGrpcClient {
     }
   }
 
+  /// Real NewAccount call to AccountService.NewAccount using grpcurl
+  Future<Map<String, dynamic>> newAccount({
+    required String externalAccountId,
+    String? auxData,
+    Duration? timeout,
+  }) async {
+    // Always test connectivity first to prevent crashes
+    print('🔍 Testing server connectivity before NewAccount...');
+    final isServerReachable = await testServerConnectivity();
+    
+    if (!isServerReachable) {
+      _isConnected = false; // Update connection state
+      return {
+        'input': {
+          'ref_request_id': 'new_account_${DateTime.now().millisecondsSinceEpoch}',
+          'external_account_id': externalAccountId,
+          'aux_data': auxData ?? '',
+        },
+        'output': {
+          'error': 'Server not reachable',
+          'message': 'Cannot connect to the gRPC server at $_host:$_port. Please check if the server is running.',
+        },
+        'requestTime': DateTime.now().toIso8601String(),
+        'serverType': 'not-reachable',
+        'success': false,
+      };
+    }
+
+    // Update connection state if server is reachable
+    if (!_isConnected) {
+      _isConnected = true;
+      print('✅ Server connection restored');
+    }
+
+    try {
+      print('👤 NewAccount called - attempting to create account for $externalAccountId');
+      
+      final requestId = 'new_account_${DateTime.now().millisecondsSinceEpoch}';
+      final request = {
+        'ref_request_id': requestId,
+        'external_account_id': externalAccountId,
+        'aux_data': auxData ?? 'Created from Flutter signup',
+      };
+
+      // Try to call the real server with grpcurl, with comprehensive crash protection
+      final response = await GrpcurlHelper.newAccount(
+        externalAccountId: externalAccountId,
+        auxData: auxData,
+      ).timeout(
+        const Duration(seconds: 10),
+        onTimeout: () {
+          print('⏰ NewAccount request timed out');
+          return {
+            'input': request,
+            'output': {
+              'error': 'Request timed out',
+              'message': 'The new account request timed out after 10 seconds. Check if server is running properly.',
+            },
+            'requestTime': DateTime.now().toIso8601String(),
+            'serverType': 'timeout',
+            'success': false,
+          };
+        },
+      ).catchError((error) {
+        print('❌ NewAccount error caught: $error');
+        return {
+          'input': request,
+          'output': {
+            'error': 'NewAccount execution failed',
+            'message': 'Failed to execute NewAccount: ${error.toString()}',
+          },
+          'requestTime': DateTime.now().toIso8601String(),
+          'serverType': 'execution-error',
+          'success': false,
+        };
+      });
+
+      print('📬 Real Server NewAccount Response: ${response['output']}');
+      print('✅ Real NewAccount completed');
+
+      // Update connection state based on response
+      if (response['success'] == true) {
+        _isConnected = true;
+      } else {
+        // Test connectivity again if request failed
+        final stillReachable = await testServerConnectivity();
+        _isConnected = stillReachable;
+      }
+
+      return response;
+    } catch (e, stackTrace) {
+      print('❌ Critical error in NewAccount: $e');
+      print('❌ Stack trace: $stackTrace');
+      
+      // Test connectivity to update state
+      final stillReachable = await testServerConnectivity();
+      _isConnected = stillReachable;
+      
+      // Return error response instead of throwing exception to prevent app crash
+      return {
+        'input': {
+          'ref_request_id': 'new_account_${DateTime.now().millisecondsSinceEpoch}',
+          'external_account_id': externalAccountId,
+          'aux_data': auxData ?? '',
+        },
+        'output': {
+          'error': 'Critical NewAccount error',
+          'message': 'A critical error occurred during NewAccount: ${e.toString()}',
+          'details': stackTrace.toString(),
+        },
+        'requestTime': DateTime.now().toIso8601String(),
+        'serverType': 'critical-error',
+        'success': false,
+      };
+    }
+  }
+
   /// Real GetAccountList call to AccountService.GetAccountList using grpcurl
   Future<Map<String, dynamic>> getAccountList({
     int pageNumber = 1,

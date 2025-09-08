@@ -313,6 +313,196 @@ class GrpcurlHelper {
     }
   }
 
+  /// Make a real NewAccount call using grpcurl
+  static Future<Map<String, dynamic>> newAccount({
+    required String externalAccountId,
+    String? auxData,
+  }) async {
+    // Prevent concurrent newAccount calls to avoid crashes
+    if (_isAccountListInProgress) {
+      print('⚠️ NewAccount blocked - another account operation in progress');
+      return {
+        'input': {
+          'ref_request_id': 'new_account_${DateTime.now().millisecondsSinceEpoch}',
+          'external_account_id': externalAccountId,
+        },
+        'output': {
+          'error': 'Operation already in progress',
+          'message': 'Another account operation is already in progress. Please wait for it to complete.',
+        },
+        'requestTime': DateTime.now().toIso8601String(),
+        'serverType': 'concurrent-blocked',
+        'success': false,
+      };
+    }
+
+    _isAccountListInProgress = true;
+    try {
+      return await _newAccountInternal(
+        externalAccountId: externalAccountId,
+        auxData: auxData,
+      );
+    } catch (error, stack) {
+      print('❌ CRITICAL: Unhandled exception in newAccount: $error');
+      print('❌ CRITICAL: Stack: $stack');
+      return {
+        'input': {
+          'ref_request_id': 'new_account_${DateTime.now().millisecondsSinceEpoch}',
+          'external_account_id': externalAccountId,
+        },
+        'output': {
+          'error': 'Critical unhandled exception in newAccount',
+          'message': 'An unhandled exception occurred: ${error.toString()}',
+          'details': stack.toString(),
+        },
+        'requestTime': DateTime.now().toIso8601String(),
+        'serverType': 'critical-error',
+        'success': false,
+      };
+    } finally {
+      _isAccountListInProgress = false;
+    }
+  }
+
+  /// Internal newAccount implementation
+  static Future<Map<String, dynamic>> _newAccountInternal({
+    required String externalAccountId,
+    String? auxData,
+  }) async {
+    final requestId = 'new_account_${DateTime.now().millisecondsSinceEpoch}';
+    
+    final request = {
+      'ref_request_id': requestId,
+      'external_account_id': externalAccountId,
+      'aux_data': auxData ?? 'Created from Flutter signup',
+    };
+
+    try {
+      // Find the working grpcurl path with aggressive timeout to prevent hanging
+      print('🔍 Looking for grpcurl executable for NewAccount...');
+      final grpcurlPath = await _findGrpcurlPath().timeout(
+        const Duration(milliseconds: 500),
+        onTimeout: () {
+          print('⏰ grpcurl path finder timed out for NewAccount');
+          return null;
+        },
+      );
+      
+      if (grpcurlPath == null) {
+        print('❌ No grpcurl path found for NewAccount');
+        return {
+          'input': request,
+          'output': {
+            'error': 'grpcurl command not available in standalone app',
+            'message': 'The standalone macOS app cannot access grpcurl due to sandbox restrictions. This feature works when running with "flutter run --debug" but not in built apps. The server connection requires external process execution which is restricted in sandboxed macOS applications.',
+            'suggestion': 'Use "echo "1" | flutter run --debug" to test this functionality',
+          },
+          'requestTime': DateTime.now().toIso8601String(),
+          'serverType': 'grpcurl-sandbox-restricted',
+          'success': false,
+        };
+      }
+
+      print('🔄 Making real grpcurl call to AccountService.NewAccount using $grpcurlPath');
+      print('📨 Request: $request');
+
+      ProcessResult? result;
+      try {
+        result = await Process.run(
+          grpcurlPath,
+          ['-plaintext', '-d', jsonEncode(request), '$_host:$_port', 'qomet.agora.daemons.prtagent.v1.AccountService.NewAccount'],
+        ).timeout(
+          const Duration(seconds: 10),
+          onTimeout: () {
+            print('⏰ grpcurl NewAccount Process.run timed out after 10 seconds');
+            throw TimeoutException('grpcurl newAccount timed out', const Duration(seconds: 10));
+          },
+        );
+      } on TimeoutException catch (e) {
+        print('⏰ NewAccount timeout: ${e.message}');
+        return {
+          'input': request,
+          'output': {
+            'error': 'Request timed out',
+            'message': 'The new account request timed out after 10 seconds. Check if server is running on localhost:50051.',
+          },
+          'requestTime': DateTime.now().toIso8601String(),
+          'serverType': 'timeout',
+          'success': false,
+        };
+      } catch (e) {
+        // Catch ANY other exception that might occur in sandboxed environment
+        print('❌ Process.run failed for newAccount in sandboxed app: ${e.runtimeType}: ${e.toString()}');
+        return {
+          'input': request,
+          'output': {
+            'error': 'Process execution failed in sandboxed app',
+            'message': 'The macOS app sandbox prevents external process execution. This is a security restriction.',
+            'details': e.toString(),
+          },
+          'requestTime': DateTime.now().toIso8601String(),
+          'serverType': 'sandbox-restricted',
+          'success': false,
+        };
+      }
+
+      if (result.exitCode == 0) {
+        final responseJson = result.stdout.toString().trim();
+        print('📬 Raw server response: $responseJson');
+        
+        try {
+          final parsedResponse = jsonDecode(responseJson) as Map<String, dynamic>;
+          return {
+            'input': request,
+            'output': parsedResponse,
+            'requestTime': DateTime.now().toIso8601String(),
+            'serverType': 'simprtagent-real-grpcurl',
+            'success': true,
+          };
+        } catch (e) {
+          return {
+            'input': request,
+            'output': {
+              'raw_response': responseJson,
+              'parse_error': e.toString(),
+            },
+            'requestTime': DateTime.now().toIso8601String(),
+            'serverType': 'simprtagent-real-grpcurl',
+            'success': false,
+          };
+        }
+      } else {
+        final error = result.stderr.toString();
+        print('❌ grpcurl error: $error');
+        
+        return {
+          'input': request,
+          'output': {
+            'error': error,
+            'exit_code': result.exitCode,
+          },
+          'requestTime': DateTime.now().toIso8601String(),
+          'serverType': 'simprtagent-real-grpcurl',
+          'success': false,
+        };
+      }
+    } catch (e) {
+      print('❌ Failed to execute grpcurl: $e');
+      return {
+        'input': request,
+        'output': {
+          'error': 'grpcurl command execution failed in standalone app',
+          'message': 'The standalone macOS app cannot execute grpcurl due to sandbox restrictions. This feature works when running with "flutter run --debug" but may fail in built apps.',
+          'suggestion': 'Use "echo "1" | flutter run --debug" to test this functionality',
+          'details': e.toString(),
+        },
+        'requestTime': DateTime.now().toIso8601String(),
+        'serverType': 'grpcurl-unavailable',
+        'success': false,
+      };
+    }
+  }
+
   /// Make a real GetAccountList call using grpcurl
   static Future<Map<String, dynamic>> getAccountList() async {
     // Prevent concurrent account list calls to avoid crashes
