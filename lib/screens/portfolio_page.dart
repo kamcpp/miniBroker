@@ -3,6 +3,7 @@ import 'package:provider/provider.dart';
 import '../services/auth_service.dart';
 import '../services/theme_service.dart';
 import '../services/real_grpc_client.dart';
+import '../services/database_helper.dart';
 import 'trading_page.dart';
 import 'profile_page.dart';
 import 'users_admin_page.dart';
@@ -23,6 +24,7 @@ class _PortfolioPageState extends State<PortfolioPage> {
   bool _isPingInProgress = false;
   Map<String, dynamic>? _portfolioData;
   bool _isLoadingPortfolio = false;
+  final DatabaseHelper _databaseHelper = DatabaseHelper();
   
   @override
   void initState() {
@@ -201,6 +203,10 @@ class _PortfolioPageState extends State<PortfolioPage> {
         });
 
         if (accountListResponse['success'] == true) {
+          // Auto-sync server accounts with local users
+          final accounts = accountListResponse['output']['accounts'] as List<dynamic>;
+          await _syncServerAccountsWithLocalUsers(accounts);
+          
           ScaffoldMessenger.of(context).showSnackBar(
             const SnackBar(
               content: Text('✅ Real server account list loaded successfully!'),
@@ -280,6 +286,7 @@ class _PortfolioPageState extends State<PortfolioPage> {
         await _fetchAccountList();
         if (_accountListData != null && _accountListData!['success'] == true) {
           final accounts = _accountListData!['output']['accounts'] as List<dynamic>;
+          // The sync is already called in _fetchAccountList, so we just find the user
           accountId = _findUserAccount(accounts, currentUsername);
         }
       }
@@ -383,6 +390,65 @@ class _PortfolioPageState extends State<PortfolioPage> {
     // Don't use fallback accounts for users that don't exist on the server
     print('❌ No account found for user $username on the server');
     return '';
+  }
+
+  /// Automatically create local users for server accounts that don't exist locally
+  Future<void> _syncServerAccountsWithLocalUsers(List<dynamic> accounts) async {
+    try {
+      print('🔄 Syncing server accounts with local users...');
+      int createdCount = 0;
+      
+      for (final account in accounts) {
+        final accountMap = account as Map<String, dynamic>;
+        final externalId = accountMap['external_id'] ?? accountMap['externalId'] ?? '';
+        
+        if (externalId.isNotEmpty) {
+          // Check if user already exists locally
+          final userExists = await _databaseHelper.isUsernameExists(externalId);
+          
+          if (!userExists) {
+            // Create user with external_id as username and password "111111"
+            print('👤 Creating local user for server account: $externalId');
+            final success = await _databaseHelper.createUser(externalId, '111111');
+            
+            if (success) {
+              createdCount++;
+              print('✅ Successfully created local user: $externalId');
+            } else {
+              print('❌ Failed to create local user: $externalId');
+            }
+          } else {
+            print('ℹ️ Local user already exists: $externalId');
+          }
+        }
+      }
+      
+      if (createdCount > 0) {
+        if (mounted) {
+          ScaffoldMessenger.of(context).showSnackBar(
+            SnackBar(
+              content: Text('✅ Created $createdCount new local users from server accounts'),
+              backgroundColor: Colors.green,
+              duration: const Duration(seconds: 3),
+            ),
+          );
+        }
+        print('✅ Auto-sync completed: $createdCount users created');
+      } else {
+        print('ℹ️ Auto-sync completed: No new users needed');
+      }
+    } catch (e) {
+      print('❌ Error syncing server accounts with local users: $e');
+      if (mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(
+            content: Text('❌ Failed to sync server accounts: ${e.toString()}'),
+            backgroundColor: Colors.red,
+            duration: const Duration(seconds: 3),
+          ),
+        );
+      }
+    }
   }
 
   @override
