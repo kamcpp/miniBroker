@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import '../services/database_helper.dart';
+import '../services/user_sync_service.dart';
 
 class UsersAdminPage extends StatefulWidget {
   const UsersAdminPage({super.key});
@@ -10,8 +11,10 @@ class UsersAdminPage extends StatefulWidget {
 
 class _UsersAdminPageState extends State<UsersAdminPage> {
   final DatabaseHelper _databaseHelper = DatabaseHelper();
+  final UserSyncService _userSyncService = UserSyncService();
   List<Map<String, dynamic>> _users = [];
   bool _isLoading = true;
+  bool _isSyncing = false;
 
   @override
   void initState() {
@@ -22,19 +25,49 @@ class _UsersAdminPageState extends State<UsersAdminPage> {
   Future<void> _loadUsers() async {
     setState(() {
       _isLoading = true;
+      _isSyncing = true;
     });
 
     try {
-      final users = await _databaseHelper.getAllUsers();
+      print('🔄 Loading synchronized users...');
+      
+      // Get synchronized users (this will call server and sync automatically)
+      final users = await _userSyncService.getSynchronizedUsers();
+      
       setState(() {
         _users = users;
         _isLoading = false;
+        _isSyncing = false;
       });
+      
+      print('✅ Synchronized users loaded: ${users.length}');
+      
+      // Show sync result in snackbar
+      if (mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(
+            content: Text('✅ Users synchronized with server (${users.length} users)'),
+            backgroundColor: Colors.green,
+            duration: const Duration(seconds: 2),
+          ),
+        );
+      }
     } catch (e) {
-      print('Error loading users: $e');
+      print('Error loading synchronized users: $e');
       setState(() {
         _isLoading = false;
+        _isSyncing = false;
       });
+      
+      if (mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(
+            content: Text('⚠️ Sync failed, showing local users only'),
+            backgroundColor: Colors.orange,
+            duration: const Duration(seconds: 3),
+          ),
+        );
+      }
     }
   }
 
@@ -103,8 +136,21 @@ class _UsersAdminPageState extends State<UsersAdminPage> {
         ],
       ),
       body: _isLoading
-          ? const Center(
-              child: CircularProgressIndicator(color: Colors.white),
+          ? Center(
+              child: Column(
+                mainAxisAlignment: MainAxisAlignment.center,
+                children: [
+                  const CircularProgressIndicator(color: Colors.white),
+                  const SizedBox(height: 16),
+                  Text(
+                    _isSyncing ? 'Syncing with server...' : 'Loading users...',
+                    style: const TextStyle(
+                      color: Colors.white,
+                      fontSize: 16,
+                    ),
+                  ),
+                ],
+              ),
             )
           : _users.isEmpty
               ? const Center(

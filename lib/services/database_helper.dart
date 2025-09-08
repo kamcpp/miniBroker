@@ -267,6 +267,79 @@ class DatabaseHelper {
     }
   }
 
+  // Synchronize local users with server accounts
+  Future<void> syncUsersWithServer(List<Map<String, dynamic>> serverAccounts) async {
+    try {
+      final db = await database;
+      
+      // Get all local users
+      final localUsers = await getAllUsers();
+      
+      // Create set of server external IDs for quick lookup
+      final serverExternalIds = serverAccounts
+          .map((account) => account['externalId'] as String?)
+          .where((id) => id != null)
+          .cast<String>()
+          .toSet();
+      
+      print('📊 Sync Status:');
+      print('  - Local users: ${localUsers.length}');
+      print('  - Server accounts: ${serverAccounts.length}');
+      print('  - Server external IDs: $serverExternalIds');
+      
+      // Check each local user
+      for (final user in localUsers) {
+        final username = user['username'] as String;
+        
+        // Skip admin user - always keep locally
+        if (isAdminUser(username)) {
+          print('  ✅ Keeping admin user: $username (protected)');
+          continue;
+        }
+        
+        // Check if user exists on server
+        if (serverExternalIds.contains(username)) {
+          print('  ✅ Keeping user: $username (exists on server)');
+        } else {
+          print('  🗑️  Deleting user: $username (not found on server)');
+          
+          // Delete user from local database
+          final deleted = await deleteUser(username);
+          if (deleted) {
+            print('  ✅ Successfully deleted: $username');
+          } else {
+            print('  ❌ Failed to delete: $username');
+          }
+        }
+      }
+      
+      // Final count
+      final remainingUsers = await getAllUsers();
+      print('📊 Sync completed:');
+      print('  - Remaining local users: ${remainingUsers.length}');
+      
+    } catch (e) {
+      print('❌ Error syncing users with server: $e');
+      rethrow;
+    }
+  }
+  
+  // Get synchronized users (requires external server accounts data)
+  // This method should be called from a service that has access to RealGrpcClient
+  Future<List<Map<String, dynamic>>> getSynchronizedUsersWithServerData(List<Map<String, dynamic>> serverAccounts) async {
+    try {
+      // Sync local database with server
+      await syncUsersWithServer(serverAccounts);
+      
+      // Return synchronized local users
+      return await getAllUsers();
+    } catch (e) {
+      print('⚠️ Sync failed, returning local users only: $e');
+      // Fallback to local users if sync fails
+      return await getAllUsers();
+    }
+  }
+
   // Close database
   Future<void> close() async {
     final db = await database;
