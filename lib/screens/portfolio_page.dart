@@ -21,11 +21,23 @@ class _PortfolioPageState extends State<PortfolioPage> {
   Map<String, dynamic>? _accountListData;
   bool _isLoadingAccounts = false;
   bool _isPingInProgress = false;
+  Map<String, dynamic>? _portfolioData;
+  bool _isLoadingPortfolio = false;
   
   @override
   void initState() {
     super.initState();
     _checkGrpcConnection();
+    // Automatically fetch portfolio data when page loads
+    _initializePortfolioData();
+  }
+
+  Future<void> _initializePortfolioData() async {
+    // Small delay to ensure connection check completes first
+    await Future.delayed(const Duration(milliseconds: 500));
+    if (mounted) {
+      _fetchPortfolioData();
+    }
   }
 
   Future<void> _checkGrpcConnection() async {
@@ -234,6 +246,145 @@ class _PortfolioPageState extends State<PortfolioPage> {
     }
   }
 
+  Future<void> _fetchPortfolioData() async {
+    try {
+      if (!realGrpcClient.isConnected) {
+        if (mounted) {
+          ScaffoldMessenger.of(context).showSnackBar(
+            const SnackBar(
+              content: Text('❌ Not connected to real simprtagent server'),
+              backgroundColor: Colors.red,
+            ),
+          );
+        }
+        return;
+      }
+
+      setState(() {
+        _isLoadingPortfolio = true;
+      });
+
+      // Get the current logged-in username from AuthService
+      final authService = Provider.of<AuthService>(context, listen: false);
+      final currentUsername = authService.username;
+      
+      print('🔍 Looking for account belonging to logged-in user: $currentUsername');
+
+      // First, get the account ID that belongs to the logged-in user
+      String? accountId;
+      if (_accountListData != null && _accountListData!['success'] == true) {
+        final accounts = _accountListData!['output']['accounts'] as List<dynamic>;
+        accountId = _findUserAccount(accounts, currentUsername);
+      } else {
+        // Fetch account list first to get account ID
+        await _fetchAccountList();
+        if (_accountListData != null && _accountListData!['success'] == true) {
+          final accounts = _accountListData!['output']['accounts'] as List<dynamic>;
+          accountId = _findUserAccount(accounts, currentUsername);
+        }
+      }
+
+      print('🔍 Final account ID selected: "$accountId" for user: $currentUsername');
+
+      if (accountId == null || accountId.isEmpty) {
+        if (mounted) {
+          setState(() {
+            _isLoadingPortfolio = false;
+          });
+          
+          ScaffoldMessenger.of(context).showSnackBar(
+            SnackBar(
+              content: Text('❌ No account ID found for user: $currentUsername'),
+              backgroundColor: Colors.red,
+            ),
+          );
+        }
+        return;
+      }
+
+      // Fetch portfolio data with comprehensive crash protection
+      final portfolioResponse = await realGrpcClient.getAccountMarketPortfolio(
+        accountId: accountId,
+        marketId: '',
+        assetIds: ['ETH', 'USD', 'XRP'],
+      ).timeout(
+        const Duration(seconds: 15),
+        onTimeout: () => {
+          'input': {'ref_request_id': 'timeout'},
+          'output': {'error': 'Request timed out', 'message': 'Portfolio request timed out after 15 seconds'},
+          'requestTime': DateTime.now().toIso8601String(),
+          'serverType': 'timeout',
+          'success': false,
+        },
+      );
+
+      if (mounted) {
+        setState(() {
+          _portfolioData = portfolioResponse;
+          _isLoadingPortfolio = false;
+        });
+
+        if (portfolioResponse['success'] == true) {
+          ScaffoldMessenger.of(context).showSnackBar(
+            const SnackBar(
+              content: Text('✅ Portfolio data loaded successfully!'),
+              backgroundColor: Colors.green,
+            ),
+          );
+        } else {
+          final output = portfolioResponse['output'] as Map<String, dynamic>;
+          ScaffoldMessenger.of(context).showSnackBar(
+            SnackBar(
+              content: Text('❌ Failed to fetch portfolio: ${output['error'] ?? 'Unknown error'}'),
+              backgroundColor: Colors.red,
+            ),
+          );
+        }
+      }
+    } catch (e) {
+      // Ultimate crash protection
+      try {
+        if (mounted) {
+          setState(() {
+            _isLoadingPortfolio = false;
+          });
+
+          ScaffoldMessenger.of(context).showSnackBar(
+            SnackBar(
+              content: Text('❌ Failed to fetch portfolio: ${e.toString()}'),
+              backgroundColor: Colors.red,
+            ),
+          );
+        }
+      } catch (innerE) {
+        print('❌ Critical error in _fetchPortfolioData: $e, UI update failed: $innerE');
+      }
+    }
+  }
+
+  /// Find the account that belongs to the logged-in user
+  String? _findUserAccount(List<dynamic> accounts, String username) {
+    for (final account in accounts) {
+      final accountMap = account as Map<String, dynamic>;
+      final externalId = accountMap['external_id'] ?? accountMap['externalId'] ?? '';
+      final accountId = accountMap['id'] ?? '';
+      
+      // Try to match the account with the logged-in user
+      // The external_id might match the username, or contain the username
+      if (externalId.toLowerCase().contains(username.toLowerCase()) || 
+          externalId == username ||
+          accountId.toLowerCase().contains(username.toLowerCase())) {
+        print('✅ Found matching account for user $username: ID=$accountId, ExternalID=$externalId');
+        return accountId;
+      }
+    }
+    
+    // If no exact match found for the logged-in user, return empty string
+    // Don't use fallback accounts for users that don't exist on the server
+    print('❌ No account found for user $username on the server');
+    return '';
+  }
+
   @override
   Widget build(BuildContext context) {
     final authService = Provider.of<AuthService>(context);
@@ -256,112 +407,6 @@ class _PortfolioPageState extends State<PortfolioPage> {
                 child: Column(
                   crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
-                    // Total Asset Value
-                    Container(
-                      padding: const EdgeInsets.all(24),
-                      decoration: BoxDecoration(
-                        color: _isDarkTheme ? const Color(0xFF2A2A2A) : Colors.white,
-                        borderRadius: BorderRadius.circular(12),
-                        boxShadow: [
-                          BoxShadow(
-                            color: Colors.black.withOpacity(0.1),
-                            blurRadius: 8,
-                            offset: const Offset(0, 2),
-                          ),
-                        ],
-                      ),
-                      child: Column(
-                        crossAxisAlignment: CrossAxisAlignment.start,
-                        children: [
-                          Text(
-                            'Total asset value',
-                            style: TextStyle(
-                              fontSize: 16,
-                              color: _isDarkTheme ? Colors.grey[400] : Colors.grey[600],
-                            ),
-                          ),
-                          const SizedBox(height: 8),
-                          Text(
-                            '1,220 \$',
-                            style: TextStyle(
-                              fontSize: 48,
-                              fontWeight: FontWeight.bold,
-                              color: _isDarkTheme ? Colors.white : Colors.black,
-                            ),
-                          ),
-                          const SizedBox(height: 24),
-                          Row(
-                            children: [
-                              // Profit Card
-                              Expanded(
-                                child: Container(
-                                  padding: const EdgeInsets.all(16),
-                                  decoration: BoxDecoration(
-                                    color: _isDarkTheme ? const Color(0xFF404040) : Colors.grey[100],
-                                    borderRadius: BorderRadius.circular(8),
-                                  ),
-                                  child: Column(
-                                    crossAxisAlignment: CrossAxisAlignment.start,
-                                    children: [
-                                      Text(
-                                        'Profit',
-                                        style: TextStyle(
-                                          fontSize: 14,
-                                          color: _isDarkTheme ? Colors.grey[400] : Colors.grey[600],
-                                        ),
-                                      ),
-                                      const SizedBox(height: 8),
-                                      Text(
-                                        'N/A',
-                                        style: TextStyle(
-                                          fontSize: 24,
-                                          fontWeight: FontWeight.bold,
-                                          color: _isDarkTheme ? Colors.white : Colors.black,
-                                        ),
-                                      ),
-                                    ],
-                                  ),
-                                ),
-                              ),
-                              const SizedBox(width: 16),
-                              // Investment gain/loss Card
-                              Expanded(
-                                child: Container(
-                                  padding: const EdgeInsets.all(16),
-                                  decoration: BoxDecoration(
-                                    color: _isDarkTheme ? const Color(0xFF404040) : Colors.grey[100],
-                                    borderRadius: BorderRadius.circular(8),
-                                  ),
-                                  child: Column(
-                                    crossAxisAlignment: CrossAxisAlignment.start,
-                                    children: [
-                                      Text(
-                                        'Investment gain/loss',
-                                        style: TextStyle(
-                                          fontSize: 14,
-                                          color: _isDarkTheme ? Colors.grey[400] : Colors.grey[600],
-                                        ),
-                                      ),
-                                      const SizedBox(height: 8),
-                                      Text(
-                                        'N/A',
-                                        style: TextStyle(
-                                          fontSize: 24,
-                                          fontWeight: FontWeight.bold,
-                                          color: _isDarkTheme ? Colors.white : Colors.black,
-                                        ),
-                                      ),
-                                    ],
-                                  ),
-                                ),
-                              ),
-                            ],
-                          ),
-                        ],
-                      ),
-                    ),
-                    
-                    const SizedBox(height: 24),
                     
                     // gRPC Connection Status Card
                     Container(
@@ -469,6 +514,47 @@ class _PortfolioPageState extends State<PortfolioPage> {
                                   padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
                                 ),
                               ),
+                              const SizedBox(width: 8),
+                              // Get Portfolio Button
+                              TextButton.icon(
+                                onPressed: _isLoadingPortfolio ? null : () {
+                                  // Extra safety wrapper to prevent any possible crashes
+                                  try {
+                                    _fetchPortfolioData();
+                                  } catch (e) {
+                                    print('❌ Critical: Portfolio button press failed: $e');
+                                    try {
+                                      if (mounted) {
+                                        ScaffoldMessenger.of(context).showSnackBar(
+                                          SnackBar(
+                                            content: Text('Portfolio fetch failed: ${e.toString()}'),
+                                            backgroundColor: Colors.red,
+                                          ),
+                                        );
+                                      }
+                                    } catch (uiError) {
+                                      print('❌ Even UI error handling failed: $uiError');
+                                    }
+                                  }
+                                },
+                                icon: _isLoadingPortfolio 
+                                    ? const SizedBox(
+                                        width: 16,
+                                        height: 16,
+                                        child: CircularProgressIndicator(
+                                          strokeWidth: 2,
+                                          valueColor: AlwaysStoppedAnimation<Color>(Colors.white),
+                                        ),
+                                      )
+                                    : const Icon(Icons.pie_chart, size: 16),
+                                label: const Text('Portfolio'),
+                                style: TextButton.styleFrom(
+                                  foregroundColor: Colors.white,
+                                  backgroundColor: Colors.transparent,
+                                  side: const BorderSide(color: Colors.white),
+                                  padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
+                                ),
+                              ),
                             ],
                           ),
                           const SizedBox(height: 12),
@@ -523,7 +609,7 @@ class _PortfolioPageState extends State<PortfolioPage> {
                     // GetAccountList Results Section
                     if (_accountListData != null) ...[
                       Container(
-                        constraints: const BoxConstraints(maxHeight: 600), // Add max height constraint
+                        constraints: const BoxConstraints(maxHeight: 150), // Reduced to 1/4 of original height (600/4 = 150)
                         padding: const EdgeInsets.all(16),
                         decoration: BoxDecoration(
                           color: _isDarkTheme ? const Color(0xFF2A2A2A) : Colors.white,
@@ -673,37 +759,7 @@ class _PortfolioPageState extends State<PortfolioPage> {
                             ),
                             const SizedBox(height: 20),
                             Expanded(
-                              child: ListView(
-                                children: [
-                                  _buildHoldingItem(
-                                    themeService,
-                                    'SFG',
-                                    'San Francisco Giants',
-                                    '100',
-                                    '100',
-                                    '0',
-                                    '5.5',
-                                    '5.5',
-                                    '0%',
-                                    '5.5',
-                                    const Color(0xFFFF6B35),
-                                  ),
-                                  const SizedBox(height: 16),
-                                  _buildHoldingItem(
-                                    themeService,
-                                    'AC1',
-                                    'AC Milan',
-                                    '100',
-                                    '100',
-                                    '0',
-                                    '6.7',
-                                    '6.7',
-                                    '0%',
-                                    '6.7',
-                                    const Color(0xFFE53E3E),
-                                  ),
-                                ],
-                              ),
+                              child: _buildPortfolioContent(themeService, _isDarkTheme),
                             ),
                           ],
                         ),
@@ -1011,6 +1067,177 @@ class _PortfolioPageState extends State<PortfolioPage> {
         ],
       ),
     );
+  }
+
+  Widget _buildPortfolioContent(ThemeService themeService, bool isDarkTheme) {
+    if (_isLoadingPortfolio) {
+      return Center(
+        child: Column(
+          mainAxisAlignment: MainAxisAlignment.center,
+          children: [
+            const CircularProgressIndicator(),
+            const SizedBox(height: 16),
+            Text(
+              'Loading portfolio data...',
+              style: TextStyle(
+                fontSize: 16,
+                color: isDarkTheme ? Colors.grey[400] : Colors.grey[600],
+              ),
+            ),
+          ],
+        ),
+      );
+    }
+
+    if (_portfolioData == null) {
+      return Center(
+        child: Column(
+          mainAxisAlignment: MainAxisAlignment.center,
+          children: [
+            Icon(
+              Icons.pie_chart,
+              size: 64,
+              color: isDarkTheme ? Colors.grey[600] : Colors.grey[400],
+            ),
+            const SizedBox(height: 16),
+            Text(
+              'No portfolio data available',
+              style: TextStyle(
+                fontSize: 18,
+                fontWeight: FontWeight.bold,
+                color: isDarkTheme ? Colors.white : Colors.black,
+              ),
+            ),
+            const SizedBox(height: 8),
+            Text(
+              'Click the "Portfolio" button above to fetch your portfolio data from the server',
+              textAlign: TextAlign.center,
+              style: TextStyle(
+                fontSize: 14,
+                color: isDarkTheme ? Colors.grey[400] : Colors.grey[600],
+              ),
+            ),
+          ],
+        ),
+      );
+    }
+
+    if (_portfolioData!['success'] != true) {
+      final error = _portfolioData!['output']['error'] ?? 'Unknown error';
+      return Center(
+        child: Column(
+          mainAxisAlignment: MainAxisAlignment.center,
+          children: [
+            Icon(
+              Icons.error_outline,
+              size: 64,
+              color: Colors.red,
+            ),
+            const SizedBox(height: 16),
+            Text(
+              'Failed to load portfolio',
+              style: TextStyle(
+                fontSize: 18,
+                fontWeight: FontWeight.bold,
+                color: isDarkTheme ? Colors.white : Colors.black,
+              ),
+            ),
+            const SizedBox(height: 8),
+            Text(
+              error,
+              textAlign: TextAlign.center,
+              style: TextStyle(
+                fontSize: 14,
+                color: Colors.red,
+              ),
+            ),
+          ],
+        ),
+      );
+    }
+
+    // Display real portfolio data
+    final portfolioOutput = _portfolioData!['output'] as Map<String, dynamic>;
+    
+    // Extract portfolio balances from the proto response structure
+    final portfolio = portfolioOutput['portfolio'] as Map<String, dynamic>? ?? {};
+    final balances = portfolio['balances'] as Map<String, dynamic>? ?? {};
+    
+    if (balances.isEmpty) {
+      return Center(
+        child: Column(
+          mainAxisAlignment: MainAxisAlignment.center,
+          children: [
+            Icon(
+              Icons.inbox,
+              size: 64,
+              color: isDarkTheme ? Colors.grey[600] : Colors.grey[400],
+            ),
+            const SizedBox(height: 16),
+            Text(
+              'No holdings found',
+              style: TextStyle(
+                fontSize: 18,
+                fontWeight: FontWeight.bold,
+                color: isDarkTheme ? Colors.white : Colors.black,
+              ),
+            ),
+            const SizedBox(height: 8),
+            Text(
+              'Your portfolio appears to be empty',
+              style: TextStyle(
+                fontSize: 14,
+                color: isDarkTheme ? Colors.grey[400] : Colors.grey[600],
+              ),
+            ),
+          ],
+        ),
+      );
+    }
+
+    final assetList = balances.entries.toList();
+    
+    return ListView.builder(
+      itemCount: assetList.length,
+      itemBuilder: (context, index) {
+        final entry = assetList[index];
+        final assetId = entry.key;
+        final balance = entry.value?.toString() ?? '0';
+        
+        return Padding(
+          padding: EdgeInsets.only(bottom: index < assetList.length - 1 ? 16 : 0),
+          child: _buildHoldingItem(
+            themeService,
+            assetId,
+            assetId, // Use asset ID as name for now
+            balance,
+            balance, // Available balance same as total for now
+            '0', // Locked balance - not available in current data
+            'N/A', // Price - not available in current data
+            'N/A', // Price high - not available in current data
+            '0%', // Change percentage - not available in current data
+            'N/A', // Market value - not available in current data
+            _getColorForAsset(assetId),
+          ),
+        );
+      },
+    );
+  }
+
+  Color _getColorForAsset(String assetId) {
+    // Return different colors for different assets
+    switch (assetId.toUpperCase()) {
+      case 'ETH':
+        return const Color(0xFF627EEA);
+      case 'USD':
+        return const Color(0xFF85BB65);
+      case 'XRP':
+        return const Color(0xFF23292F);
+      case 'BTC':
+        return const Color(0xFFF2A900);
+      default:
+        return const Color(0xFF6B73FF);
+    }
   }
 
   Widget _buildHoldingItem(
