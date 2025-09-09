@@ -460,7 +460,7 @@ class RealGrpcClient {
           'ref_request_id': 'get_account_market_portfolio_${DateTime.now().millisecondsSinceEpoch}',
           'account_id': accountId,
           'market_id': marketId ?? '',
-          'asset_ids': assetIds ?? ['ETH', 'USD', 'XRP'],
+          'asset_ids': assetIds ?? ['SFG', 'AC1'],
         },
         'output': {
           'error': 'Server not reachable',
@@ -495,7 +495,7 @@ class RealGrpcClient {
               'ref_request_id': 'get_account_market_portfolio_${DateTime.now().millisecondsSinceEpoch}',
               'account_id': accountId,
               'market_id': marketId ?? '',
-              'asset_ids': assetIds ?? ['ETH', 'USD', 'XRP'],
+              'asset_ids': assetIds ?? ['SFG', 'AC1'],
             },
             'output': {
               'error': 'Request timed out',
@@ -513,7 +513,7 @@ class RealGrpcClient {
             'ref_request_id': 'get_account_market_portfolio_${DateTime.now().millisecondsSinceEpoch}',
             'account_id': accountId,
             'market_id': marketId ?? '',
-            'asset_ids': assetIds ?? ['ETH', 'USD', 'XRP'],
+            'asset_ids': assetIds ?? ['SFG', 'AC1'],
           },
           'output': {
             'error': 'GetAccountMarketPortfolio execution failed',
@@ -552,7 +552,7 @@ class RealGrpcClient {
           'ref_request_id': 'get_account_market_portfolio_${DateTime.now().millisecondsSinceEpoch}',
           'account_id': accountId,
           'market_id': marketId ?? '',
-          'asset_ids': assetIds ?? ['ETH', 'USD', 'XRP'],
+          'asset_ids': assetIds ?? ['SFG', 'AC1'],
         },
         'output': {
           'error': 'Critical GetAccountMarketPortfolio error',

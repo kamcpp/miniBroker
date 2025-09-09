@@ -313,7 +313,7 @@ class _PortfolioPageState extends State<PortfolioPage> {
       final portfolioResponse = await realGrpcClient.getAccountMarketPortfolio(
         accountId: accountId,
         marketId: '',
-        assetIds: ['ETH', 'USD', 'XRP'],
+        assetIds: ['SFG', 'AC1'],
       ).timeout(
         const Duration(seconds: 15),
         onTimeout: () => {
@@ -1293,14 +1293,12 @@ class _PortfolioPageState extends State<PortfolioPage> {
   Color _getColorForAsset(String assetId) {
     // Return different colors for different assets
     switch (assetId.toUpperCase()) {
-      case 'ETH':
+      case 'SFG':
         return const Color(0xFF627EEA);
       case 'USD':
         return const Color(0xFF85BB65);
-      case 'XRP':
+      case 'AC1':
         return const Color(0xFF23292F);
-      case 'BTC':
-        return const Color(0xFFF2A900);
       default:
         return const Color(0xFF6B73FF);
     }
