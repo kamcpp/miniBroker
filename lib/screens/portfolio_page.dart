@@ -5,6 +5,7 @@ import '../services/theme_service.dart';
 import '../services/real_grpc_client.dart';
 import '../services/database_helper.dart';
 import 'trading_page.dart';
+import 'activity_page.dart';
 import 'profile_page.dart';
 import 'users_admin_page.dart';
 
@@ -837,6 +838,40 @@ class _PortfolioPageState extends State<PortfolioPage> {
                         fontSize: 12,
                         fontWeight: FontWeight.w600,
                         color: Color(0xFF1a1754),
+                      ),
+                    ),
+                  ),
+                ),
+                
+                const SizedBox(width: 8),
+                
+                // Activity Button
+                MouseRegion(
+                  cursor: SystemMouseCursors.click,
+                  child: GestureDetector(
+                    onTap: () {
+                      Navigator.of(context).push(
+                        PageRouteBuilder(
+                          pageBuilder: (context, animation, secondaryAnimation) => const ActivityPage(),
+                          transitionDuration: Duration.zero,
+                          reverseTransitionDuration: Duration.zero,
+                        ),
+                      );
+                    },
+                    child: Container(
+                      height: 32,
+                      padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 6),
+                      decoration: BoxDecoration(
+                        color: Colors.transparent,
+                        borderRadius: BorderRadius.circular(6),
+                      ),
+                      child: const Text(
+                        'Activity',
+                        style: TextStyle(
+                          fontSize: 12,
+                          fontWeight: FontWeight.w600,
+                          color: Colors.white,
+                        ),
                       ),
                     ),
                   ),

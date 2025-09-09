@@ -768,6 +768,150 @@ class RealGrpcClient {
     return 'Real server error: ${error.toString()}';
   }
 
+  /// Real GetAccountOrders call to PortfolioService.GetAccountOrders using grpcurl
+  Future<Map<String, dynamic>> getAccountOrders({
+    required String accountId,
+  }) async {
+    if (!_isConnected) {
+      return {
+        'input': {'account_id': accountId},
+        'output': {'error': 'Not connected to server'},
+        'requestTime': DateTime.now().toIso8601String(),
+        'serverType': 'disconnected',
+        'success': false,
+      };
+    }
+
+    try {
+      print('📋 Fetching orders for account: $accountId');
+
+      final response = await Future.any([
+        GrpcurlHelper.getAccountOrders(
+          accountId: accountId,
+          refRequestId: generateRequestId(prefix: 'get_orders'),
+        ),
+      ]).catchError((error) {
+        print('❌ GetAccountOrders execution error: $error');
+        return {
+          'input': {'account_id': accountId},
+          'output': {
+            'error': 'GetAccountOrders execution error',
+            'message': error.toString(),
+          },
+          'requestTime': DateTime.now().toIso8601String(),
+          'serverType': 'execution-error',
+          'success': false,
+        };
+      });
+
+      print('📬 Real Server GetAccountOrders Response: ${response['output']}');
+      print('✅ Real get account orders completed');
+
+      // Update connection state based on response
+      if (response['success'] == true) {
+        _isConnected = true;
+      } else {
+        // Test connectivity again if request failed
+        final stillReachable = await testServerConnectivity();
+        _isConnected = stillReachable;
+      }
+
+      return response;
+    } catch (e, stackTrace) {
+      print('❌ Critical error in GetAccountOrders: $e');
+      print('❌ Stack trace: $stackTrace');
+      
+      // Test connectivity to update state
+      final stillReachable = await testServerConnectivity();
+      _isConnected = stillReachable;
+      
+      // Return error response instead of throwing exception to prevent app crash
+      return {
+        'input': {'account_id': accountId},
+        'output': {
+          'error': 'Critical GetAccountOrders error',
+          'message': 'A critical error occurred during GetAccountOrders: ${e.toString()}',
+          'details': stackTrace.toString(),
+        },
+        'requestTime': DateTime.now().toIso8601String(),
+        'serverType': 'critical-error',
+        'success': false,
+      };
+    }
+  }
+
+  /// Real GetAccountTrades call to PortfolioService.GetAccountTrades using grpcurl
+  Future<Map<String, dynamic>> getAccountTrades({
+    required String accountId,
+  }) async {
+    if (!_isConnected) {
+      return {
+        'input': {'account_id': accountId},
+        'output': {'error': 'Not connected to server'},
+        'requestTime': DateTime.now().toIso8601String(),
+        'serverType': 'disconnected',
+        'success': false,
+      };
+    }
+
+    try {
+      print('📋 Fetching trades for account: $accountId');
+
+      final response = await Future.any([
+        GrpcurlHelper.getAccountTrades(
+          accountId: accountId,
+          refRequestId: generateRequestId(prefix: 'get_trades'),
+        ),
+      ]).catchError((error) {
+        print('❌ GetAccountTrades execution error: $error');
+        return {
+          'input': {'account_id': accountId},
+          'output': {
+            'error': 'GetAccountTrades execution error',
+            'message': error.toString(),
+          },
+          'requestTime': DateTime.now().toIso8601String(),
+          'serverType': 'execution-error',
+          'success': false,
+        };
+      });
+
+      print('📬 Real Server GetAccountTrades Response: ${response['output']}');
+      print('✅ Real get account trades completed');
+
+      // Update connection state based on response
+      if (response['success'] == true) {
+        _isConnected = true;
+      } else {
+        // Test connectivity again if request failed
+        final stillReachable = await testServerConnectivity();
+        _isConnected = stillReachable;
+      }
+
+      return response;
+    } catch (e, stackTrace) {
+      print('❌ Critical error in GetAccountTrades: $e');
+      print('❌ Stack trace: $stackTrace');
+      
+      // Test connectivity to update state
+      final stillReachable = await testServerConnectivity();
+      _isConnected = stillReachable;
+      
+      // Return error response instead of throwing exception to prevent app crash
+      return {
+        'input': {'account_id': accountId},
+        'output': {
+          'error': 'Critical GetAccountTrades error',
+          'message': 'A critical error occurred during GetAccountTrades: ${e.toString()}',
+          'details': stackTrace.toString(),
+        },
+        'requestTime': DateTime.now().toIso8601String(),
+        'serverType': 'critical-error',
+        'success': false,
+      };
+    }
+  }
+
   /// Dispose and clean up resources
   void dispose() {
     disconnect();

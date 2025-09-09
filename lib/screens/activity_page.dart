@@ -1,0 +1,1072 @@
+import 'dart:async';
+import 'package:flutter/material.dart';
+import 'package:provider/provider.dart';
+import '../services/auth_service.dart';
+import '../services/theme_service.dart';
+import '../services/real_grpc_client.dart';
+import 'portfolio_page.dart';
+import 'trading_page.dart';
+import 'profile_page.dart';
+import 'users_admin_page.dart';
+
+class ActivityPage extends StatefulWidget {
+  const ActivityPage({Key? key}) : super(key: key);
+
+  @override
+  State<ActivityPage> createState() => _ActivityPageState();
+}
+
+class _ActivityPageState extends State<ActivityPage> {
+  // Orders data variables
+  List<Map<String, dynamic>> _orders = [];
+  bool _isLoadingOrders = false;
+  String _ordersError = '';
+
+  // Trades data variables
+  List<Map<String, dynamic>> _trades = [];
+  bool _isLoadingTrades = false;
+  String _tradesError = '';
+
+  // Account management
+  String? _cachedAccountId;
+  
+  @override
+  void initState() {
+    super.initState();
+    // Fetch both orders and trades when page loads
+    _fetchActivityData();
+  }
+
+  /// Fetch both orders and trades data
+  Future<void> _fetchActivityData() async {
+    await Future.wait([
+      _fetchOrders(),
+      _fetchTrades(),
+    ]);
+  }
+
+  /// Find the account that belongs to the logged-in user
+  String? _findUserAccount(List<dynamic> accounts, String username) {
+    print('🔍 Searching for account matching user: "$username"');
+    print('📋 Available accounts:');
+    
+    for (int i = 0; i < accounts.length; i++) {
+      final accountMap = accounts[i] as Map<String, dynamic>;
+      final externalId = accountMap['external_id'] ?? accountMap['externalId'] ?? '';
+      final accountId = accountMap['id'] ?? '';
+      print('   [$i] ID: "$accountId", ExternalID: "$externalId"');
+      
+      // Try exact match first (case-sensitive)
+      if (externalId == username) {
+        print('✅ Found EXACT match for user "$username": ID="$accountId", ExternalID="$externalId"');
+        return accountId;
+      }
+    }
+    
+    // If no exact match, try case-insensitive
+    for (final account in accounts) {
+      final accountMap = account as Map<String, dynamic>;
+      final externalId = accountMap['external_id'] ?? accountMap['externalId'] ?? '';
+      final accountId = accountMap['id'] ?? '';
+      
+      if (externalId.toLowerCase() == username.toLowerCase()) {
+        print('✅ Found case-insensitive match for user "$username": ID="$accountId", ExternalID="$externalId"');
+        return accountId;
+      }
+    }
+    
+    // If still no match, try contains
+    for (final account in accounts) {
+      final accountMap = account as Map<String, dynamic>;
+      final externalId = accountMap['external_id'] ?? accountMap['externalId'] ?? '';
+      final accountId = accountMap['id'] ?? '';
+      
+      if (externalId.toLowerCase().contains(username.toLowerCase()) || 
+          accountId.toLowerCase().contains(username.toLowerCase())) {
+        print('⚠️ Found partial match for user "$username": ID="$accountId", ExternalID="$externalId"');
+        return accountId;
+      }
+    }
+    
+    // If no match found for the logged-in user, return empty string
+    print('❌ No account found for user "$username" on the server');
+    print('🔍 Searched in ${accounts.length} accounts');
+    return '';
+  }
+
+  /// Get the account ID for the current logged-in user
+  Future<String?> _getAccountId() async {
+    // Use cached account ID if available
+    if (_cachedAccountId != null && _cachedAccountId!.isNotEmpty) {
+      print('✅ Using cached account ID: $_cachedAccountId');
+      return _cachedAccountId;
+    }
+
+    try {
+      final authService = Provider.of<AuthService>(context, listen: false);
+      final currentUsername = authService.username;
+      print('🔍 Getting account ID for user: $currentUsername');
+
+      // Get account list to find the user's account ID
+      final accountListResponse = await realGrpcClient.getAccountList();
+      
+      String? accountId;
+      if (accountListResponse['success'] == true) {
+        final accounts = accountListResponse['output']['accounts'] as List<dynamic>;
+        accountId = _findUserAccount(accounts, currentUsername);
+      }
+
+      print('🔍 Account ID found: "$accountId" for user: $currentUsername');
+
+      if (accountId != null && accountId.isNotEmpty) {
+        // Cache the account ID for future use
+        _cachedAccountId = accountId;
+        print('💾 Cached account ID: $_cachedAccountId for session');
+        return accountId;
+      }
+
+      return null;
+    } catch (e) {
+      print('❌ Error getting account ID: $e');
+      return null;
+    }
+  }
+
+  /// Fetch orders using GetAccountOrders function
+  Future<void> _fetchOrders() async {
+    setState(() {
+      _isLoadingOrders = true;
+      _ordersError = '';
+    });
+
+    try {
+      print('📋 Fetching orders...');
+      
+      // Get account ID
+      final accountId = await _getAccountId();
+      if (accountId == null || accountId.isEmpty) {
+        setState(() {
+          _isLoadingOrders = false;
+          _ordersError = 'No account ID found for logged-in user';
+          _orders = [];
+        });
+        print('❌ No account ID found for orders');
+        return;
+      }
+
+      // Call GetAccountOrders
+      final ordersResponse = await realGrpcClient.getAccountOrders(
+        accountId: accountId,
+      );
+
+      if (mounted) {
+        setState(() {
+          _isLoadingOrders = false;
+          
+          if (ordersResponse['success'] == true) {
+            final output = ordersResponse['output'] as Map<String, dynamic>;
+            // Extract orders from the response - adjust field name based on actual server response
+            final ordersList = output['orders'] as List<dynamic>? ?? [];
+            _orders = ordersList.map((order) => order as Map<String, dynamic>).toList();
+            _ordersError = '';
+            print('✅ Orders loaded successfully: ${_orders.length} orders found');
+          } else {
+            final output = ordersResponse['output'] as Map<String, dynamic>;
+            _ordersError = output['error']?.toString() ?? 'Unknown error fetching orders';
+            _orders = [];
+            print('❌ Failed to fetch orders: $_ordersError');
+          }
+        });
+      }
+    } catch (e) {
+      if (mounted) {
+        setState(() {
+          _isLoadingOrders = false;
+          _ordersError = 'Failed to fetch orders: ${e.toString()}';
+          _orders = [];
+        });
+      }
+      print('❌ Exception fetching orders: $e');
+    }
+  }
+
+  /// Fetch trades using GetAccountTrades function
+  Future<void> _fetchTrades() async {
+    setState(() {
+      _isLoadingTrades = true;
+      _tradesError = '';
+    });
+
+    try {
+      print('📋 Fetching trades...');
+      
+      // Get account ID
+      final accountId = await _getAccountId();
+      if (accountId == null || accountId.isEmpty) {
+        setState(() {
+          _isLoadingTrades = false;
+          _tradesError = 'No account ID found for logged-in user';
+          _trades = [];
+        });
+        print('❌ No account ID found for trades');
+        return;
+      }
+
+      // Call GetAccountTrades
+      final tradesResponse = await realGrpcClient.getAccountTrades(
+        accountId: accountId,
+      );
+
+      if (mounted) {
+        setState(() {
+          _isLoadingTrades = false;
+          
+          if (tradesResponse['success'] == true) {
+            final output = tradesResponse['output'] as Map<String, dynamic>;
+            // Extract trades from the response - adjust field name based on actual server response
+            final tradesList = output['trades'] as List<dynamic>? ?? [];
+            _trades = tradesList.map((trade) => trade as Map<String, dynamic>).toList();
+            _tradesError = '';
+            print('✅ Trades loaded successfully: ${_trades.length} trades found');
+          } else {
+            final output = tradesResponse['output'] as Map<String, dynamic>;
+            _tradesError = output['error']?.toString() ?? 'Unknown error fetching trades';
+            _trades = [];
+            print('❌ Failed to fetch trades: $_tradesError');
+          }
+        });
+      }
+    } catch (e) {
+      if (mounted) {
+        setState(() {
+          _isLoadingTrades = false;
+          _tradesError = 'Failed to fetch trades: ${e.toString()}';
+          _trades = [];
+        });
+      }
+      print('❌ Exception fetching trades: $e');
+    }
+  }
+
+  /// Build orders table widget
+  Widget _buildOrdersTable(bool isDarkTheme) {
+    return Container(
+      decoration: BoxDecoration(
+        color: isDarkTheme ? const Color(0xFF1e1e1e) : Colors.white,
+        borderRadius: BorderRadius.circular(8),
+        border: Border.all(
+          color: isDarkTheme ? Colors.grey[700]! : Colors.grey[300]!,
+          width: 1,
+        ),
+      ),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          // Table header
+          Container(
+            padding: const EdgeInsets.all(16),
+            decoration: BoxDecoration(
+              color: isDarkTheme ? const Color(0xFF2d2d2d) : Colors.grey[50],
+              borderRadius: const BorderRadius.only(
+                topLeft: Radius.circular(8),
+                topRight: Radius.circular(8),
+              ),
+            ),
+            child: Row(
+              children: [
+                Text(
+                  'Orders',
+                  style: TextStyle(
+                    fontSize: 18,
+                    fontWeight: FontWeight.bold,
+                    color: isDarkTheme ? Colors.white : Colors.black,
+                  ),
+                ),
+                const Spacer(),
+                if (_isLoadingOrders)
+                  SizedBox(
+                    width: 16,
+                    height: 16,
+                    child: CircularProgressIndicator(
+                      strokeWidth: 2,
+                      valueColor: AlwaysStoppedAnimation<Color>(
+                        isDarkTheme ? Colors.white : Colors.black,
+                      ),
+                    ),
+                  ),
+              ],
+            ),
+          ),
+          // Table content
+          Container(
+            height: 300, // Fixed height for orders table
+            child: _isLoadingOrders
+                ? Center(
+                    child: CircularProgressIndicator(
+                      valueColor: AlwaysStoppedAnimation<Color>(
+                        isDarkTheme ? Colors.white : Colors.black,
+                      ),
+                    ),
+                  )
+                : _ordersError.isNotEmpty
+                    ? Center(
+                        child: Padding(
+                          padding: const EdgeInsets.all(16),
+                          child: Column(
+                            mainAxisAlignment: MainAxisAlignment.center,
+                            children: [
+                              Icon(
+                                Icons.error_outline,
+                                size: 48,
+                                color: Colors.red,
+                              ),
+                              const SizedBox(height: 8),
+                              Text(
+                                'Error loading orders',
+                                style: TextStyle(
+                                  fontSize: 16,
+                                  fontWeight: FontWeight.bold,
+                                  color: isDarkTheme ? Colors.white : Colors.black,
+                                ),
+                              ),
+                              const SizedBox(height: 4),
+                              Text(
+                                _ordersError,
+                                textAlign: TextAlign.center,
+                                style: TextStyle(
+                                  fontSize: 14,
+                                  color: isDarkTheme ? Colors.grey[400] : Colors.grey[600],
+                                ),
+                              ),
+                              const SizedBox(height: 16),
+                              ElevatedButton.icon(
+                                onPressed: _fetchOrders,
+                                icon: const Icon(Icons.refresh),
+                                label: const Text('Retry'),
+                                style: ElevatedButton.styleFrom(
+                                  backgroundColor: Colors.blue,
+                                  foregroundColor: Colors.white,
+                                ),
+                              ),
+                            ],
+                          ),
+                        ),
+                      )
+                    : _orders.isEmpty
+                        ? Center(
+                            child: Column(
+                              mainAxisAlignment: MainAxisAlignment.center,
+                              children: [
+                                Icon(
+                                  Icons.receipt_long,
+                                  size: 48,
+                                  color: isDarkTheme ? Colors.grey[600] : Colors.grey[400],
+                                ),
+                                const SizedBox(height: 8),
+                                Text(
+                                  'No orders found',
+                                  style: TextStyle(
+                                    fontSize: 16,
+                                    color: isDarkTheme ? Colors.grey[400] : Colors.grey[600],
+                                  ),
+                                ),
+                              ],
+                            ),
+                          )
+                        : ListView.builder(
+                            padding: const EdgeInsets.all(16),
+                            itemCount: _orders.length,
+                            itemBuilder: (context, index) {
+                              final order = _orders[index];
+                              return Container(
+                                margin: const EdgeInsets.only(bottom: 8),
+                                padding: const EdgeInsets.all(12),
+                                decoration: BoxDecoration(
+                                  color: isDarkTheme ? const Color(0xFF2d2d2d) : Colors.grey[50],
+                                  borderRadius: BorderRadius.circular(6),
+                                ),
+                                child: Row(
+                                  children: [
+                                    Expanded(
+                                      flex: 2,
+                                      child: Column(
+                                        crossAxisAlignment: CrossAxisAlignment.start,
+                                        children: [
+                                          Text(
+                                            order['symbol']?.toString() ?? order['asset_id']?.toString() ?? 'N/A',
+                                            style: TextStyle(
+                                              fontWeight: FontWeight.w600,
+                                              color: isDarkTheme ? Colors.white : Colors.black,
+                                            ),
+                                          ),
+                                          Text(
+                                            order['side']?.toString()?.toUpperCase() ?? 'N/A',
+                                            style: TextStyle(
+                                              fontSize: 12,
+                                              color: order['side']?.toString()?.toLowerCase() == 'buy'
+                                                  ? Colors.green
+                                                  : Colors.red,
+                                            ),
+                                          ),
+                                        ],
+                                      ),
+                                    ),
+                                    Expanded(
+                                      flex: 2,
+                                      child: Column(
+                                        crossAxisAlignment: CrossAxisAlignment.center,
+                                        children: [
+                                          Text(
+                                            order['quantity']?.toString() ?? 'N/A',
+                                            style: TextStyle(
+                                              fontWeight: FontWeight.w500,
+                                              color: isDarkTheme ? Colors.white : Colors.black,
+                                            ),
+                                          ),
+                                          Text(
+                                            '\$${order['price']?.toString() ?? 'N/A'}',
+                                            style: TextStyle(
+                                              fontSize: 12,
+                                              color: isDarkTheme ? Colors.grey[400] : Colors.grey[600],
+                                            ),
+                                          ),
+                                        ],
+                                      ),
+                                    ),
+                                    Expanded(
+                                      flex: 2,
+                                      child: Column(
+                                        crossAxisAlignment: CrossAxisAlignment.end,
+                                        children: [
+                                          Text(
+                                            order['status']?.toString() ?? 'N/A',
+                                            style: TextStyle(
+                                              fontWeight: FontWeight.w500,
+                                              color: _getStatusColor(order['status']?.toString()),
+                                            ),
+                                          ),
+                                          Text(
+                                            order['timestamp']?.toString() ?? order['created_at']?.toString() ?? 'N/A',
+                                            style: TextStyle(
+                                              fontSize: 12,
+                                              color: isDarkTheme ? Colors.grey[400] : Colors.grey[600],
+                                            ),
+                                          ),
+                                        ],
+                                      ),
+                                    ),
+                                  ],
+                                ),
+                              );
+                            },
+                          ),
+          ),
+        ],
+      ),
+    );
+  }
+
+  /// Build trades table widget
+  Widget _buildTradesTable(bool isDarkTheme) {
+    return Container(
+      decoration: BoxDecoration(
+        color: isDarkTheme ? const Color(0xFF1e1e1e) : Colors.white,
+        borderRadius: BorderRadius.circular(8),
+        border: Border.all(
+          color: isDarkTheme ? Colors.grey[700]! : Colors.grey[300]!,
+          width: 1,
+        ),
+      ),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          // Table header
+          Container(
+            padding: const EdgeInsets.all(16),
+            decoration: BoxDecoration(
+              color: isDarkTheme ? const Color(0xFF2d2d2d) : Colors.grey[50],
+              borderRadius: const BorderRadius.only(
+                topLeft: Radius.circular(8),
+                topRight: Radius.circular(8),
+              ),
+            ),
+            child: Row(
+              children: [
+                Text(
+                  'Trades',
+                  style: TextStyle(
+                    fontSize: 18,
+                    fontWeight: FontWeight.bold,
+                    color: isDarkTheme ? Colors.white : Colors.black,
+                  ),
+                ),
+                const Spacer(),
+                if (_isLoadingTrades)
+                  SizedBox(
+                    width: 16,
+                    height: 16,
+                    child: CircularProgressIndicator(
+                      strokeWidth: 2,
+                      valueColor: AlwaysStoppedAnimation<Color>(
+                        isDarkTheme ? Colors.white : Colors.black,
+                      ),
+                    ),
+                  ),
+              ],
+            ),
+          ),
+          // Table content
+          Container(
+            height: 300, // Fixed height for trades table
+            child: _isLoadingTrades
+                ? Center(
+                    child: CircularProgressIndicator(
+                      valueColor: AlwaysStoppedAnimation<Color>(
+                        isDarkTheme ? Colors.white : Colors.black,
+                      ),
+                    ),
+                  )
+                : _tradesError.isNotEmpty
+                    ? Center(
+                        child: Padding(
+                          padding: const EdgeInsets.all(16),
+                          child: Column(
+                            mainAxisAlignment: MainAxisAlignment.center,
+                            children: [
+                              Icon(
+                                Icons.error_outline,
+                                size: 48,
+                                color: Colors.red,
+                              ),
+                              const SizedBox(height: 8),
+                              Text(
+                                'Error loading trades',
+                                style: TextStyle(
+                                  fontSize: 16,
+                                  fontWeight: FontWeight.bold,
+                                  color: isDarkTheme ? Colors.white : Colors.black,
+                                ),
+                              ),
+                              const SizedBox(height: 4),
+                              Text(
+                                _tradesError,
+                                textAlign: TextAlign.center,
+                                style: TextStyle(
+                                  fontSize: 14,
+                                  color: isDarkTheme ? Colors.grey[400] : Colors.grey[600],
+                                ),
+                              ),
+                              const SizedBox(height: 16),
+                              ElevatedButton.icon(
+                                onPressed: _fetchTrades,
+                                icon: const Icon(Icons.refresh),
+                                label: const Text('Retry'),
+                                style: ElevatedButton.styleFrom(
+                                  backgroundColor: Colors.blue,
+                                  foregroundColor: Colors.white,
+                                ),
+                              ),
+                            ],
+                          ),
+                        ),
+                      )
+                    : _trades.isEmpty
+                        ? Center(
+                            child: Column(
+                              mainAxisAlignment: MainAxisAlignment.center,
+                              children: [
+                                Icon(
+                                  Icons.swap_horiz,
+                                  size: 48,
+                                  color: isDarkTheme ? Colors.grey[600] : Colors.grey[400],
+                                ),
+                                const SizedBox(height: 8),
+                                Text(
+                                  'No trades found',
+                                  style: TextStyle(
+                                    fontSize: 16,
+                                    color: isDarkTheme ? Colors.grey[400] : Colors.grey[600],
+                                  ),
+                                ),
+                              ],
+                            ),
+                          )
+                        : ListView.builder(
+                            padding: const EdgeInsets.all(16),
+                            itemCount: _trades.length,
+                            itemBuilder: (context, index) {
+                              final trade = _trades[index];
+                              return Container(
+                                margin: const EdgeInsets.only(bottom: 8),
+                                padding: const EdgeInsets.all(12),
+                                decoration: BoxDecoration(
+                                  color: isDarkTheme ? const Color(0xFF2d2d2d) : Colors.grey[50],
+                                  borderRadius: BorderRadius.circular(6),
+                                ),
+                                child: Row(
+                                  children: [
+                                    Expanded(
+                                      flex: 2,
+                                      child: Column(
+                                        crossAxisAlignment: CrossAxisAlignment.start,
+                                        children: [
+                                          Text(
+                                            trade['symbol']?.toString() ?? trade['asset_id']?.toString() ?? 'N/A',
+                                            style: TextStyle(
+                                              fontWeight: FontWeight.w600,
+                                              color: isDarkTheme ? Colors.white : Colors.black,
+                                            ),
+                                          ),
+                                          Text(
+                                            trade['side']?.toString()?.toUpperCase() ?? 'N/A',
+                                            style: TextStyle(
+                                              fontSize: 12,
+                                              color: trade['side']?.toString()?.toLowerCase() == 'buy'
+                                                  ? Colors.green
+                                                  : Colors.red,
+                                            ),
+                                          ),
+                                        ],
+                                      ),
+                                    ),
+                                    Expanded(
+                                      flex: 2,
+                                      child: Column(
+                                        crossAxisAlignment: CrossAxisAlignment.center,
+                                        children: [
+                                          Text(
+                                            trade['quantity']?.toString() ?? 'N/A',
+                                            style: TextStyle(
+                                              fontWeight: FontWeight.w500,
+                                              color: isDarkTheme ? Colors.white : Colors.black,
+                                            ),
+                                          ),
+                                          Text(
+                                            '\$${trade['price']?.toString() ?? 'N/A'}',
+                                            style: TextStyle(
+                                              fontSize: 12,
+                                              color: isDarkTheme ? Colors.grey[400] : Colors.grey[600],
+                                            ),
+                                          ),
+                                        ],
+                                      ),
+                                    ),
+                                    Expanded(
+                                      flex: 2,
+                                      child: Column(
+                                        crossAxisAlignment: CrossAxisAlignment.end,
+                                        children: [
+                                          Text(
+                                            '\$${((double.tryParse(trade['quantity']?.toString() ?? '0') ?? 0.0) * (double.tryParse(trade['price']?.toString() ?? '0') ?? 0.0)).toStringAsFixed(2)}',
+                                            style: TextStyle(
+                                              fontWeight: FontWeight.w500,
+                                              color: isDarkTheme ? Colors.white : Colors.black,
+                                            ),
+                                          ),
+                                          Text(
+                                            trade['timestamp']?.toString() ?? trade['executed_at']?.toString() ?? 'N/A',
+                                            style: TextStyle(
+                                              fontSize: 12,
+                                              color: isDarkTheme ? Colors.grey[400] : Colors.grey[600],
+                                            ),
+                                          ),
+                                        ],
+                                      ),
+                                    ),
+                                  ],
+                                ),
+                              );
+                            },
+                          ),
+          ),
+        ],
+      ),
+    );
+  }
+
+  /// Get color for order status
+  Color _getStatusColor(String? status) {
+    switch (status?.toLowerCase()) {
+      case 'filled':
+      case 'executed':
+        return Colors.green;
+      case 'pending':
+      case 'open':
+        return Colors.orange;
+      case 'cancelled':
+      case 'rejected':
+        return Colors.red;
+      default:
+        return Colors.grey;
+    }
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    final authService = Provider.of<AuthService>(context);
+    final themeService = Provider.of<ThemeService>(context);
+    final isDarkTheme = themeService.isDarkTheme;
+
+    return Scaffold(
+      backgroundColor: isDarkTheme ? const Color(0xFF121212) : Colors.grey[100],
+      body: Column(
+        children: [
+          // Header with navigation
+          _buildHeader(authService, themeService),
+          
+          // Main content area
+          Expanded(
+            child: RefreshIndicator(
+              onRefresh: _fetchActivityData,
+              child: SingleChildScrollView(
+                physics: const AlwaysScrollableScrollPhysics(),
+                padding: const EdgeInsets.all(16),
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    // Orders table (top)
+                    _buildOrdersTable(isDarkTheme),
+                    
+                    const SizedBox(height: 24),
+                    
+                    // Trades table (bottom)
+                    _buildTradesTable(isDarkTheme),
+                  ],
+                ),
+              ),
+            ),
+          ),
+        ],
+      ),
+    );
+  }
+
+  /// Build header with navigation similar to Portfolio page
+  Widget _buildHeader(AuthService authService, ThemeService themeService) {
+    return Container(
+      height: 60,
+      padding: const EdgeInsets.symmetric(horizontal: 20),
+      decoration: BoxDecoration(
+        color: const Color(0xFF1a1754),
+        boxShadow: [
+          BoxShadow(
+            color: Colors.black.withOpacity(0.2),
+            blurRadius: 4,
+            offset: const Offset(0, 2),
+          ),
+        ],
+      ),
+      child: Row(
+        children: [
+          // Logo on the left
+          Container(
+            width: 40,
+            height: 40,
+            decoration: BoxDecoration(
+              shape: BoxShape.circle,
+              color: const Color(0xFF1E88E5),
+            ),
+            child: ClipOval(
+              child: Padding(
+                padding: const EdgeInsets.all(4.0),
+                child: Container(
+                  decoration: const BoxDecoration(
+                    color: Color(0xFF1E88E5),
+                    shape: BoxShape.circle,
+                  ),
+                  child: Center(
+                    child: RichText(
+                      textAlign: TextAlign.center,
+                      text: const TextSpan(
+                        children: [
+                          TextSpan(
+                            text: 'mini\n',
+                            style: TextStyle(
+                              color: Colors.white,
+                              fontSize: 8,
+                              fontWeight: FontWeight.w500,
+                              height: 0.8,
+                            ),
+                          ),
+                          TextSpan(
+                            text: 'Broker',
+                            style: TextStyle(
+                              color: Colors.white,
+                              fontSize: 8,
+                              fontWeight: FontWeight.bold,
+                              height: 0.8,
+                            ),
+                          ),
+                        ],
+                      ),
+                    ),
+                  ),
+                ),
+              ),
+            ),
+          ),
+          
+          // Left spacer
+          const Expanded(flex: 2, child: SizedBox.shrink()),
+          
+          // Center Navigation Buttons
+          Container(
+            padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
+            decoration: BoxDecoration(
+              color: Colors.white.withOpacity(0.1),
+              borderRadius: BorderRadius.circular(8),
+            ),
+            child: Row(
+              mainAxisSize: MainAxisSize.min,
+              children: [
+                // Portfolio Button
+                MouseRegion(
+                  cursor: SystemMouseCursors.click,
+                  child: GestureDetector(
+                    onTap: () {
+                      Navigator.of(context).push(
+                        PageRouteBuilder(
+                          pageBuilder: (context, animation, secondaryAnimation) => const PortfolioPage(),
+                          transitionDuration: Duration.zero,
+                          reverseTransitionDuration: Duration.zero,
+                        ),
+                      );
+                    },
+                    child: Container(
+                      height: 32,
+                      padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 6),
+                      decoration: BoxDecoration(
+                        color: Colors.transparent,
+                        borderRadius: BorderRadius.circular(6),
+                      ),
+                      child: const Text(
+                        'Portfolio',
+                        style: TextStyle(
+                          fontSize: 12,
+                          fontWeight: FontWeight.w600,
+                          color: Colors.white,
+                        ),
+                      ),
+                    ),
+                  ),
+                ),
+                
+                const SizedBox(width: 8),
+                
+                // Activity Button (current page)
+                MouseRegion(
+                  cursor: SystemMouseCursors.click,
+                  child: Container(
+                    height: 32,
+                    padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 6),
+                    decoration: BoxDecoration(
+                      color: Colors.white,
+                      borderRadius: BorderRadius.circular(6),
+                    ),
+                    child: const Text(
+                      'Activity',
+                      style: TextStyle(
+                        fontSize: 12,
+                        fontWeight: FontWeight.w600,
+                        color: Color(0xFF1a1754),
+                      ),
+                    ),
+                  ),
+                ),
+                
+                const SizedBox(width: 8),
+                
+                // Trading Button
+                MouseRegion(
+                  cursor: SystemMouseCursors.click,
+                  child: GestureDetector(
+                    onTap: () {
+                      Navigator.of(context).push(
+                        PageRouteBuilder(
+                          pageBuilder: (context, animation, secondaryAnimation) => const TradingPage(),
+                          transitionDuration: Duration.zero,
+                          reverseTransitionDuration: Duration.zero,
+                        ),
+                      );
+                    },
+                    child: Container(
+                      height: 32,
+                      padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 6),
+                      decoration: BoxDecoration(
+                        color: Colors.transparent,
+                        borderRadius: BorderRadius.circular(6),
+                      ),
+                      child: const Text(
+                        'Trading',
+                        style: TextStyle(
+                          fontSize: 12,
+                          fontWeight: FontWeight.w600,
+                          color: Colors.white,
+                        ),
+                      ),
+                    ),
+                  ),
+                ),
+              ],
+            ),
+          ),
+          
+          // Right spacer - smaller to balance the layout
+          const Expanded(flex: 1, child: SizedBox.shrink()),
+          
+          // User Profile with Dropdown
+          PopupMenuButton<String>(
+            onSelected: (value) {
+              if (value == 'profile') {
+                Navigator.of(context).push(
+                  MaterialPageRoute(
+                    builder: (context) => const ProfilePage(),
+                  ),
+                );
+              } else if (value == 'users') {
+                Navigator.of(context).push(
+                  MaterialPageRoute(
+                    builder: (context) => const UsersAdminPage(),
+                  ),
+                );
+              }
+            },
+            itemBuilder: (BuildContext context) {
+              final isAdmin = authService.username.toLowerCase() == 'admin';
+              return [
+                const PopupMenuItem<String>(
+                  value: 'profile',
+                  child: Row(
+                    children: [
+                      Icon(Icons.person, size: 18),
+                      SizedBox(width: 8),
+                      Text('Profile'),
+                    ],
+                  ),
+                ),
+                if (isAdmin)
+                  const PopupMenuItem<String>(
+                    value: 'users',
+                    child: Row(
+                      children: [
+                        Icon(Icons.people, size: 18),
+                        SizedBox(width: 8),
+                        Text('View Users'),
+                      ],
+                    ),
+                  ),
+              ];
+            },
+            child: Row(
+              mainAxisSize: MainAxisSize.min,
+              children: [
+                Container(
+                  width: 24,
+                  height: 24,
+                  decoration: BoxDecoration(
+                    shape: BoxShape.circle,
+                    color: Colors.white.withOpacity(0.2),
+                    border: Border.all(color: Colors.white, width: 1),
+                  ),
+                  child: const Icon(
+                    Icons.person,
+                    color: Colors.white,
+                    size: 14,
+                  ),
+                ),
+                const SizedBox(width: 8),
+                Text(
+                  authService.username,
+                  style: const TextStyle(
+                    color: Colors.white,
+                    fontSize: 16,
+                    fontWeight: FontWeight.w500,
+                  ),
+                ),
+                const SizedBox(width: 4),
+                const Icon(
+                  Icons.keyboard_arrow_down,
+                  color: Colors.white,
+                  size: 18,
+                ),
+              ],
+            ),
+          ),
+          
+          const SizedBox(width: 16),
+          
+          // Vertical divider line
+          Container(
+            height: 30,
+            width: 1,
+            color: Colors.white.withOpacity(0.3),
+          ),
+          
+          const SizedBox(width: 16),
+          
+          // Theme toggle button (centered)
+          Container(
+            width: 36,
+            alignment: Alignment.center,
+            child: IconButton(
+              onPressed: () {
+                themeService.toggleTheme();
+              },
+              icon: Icon(
+                themeService.isDarkTheme ? Icons.wb_sunny : Icons.nights_stay,
+                color: Colors.white,
+                size: 20,
+              ),
+              tooltip: themeService.isDarkTheme ? 'Light Theme' : 'Dark Theme',
+              padding: const EdgeInsets.all(8),
+            ),
+          ),
+          
+          const SizedBox(width: 8),
+          
+          // Vertical divider line
+          Container(
+            height: 30,
+            width: 1,
+            color: Colors.white.withOpacity(0.3),
+          ),
+          
+          const SizedBox(width: 8),
+          
+          // Logout icon button
+          IconButton(
+            onPressed: () async {
+              try {
+                print('🚪 Activity page logout initiated...');
+                await authService.logout();
+                print('✅ Logout completed, should redirect to login');
+                
+                // Navigate back to root to ensure proper app state reset
+                if (mounted) {
+                  Navigator.of(context).popUntil((route) => route.isFirst);
+                }
+              } catch (e) {
+                print('❌ Error during logout: $e');
+                if (mounted) {
+                  ScaffoldMessenger.of(context).showSnackBar(
+                    SnackBar(
+                      content: Text('Logout failed: $e'),
+                      backgroundColor: Colors.red,
+                    ),
+                  );
+                }
+              }
+            },
+            icon: const Icon(
+              Icons.logout,
+              color: Colors.white,
+              size: 20,
+            ),
+            tooltip: 'Logout',
+            padding: const EdgeInsets.all(8),
+          ),
+        ],
+      ),
+    );
+  }
+}

@@ -997,4 +997,188 @@ class GrpcurlHelper {
       return [];
     }
   }
+
+  /// Get account orders using GetAccountOrders gRPC method
+  static Future<Map<String, dynamic>> getAccountOrders({
+    required String accountId,
+    String refRequestId = 'flutter-get-orders',
+  }) async {
+    try {
+      print('📋 Getting orders for account: $accountId');
+      
+      // Find the working grpcurl path
+      final grpcurlPath = await _findGrpcurlPath();
+      if (grpcurlPath == null) {
+        return {
+          'success': false,
+          'output': {'error': 'grpcurl not available'},
+          'requestTime': DateTime.now().toIso8601String(),
+          'serverType': 'grpcurl_unavailable',
+        };
+      }
+
+      // Prepare request payload
+      final requestPayload = {
+        'ref_request_id': refRequestId,
+        'account_id': accountId,
+      };
+
+      final jsonPayload = jsonEncode(requestPayload);
+      
+      ProcessResult result;
+      try {
+        result = await Process.run(
+          grpcurlPath,
+          [
+            '-plaintext',
+            '-d', jsonPayload,
+            '$_host:$_port',
+            'qomet.agora.daemons.prtagent.v1.AccountService/GetAccountOrders'
+          ],
+        ).timeout(const Duration(seconds: 10));
+      } catch (e) {
+        print('❌ Process.run failed for GetAccountOrders: ${e.runtimeType}: ${e.toString()}');
+        return {
+          'success': false,
+          'output': {'error': 'Process execution failed', 'details': e.toString()},
+          'requestTime': DateTime.now().toIso8601String(),
+          'serverType': 'process_error',
+        };
+      }
+
+      final responseData = {
+        'input': requestPayload,
+        'output': {},
+        'requestTime': DateTime.now().toIso8601String(),
+        'serverType': 'real_grpc',
+        'success': false,
+      };
+
+      if (result.exitCode == 0) {
+        try {
+          final outputData = jsonDecode(result.stdout.toString());
+          responseData['output'] = outputData;
+          responseData['success'] = true;
+          print('✅ GetAccountOrders successful for account: $accountId');
+        } catch (e) {
+          responseData['output'] = {
+            'error': 'Invalid JSON response',
+            'raw_output': result.stdout.toString(),
+            'details': e.toString(),
+          };
+          print('❌ GetAccountOrders JSON parse error: $e');
+        }
+      } else {
+        responseData['output'] = {
+          'error': 'gRPC call failed',
+          'stderr': result.stderr.toString(),
+          'stdout': result.stdout.toString(),
+          'exit_code': result.exitCode,
+        };
+        print('❌ GetAccountOrders failed: ${result.stderr}');
+      }
+
+      return responseData;
+    } catch (e) {
+      print('❌ GetAccountOrders exception: $e');
+      return {
+        'success': false,
+        'output': {'error': 'Exception occurred', 'details': e.toString()},
+        'requestTime': DateTime.now().toIso8601String(),
+        'serverType': 'exception',
+      };
+    }
+  }
+
+  /// Get account trades using GetAccountTrades gRPC method
+  static Future<Map<String, dynamic>> getAccountTrades({
+    required String accountId,
+    String refRequestId = 'flutter-get-trades',
+  }) async {
+    try {
+      print('📋 Getting trades for account: $accountId');
+      
+      // Find the working grpcurl path
+      final grpcurlPath = await _findGrpcurlPath();
+      if (grpcurlPath == null) {
+        return {
+          'success': false,
+          'output': {'error': 'grpcurl not available'},
+          'requestTime': DateTime.now().toIso8601String(),
+          'serverType': 'grpcurl_unavailable',
+        };
+      }
+
+      // Prepare request payload
+      final requestPayload = {
+        'ref_request_id': refRequestId,
+        'account_id': accountId,
+      };
+
+      final jsonPayload = jsonEncode(requestPayload);
+      
+      ProcessResult result;
+      try {
+        result = await Process.run(
+          grpcurlPath,
+          [
+            '-plaintext',
+            '-d', jsonPayload,
+            '$_host:$_port',
+            'qomet.agora.daemons.prtagent.v1.AccountService/GetAccountTrades'
+          ],
+        ).timeout(const Duration(seconds: 10));
+      } catch (e) {
+        print('❌ Process.run failed for GetAccountTrades: ${e.runtimeType}: ${e.toString()}');
+        return {
+          'success': false,
+          'output': {'error': 'Process execution failed', 'details': e.toString()},
+          'requestTime': DateTime.now().toIso8601String(),
+          'serverType': 'process_error',
+        };
+      }
+
+      final responseData = {
+        'input': requestPayload,
+        'output': {},
+        'requestTime': DateTime.now().toIso8601String(),
+        'serverType': 'real_grpc',
+        'success': false,
+      };
+
+      if (result.exitCode == 0) {
+        try {
+          final outputData = jsonDecode(result.stdout.toString());
+          responseData['output'] = outputData;
+          responseData['success'] = true;
+          print('✅ GetAccountTrades successful for account: $accountId');
+        } catch (e) {
+          responseData['output'] = {
+            'error': 'Invalid JSON response',
+            'raw_output': result.stdout.toString(),
+            'details': e.toString(),
+          };
+          print('❌ GetAccountTrades JSON parse error: $e');
+        }
+      } else {
+        responseData['output'] = {
+          'error': 'gRPC call failed',
+          'stderr': result.stderr.toString(),
+          'stdout': result.stdout.toString(),
+          'exit_code': result.exitCode,
+        };
+        print('❌ GetAccountTrades failed: ${result.stderr}');
+      }
+
+      return responseData;
+    } catch (e) {
+      print('❌ GetAccountTrades exception: $e');
+      return {
+        'success': false,
+        'output': {'error': 'Exception occurred', 'details': e.toString()},
+        'requestTime': DateTime.now().toIso8601String(),
+        'serverType': 'exception',
+      };
+    }
+  }
 }
