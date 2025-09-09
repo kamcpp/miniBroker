@@ -114,26 +114,11 @@ class _PortfolioPageState extends State<PortfolioPage> {
             _connectionStatusColor = Colors.green;
           });
 
-          ScaffoldMessenger.of(context).showSnackBar(
-            const SnackBar(
-              content: Text('✅ Real server connection test successful!'),
-              backgroundColor: Colors.green,
-              duration: Duration(seconds: 2),
-            ),
-          );
         } else {
           setState(() {
             _connectionStatus = 'Real server ping failed: ${output['error'] ?? 'Unknown error'}';
             _connectionStatusColor = Colors.red;
           });
-          
-          ScaffoldMessenger.of(context).showSnackBar(
-            SnackBar(
-              content: Text('❌ Real server connection test failed: ${output['error'] ?? 'Unknown error'}'),
-              backgroundColor: Colors.red,
-              duration: const Duration(seconds: 3),
-            ),
-          );
         }
       }
     } catch (e) {
@@ -144,14 +129,6 @@ class _PortfolioPageState extends State<PortfolioPage> {
             _connectionStatus = 'Ping failed with error: ${e.toString()}';
             _connectionStatusColor = Colors.red;
           });
-          
-          ScaffoldMessenger.of(context).showSnackBar(
-            SnackBar(
-              content: Text('❌ Ping failed: ${e.toString()}'),
-              backgroundColor: Colors.red,
-              duration: const Duration(seconds: 3),
-            ),
-          );
         }
       } catch (innerE) {
         // Even UI updates can fail - print to console as last resort
@@ -164,18 +141,6 @@ class _PortfolioPageState extends State<PortfolioPage> {
 
   Future<void> _fetchAccountList() async {
     try {
-      if (!realGrpcClient.isConnected) {
-        if (mounted) {
-          ScaffoldMessenger.of(context).showSnackBar(
-            const SnackBar(
-              content: Text('❌ Not connected to real simprtagent server'),
-              backgroundColor: Colors.red,
-            ),
-          );
-        }
-        return;
-      }
-
       setState(() {
         _isLoadingAccounts = true;
       });
@@ -207,12 +172,6 @@ class _PortfolioPageState extends State<PortfolioPage> {
           final accounts = accountListResponse['output']['accounts'] as List<dynamic>;
           await _syncServerAccountsWithLocalUsers(accounts);
           
-          ScaffoldMessenger.of(context).showSnackBar(
-            const SnackBar(
-              content: Text('✅ Real server account list loaded successfully!'),
-              backgroundColor: Colors.green,
-            ),
-          );
         } else {
           final output = accountListResponse['output'] as Map<String, dynamic>;
           setState(() {
@@ -220,12 +179,6 @@ class _PortfolioPageState extends State<PortfolioPage> {
             _connectionStatusColor = Colors.red;
           });
 
-          ScaffoldMessenger.of(context).showSnackBar(
-            SnackBar(
-              content: Text('❌ Failed to fetch account list: ${output['error'] ?? 'Unknown error'}'),
-              backgroundColor: Colors.red,
-            ),
-          );
         }
       }
     } catch (e) {
@@ -237,13 +190,6 @@ class _PortfolioPageState extends State<PortfolioPage> {
             _connectionStatus = 'Account list fetch failed with error: ${e.toString()}';
             _connectionStatusColor = Colors.red;
           });
-
-          ScaffoldMessenger.of(context).showSnackBar(
-            SnackBar(
-              content: Text('❌ Failed to fetch account list: ${e.toString()}'),
-              backgroundColor: Colors.red,
-            ),
-          );
         }
       } catch (innerE) {
         // Even UI updates can fail - print to console as last resort
@@ -254,18 +200,6 @@ class _PortfolioPageState extends State<PortfolioPage> {
 
   Future<void> _fetchPortfolioData() async {
     try {
-      if (!realGrpcClient.isConnected) {
-        if (mounted) {
-          ScaffoldMessenger.of(context).showSnackBar(
-            const SnackBar(
-              content: Text('❌ Not connected to real simprtagent server'),
-              backgroundColor: Colors.red,
-            ),
-          );
-        }
-        return;
-      }
-
       setState(() {
         _isLoadingPortfolio = true;
       });
@@ -298,13 +232,6 @@ class _PortfolioPageState extends State<PortfolioPage> {
           setState(() {
             _isLoadingPortfolio = false;
           });
-          
-          ScaffoldMessenger.of(context).showSnackBar(
-            SnackBar(
-              content: Text('❌ No account ID found for user: $currentUsername'),
-              backgroundColor: Colors.red,
-            ),
-          );
         }
         return;
       }
@@ -330,23 +257,6 @@ class _PortfolioPageState extends State<PortfolioPage> {
           _portfolioData = portfolioResponse;
           _isLoadingPortfolio = false;
         });
-
-        if (portfolioResponse['success'] == true) {
-          ScaffoldMessenger.of(context).showSnackBar(
-            const SnackBar(
-              content: Text('✅ Portfolio data loaded successfully!'),
-              backgroundColor: Colors.green,
-            ),
-          );
-        } else {
-          final output = portfolioResponse['output'] as Map<String, dynamic>;
-          ScaffoldMessenger.of(context).showSnackBar(
-            SnackBar(
-              content: Text('❌ Failed to fetch portfolio: ${output['error'] ?? 'Unknown error'}'),
-              backgroundColor: Colors.red,
-            ),
-          );
-        }
       }
     } catch (e) {
       // Ultimate crash protection
@@ -355,13 +265,6 @@ class _PortfolioPageState extends State<PortfolioPage> {
           setState(() {
             _isLoadingPortfolio = false;
           });
-
-          ScaffoldMessenger.of(context).showSnackBar(
-            SnackBar(
-              content: Text('❌ Failed to fetch portfolio: ${e.toString()}'),
-              backgroundColor: Colors.red,
-            ),
-          );
         }
       } catch (innerE) {
         print('❌ Critical error in _fetchPortfolioData: $e, UI update failed: $innerE');

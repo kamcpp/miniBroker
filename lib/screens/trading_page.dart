@@ -2,12 +2,12 @@
 import 'dart:math';
 import 'dart:async';
 import 'dart:convert';
-import 'dart:io';
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 import 'package:http/http.dart' as http;
 import '../services/auth_service.dart';
 import '../services/theme_service.dart';
+import '../services/real_grpc_client.dart';
 import 'portfolio_page.dart';
 import 'profile_page.dart';
 import 'users_admin_page.dart';
@@ -20,7 +20,6 @@ class TradingPage extends StatefulWidget {
 }
 
 class _TradingPageState extends State<TradingPage> {
-  String _tradeHistoryApiDebug = '';
   Future<void> _fetchTradeHistoryForAsset(String symbol, {int page = 1, bool append = false}) async {
   print('[TradeHistory] Fetching for symbol: $symbol, page: $page');
   print('[TradeHistory] Asset list: ${_assets.map((a) => a['symbol']).toList()}');
@@ -88,9 +87,7 @@ class _TradingPageState extends State<TradingPage> {
         },
         body: json.encode(payload),
       ).timeout(const Duration(seconds: 10));
-        setState(() {
-          _tradeHistoryApiDebug = 'Status: ${response.statusCode}\nBody: ${response.body}';
-        });
+        // Debug info logged below
       final apiCallEnd = DateTime.now();
       print('[TradeHistory] API call duration: ${apiCallEnd.difference(apiCallStart).inMilliseconds} ms');
       if (response.statusCode == 200) {
@@ -163,7 +160,6 @@ class _TradingPageState extends State<TradingPage> {
               }
               _hasMoreTradeHistory = false;
               _isLoadingTradeHistory = false;
-              _tradeHistoryApiDebug = 'Full API response:\n${response.body}';
             });
           }
         }
@@ -175,7 +171,6 @@ class _TradingPageState extends State<TradingPage> {
           _tradeHistory = [];
         }
         _isLoadingTradeHistory = false;
-        _tradeHistoryApiDebug = 'Error: $e';
       });
     }
   }
@@ -207,6 +202,11 @@ class _TradingPageState extends State<TradingPage> {
   final TextEditingController _quantityController = TextEditingController();
   final TextEditingController _priceController = TextEditingController();
   final ScrollController _scrollController = ScrollController();
+  
+  // Cash holdings data
+  bool _isLoadingCashHoldings = false;
+  String _buyingPower = '0'; // Default fallback value
+  String? _cachedAccountId; // Cache account ID for entire session (doesn't change until logout)
   
   // Message stream subscription
   StreamSubscription<String>? _messageSubscription;
@@ -265,6 +265,9 @@ class _TradingPageState extends State<TradingPage> {
     // Fetch pairs from API immediately when page opens, independent of FIX connection
     _fetchPairsFromAPI();
     
+    // Fetch cash holdings for buying power
+    _fetchCashHoldings();
+    
       // Fetch trade history and orderbook for default symbol when page is shown and assets are loaded
       WidgetsBinding.instance.addPostFrameCallback((_) {
         if (_selectedSymbol.isNotEmpty) {
@@ -282,6 +285,185 @@ class _TradingPageState extends State<TradingPage> {
   void _listenToFixMessages() {
     // FIX message listening removed - no longer needed
     print('FIX message monitoring disabled - FIX functionality removed');
+  }
+  
+  /// Find the account that belongs to the logged-in user
+  String? _findUserAccount(List<dynamic> accounts, String username) {
+    print('🔍 Searching for account matching user: "$username"');
+    print('📋 Available accounts:');
+    
+    for (int i = 0; i < accounts.length; i++) {
+      final accountMap = accounts[i] as Map<String, dynamic>;
+      final externalId = accountMap['external_id'] ?? accountMap['externalId'] ?? '';
+      final accountId = accountMap['id'] ?? '';
+      print('   [$i] ID: "$accountId", ExternalID: "$externalId"');
+      
+      // Try exact match first (case-sensitive)
+      if (externalId == username) {
+        print('✅ Found EXACT match for user "$username": ID="$accountId", ExternalID="$externalId"');
+        return accountId;
+      }
+    }
+    
+    // If no exact match, try case-insensitive
+    for (final account in accounts) {
+      final accountMap = account as Map<String, dynamic>;
+      final externalId = accountMap['external_id'] ?? accountMap['externalId'] ?? '';
+      final accountId = accountMap['id'] ?? '';
+      
+      if (externalId.toLowerCase() == username.toLowerCase()) {
+        print('✅ Found case-insensitive match for user "$username": ID="$accountId", ExternalID="$externalId"');
+        return accountId;
+      }
+    }
+    
+    // If still no match, try contains
+    for (final account in accounts) {
+      final accountMap = account as Map<String, dynamic>;
+      final externalId = accountMap['external_id'] ?? accountMap['externalId'] ?? '';
+      final accountId = accountMap['id'] ?? '';
+      
+      if (externalId.toLowerCase().contains(username.toLowerCase()) || 
+          accountId.toLowerCase().contains(username.toLowerCase())) {
+        print('⚠️ Found partial match for user "$username": ID="$accountId", ExternalID="$externalId"');
+        return accountId;
+      }
+    }
+    
+    // If no match found for the logged-in user, return empty string
+    print('❌ No account found for user "$username" on the server');
+    print('🔍 Searched in ${accounts.length} accounts');
+    return '';
+  }
+
+  /// Fetch cash holdings for the logged-in user to get buying power
+  Future<void> _fetchCashHoldings() async {
+    try {
+      if (!realGrpcClient.isConnected) {
+        print('❌ Not connected to real gRPC server for cash holdings');
+        return;
+      }
+
+      // Check if we already have cached account ID (account ID doesn't change during session)
+      if (_cachedAccountId != null && 
+          _cachedAccountId!.isNotEmpty &&
+          !_isLoadingCashHoldings) {
+        print('✅ Using cached account ID for fresh cash holdings: $_cachedAccountId');
+        await _fetchCashHoldingsForAccount(_cachedAccountId!);
+        return;
+      }
+
+      // First time - need to lookup account ID
+      setState(() {
+        _isLoadingCashHoldings = true;
+      });
+
+      final authService = Provider.of<AuthService>(context, listen: false);
+      final currentUsername = authService.username;
+      print('🔍 First time lookup for user: $currentUsername');
+
+      // Get account list to find the user's account ID
+      final accountListResponse = await realGrpcClient.getAccountList();
+      
+      String? accountId;
+      if (accountListResponse['success'] == true) {
+        final accounts = accountListResponse['output']['accounts'] as List<dynamic>;
+        accountId = _findUserAccount(accounts, currentUsername);
+      }
+
+      print('🔍 Account ID found: "$accountId" for user: $currentUsername');
+
+      if (accountId == null || accountId.isEmpty) {
+        setState(() {
+          _isLoadingCashHoldings = false;
+          _buyingPower = '0';
+        });
+        print('❌ No account ID found for user: $currentUsername');
+        return;
+      }
+
+      // Cache the account ID for the entire session
+      _cachedAccountId = accountId;
+      print('💾 Cached account ID: $_cachedAccountId for session');
+      
+      await _fetchCashHoldingsForAccount(accountId);
+    } catch (e) {
+      // Ultimate crash protection
+      try {
+        if (mounted) {
+          setState(() {
+            _isLoadingCashHoldings = false;
+            // Don't reset buying power on error if we have valid cached data
+            if (_buyingPower == '0' || _buyingPower.isEmpty) {
+              _buyingPower = '0';
+            }
+          });
+        }
+        print('❌ Failed to fetch cash holdings: ${e.toString()}');
+      } catch (innerE) {
+        print('❌ Critical error in _fetchCashHoldings: $e, UI update failed: $innerE');
+      }
+    }
+  }
+
+  /// Fetch cash holdings for a specific account ID
+  Future<void> _fetchCashHoldingsForAccount(String accountId) async {
+    try {
+
+      // Fetch cash holdings with comprehensive crash protection
+      final cashHoldingsResponse = await realGrpcClient.getAccountCashHoldings(
+        accountId: accountId,
+        cashAssetIds: ['USD'],
+      ).timeout(
+        const Duration(seconds: 15),
+        onTimeout: () => {
+          'input': {'ref_request_id': 'timeout'},
+          'output': {'error': 'Request timed out', 'message': 'Cash holdings request timed out after 15 seconds'},
+          'requestTime': DateTime.now().toIso8601String(),
+          'serverType': 'timeout',
+          'success': false,
+        },
+      );
+
+      if (mounted) {
+        setState(() {
+          _isLoadingCashHoldings = false;
+        });
+
+        if (cashHoldingsResponse['success'] == true) {
+          // Extract USD balance from the response
+          final output = cashHoldingsResponse['output'] as Map<String, dynamic>;
+          final cashHoldings = output['cashHoldings'] as Map<String, dynamic>? ?? {};
+          final balances = cashHoldings['balances'] as Map<String, dynamic>? ?? {};
+          final usdBalance = balances['USD']?.toString() ?? '0';
+          
+          setState(() {
+            _buyingPower = usdBalance;
+          });
+          
+          print('✅ Cash holdings loaded successfully! USD balance: $usdBalance');
+        } else {
+          final output = cashHoldingsResponse['output'] as Map<String, dynamic>;
+          setState(() {
+            _buyingPower = '0'; // Set to 0 on error
+          });
+          print('❌ Failed to fetch cash holdings: ${output['error'] ?? 'Unknown error'}');
+        }
+      }
+    } catch (e) {
+      // Ultimate crash protection
+      try {
+        if (mounted) {
+          setState(() {
+            _isLoadingCashHoldings = false;
+            _buyingPower = '0'; // Set to 0 on error
+          });
+        }
+        print('❌ Failed to fetch cash holdings: ${e.toString()}');
+      } catch (innerE) {
+        print('❌ Critical error in _fetchCashHoldings: $e, UI update failed: $innerE');
+      }
+    }
   }
   
   // Fetch last price for asset using exchangePairId
@@ -1771,7 +1953,11 @@ class _TradingPageState extends State<TradingPage> {
             ),
             child: DropdownButtonHideUnderline(
               child: DropdownButton<String>(
-                value: _assets.isEmpty ? '' : _selectedSymbol,
+                value: _assets.isEmpty 
+                    ? '' 
+                    : (_assets.any((asset) => asset['symbol'] == _selectedSymbol) 
+                        ? _selectedSymbol 
+                        : _assets.isNotEmpty ? _assets.first['symbol'] : ''),
                 isExpanded: true,
                 onChanged: _assets.isEmpty ? null : (String? newValue) {
                   setState(() {
@@ -1960,14 +2146,25 @@ class _TradingPageState extends State<TradingPage> {
           const SizedBox(height: 8),
           Row(
             children: [
-              Text(
-                _isBuySelected ? '100 \$' : '100',
-                style: TextStyle(
-                  fontSize: 18,
-                  fontWeight: FontWeight.w600,
-                  color: _isDarkTheme ? Colors.white : Colors.black,
-                ),
-              ),
+              _isLoadingCashHoldings 
+                  ? SizedBox(
+                      width: 20,
+                      height: 20,
+                      child: CircularProgressIndicator(
+                        strokeWidth: 2,
+                        valueColor: AlwaysStoppedAnimation<Color>(
+                          _isDarkTheme ? Colors.white : Colors.black,
+                        ),
+                      ),
+                    )
+                  : Text(
+                      _isBuySelected ? '$_buyingPower \$' : _buyingPower,
+                      style: TextStyle(
+                        fontSize: 18,
+                        fontWeight: FontWeight.w600,
+                        color: _isDarkTheme ? Colors.white : Colors.black,
+                      ),
+                    ),
               const SizedBox(width: 4),
               (!_isBuySelected && _assets.isEmpty)
                   ? SizedBox(
@@ -1993,7 +2190,7 @@ class _TradingPageState extends State<TradingPage> {
             ],
           ),
           
-          const SizedBox(height: 24),
+          const SizedBox(height: 12),
           
           // Amount Input
           Text(
@@ -2020,7 +2217,7 @@ class _TradingPageState extends State<TradingPage> {
                       fontSize: 16,
                     ),
                     decoration: InputDecoration(
-                      hintText: 'E.g 1',
+                      hintText: '0',
                       hintStyle: TextStyle(
                         color: _isDarkTheme ? Colors.grey[500] : Colors.grey[400],
                       ),
@@ -2030,32 +2227,35 @@ class _TradingPageState extends State<TradingPage> {
                   ),
                 ),
                 Container(
-                  padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
+                  padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 8),
                   child: Row(
                     mainAxisSize: MainAxisSize.min,
                     children: [
-                      MouseRegion(
-                        cursor: SystemMouseCursors.click, // Pointer cursor for Max button
-                        child: GestureDetector(
-                          onTap: () {
-                            // Set quantity to maximum (100) for now
-                            setState(() {
-                              _quantityController.text = '100';
-                            });
-                          },
-                          child: Text(
-                            'Max',
-                            style: TextStyle(
-                              color: _isBuySelected 
-                                  ? const Color(0xFF00D4AA) // Cyan for buy
-                                  : const Color(0xFFFF4081), // Pink for sell
-                              fontSize: 12,
-                              fontWeight: FontWeight.w600,
+                      // Show Max button only for Sell orders (when _isBuySelected is false)
+                      if (!_isBuySelected) ...[
+                        MouseRegion(
+                          cursor: SystemMouseCursors.click, // Pointer cursor for Max button
+                          child: GestureDetector(
+                            onTap: () {
+                              // Set quantity to maximum available selling amount
+                              setState(() {
+                                _quantityController.text = _buyingPower;
+                              });
+                            },
+                            child: Container(
+                              child: Text(
+                                'Max',
+                                style: TextStyle(
+                                  color: const Color(0xFFFF4081), // Pink for sell
+                                  fontSize: 12,
+                                  fontWeight: FontWeight.w600,
+                                ),
+                              ),
                             ),
                           ),
                         ),
-                      ),
-                      const SizedBox(width: 8),
+                        const SizedBox(width: 8),
+                      ],
                       _assets.isEmpty
                           ? SizedBox(
                               width: 14,
@@ -2110,7 +2310,7 @@ class _TradingPageState extends State<TradingPage> {
                         fontSize: 16,
                       ),
                       decoration: InputDecoration(
-                        hintText: 'E.g 1',
+                        hintText: '0',
                         hintStyle: TextStyle(
                           color: _isDarkTheme ? Colors.grey[500] : Colors.grey[400],
                         ),

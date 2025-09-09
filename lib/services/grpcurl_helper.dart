@@ -821,6 +821,145 @@ class GrpcurlHelper {
     }
   }
 
+  /// Make a real GetAccountCashHoldings call using grpcurl
+  static Future<Map<String, dynamic>> getAccountCashHoldings({
+    required String accountId,
+    List<String>? cashAssetIds,
+  }) async {
+    final requestId = 'get_account_cash_holdings_${DateTime.now().millisecondsSinceEpoch}';
+    
+    final request = {
+      'ref_request_id': requestId,
+      'account_id': accountId,
+      'cash_asset_ids': cashAssetIds ?? ['USD'],
+    };
+
+    try {
+      // Find the working grpcurl path with aggressive timeout to prevent hanging
+      print('🔍 Looking for grpcurl executable for GetAccountCashHoldings...');
+      final grpcurlPath = await _findGrpcurlPath().timeout(
+        const Duration(milliseconds: 500),
+        onTimeout: () {
+          print('⏰ grpcurl path finder timed out for GetAccountCashHoldings');
+          return null;
+        },
+      );
+      
+      if (grpcurlPath == null) {
+        print('❌ No grpcurl path found for GetAccountCashHoldings');
+        return {
+          'input': request,
+          'output': {
+            'error': 'grpcurl command not available in standalone app',
+            'message': 'The standalone macOS app cannot access grpcurl due to sandbox restrictions. This feature works when running with "flutter run --debug" but not in built apps. The server connection requires external process execution which is restricted in sandboxed macOS applications.',
+            'suggestion': 'Use "echo "1" | flutter run --debug" to test this functionality',
+          },
+          'requestTime': DateTime.now().toIso8601String(),
+          'serverType': 'grpcurl-sandbox-restricted',
+          'success': false,
+        };
+      }
+
+      print('🔄 Making real grpcurl call to AccountService.GetAccountCashHoldings using $grpcurlPath');
+      print('📨 Request: $request');
+
+      ProcessResult? result;
+      try {
+        result = await Process.run(
+          grpcurlPath,
+          ['-plaintext', '-d', jsonEncode(request), '$_host:$_port', 'qomet.agora.daemons.prtagent.v1.AccountService.GetAccountCashHoldings'],
+        ).timeout(
+          const Duration(seconds: 5),
+          onTimeout: () {
+            print('⏰ grpcurl GetAccountCashHoldings Process.run timed out after 5 seconds');
+            throw TimeoutException('grpcurl getAccountCashHoldings timed out', const Duration(seconds: 5));
+          },
+        );
+      } on TimeoutException catch (e) {
+        print('⏰ GetAccountCashHoldings timeout: ${e.message}');
+        return {
+          'input': request,
+          'output': {
+            'error': 'Request timed out',
+            'message': 'The account cash holdings request timed out after 5 seconds. Check if server is running on localhost:50051.',
+          },
+          'requestTime': DateTime.now().toIso8601String(),
+          'serverType': 'timeout',
+          'success': false,
+        };
+      } catch (e) {
+        // Catch ANY other exception that might occur in sandboxed environment
+        print('❌ Process.run failed for getAccountCashHoldings in sandboxed app: ${e.runtimeType}: ${e.toString()}');
+        return {
+          'input': request,
+          'output': {
+            'error': 'Process execution failed in sandboxed app',
+            'message': 'The macOS app sandbox prevents external process execution. This is a security restriction.',
+            'details': e.toString(),
+          },
+          'requestTime': DateTime.now().toIso8601String(),
+          'serverType': 'sandbox-restricted',
+          'success': false,
+        };
+      }
+
+      if (result.exitCode == 0) {
+        final responseJson = result.stdout.toString().trim();
+        print('📬 Raw server response: $responseJson');
+        
+        try {
+          final parsedResponse = jsonDecode(responseJson) as Map<String, dynamic>;
+          return {
+            'input': request,
+            'output': parsedResponse,
+            'requestTime': DateTime.now().toIso8601String(),
+            'serverType': 'simprtagent-real-grpcurl',
+            'success': true,
+          };
+        } catch (e) {
+          return {
+            'input': request,
+            'output': {
+              'raw_response': responseJson,
+              'parse_error': e.toString(),
+            },
+            'requestTime': DateTime.now().toIso8601String(),
+            'serverType': 'simprtagent-real-grpcurl',
+            'success': false,
+          };
+        }
+      } else {
+        final error = result.stderr.toString();
+        print('❌ grpcurl error: $error');
+        
+        return {
+          'input': request,
+          'output': {
+            'error': error,
+            'exit_code': result.exitCode,
+          },
+          'requestTime': DateTime.now().toIso8601String(),
+          'serverType': 'simprtagent-real-grpcurl',
+          'success': false,
+        };
+      }
+    } catch (e) {
+      print('❌ Failed to execute grpcurl: $e');
+      return {
+        'input': request,
+        'output': {
+          'error': 'grpcurl command execution failed in standalone app',
+          'message': 'The standalone macOS app cannot execute grpcurl due to sandbox restrictions. This feature works when running with "flutter run --debug" but may fail in built apps.',
+          'suggestion': 'Use "echo "1" | flutter run --debug" to test this functionality',
+          'details': e.toString(),
+        },
+        'requestTime': DateTime.now().toIso8601String(),
+        'serverType': 'grpcurl-unavailable',
+        'success': false,
+      };
+    }
+  }
+
   /// List available services using grpcurl
   static Future<List<String>> listServices() async {
     try {
