@@ -692,7 +692,7 @@ class GrpcurlHelper {
       'ref_request_id': requestId,
       'account_id': accountId,
       'market_id': marketId ?? '',
-      'asset_ids': assetIds ?? ['SFG', 'AC1'],
+      'asset_ids': assetIds ?? ['ETH', 'OXC', 'XRP'],
     };
 
     try {
