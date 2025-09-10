@@ -746,6 +746,7 @@ class _PortfolioPageState extends State<PortfolioPage> {
   }
 
   Widget _buildHeader(AuthService authService, ThemeService themeService) {
+    final isDarkTheme = themeService.isDarkTheme;
     return Container(
       height: 60,
       padding: const EdgeInsets.symmetric(horizontal: 20),
@@ -809,113 +810,131 @@ class _PortfolioPageState extends State<PortfolioPage> {
             ),
           ),
           
-          // Left spacer - make it larger to push buttons more to the right
-          const Expanded(flex: 2, child: SizedBox.shrink()),
+          const SizedBox(width: 16),
           
-          // Center Navigation Buttons
-          Container(
-            padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
-            decoration: BoxDecoration(
-              color: Colors.white.withOpacity(0.1),
-              borderRadius: BorderRadius.circular(8),
-            ),
+          // Navigation Tabs - Left side beside logo
+          Padding(
+            padding: const EdgeInsets.only(top: 10),
             child: Row(
               mainAxisSize: MainAxisSize.min,
+              crossAxisAlignment: CrossAxisAlignment.end,
               children: [
-                // Portfolio Button (current page)
-                MouseRegion(
-                  cursor: SystemMouseCursors.click,
+              // Portfolio Button (current page)
+              MouseRegion(
+                cursor: SystemMouseCursors.click,
+                child: Container(
+                  height: 55,
+                  padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
+                  decoration: BoxDecoration(
+                    color: isDarkTheme ? const Color(0xFF1A1A1A) : Colors.grey[100],
+                    border: Border(
+                      top: BorderSide(color: Colors.white.withOpacity(0.3), width: 1),
+                      left: BorderSide(color: Colors.white.withOpacity(0.3), width: 1),
+                      right: BorderSide(color: Colors.white.withOpacity(0.3), width: 1),
+                    ),
+                    borderRadius: const BorderRadius.only(
+                      topLeft: Radius.circular(8),
+                      topRight: Radius.circular(8),
+                    ),
+                  ),
+                  child: Text(
+                    'Portfolio',
+                    style: TextStyle(
+                      fontSize: 13,
+                      fontWeight: FontWeight.w600,
+                      color: isDarkTheme ? Colors.white : Colors.black,
+                    ),
+                  ),
+                ),
+              ),
+              
+              // Activity Button
+              MouseRegion(
+                cursor: SystemMouseCursors.click,
+                child: GestureDetector(
+                  onTap: () {
+                    Navigator.of(context).push(
+                      PageRouteBuilder(
+                        pageBuilder: (context, animation, secondaryAnimation) => const ActivityPage(),
+                        transitionDuration: Duration.zero,
+                        reverseTransitionDuration: Duration.zero,
+                      ),
+                    );
+                  },
                   child: Container(
-                    height: 32,
-                    padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 6),
+                    height: 50,
+                    padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 9),
                     decoration: BoxDecoration(
-                      color: Colors.white,
-                      borderRadius: BorderRadius.circular(6),
+                      color: Colors.transparent,
+                      border: Border(
+                        top: BorderSide(color: Colors.white.withOpacity(0.3), width: 1),
+                        left: BorderSide(color: Colors.white.withOpacity(0.3), width: 1),
+                        right: BorderSide(color: Colors.white.withOpacity(0.3), width: 1),
+                        bottom: BorderSide(color: Colors.white.withOpacity(0.3), width: 1),
+                      ),
+                      borderRadius: const BorderRadius.only(
+                        topLeft: Radius.circular(8),
+                        topRight: Radius.circular(8),
+                      ),
                     ),
                     child: const Text(
-                      'Portfolio',
+                      'Activity',
                       style: TextStyle(
-                        fontSize: 12,
-                        fontWeight: FontWeight.w600,
-                        color: Color(0xFF1a1754),
+                        fontSize: 13,
+                        fontWeight: FontWeight.w500,
+                        color: Colors.white70,
                       ),
                     ),
                   ),
                 ),
-                
-                const SizedBox(width: 8),
-                
-                // Activity Button
-                MouseRegion(
-                  cursor: SystemMouseCursors.click,
-                  child: GestureDetector(
-                    onTap: () {
-                      Navigator.of(context).push(
-                        PageRouteBuilder(
-                          pageBuilder: (context, animation, secondaryAnimation) => const ActivityPage(),
-                          transitionDuration: Duration.zero,
-                          reverseTransitionDuration: Duration.zero,
-                        ),
-                      );
-                    },
-                    child: Container(
-                      height: 32,
-                      padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 6),
-                      decoration: BoxDecoration(
-                        color: Colors.transparent,
-                        borderRadius: BorderRadius.circular(6),
+              ),
+              
+              // Trading Button
+              MouseRegion(
+                cursor: SystemMouseCursors.click,
+                child: GestureDetector(
+                  onTap: () {
+                    Navigator.of(context).push(
+                      PageRouteBuilder(
+                        pageBuilder: (context, animation, secondaryAnimation) => const TradingPage(),
+                        transitionDuration: Duration.zero,
+                        reverseTransitionDuration: Duration.zero,
                       ),
-                      child: const Text(
-                        'Activity',
-                        style: TextStyle(
-                          fontSize: 12,
-                          fontWeight: FontWeight.w600,
-                          color: Colors.white,
-                        ),
+                    );
+                  },
+                  child: Container(
+                    height: 50,
+                    padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 9),
+                    decoration: BoxDecoration(
+                      color: Colors.transparent,
+                      border: Border(
+                        top: BorderSide(color: Colors.white.withOpacity(0.3), width: 1),
+                        left: BorderSide(color: Colors.white.withOpacity(0.3), width: 1),
+                        right: BorderSide(color: Colors.white.withOpacity(0.3), width: 1),
+                        bottom: BorderSide(color: Colors.white.withOpacity(0.3), width: 1),
+                      ),
+                      borderRadius: const BorderRadius.only(
+                        topLeft: Radius.circular(8),
+                        topRight: Radius.circular(8),
+                      ),
+                    ),
+                    child: const Text(
+                      'Trading',
+                      style: TextStyle(
+                        fontSize: 13,
+                        fontWeight: FontWeight.w500,
+                        color: Colors.white70,
                       ),
                     ),
                   ),
                 ),
-                
-                const SizedBox(width: 8),
-                
-                // Trading Button
-                MouseRegion(
-                  cursor: SystemMouseCursors.click,
-                  child: GestureDetector(
-                    onTap: () {
-                      Navigator.of(context).push(
-                        PageRouteBuilder(
-                          pageBuilder: (context, animation, secondaryAnimation) => const TradingPage(),
-                          transitionDuration: Duration.zero,
-                          reverseTransitionDuration: Duration.zero,
-                        ),
-                      );
-                    },
-                    child: Container(
-                      height: 32,
-                      padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 6),
-                      decoration: BoxDecoration(
-                        color: Colors.transparent,
-                        borderRadius: BorderRadius.circular(6),
-                      ),
-                      child: const Text(
-                        'Trading',
-                        style: TextStyle(
-                          fontSize: 12,
-                          fontWeight: FontWeight.w600,
-                          color: Colors.white,
-                        ),
-                      ),
-                    ),
-                  ),
-                ),
+              ),
               ],
             ),
           ),
           
-          // Right spacer - smaller to balance the layout
-          const Expanded(flex: 1, child: SizedBox.shrink()),
+          // Spacer to push user menu to the right
+          const Spacer(),
           
           // User Profile with Dropdown
           PopupMenuButton<String>(
