@@ -1819,6 +1819,11 @@ class _TradingPageState extends State<TradingPage> {
           
           // User Profile with Dropdown
           PopupMenuButton<String>(
+            offset: const Offset(18, 40),
+            color: const Color(0xFF1a1754),
+            surfaceTintColor: const Color(0xFF1a1754),
+            shadowColor: Colors.black.withOpacity(0.3),
+            elevation: 8,
             onSelected: (value) {
               if (value == 'profile') {
                 Navigator.of(context).push(
@@ -1837,24 +1842,29 @@ class _TradingPageState extends State<TradingPage> {
             itemBuilder: (BuildContext context) {
               final isAdmin = authService.username.toLowerCase() == 'admin';
               return [
-                const PopupMenuItem<String>(
+                PopupMenuItem<String>(
                   value: 'profile',
                   child: Row(
                     children: [
-                      Icon(Icons.person, size: 18),
+                      Icon(Icons.person, size: 18, color: Colors.white),
                       SizedBox(width: 8),
-                      Text('Profile'),
+                      Text('Profile', style: TextStyle(color: Colors.white)),
                     ],
                   ),
                 ),
                 if (isAdmin)
-                  const PopupMenuItem<String>(
+                  PopupMenuDivider(
+                    height: 1,
+                    color: Colors.white.withOpacity(0.3),
+                  ),
+                if (isAdmin)
+                  PopupMenuItem<String>(
                     value: 'users',
                     child: Row(
                       children: [
-                        Icon(Icons.people, size: 18),
+                        Icon(Icons.people, size: 18, color: Colors.white),
                         SizedBox(width: 8),
-                        Text('View Users'),
+                        Text('View Users', style: TextStyle(color: Colors.white)),
                       ],
                     ),
                   ),
