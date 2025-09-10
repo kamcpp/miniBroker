@@ -2,6 +2,7 @@
 import 'dart:math';
 import 'dart:async';
 import 'dart:convert';
+import 'dart:ui';
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 import 'package:http/http.dart' as http;
@@ -1713,28 +1714,37 @@ class _TradingPageState extends State<TradingPage> {
                       ),
                     );
                   },
-                  child: Container(
-                    height: 45,
-                    padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 9),
-                    decoration: BoxDecoration(
-                      color: Colors.transparent,
-                      border: Border(
-                        top: BorderSide(color: Colors.white.withOpacity(0.3), width: 1),
-                        left: BorderSide(color: Colors.white.withOpacity(0.3), width: 1),
-                        right: BorderSide(color: Colors.white.withOpacity(0.3), width: 1),
-                        bottom: BorderSide(color: Colors.white.withOpacity(0.3), width: 1),
-                      ),
-                      borderRadius: const BorderRadius.only(
-                        topLeft: Radius.circular(8),
-                        topRight: Radius.circular(8),
-                      ),
+                  child: ClipRRect(
+                    borderRadius: const BorderRadius.only(
+                      topLeft: Radius.circular(8),
+                      topRight: Radius.circular(8),
                     ),
-                    child: const Text(
-                      'Portfolio',
-                      style: TextStyle(
-                        fontSize: 13,
-                        fontWeight: FontWeight.w500,
-                        color: Colors.white70,
+                    child: BackdropFilter(
+                      filter: ImageFilter.blur(sigmaX: 2, sigmaY: 2),
+                      child: Container(
+                        height: 45,
+                        padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 9),
+                        decoration: BoxDecoration(
+                          color: Colors.white.withOpacity(0.1),
+                          border: Border(
+                            top: BorderSide(color: Colors.white.withOpacity(0.3), width: 1),
+                            left: BorderSide(color: Colors.white.withOpacity(0.3), width: 1),
+                            right: BorderSide(color: Colors.white.withOpacity(0.3), width: 1),
+                            bottom: BorderSide(color: Colors.white.withOpacity(0.3), width: 1),
+                          ),
+                          borderRadius: const BorderRadius.only(
+                            topLeft: Radius.circular(8),
+                            topRight: Radius.circular(8),
+                          ),
+                        ),
+                        child: const Text(
+                          'Portfolio',
+                          style: TextStyle(
+                            fontSize: 13,
+                            fontWeight: FontWeight.w500,
+                            color: Colors.white70,
+                          ),
+                        ),
                       ),
                     ),
                   ),
@@ -1754,28 +1764,37 @@ class _TradingPageState extends State<TradingPage> {
                       ),
                     );
                   },
-                  child: Container(
-                    height: 45,
-                    padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 9),
-                    decoration: BoxDecoration(
-                      color: Colors.transparent,
-                      border: Border(
-                        top: BorderSide(color: Colors.white.withOpacity(0.3), width: 1),
-                        left: BorderSide(color: Colors.white.withOpacity(0.3), width: 1),
-                        right: BorderSide(color: Colors.white.withOpacity(0.3), width: 1),
-                        bottom: BorderSide(color: Colors.white.withOpacity(0.3), width: 1),
-                      ),
-                      borderRadius: const BorderRadius.only(
-                        topLeft: Radius.circular(8),
-                        topRight: Radius.circular(8),
-                      ),
+                  child: ClipRRect(
+                    borderRadius: const BorderRadius.only(
+                      topLeft: Radius.circular(8),
+                      topRight: Radius.circular(8),
                     ),
-                    child: const Text(
-                      'Activity',
-                      style: TextStyle(
-                        fontSize: 13,
-                        fontWeight: FontWeight.w500,
-                        color: Colors.white70,
+                    child: BackdropFilter(
+                      filter: ImageFilter.blur(sigmaX: 2, sigmaY: 2),
+                      child: Container(
+                        height: 45,
+                        padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 9),
+                        decoration: BoxDecoration(
+                          color: Colors.white.withOpacity(0.1),
+                          border: Border(
+                            top: BorderSide(color: Colors.white.withOpacity(0.3), width: 1),
+                            left: BorderSide(color: Colors.white.withOpacity(0.3), width: 1),
+                            right: BorderSide(color: Colors.white.withOpacity(0.3), width: 1),
+                            bottom: BorderSide(color: Colors.white.withOpacity(0.3), width: 1),
+                          ),
+                          borderRadius: const BorderRadius.only(
+                            topLeft: Radius.circular(8),
+                            topRight: Radius.circular(8),
+                          ),
+                        ),
+                        child: const Text(
+                          'Activity',
+                          style: TextStyle(
+                            fontSize: 13,
+                            fontWeight: FontWeight.w500,
+                            color: Colors.white70,
+                          ),
+                        ),
                       ),
                     ),
                   ),
