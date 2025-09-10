@@ -609,135 +609,114 @@ class _ActivityPageState extends State<ActivityPage> {
                       )
                     : Column(
                         children: [
-                          // Table header
-                          Container(
-                            padding: const EdgeInsets.symmetric(vertical: 12, horizontal: 16),
-                            decoration: BoxDecoration(
-                              color: isDarkTheme ? const Color(0xFF2d2d2d) : Colors.grey[200],
-                              border: Border.all(
-                                color: isDarkTheme ? Colors.grey[600]! : Colors.grey[400]!,
-                                width: 1,
-                              ),
-                            ),
-                            child: Row(
-                              children: [
-                                Expanded(
-                                  flex: 3,
+                          // Table header row
+                          Row(
+                            children: [
+                              Expanded(
+                                flex: 3,
+                                child: Padding(
+                                  padding: const EdgeInsets.only(left: 16),
                                   child: Text(
                                     'Order ID',
                                     style: TextStyle(
-                                      fontWeight: FontWeight.bold,
-                                      color: isDarkTheme ? Colors.white : Colors.black,
                                       fontSize: 14,
+                                      color: isDarkTheme ? Colors.grey[400] : Colors.grey[600],
                                     ),
                                   ),
                                 ),
-                                Expanded(
-                                  flex: 3,
-                                  child: Text(
-                                    'Participant Account',
-                                    style: TextStyle(
-                                      fontWeight: FontWeight.bold,
-                                      color: isDarkTheme ? Colors.white : Colors.black,
-                                      fontSize: 14,
-                                    ),
+                              ),
+                              Expanded(
+                                flex: 3,
+                                child: Text(
+                                  'Account',
+                                  style: TextStyle(
+                                    fontSize: 14,
+                                    color: isDarkTheme ? Colors.grey[400] : Colors.grey[600],
                                   ),
                                 ),
-                                Expanded(
-                                  flex: 2,
-                                  child: Text(
-                                    'Symbol',
-                                    style: TextStyle(
-                                      fontWeight: FontWeight.bold,
-                                      color: isDarkTheme ? Colors.white : Colors.black,
-                                      fontSize: 14,
-                                    ),
-                                    textAlign: TextAlign.center,
+                              ),
+                              Expanded(
+                                flex: 2,
+                                child: Text(
+                                  'Symbol',
+                                  style: TextStyle(
+                                    fontSize: 14,
+                                    color: isDarkTheme ? Colors.grey[400] : Colors.grey[600],
                                   ),
                                 ),
-                                Expanded(
-                                  flex: 2,
-                                  child: Text(
-                                    'Quantity',
-                                    style: TextStyle(
-                                      fontWeight: FontWeight.bold,
-                                      color: isDarkTheme ? Colors.white : Colors.black,
-                                      fontSize: 14,
-                                    ),
-                                    textAlign: TextAlign.center,
+                              ),
+                              Expanded(
+                                flex: 2,
+                                child: Text(
+                                  'Quantity',
+                                  textAlign: TextAlign.center,
+                                  style: TextStyle(
+                                    fontSize: 14,
+                                    color: isDarkTheme ? Colors.grey[400] : Colors.grey[600],
                                   ),
                                 ),
-                                Expanded(
-                                  flex: 2,
+                              ),
+                              Expanded(
+                                flex: 2,
+                                child: Padding(
+                                  padding: const EdgeInsets.only(right: 16),
                                   child: Text(
                                     'Price',
-                                    style: TextStyle(
-                                      fontWeight: FontWeight.bold,
-                                      color: isDarkTheme ? Colors.white : Colors.black,
-                                      fontSize: 14,
-                                    ),
                                     textAlign: TextAlign.right,
+                                    style: TextStyle(
+                                      fontSize: 14,
+                                      color: isDarkTheme ? Colors.grey[400] : Colors.grey[600],
+                                    ),
                                   ),
                                 ),
-                              ],
-                            ),
+                              ),
+                            ],
                           ),
+                          const SizedBox(height: 8),
+                          Container(
+                            height: 1,
+                            color: isDarkTheme ? Colors.grey[700] : Colors.grey[300],
+                          ),
+                          const SizedBox(height: 12),
                           // Table rows
                           Flexible(
                             child: _orders.isEmpty
                                 ? Center(
-                                    child: Column(
-                                      mainAxisAlignment: MainAxisAlignment.center,
-                                      children: [
-                                        Icon(
-                                          Icons.receipt_long,
-                                          size: 48,
-                                          color: isDarkTheme ? Colors.grey[600] : Colors.grey[400],
-                                        ),
-                                        const SizedBox(height: 8),
-                                        Text(
-                                          'No orders found',
-                                          style: TextStyle(
-                                            fontSize: 16,
-                                            color: isDarkTheme ? Colors.grey[400] : Colors.grey[600],
-                                          ),
-                                        ),
-                                      ],
+                                    child: Text(
+                                      'No orders found',
+                                      style: TextStyle(
+                                        color: isDarkTheme ? Colors.grey[400] : Colors.grey[600],
+                                        fontSize: 14,
+                                      ),
                                     ),
                                   )
                                 : ListView.builder(
                                     itemCount: _orders.length,
                                     itemBuilder: (context, index) {
                                       final order = _orders[index];
-                                      return Container(
-                                        padding: const EdgeInsets.symmetric(vertical: 12, horizontal: 16),
-                                        decoration: BoxDecoration(
-                                          color: index.isEven 
-                                              ? (isDarkTheme ? const Color(0xFF1e1e1e) : Colors.white)
-                                              : (isDarkTheme ? const Color(0xFF2a2a2a) : Colors.grey[50]),
-                                          border: Border(
-                                            left: BorderSide(color: isDarkTheme ? Colors.grey[600]! : Colors.grey[400]!),
-                                            right: BorderSide(color: isDarkTheme ? Colors.grey[600]! : Colors.grey[400]!),
-                                            bottom: BorderSide(color: isDarkTheme ? Colors.grey[700]! : Colors.grey[300]!),
-                                          ),
-                                        ),
+                                      return Padding(
+                                        padding: const EdgeInsets.only(bottom: 8),
                                         child: Row(
                                           children: [
                                             // Order ID
                                             Expanded(
                                               flex: 3,
-                                              child: Text(
-                                                order['id']?.toString() ?? 
-                                                order['order_id']?.toString() ?? 
-                                                'N/A',
-                                                style: TextStyle(
-                                                  color: isDarkTheme ? Colors.white : Colors.black,
-                                                  fontSize: 13,
+                                              child: Padding(
+                                                padding: const EdgeInsets.only(left: 16),
+                                                child: Text(
+                                                  order['id']?.toString() ?? 
+                                                  order['order_id']?.toString() ?? 
+                                                  'N/A',
+                                                  style: TextStyle(
+                                                    fontSize: 16,
+                                                    color: isDarkTheme ? Colors.white : Colors.black,
+                                                    fontWeight: FontWeight.w500,
+                                                  ),
+                                                  overflow: TextOverflow.ellipsis,
                                                 ),
-                                                overflow: TextOverflow.ellipsis,
                                               ),
                                             ),
-                                            // Participant Account
+                                            // Account
                                             Expanded(
                                               flex: 3,
                                               child: Text(
@@ -745,8 +724,8 @@ class _ActivityPageState extends State<ActivityPage> {
                                                 order['participant_account']?.toString() ?? 
                                                 'N/A',
                                                 style: TextStyle(
+                                                  fontSize: 16,
                                                   color: isDarkTheme ? Colors.white : Colors.black,
-                                                  fontSize: 13,
                                                 ),
                                                 overflow: TextOverflow.ellipsis,
                                               ),
@@ -759,11 +738,9 @@ class _ActivityPageState extends State<ActivityPage> {
                                                 order['asset_id']?.toString() ?? 
                                                 'N/A',
                                                 style: TextStyle(
-                                                  fontWeight: FontWeight.w600,
+                                                  fontSize: 16,
                                                   color: isDarkTheme ? Colors.white : Colors.black,
-                                                  fontSize: 13,
                                                 ),
-                                                textAlign: TextAlign.center,
                                               ),
                                             ),
                                             // Quantity
@@ -771,23 +748,27 @@ class _ActivityPageState extends State<ActivityPage> {
                                               flex: 2,
                                               child: Text(
                                                 order['quantity']?.toString() ?? 'N/A',
-                                                style: TextStyle(
-                                                  color: isDarkTheme ? Colors.white : Colors.black,
-                                                  fontSize: 13,
-                                                ),
                                                 textAlign: TextAlign.center,
+                                                style: TextStyle(
+                                                  fontSize: 16,
+                                                  color: isDarkTheme ? Colors.white : Colors.black,
+                                                ),
                                               ),
                                             ),
                                             // Price
                                             Expanded(
                                               flex: 2,
-                                              child: Text(
-                                                order['price']?.toString() ?? 'N/A',
-                                                style: TextStyle(
-                                                  color: isDarkTheme ? Colors.white : Colors.black,
-                                                  fontSize: 13,
+                                              child: Padding(
+                                                padding: const EdgeInsets.only(right: 16),
+                                                child: Text(
+                                                  order['price']?.toString() ?? 'N/A',
+                                                  textAlign: TextAlign.right,
+                                                  style: TextStyle(
+                                                    fontSize: 16,
+                                                    color: isDarkTheme ? Colors.white : Colors.black,
+                                                    fontWeight: FontWeight.w500,
+                                                  ),
                                                 ),
-                                                textAlign: TextAlign.right,
                                               ),
                                             ),
                                           ],
@@ -1027,114 +1008,130 @@ class _ActivityPageState extends State<ActivityPage> {
                           ),
                         ),
                       )
-                    : _trades.isEmpty
-                        ? Center(
-                            child: Column(
-                              mainAxisAlignment: MainAxisAlignment.center,
-                              children: [
-                                Icon(
-                                  Icons.swap_horiz,
-                                  size: 48,
-                                  color: isDarkTheme ? Colors.grey[600] : Colors.grey[400],
+                    : Column(
+                        children: [
+                          // Trades table header row
+                          Row(
+                            children: [
+                              Expanded(
+                                flex: 3,
+                                child: Padding(
+                                  padding: const EdgeInsets.only(left: 16),
+                                  child: Text(
+                                    'Price',
+                                    style: TextStyle(
+                                      fontSize: 14,
+                                      color: isDarkTheme ? Colors.grey[400] : Colors.grey[600],
+                                    ),
+                                  ),
                                 ),
-                                const SizedBox(height: 8),
-                                Text(
-                                  'No trades found',
+                              ),
+                              Expanded(
+                                flex: 3,
+                                child: Text(
+                                  'Quantity',
+                                  textAlign: TextAlign.center,
                                   style: TextStyle(
-                                    fontSize: 16,
+                                    fontSize: 14,
                                     color: isDarkTheme ? Colors.grey[400] : Colors.grey[600],
                                   ),
                                 ),
-                              ],
-                            ),
-                          )
-                        : ListView.builder(
-                            padding: const EdgeInsets.all(16),
-                            itemCount: _trades.length,
-                            itemBuilder: (context, index) {
-                              final trade = _trades[index];
-                              return Container(
-                                margin: const EdgeInsets.only(bottom: 8),
-                                padding: const EdgeInsets.all(12),
-                                decoration: BoxDecoration(
-                                  color: isDarkTheme ? const Color(0xFF2d2d2d) : Colors.grey[50],
-                                  borderRadius: BorderRadius.circular(6),
+                              ),
+                              Expanded(
+                                flex: 4,
+                                child: Padding(
+                                  padding: const EdgeInsets.only(right: 16),
+                                  child: Text(
+                                    'Time',
+                                    textAlign: TextAlign.right,
+                                    style: TextStyle(
+                                      fontSize: 14,
+                                      color: isDarkTheme ? Colors.grey[400] : Colors.grey[600],
+                                    ),
+                                  ),
                                 ),
-                                child: Row(
-                                  children: [
-                                    Expanded(
-                                      flex: 2,
-                                      child: Column(
-                                        crossAxisAlignment: CrossAxisAlignment.start,
-                                        children: [
-                                          Text(
-                                            trade['symbol']?.toString() ?? trade['asset_id']?.toString() ?? 'N/A',
-                                            style: TextStyle(
-                                              fontWeight: FontWeight.w600,
-                                              color: isDarkTheme ? Colors.white : Colors.black,
-                                            ),
-                                          ),
-                                          Text(
-                                            trade['side']?.toString()?.toUpperCase() ?? 'N/A',
-                                            style: TextStyle(
-                                              fontSize: 12,
-                                              color: trade['side']?.toString()?.toLowerCase() == 'buy'
-                                                  ? Colors.green
-                                                  : Colors.red,
-                                            ),
-                                          ),
-                                        ],
-                                      ),
-                                    ),
-                                    Expanded(
-                                      flex: 2,
-                                      child: Column(
-                                        crossAxisAlignment: CrossAxisAlignment.center,
-                                        children: [
-                                          Text(
-                                            trade['quantity']?.toString() ?? 'N/A',
-                                            style: TextStyle(
-                                              fontWeight: FontWeight.w500,
-                                              color: isDarkTheme ? Colors.white : Colors.black,
-                                            ),
-                                          ),
-                                          Text(
-                                            '\$${trade['price']?.toString() ?? 'N/A'}',
-                                            style: TextStyle(
-                                              fontSize: 12,
-                                              color: isDarkTheme ? Colors.grey[400] : Colors.grey[600],
-                                            ),
-                                          ),
-                                        ],
-                                      ),
-                                    ),
-                                    Expanded(
-                                      flex: 2,
-                                      child: Column(
-                                        crossAxisAlignment: CrossAxisAlignment.end,
-                                        children: [
-                                          Text(
-                                            '\$${((double.tryParse(trade['quantity']?.toString() ?? '0') ?? 0.0) * (double.tryParse(trade['price']?.toString() ?? '0') ?? 0.0)).toStringAsFixed(2)}',
-                                            style: TextStyle(
-                                              fontWeight: FontWeight.w500,
-                                              color: isDarkTheme ? Colors.white : Colors.black,
-                                            ),
-                                          ),
-                                          Text(
-                                            trade['timestamp']?.toString() ?? trade['executed_at']?.toString() ?? 'N/A',
-                                            style: TextStyle(
-                                              fontSize: 12,
-                                              color: isDarkTheme ? Colors.grey[400] : Colors.grey[600],
-                                            ),
-                                          ),
-                                        ],
-                                      ),
-                                    ),
-                                  ],
-                                ),
-                              );
-                            },
+                              ),
+                            ],
                           ),
+                          const SizedBox(height: 8),
+                          Container(
+                            height: 1,
+                            color: isDarkTheme ? Colors.grey[700] : Colors.grey[300],
+                          ),
+                          const SizedBox(height: 12),
+                          // Trades table rows
+                          Flexible(
+                            child: _trades.isEmpty
+                                ? Center(
+                                    child: Text(
+                                      'No trades found',
+                                      style: TextStyle(
+                                        color: isDarkTheme ? Colors.grey[400] : Colors.grey[600],
+                                        fontSize: 14,
+                                      ),
+                                    ),
+                                  )
+                                : ListView.builder(
+                                    itemCount: _trades.length,
+                                    itemBuilder: (context, index) {
+                                      final trade = _trades[index];
+                                      return Padding(
+                                        padding: const EdgeInsets.only(bottom: 8),
+                                        child: Row(
+                                          children: [
+                                            // Price
+                                            Expanded(
+                                              flex: 3,
+                                              child: Padding(
+                                                padding: const EdgeInsets.only(left: 16),
+                                                child: Text(
+                                                  '\$${trade['price']?.toString() ?? 'N/A'}',
+                                                  style: TextStyle(
+                                                    fontSize: 16,
+                                                    color: isDarkTheme ? Colors.white : Colors.black,
+                                                    fontWeight: FontWeight.w500,
+                                                  ),
+                                                  overflow: TextOverflow.ellipsis,
+                                                ),
+                                              ),
+                                            ),
+                                            // Quantity
+                                            Expanded(
+                                              flex: 3,
+                                              child: Text(
+                                                trade['quantity']?.toString() ?? 'N/A',
+                                                textAlign: TextAlign.center,
+                                                style: TextStyle(
+                                                  fontSize: 16,
+                                                  color: isDarkTheme ? Colors.white : Colors.black,
+                                                ),
+                                                overflow: TextOverflow.ellipsis,
+                                              ),
+                                            ),
+                                            // Time
+                                            Expanded(
+                                              flex: 4,
+                                              child: Padding(
+                                                padding: const EdgeInsets.only(right: 16),
+                                                child: Text(
+                                                  trade['timestamp']?.toString() ?? trade['executed_at']?.toString() ?? 'N/A',
+                                                  textAlign: TextAlign.right,
+                                                  style: TextStyle(
+                                                    fontSize: 16,
+                                                    color: isDarkTheme ? Colors.white : Colors.black,
+                                                  ),
+                                                  overflow: TextOverflow.ellipsis,
+                                                ),
+                                              ),
+                                            ),
+                                          ],
+                                        ),
+                                      );
+                                    },
+                                  ),
+                          ),
+                        ],
+                      ),
           ),
         ],
       ),
