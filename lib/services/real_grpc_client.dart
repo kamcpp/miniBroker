@@ -771,6 +771,13 @@ class RealGrpcClient {
   /// Real GetAccountOrders call to PortfolioService.GetAccountOrders using grpcurl
   Future<Map<String, dynamic>> getAccountOrders({
     required String accountId,
+    List<String>? marketIdOrNameRegexes,
+    Map<String, dynamic>? pagination,
+    String? fromTime,
+    String? toTime,
+    String? side,
+    List<bool>? statusFilters,
+    List<String>? instrumentIdOrSymbolRegexes,
   }) async {
     if (!_isConnected) {
       return {
@@ -789,6 +796,13 @@ class RealGrpcClient {
         GrpcurlHelper.getAccountOrders(
           accountId: accountId,
           refRequestId: generateRequestId(prefix: 'get_orders'),
+          marketIdOrNameRegexes: marketIdOrNameRegexes,
+          pagination: pagination,
+          fromTime: fromTime,
+          toTime: toTime,
+          side: side,
+          statusFilters: statusFilters,
+          instrumentIdOrSymbolRegexes: instrumentIdOrSymbolRegexes,
         ),
       ]).catchError((error) {
         print('❌ GetAccountOrders execution error: $error');
@@ -843,6 +857,12 @@ class RealGrpcClient {
   /// Real GetAccountTrades call to PortfolioService.GetAccountTrades using grpcurl
   Future<Map<String, dynamic>> getAccountTrades({
     required String accountId,
+    List<String>? marketIdOrNameRegexes,
+    Map<String, dynamic>? pagination,
+    String? fromTime,
+    String? toTime,
+    String? side,
+    List<String>? instrumentIdOrSymbolRegexes,
   }) async {
     if (!_isConnected) {
       return {
@@ -861,6 +881,12 @@ class RealGrpcClient {
         GrpcurlHelper.getAccountTrades(
           accountId: accountId,
           refRequestId: generateRequestId(prefix: 'get_trades'),
+          marketIdOrNameRegexes: marketIdOrNameRegexes,
+          pagination: pagination,
+          fromTime: fromTime,
+          toTime: toTime,
+          side: side,
+          instrumentIdOrSymbolRegexes: instrumentIdOrSymbolRegexes,
         ),
       ]).catchError((error) {
         print('❌ GetAccountTrades execution error: $error');

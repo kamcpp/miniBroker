@@ -1,4 +1,5 @@
 import 'dart:async';
+import 'dart:convert';
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 import '../services/auth_service.dart';
@@ -29,6 +30,27 @@ class _ActivityPageState extends State<ActivityPage> {
 
   // Account management
   String? _cachedAccountId;
+
+  // Filter state for orders
+  String? _selectedSide; // BUY, SELL, or null for all
+  List<String> _marketFilters = [];
+  List<String> _instrumentFilters = [];
+  DateTime? _fromDate;
+  DateTime? _toDate;
+  bool _showOnlyFilled = false;
+  bool _showOnlyCancelled = false;
+  bool _showOnlyExpired = false;
+  int _pageSize = 50;
+  bool _showFilters = false;
+
+  // Filter state for trades (similar to orders but without status filters)
+  String? _selectedTradeSide;
+  List<String> _tradeMarketFilters = [];
+  List<String> _tradeInstrumentFilters = [];
+  DateTime? _tradeFromDate;
+  DateTime? _tradeToDate;
+  int _tradePageSize = 50;
+  bool _showTradeFilters = false;
   
   @override
   void initState() {
@@ -154,10 +176,40 @@ class _ActivityPageState extends State<ActivityPage> {
         return;
       }
 
-      // Call GetAccountOrders
+      // Prepare filter parameters
+      final pagination = {'page_size': _pageSize, 'page_nr': 1};
+      final statusFilters = [_showOnlyFilled, _showOnlyCancelled, _showOnlyExpired];
+      
+      final inputParams = {
+        'ref_request_id': 'flutter-get-orders-${DateTime.now().millisecondsSinceEpoch}',
+        'account_id': accountId,
+        'market_id_or_name_regexes': _marketFilters,
+        'instrument_id_or_symbol_regexes': _instrumentFilters,
+        'from_time': _fromDate?.toIso8601String(),
+        'to_time': _toDate?.toIso8601String(),
+        'side': _selectedSide,
+        'status_filters': statusFilters,
+        'pagination': {
+          'page_size': _pageSize,
+          'page_nr': 1,
+        },
+      };
+
+      print('🔍 GetAccountOrders INPUT: ${jsonEncode(inputParams)}');
+
+      // Call GetAccountOrders with all parameters
       final ordersResponse = await realGrpcClient.getAccountOrders(
         accountId: accountId,
+        marketIdOrNameRegexes: _marketFilters.isNotEmpty ? _marketFilters : null,
+        pagination: pagination,
+        fromTime: _fromDate?.toIso8601String(),
+        toTime: _toDate?.toIso8601String(),
+        side: _selectedSide,
+        statusFilters: statusFilters.contains(true) ? statusFilters : null,
+        instrumentIdOrSymbolRegexes: _instrumentFilters.isNotEmpty ? _instrumentFilters : null,
       );
+
+      print('📤 GetAccountOrders OUTPUT: ${jsonEncode(ordersResponse)}');
 
       if (mounted) {
         setState(() {
@@ -212,10 +264,37 @@ class _ActivityPageState extends State<ActivityPage> {
         return;
       }
 
-      // Call GetAccountTrades
+      // Prepare filter parameters for trades
+      final tradePagination = {'page_size': _tradePageSize, 'page_nr': 1};
+      
+      final tradeInputParams = {
+        'ref_request_id': 'flutter-get-trades-${DateTime.now().millisecondsSinceEpoch}',
+        'account_id': accountId,
+        'market_id_or_name_regexes': _tradeMarketFilters,
+        'instrument_id_or_symbol_regexes': _tradeInstrumentFilters,
+        'from_time': _tradeFromDate?.toIso8601String(),
+        'to_time': _tradeToDate?.toIso8601String(),
+        'side': _selectedTradeSide,
+        'pagination': {
+          'page_size': _tradePageSize,
+          'page_nr': 1,
+        },
+      };
+
+      print('🔍 GetAccountTrades INPUT: ${jsonEncode(tradeInputParams)}');
+
+      // Call GetAccountTrades with all parameters
       final tradesResponse = await realGrpcClient.getAccountTrades(
         accountId: accountId,
+        marketIdOrNameRegexes: _tradeMarketFilters.isNotEmpty ? _tradeMarketFilters : null,
+        pagination: tradePagination,
+        fromTime: _tradeFromDate?.toIso8601String(),
+        toTime: _tradeToDate?.toIso8601String(),
+        side: _selectedTradeSide,
+        instrumentIdOrSymbolRegexes: _tradeInstrumentFilters.isNotEmpty ? _tradeInstrumentFilters : null,
       );
+
+      print('📤 GetAccountTrades OUTPUT: ${jsonEncode(tradesResponse)}');
 
       if (mounted) {
         setState(() {
@@ -282,6 +361,20 @@ class _ActivityPageState extends State<ActivityPage> {
                     color: isDarkTheme ? Colors.white : Colors.black,
                   ),
                 ),
+                const SizedBox(width: 16),
+                // Filter toggle button
+                IconButton(
+                  onPressed: () {
+                    setState(() {
+                      _showFilters = !_showFilters;
+                    });
+                  },
+                  icon: Icon(
+                    _showFilters ? Icons.filter_alt : Icons.filter_alt_outlined,
+                    color: isDarkTheme ? Colors.white : Colors.black,
+                  ),
+                  tooltip: 'Toggle Filters',
+                ),
                 const Spacer(),
                 if (_isLoadingOrders)
                   SizedBox(
@@ -297,9 +390,167 @@ class _ActivityPageState extends State<ActivityPage> {
               ],
             ),
           ),
-          // Table content
+          // Filter section
+          if (_showFilters)
+            Container(
+              padding: const EdgeInsets.all(16),
+              decoration: BoxDecoration(
+                color: isDarkTheme ? const Color(0xFF2a2a2a) : Colors.grey[100],
+                border: Border(
+                  bottom: BorderSide(
+                    color: isDarkTheme ? Colors.grey[700]! : Colors.grey[300]!,
+                    width: 1,
+                  ),
+                ),
+              ),
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  // First row of filters
+                  Row(
+                    children: [
+                      // Side filter
+                      Expanded(
+                        child: Column(
+                          crossAxisAlignment: CrossAxisAlignment.start,
+                          children: [
+                            Text(
+                              'Side',
+                              style: TextStyle(
+                                fontWeight: FontWeight.bold,
+                                color: isDarkTheme ? Colors.white : Colors.black,
+                              ),
+                            ),
+                            const SizedBox(height: 4),
+                            DropdownButton<String?>(
+                              value: _selectedSide,
+                              isExpanded: true,
+                              dropdownColor: isDarkTheme ? const Color(0xFF2a2a2a) : Colors.white,
+                              items: [
+                                DropdownMenuItem(value: null, child: Text('All', style: TextStyle(color: isDarkTheme ? Colors.white : Colors.black))),
+                                DropdownMenuItem(value: 'BUY', child: Text('BUY', style: TextStyle(color: Colors.green))),
+                                DropdownMenuItem(value: 'SELL', child: Text('SELL', style: TextStyle(color: Colors.red))),
+                              ],
+                              onChanged: (value) {
+                                setState(() {
+                                  _selectedSide = value;
+                                });
+                              },
+                            ),
+                          ],
+                        ),
+                      ),
+                      const SizedBox(width: 16),
+                      // Page size filter
+                      Expanded(
+                        child: Column(
+                          crossAxisAlignment: CrossAxisAlignment.start,
+                          children: [
+                            Text(
+                              'Page Size',
+                              style: TextStyle(
+                                fontWeight: FontWeight.bold,
+                                color: isDarkTheme ? Colors.white : Colors.black,
+                              ),
+                            ),
+                            const SizedBox(height: 4),
+                            DropdownButton<int>(
+                              value: _pageSize,
+                              isExpanded: true,
+                              dropdownColor: isDarkTheme ? const Color(0xFF2a2a2a) : Colors.white,
+                              items: [10, 25, 50, 100].map((size) => 
+                                DropdownMenuItem(
+                                  value: size, 
+                                  child: Text('$size', style: TextStyle(color: isDarkTheme ? Colors.white : Colors.black))
+                                )
+                              ).toList(),
+                              onChanged: (value) {
+                                if (value != null) {
+                                  setState(() {
+                                    _pageSize = value;
+                                  });
+                                }
+                              },
+                            ),
+                          ],
+                        ),
+                      ),
+                    ],
+                  ),
+                  const SizedBox(height: 16),
+                  // Status filters
+                  Text(
+                    'Status Filters',
+                    style: TextStyle(
+                      fontWeight: FontWeight.bold,
+                      color: isDarkTheme ? Colors.white : Colors.black,
+                    ),
+                  ),
+                  const SizedBox(height: 8),
+                  Row(
+                    children: [
+                      Expanded(
+                        child: CheckboxListTile(
+                          title: Text('Filled', style: TextStyle(color: isDarkTheme ? Colors.white : Colors.black)),
+                          value: _showOnlyFilled,
+                          onChanged: (value) {
+                            setState(() {
+                              _showOnlyFilled = value ?? false;
+                            });
+                          },
+                          controlAffinity: ListTileControlAffinity.leading,
+                          dense: true,
+                        ),
+                      ),
+                      Expanded(
+                        child: CheckboxListTile(
+                          title: Text('Cancelled', style: TextStyle(color: isDarkTheme ? Colors.white : Colors.black)),
+                          value: _showOnlyCancelled,
+                          onChanged: (value) {
+                            setState(() {
+                              _showOnlyCancelled = value ?? false;
+                            });
+                          },
+                          controlAffinity: ListTileControlAffinity.leading,
+                          dense: true,
+                        ),
+                      ),
+                      Expanded(
+                        child: CheckboxListTile(
+                          title: Text('Expired', style: TextStyle(color: isDarkTheme ? Colors.white : Colors.black)),
+                          value: _showOnlyExpired,
+                          onChanged: (value) {
+                            setState(() {
+                              _showOnlyExpired = value ?? false;
+                            });
+                          },
+                          controlAffinity: ListTileControlAffinity.leading,
+                          dense: true,
+                        ),
+                      ),
+                    ],
+                  ),
+                  const SizedBox(height: 16),
+                  // Apply filters button
+                  Center(
+                    child: ElevatedButton.icon(
+                      onPressed: () {
+                        _fetchOrders(); // Refresh orders with current filters
+                      },
+                      icon: const Icon(Icons.refresh),
+                      label: const Text('Apply Filters'),
+                      style: ElevatedButton.styleFrom(
+                        backgroundColor: Colors.blue,
+                        foregroundColor: Colors.white,
+                      ),
+                    ),
+                  ),
+                ],
+              ),
+            ),
+          // Orders table content
           Container(
-            height: 300, // Fixed height for orders table
+            height: _showFilters ? 300 : 400, // Fixed height instead of Expanded
             child: _isLoadingOrders
                 ? Center(
                     child: CircularProgressIndicator(
@@ -348,118 +599,204 @@ class _ActivityPageState extends State<ActivityPage> {
                                   foregroundColor: Colors.white,
                                 ),
                               ),
+                              // Show empty table structure even on error
+                              const SizedBox(height: 20),
+                              _buildOrdersTableStructure(isDarkTheme),
                             ],
                           ),
                         ),
                       )
-                    : _orders.isEmpty
-                        ? Center(
-                            child: Column(
-                              mainAxisAlignment: MainAxisAlignment.center,
+                    : Column(
+                        children: [
+                          // Table header
+                          Container(
+                            padding: const EdgeInsets.symmetric(vertical: 12, horizontal: 16),
+                            decoration: BoxDecoration(
+                              color: isDarkTheme ? const Color(0xFF2d2d2d) : Colors.grey[200],
+                              border: Border.all(
+                                color: isDarkTheme ? Colors.grey[600]! : Colors.grey[400]!,
+                                width: 1,
+                              ),
+                            ),
+                            child: Row(
                               children: [
-                                Icon(
-                                  Icons.receipt_long,
-                                  size: 48,
-                                  color: isDarkTheme ? Colors.grey[600] : Colors.grey[400],
+                                Expanded(
+                                  flex: 3,
+                                  child: Text(
+                                    'Order ID',
+                                    style: TextStyle(
+                                      fontWeight: FontWeight.bold,
+                                      color: isDarkTheme ? Colors.white : Colors.black,
+                                      fontSize: 14,
+                                    ),
+                                  ),
                                 ),
-                                const SizedBox(height: 8),
-                                Text(
-                                  'No orders found',
-                                  style: TextStyle(
-                                    fontSize: 16,
-                                    color: isDarkTheme ? Colors.grey[400] : Colors.grey[600],
+                                Expanded(
+                                  flex: 3,
+                                  child: Text(
+                                    'Participant Account',
+                                    style: TextStyle(
+                                      fontWeight: FontWeight.bold,
+                                      color: isDarkTheme ? Colors.white : Colors.black,
+                                      fontSize: 14,
+                                    ),
+                                  ),
+                                ),
+                                Expanded(
+                                  flex: 2,
+                                  child: Text(
+                                    'Symbol',
+                                    style: TextStyle(
+                                      fontWeight: FontWeight.bold,
+                                      color: isDarkTheme ? Colors.white : Colors.black,
+                                      fontSize: 14,
+                                    ),
+                                    textAlign: TextAlign.center,
+                                  ),
+                                ),
+                                Expanded(
+                                  flex: 2,
+                                  child: Text(
+                                    'Quantity',
+                                    style: TextStyle(
+                                      fontWeight: FontWeight.bold,
+                                      color: isDarkTheme ? Colors.white : Colors.black,
+                                      fontSize: 14,
+                                    ),
+                                    textAlign: TextAlign.center,
+                                  ),
+                                ),
+                                Expanded(
+                                  flex: 2,
+                                  child: Text(
+                                    'Price',
+                                    style: TextStyle(
+                                      fontWeight: FontWeight.bold,
+                                      color: isDarkTheme ? Colors.white : Colors.black,
+                                      fontSize: 14,
+                                    ),
+                                    textAlign: TextAlign.right,
                                   ),
                                 ),
                               ],
                             ),
-                          )
-                        : ListView.builder(
-                            padding: const EdgeInsets.all(16),
-                            itemCount: _orders.length,
-                            itemBuilder: (context, index) {
-                              final order = _orders[index];
-                              return Container(
-                                margin: const EdgeInsets.only(bottom: 8),
-                                padding: const EdgeInsets.all(12),
-                                decoration: BoxDecoration(
-                                  color: isDarkTheme ? const Color(0xFF2d2d2d) : Colors.grey[50],
-                                  borderRadius: BorderRadius.circular(6),
-                                ),
-                                child: Row(
-                                  children: [
-                                    Expanded(
-                                      flex: 2,
-                                      child: Column(
-                                        crossAxisAlignment: CrossAxisAlignment.start,
-                                        children: [
-                                          Text(
-                                            order['symbol']?.toString() ?? order['asset_id']?.toString() ?? 'N/A',
-                                            style: TextStyle(
-                                              fontWeight: FontWeight.w600,
-                                              color: isDarkTheme ? Colors.white : Colors.black,
-                                            ),
-                                          ),
-                                          Text(
-                                            order['side']?.toString()?.toUpperCase() ?? 'N/A',
-                                            style: TextStyle(
-                                              fontSize: 12,
-                                              color: order['side']?.toString()?.toLowerCase() == 'buy'
-                                                  ? Colors.green
-                                                  : Colors.red,
-                                            ),
-                                          ),
-                                        ],
-                                      ),
-                                    ),
-                                    Expanded(
-                                      flex: 2,
-                                      child: Column(
-                                        crossAxisAlignment: CrossAxisAlignment.center,
-                                        children: [
-                                          Text(
-                                            order['quantity']?.toString() ?? 'N/A',
-                                            style: TextStyle(
-                                              fontWeight: FontWeight.w500,
-                                              color: isDarkTheme ? Colors.white : Colors.black,
-                                            ),
-                                          ),
-                                          Text(
-                                            '\$${order['price']?.toString() ?? 'N/A'}',
-                                            style: TextStyle(
-                                              fontSize: 12,
-                                              color: isDarkTheme ? Colors.grey[400] : Colors.grey[600],
-                                            ),
-                                          ),
-                                        ],
-                                      ),
-                                    ),
-                                    Expanded(
-                                      flex: 2,
-                                      child: Column(
-                                        crossAxisAlignment: CrossAxisAlignment.end,
-                                        children: [
-                                          Text(
-                                            order['status']?.toString() ?? 'N/A',
-                                            style: TextStyle(
-                                              fontWeight: FontWeight.w500,
-                                              color: _getStatusColor(order['status']?.toString()),
-                                            ),
-                                          ),
-                                          Text(
-                                            order['timestamp']?.toString() ?? order['created_at']?.toString() ?? 'N/A',
-                                            style: TextStyle(
-                                              fontSize: 12,
-                                              color: isDarkTheme ? Colors.grey[400] : Colors.grey[600],
-                                            ),
-                                          ),
-                                        ],
-                                      ),
-                                    ),
-                                  ],
-                                ),
-                              );
-                            },
                           ),
+                          // Table rows
+                          Flexible(
+                            child: _orders.isEmpty
+                                ? Center(
+                                    child: Column(
+                                      mainAxisAlignment: MainAxisAlignment.center,
+                                      children: [
+                                        Icon(
+                                          Icons.receipt_long,
+                                          size: 48,
+                                          color: isDarkTheme ? Colors.grey[600] : Colors.grey[400],
+                                        ),
+                                        const SizedBox(height: 8),
+                                        Text(
+                                          'No orders found',
+                                          style: TextStyle(
+                                            fontSize: 16,
+                                            color: isDarkTheme ? Colors.grey[400] : Colors.grey[600],
+                                          ),
+                                        ),
+                                      ],
+                                    ),
+                                  )
+                                : ListView.builder(
+                                    itemCount: _orders.length,
+                                    itemBuilder: (context, index) {
+                                      final order = _orders[index];
+                                      return Container(
+                                        padding: const EdgeInsets.symmetric(vertical: 12, horizontal: 16),
+                                        decoration: BoxDecoration(
+                                          color: index.isEven 
+                                              ? (isDarkTheme ? const Color(0xFF1e1e1e) : Colors.white)
+                                              : (isDarkTheme ? const Color(0xFF2a2a2a) : Colors.grey[50]),
+                                          border: Border(
+                                            left: BorderSide(color: isDarkTheme ? Colors.grey[600]! : Colors.grey[400]!),
+                                            right: BorderSide(color: isDarkTheme ? Colors.grey[600]! : Colors.grey[400]!),
+                                            bottom: BorderSide(color: isDarkTheme ? Colors.grey[700]! : Colors.grey[300]!),
+                                          ),
+                                        ),
+                                        child: Row(
+                                          children: [
+                                            // Order ID
+                                            Expanded(
+                                              flex: 3,
+                                              child: Text(
+                                                order['id']?.toString() ?? 
+                                                order['order_id']?.toString() ?? 
+                                                'N/A',
+                                                style: TextStyle(
+                                                  color: isDarkTheme ? Colors.white : Colors.black,
+                                                  fontSize: 13,
+                                                ),
+                                                overflow: TextOverflow.ellipsis,
+                                              ),
+                                            ),
+                                            // Participant Account
+                                            Expanded(
+                                              flex: 3,
+                                              child: Text(
+                                                order['account_id']?.toString() ?? 
+                                                order['participant_account']?.toString() ?? 
+                                                'N/A',
+                                                style: TextStyle(
+                                                  color: isDarkTheme ? Colors.white : Colors.black,
+                                                  fontSize: 13,
+                                                ),
+                                                overflow: TextOverflow.ellipsis,
+                                              ),
+                                            ),
+                                            // Symbol
+                                            Expanded(
+                                              flex: 2,
+                                              child: Text(
+                                                order['symbol']?.toString() ?? 
+                                                order['asset_id']?.toString() ?? 
+                                                'N/A',
+                                                style: TextStyle(
+                                                  fontWeight: FontWeight.w600,
+                                                  color: isDarkTheme ? Colors.white : Colors.black,
+                                                  fontSize: 13,
+                                                ),
+                                                textAlign: TextAlign.center,
+                                              ),
+                                            ),
+                                            // Quantity
+                                            Expanded(
+                                              flex: 2,
+                                              child: Text(
+                                                order['quantity']?.toString() ?? 'N/A',
+                                                style: TextStyle(
+                                                  color: isDarkTheme ? Colors.white : Colors.black,
+                                                  fontSize: 13,
+                                                ),
+                                                textAlign: TextAlign.center,
+                                              ),
+                                            ),
+                                            // Price
+                                            Expanded(
+                                              flex: 2,
+                                              child: Text(
+                                                order['price']?.toString() ?? 'N/A',
+                                                style: TextStyle(
+                                                  color: isDarkTheme ? Colors.white : Colors.black,
+                                                  fontSize: 13,
+                                                ),
+                                                textAlign: TextAlign.right,
+                                              ),
+                                            ),
+                                          ],
+                                        ),
+                                      );
+                                    },
+                                  ),
+                          ),
+                        ],
+                      ),
           ),
         ],
       ),
@@ -500,6 +837,20 @@ class _ActivityPageState extends State<ActivityPage> {
                     color: isDarkTheme ? Colors.white : Colors.black,
                   ),
                 ),
+                const SizedBox(width: 16),
+                // Filter toggle button for trades
+                IconButton(
+                  onPressed: () {
+                    setState(() {
+                      _showTradeFilters = !_showTradeFilters;
+                    });
+                  },
+                  icon: Icon(
+                    _showTradeFilters ? Icons.filter_alt : Icons.filter_alt_outlined,
+                    color: isDarkTheme ? Colors.white : Colors.black,
+                  ),
+                  tooltip: 'Toggle Trade Filters',
+                ),
                 const Spacer(),
                 if (_isLoadingTrades)
                   SizedBox(
@@ -515,9 +866,114 @@ class _ActivityPageState extends State<ActivityPage> {
               ],
             ),
           ),
+          // Filter section for trades
+          if (_showTradeFilters)
+            Container(
+              padding: const EdgeInsets.all(16),
+              decoration: BoxDecoration(
+                color: isDarkTheme ? const Color(0xFF2a2a2a) : Colors.grey[100],
+                border: Border(
+                  bottom: BorderSide(
+                    color: isDarkTheme ? Colors.grey[700]! : Colors.grey[300]!,
+                    width: 1,
+                  ),
+                ),
+              ),
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  // First row of filters
+                  Row(
+                    children: [
+                      // Side filter for trades
+                      Expanded(
+                        child: Column(
+                          crossAxisAlignment: CrossAxisAlignment.start,
+                          children: [
+                            Text(
+                              'Side',
+                              style: TextStyle(
+                                fontWeight: FontWeight.bold,
+                                color: isDarkTheme ? Colors.white : Colors.black,
+                              ),
+                            ),
+                            const SizedBox(height: 4),
+                            DropdownButton<String?>(
+                              value: _selectedTradeSide,
+                              isExpanded: true,
+                              dropdownColor: isDarkTheme ? const Color(0xFF2a2a2a) : Colors.white,
+                              items: [
+                                DropdownMenuItem(value: null, child: Text('All', style: TextStyle(color: isDarkTheme ? Colors.white : Colors.black))),
+                                DropdownMenuItem(value: 'BUY', child: Text('BUY', style: TextStyle(color: Colors.green))),
+                                DropdownMenuItem(value: 'SELL', child: Text('SELL', style: TextStyle(color: Colors.red))),
+                              ],
+                              onChanged: (value) {
+                                setState(() {
+                                  _selectedTradeSide = value;
+                                });
+                              },
+                            ),
+                          ],
+                        ),
+                      ),
+                      const SizedBox(width: 16),
+                      // Page size filter for trades
+                      Expanded(
+                        child: Column(
+                          crossAxisAlignment: CrossAxisAlignment.start,
+                          children: [
+                            Text(
+                              'Page Size',
+                              style: TextStyle(
+                                fontWeight: FontWeight.bold,
+                                color: isDarkTheme ? Colors.white : Colors.black,
+                              ),
+                            ),
+                            const SizedBox(height: 4),
+                            DropdownButton<int>(
+                              value: _tradePageSize,
+                              isExpanded: true,
+                              dropdownColor: isDarkTheme ? const Color(0xFF2a2a2a) : Colors.white,
+                              items: [10, 25, 50, 100].map((size) => 
+                                DropdownMenuItem(
+                                  value: size, 
+                                  child: Text('$size', style: TextStyle(color: isDarkTheme ? Colors.white : Colors.black))
+                                )
+                              ).toList(),
+                              onChanged: (value) {
+                                if (value != null) {
+                                  setState(() {
+                                    _tradePageSize = value;
+                                  });
+                                }
+                              },
+                            ),
+                          ],
+                        ),
+                      ),
+                    ],
+                  ),
+                  const SizedBox(height: 16),
+                  // Apply filters button for trades
+                  Center(
+                    child: ElevatedButton.icon(
+                      onPressed: () {
+                        _fetchTrades(); // Refresh trades with current filters
+                      },
+                      icon: const Icon(Icons.refresh),
+                      label: const Text('Apply Trade Filters'),
+                      style: ElevatedButton.styleFrom(
+                        backgroundColor: Colors.blue,
+                        foregroundColor: Colors.white,
+                      ),
+                    ),
+                  ),
+                ],
+              ),
+            ),
           // Table content
           Container(
-            height: 300, // Fixed height for trades table
+            height: _showTradeFilters ? 200 : 300, // Adjust height when filters are shown
             child: _isLoadingTrades
                 ? Center(
                     child: CircularProgressIndicator(
@@ -701,6 +1157,104 @@ class _ActivityPageState extends State<ActivityPage> {
     }
   }
 
+  /// Build empty orders table structure (shown on error)
+  Widget _buildOrdersTableStructure(bool isDarkTheme) {
+    return Container(
+      width: double.infinity,
+      decoration: BoxDecoration(
+        color: isDarkTheme ? const Color(0xFF1e1e1e) : Colors.white,
+        border: Border.all(
+          color: isDarkTheme ? Colors.grey[600]! : Colors.grey[400]!,
+          width: 1,
+        ),
+      ),
+      child: Column(
+        children: [
+          // Table header
+          Container(
+            padding: const EdgeInsets.symmetric(vertical: 12, horizontal: 16),
+            decoration: BoxDecoration(
+              color: isDarkTheme ? const Color(0xFF2d2d2d) : Colors.grey[200],
+            ),
+            child: Row(
+              children: [
+                Expanded(
+                  flex: 3,
+                  child: Text(
+                    'Order ID',
+                    style: TextStyle(
+                      fontWeight: FontWeight.bold,
+                      color: isDarkTheme ? Colors.white : Colors.black,
+                      fontSize: 14,
+                    ),
+                  ),
+                ),
+                Expanded(
+                  flex: 3,
+                  child: Text(
+                    'Participant Account',
+                    style: TextStyle(
+                      fontWeight: FontWeight.bold,
+                      color: isDarkTheme ? Colors.white : Colors.black,
+                      fontSize: 14,
+                    ),
+                  ),
+                ),
+                Expanded(
+                  flex: 2,
+                  child: Text(
+                    'Symbol',
+                    style: TextStyle(
+                      fontWeight: FontWeight.bold,
+                      color: isDarkTheme ? Colors.white : Colors.black,
+                      fontSize: 14,
+                    ),
+                    textAlign: TextAlign.center,
+                  ),
+                ),
+                Expanded(
+                  flex: 2,
+                  child: Text(
+                    'Quantity',
+                    style: TextStyle(
+                      fontWeight: FontWeight.bold,
+                      color: isDarkTheme ? Colors.white : Colors.black,
+                      fontSize: 14,
+                    ),
+                    textAlign: TextAlign.center,
+                  ),
+                ),
+                Expanded(
+                  flex: 2,
+                  child: Text(
+                    'Price',
+                    style: TextStyle(
+                      fontWeight: FontWeight.bold,
+                      color: isDarkTheme ? Colors.white : Colors.black,
+                      fontSize: 14,
+                    ),
+                    textAlign: TextAlign.right,
+                  ),
+                ),
+              ],
+            ),
+          ),
+          // Empty state
+          Container(
+            padding: const EdgeInsets.all(20),
+            child: Text(
+              'Orders will be displayed here once loaded',
+              style: TextStyle(
+                color: isDarkTheme ? Colors.grey[400] : Colors.grey[600],
+                fontSize: 14,
+              ),
+            ),
+          ),
+        ],
+      ),
+    );
+  }
+
   @override
   Widget build(BuildContext context) {
     final authService = Provider.of<AuthService>(context);
@@ -830,7 +1384,7 @@ class _ActivityPageState extends State<ActivityPage> {
                     );
                   },
                   child: Container(
-                    height: 50,
+                    height: 45,
                     padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 9),
                     decoration: BoxDecoration(
                       color: Colors.transparent,
@@ -900,7 +1454,7 @@ class _ActivityPageState extends State<ActivityPage> {
                     );
                   },
                   child: Container(
-                    height: 50,
+                    height: 45,
                     padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 9),
                     decoration: BoxDecoration(
                       color: Colors.transparent,

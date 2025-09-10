@@ -862,7 +862,7 @@ class _PortfolioPageState extends State<PortfolioPage> {
                     );
                   },
                   child: Container(
-                    height: 50,
+                    height: 45,
                     padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 9),
                     decoration: BoxDecoration(
                       color: Colors.transparent,
@@ -903,7 +903,7 @@ class _PortfolioPageState extends State<PortfolioPage> {
                     );
                   },
                   child: Container(
-                    height: 50,
+                    height: 45,
                     padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 9),
                     decoration: BoxDecoration(
                       color: Colors.transparent,

@@ -1698,7 +1698,7 @@ class _TradingPageState extends State<TradingPage> {
             padding: const EdgeInsets.only(top: 10),
             child: Row(
               mainAxisSize: MainAxisSize.min,
-              crossAxisAlignment: CrossAxisAlignment.center,
+              crossAxisAlignment: CrossAxisAlignment.end,
               children: [
               // Portfolio Button
               MouseRegion(
@@ -1714,7 +1714,7 @@ class _TradingPageState extends State<TradingPage> {
                     );
                   },
                   child: Container(
-                    height: 50,
+                    height: 45,
                     padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 9),
                     decoration: BoxDecoration(
                       color: Colors.transparent,
@@ -1755,7 +1755,7 @@ class _TradingPageState extends State<TradingPage> {
                     );
                   },
                   child: Container(
-                    height: 50,
+                    height: 45,
                     padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 9),
                     decoration: BoxDecoration(
                       color: Colors.transparent,
@@ -2681,8 +2681,8 @@ class _TradingPageState extends State<TradingPage> {
                                     boxShadow: [
                                       BoxShadow(
                                         color: Colors.black.withOpacity(0.1),
-                                        blurRadius: 8,
-                                        offset: const Offset(0, 4),
+                                        blurRadius: 4,
+                                        offset: const Offset(0, 2),
                                       ),
                                     ],
                                   ),

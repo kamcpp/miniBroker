@@ -1002,6 +1002,13 @@ class GrpcurlHelper {
   static Future<Map<String, dynamic>> getAccountOrders({
     required String accountId,
     String refRequestId = 'flutter-get-orders',
+    List<String>? marketIdOrNameRegexes,
+    Map<String, dynamic>? pagination,
+    String? fromTime,
+    String? toTime,
+    String? side, // "BUY" or "SELL"
+    List<bool>? statusFilters, // [is_filled, is_cancelled, is_expired]
+    List<String>? instrumentIdOrSymbolRegexes,
   }) async {
     try {
       print('📋 Getting orders for account: $accountId');
@@ -1017,11 +1024,40 @@ class GrpcurlHelper {
         };
       }
 
-      // Prepare request payload
-      final requestPayload = {
+      // Prepare request payload with all optional parameters
+      final requestPayload = <String, dynamic>{
         'ref_request_id': refRequestId,
         'account_id': accountId,
       };
+
+      // Add optional parameters if provided
+      if (marketIdOrNameRegexes != null && marketIdOrNameRegexes.isNotEmpty) {
+        requestPayload['market_id_or_name_regexes'] = marketIdOrNameRegexes;
+      }
+      
+      if (pagination != null) {
+        requestPayload['pagination'] = pagination;
+      }
+      
+      if (fromTime != null) {
+        requestPayload['from_time'] = fromTime;
+      }
+      
+      if (toTime != null) {
+        requestPayload['to_time'] = toTime;
+      }
+      
+      if (side != null) {
+        requestPayload['side'] = side;
+      }
+      
+      if (statusFilters != null) {
+        requestPayload['status_filters'] = statusFilters;
+      }
+      
+      if (instrumentIdOrSymbolRegexes != null && instrumentIdOrSymbolRegexes.isNotEmpty) {
+        requestPayload['instrument_id_or_symbol_regexes'] = instrumentIdOrSymbolRegexes;
+      }
 
       final jsonPayload = jsonEncode(requestPayload);
       
@@ -1094,6 +1130,12 @@ class GrpcurlHelper {
   static Future<Map<String, dynamic>> getAccountTrades({
     required String accountId,
     String refRequestId = 'flutter-get-trades',
+    List<String>? marketIdOrNameRegexes,
+    Map<String, dynamic>? pagination,
+    String? fromTime,
+    String? toTime,
+    String? side,
+    List<String>? instrumentIdOrSymbolRegexes,
   }) async {
     try {
       print('📋 Getting trades for account: $accountId');
@@ -1109,11 +1151,36 @@ class GrpcurlHelper {
         };
       }
 
-      // Prepare request payload
-      final requestPayload = {
+      // Prepare request payload with all optional parameters
+      final requestPayload = <String, dynamic>{
         'ref_request_id': refRequestId,
         'account_id': accountId,
       };
+
+      // Add optional parameters if provided
+      if (marketIdOrNameRegexes != null && marketIdOrNameRegexes.isNotEmpty) {
+        requestPayload['market_id_or_name_regexes'] = marketIdOrNameRegexes;
+      }
+      
+      if (pagination != null) {
+        requestPayload['pagination'] = pagination;
+      }
+      
+      if (fromTime != null) {
+        requestPayload['from_time'] = fromTime;
+      }
+      
+      if (toTime != null) {
+        requestPayload['to_time'] = toTime;
+      }
+      
+      if (side != null) {
+        requestPayload['side'] = side;
+      }
+      
+      if (instrumentIdOrSymbolRegexes != null && instrumentIdOrSymbolRegexes.isNotEmpty) {
+        requestPayload['instrument_id_or_symbol_regexes'] = instrumentIdOrSymbolRegexes;
+      }
 
       final jsonPayload = jsonEncode(requestPayload);
       
