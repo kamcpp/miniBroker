@@ -56,16 +56,38 @@ class _ActivityPageState extends State<ActivityPage> {
   @override
   void initState() {
     super.initState();
+    print('🏁 ActivityPage initState() called - initializing activity data fetch');
     // Fetch both orders and trades when page loads
     _fetchActivityData();
   }
 
   /// Fetch both orders and trades data
   Future<void> _fetchActivityData() async {
+    print('🚀 _fetchActivityData() called - starting parallel fetch of orders and trades');
+    
+    // Get account ID once and use it for both orders and trades
+    print('🔍 Getting account ID for both orders and trades...');
+    final accountId = await _getAccountId();
+    print('📋 Account ID for both orders and trades: "$accountId"');
+    
+    if (accountId == null || accountId.isEmpty) {
+      print('❌ No account ID found - skipping both orders and trades fetch');
+      setState(() {
+        _isLoadingOrders = false;
+        _isLoadingTrades = false;
+        _ordersError = 'No account ID found for logged-in user';
+        _tradesError = 'No account ID found for logged-in user';
+        _orders = [];
+        _trades = [];
+      });
+      return;
+    }
+    
     await Future.wait([
-      _fetchOrders(),
-      _fetchTrades(),
+      _fetchOrdersWithAccountId(accountId),
+      _fetchTradesWithAccountId(accountId),
     ]);
+    print('🏁 _fetchActivityData() completed - both orders and trades fetch finished');
   }
 
   /// Find the account that belongs to the logged-in user
@@ -155,27 +177,30 @@ class _ActivityPageState extends State<ActivityPage> {
     }
   }
 
-  /// Fetch orders using GetAccountOrders function
+  /// Fetch orders using GetAccountOrders function (with account ID lookup)
   Future<void> _fetchOrders() async {
+    // Get account ID
+    final accountId = await _getAccountId();
+    if (accountId == null || accountId.isEmpty) {
+      setState(() {
+        _isLoadingOrders = false;
+        _ordersError = 'No account ID found for logged-in user';
+        _orders = [];
+      });
+      return;
+    }
+    await _fetchOrdersWithAccountId(accountId);
+  }
+
+  /// Fetch orders using GetAccountOrders function (with provided account ID)
+  Future<void> _fetchOrdersWithAccountId(String accountId) async {
     setState(() {
       _isLoadingOrders = true;
       _ordersError = '';
     });
 
     try {
-      print('📋 Fetching orders...');
-      
-      // Get account ID
-      final accountId = await _getAccountId();
-      if (accountId == null || accountId.isEmpty) {
-        setState(() {
-          _isLoadingOrders = false;
-          _ordersError = 'No account ID found for logged-in user';
-          _orders = [];
-        });
-        print('❌ No account ID found for orders');
-        return;
-      }
+      print('📋 Fetching orders with account ID: $accountId');
 
       // Prepare filter parameters
       final pagination = {'page_size': _pageSize, 'page_nr': 1};
@@ -243,27 +268,32 @@ class _ActivityPageState extends State<ActivityPage> {
     }
   }
 
-  /// Fetch trades using GetAccountTrades function
+  /// Fetch trades using GetAccountTrades function (with account ID lookup)
   Future<void> _fetchTrades() async {
+    // Get account ID
+    final accountId = await _getAccountId();
+    if (accountId == null || accountId.isEmpty) {
+      setState(() {
+        _isLoadingTrades = false;
+        _tradesError = 'No account ID found for logged-in user';
+        _trades = [];
+      });
+      return;
+    }
+    await _fetchTradesWithAccountId(accountId);
+  }
+
+  /// Fetch trades using GetAccountTrades function (with provided account ID)
+  Future<void> _fetchTradesWithAccountId(String accountId) async {
+    print('🚀 _fetchTradesWithAccountId() called - Starting trade fetch process with account ID: $accountId');
+    
     setState(() {
       _isLoadingTrades = true;
       _tradesError = '';
     });
 
     try {
-      print('📋 Fetching trades...');
-      
-      // Get account ID
-      final accountId = await _getAccountId();
-      if (accountId == null || accountId.isEmpty) {
-        setState(() {
-          _isLoadingTrades = false;
-          _tradesError = 'No account ID found for logged-in user';
-          _trades = [];
-        });
-        print('❌ No account ID found for trades');
-        return;
-      }
+      print('📋 Fetching trades with account ID: $accountId');
 
       // Prepare filter parameters for trades
       final tradePagination = {'page_size': _tradePageSize, 'page_nr': 1};
@@ -282,8 +312,18 @@ class _ActivityPageState extends State<ActivityPage> {
         },
       };
 
-      print('🔍 GetAccountTrades INPUT: ${jsonEncode(tradeInputParams)}');
+      print('🔍 GetAccountTrades REQUEST PARAMETERS:');
+      print('   Account ID: $accountId');
+      print('   Market Filters: $_tradeMarketFilters');
+      print('   Instrument Filters: $_tradeInstrumentFilters');
+      print('   From Date: ${_tradeFromDate?.toIso8601String()}');
+      print('   To Date: ${_tradeToDate?.toIso8601String()}');
+      print('   Side: $_selectedTradeSide');
+      print('   Page Size: $_tradePageSize');
+      print('🔍 GetAccountTrades FULL INPUT: ${jsonEncode(tradeInputParams)}');
 
+      print('📞 Making GetAccountTrades API call...');
+      
       // Call GetAccountTrades with all parameters
       final tradesResponse = await realGrpcClient.getAccountTrades(
         accountId: accountId,
@@ -295,28 +335,46 @@ class _ActivityPageState extends State<ActivityPage> {
         instrumentIdOrSymbolRegexes: _tradeInstrumentFilters.isNotEmpty ? _tradeInstrumentFilters : null,
       );
 
-      print('📤 GetAccountTrades OUTPUT: ${jsonEncode(tradesResponse)}');
+      print('📤 GetAccountTrades API RESPONSE:');
+      print('   Response Type: ${tradesResponse.runtimeType}');
+      print('   Full Response: ${jsonEncode(tradesResponse)}');
 
+      print('🔄 Processing GetAccountTrades response...');
+      
       if (mounted) {
         setState(() {
           _isLoadingTrades = false;
           
+          print('🔍 Response success check: ${tradesResponse['success']}');
+          
           if (tradesResponse['success'] == true) {
+            print('✅ Response marked as successful');
             final output = tradesResponse['output'] as Map<String, dynamic>;
+            print('📋 Response output keys: ${output.keys.toList()}');
+            
             // Extract trades from the response - adjust field name based on actual server response
             final tradesList = output['trades'] as List<dynamic>? ?? [];
+            print('📋 Trades list length: ${tradesList.length}');
+            print('📋 First few trades: ${tradesList.take(3).toList()}');
+            
             _trades = tradesList.map((trade) => trade as Map<String, dynamic>).toList();
             _tradesError = '';
             print('✅ Trades loaded successfully: ${_trades.length} trades found');
+            print('📋 Processed trades: $_trades');
           } else {
-            final output = tradesResponse['output'] as Map<String, dynamic>;
+            print('❌ Response marked as failed');
+            final output = tradesResponse['output'] as Map<String, dynamic>? ?? {};
             _tradesError = output['error']?.toString() ?? 'Unknown error fetching trades';
             _trades = [];
             print('❌ Failed to fetch trades: $_tradesError');
+            print('❌ Full error output: $output');
           }
         });
       }
     } catch (e) {
+      print('💥 Exception caught in _fetchTrades: $e');
+      print('💥 Exception stack trace: ${StackTrace.current}');
+      
       if (mounted) {
         setState(() {
           _isLoadingTrades = false;
@@ -326,6 +384,8 @@ class _ActivityPageState extends State<ActivityPage> {
       }
       print('❌ Exception fetching trades: $e');
     }
+    
+    print('🏁 _fetchTrades() completed');
   }
 
   /// Build orders table widget
@@ -704,6 +764,7 @@ class _ActivityPageState extends State<ActivityPage> {
                                               child: Padding(
                                                 padding: const EdgeInsets.only(left: 16),
                                                 child: Text(
+                                                  order['orderId']?.toString() ?? 
                                                   order['id']?.toString() ?? 
                                                   order['order_id']?.toString() ?? 
                                                   'N/A',
@@ -720,6 +781,7 @@ class _ActivityPageState extends State<ActivityPage> {
                                             Expanded(
                                               flex: 3,
                                               child: Text(
+                                                order['participantAccountId']?.toString() ?? 
                                                 order['account_id']?.toString() ?? 
                                                 order['participant_account']?.toString() ?? 
                                                 'N/A',
