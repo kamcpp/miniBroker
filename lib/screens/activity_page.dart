@@ -298,13 +298,33 @@ class _ActivityPageState extends State<ActivityPage> {
       // Prepare filter parameters for trades
       final tradePagination = {'page_size': _tradePageSize, 'page_nr': 1};
       
+      // Format date filters in the required timestamp format
+      Map<String, dynamic>? fromTimeFormatted;
+      Map<String, dynamic>? toTimeFormatted;
+      
+      if (_tradeFromDate != null) {
+        // Set from time to start of day
+        final fromDateTime = DateTime(_tradeFromDate!.year, _tradeFromDate!.month, _tradeFromDate!.day, 0, 0, 0);
+        fromTimeFormatted = {
+          "ts": fromDateTime.toUtc().toIso8601String()
+        };
+      }
+      
+      if (_tradeToDate != null) {
+        // Set to time to end of day
+        final toDateTime = DateTime(_tradeToDate!.year, _tradeToDate!.month, _tradeToDate!.day, 23, 59, 59);
+        toTimeFormatted = {
+          "ts": toDateTime.toUtc().toIso8601String()
+        };
+      }
+      
       final tradeInputParams = {
         'ref_request_id': 'flutter-get-trades-${DateTime.now().millisecondsSinceEpoch}',
         'account_id': accountId,
         'market_id_or_name_regexes': _tradeMarketFilters,
         'instrument_id_or_symbol_regexes': _tradeInstrumentFilters,
-        'from_time': _tradeFromDate?.toIso8601String(),
-        'to_time': _tradeToDate?.toIso8601String(),
+        'from_time': fromTimeFormatted,
+        'to_time': toTimeFormatted,
         'side': _selectedTradeSide,
         'pagination': {
           'page_size': _tradePageSize,
@@ -316,8 +336,8 @@ class _ActivityPageState extends State<ActivityPage> {
       print('   Account ID: $accountId');
       print('   Market Filters: $_tradeMarketFilters');
       print('   Instrument Filters: $_tradeInstrumentFilters');
-      print('   From Date: ${_tradeFromDate?.toIso8601String()}');
-      print('   To Date: ${_tradeToDate?.toIso8601String()}');
+      print('   From Date: $fromTimeFormatted');
+      print('   To Date: $toTimeFormatted');
       print('   Side: $_selectedTradeSide');
       print('   Page Size: $_tradePageSize');
       print('🔍 GetAccountTrades FULL INPUT: ${jsonEncode(tradeInputParams)}');
@@ -329,8 +349,8 @@ class _ActivityPageState extends State<ActivityPage> {
         accountId: accountId,
         marketIdOrNameRegexes: _tradeMarketFilters.isNotEmpty ? _tradeMarketFilters : null,
         pagination: tradePagination,
-        fromTime: _tradeFromDate?.toIso8601String(),
-        toTime: _tradeToDate?.toIso8601String(),
+        fromTime: fromTimeFormatted != null ? jsonEncode(fromTimeFormatted) : null,
+        toTime: toTimeFormatted != null ? jsonEncode(toTimeFormatted) : null,
         side: _selectedTradeSide,
         instrumentIdOrSymbolRegexes: _tradeInstrumentFilters.isNotEmpty ? _tradeInstrumentFilters : null,
       );
@@ -489,8 +509,8 @@ class _ActivityPageState extends State<ActivityPage> {
                               dropdownColor: isDarkTheme ? const Color(0xFF2a2a2a) : Colors.white,
                               items: [
                                 DropdownMenuItem(value: null, child: Text('All', style: TextStyle(color: isDarkTheme ? Colors.white : Colors.black))),
-                                DropdownMenuItem(value: 'BUY', child: Text('BUY', style: TextStyle(color: Colors.green))),
-                                DropdownMenuItem(value: 'SELL', child: Text('SELL', style: TextStyle(color: Colors.red))),
+                                DropdownMenuItem(value: '1', child: Text('Buy', style: TextStyle(color: Colors.green))),
+                                DropdownMenuItem(value: '2', child: Text('Sell', style: TextStyle(color: Colors.red))),
                               ],
                               onChanged: (value) {
                                 setState(() {
@@ -948,8 +968,8 @@ class _ActivityPageState extends State<ActivityPage> {
                               dropdownColor: isDarkTheme ? const Color(0xFF2a2a2a) : Colors.white,
                               items: [
                                 DropdownMenuItem(value: null, child: Text('All', style: TextStyle(color: isDarkTheme ? Colors.white : Colors.black))),
-                                DropdownMenuItem(value: 'BUY', child: Text('BUY', style: TextStyle(color: Colors.green))),
-                                DropdownMenuItem(value: 'SELL', child: Text('SELL', style: TextStyle(color: Colors.red))),
+                                DropdownMenuItem(value: '1', child: Text('Buy', style: TextStyle(color: Colors.green))),
+                                DropdownMenuItem(value: '2', child: Text('Sell', style: TextStyle(color: Colors.red))),
                               ],
                               onChanged: (value) {
                                 setState(() {
@@ -991,6 +1011,145 @@ class _ActivityPageState extends State<ActivityPage> {
                                   });
                                 }
                               },
+                            ),
+                          ],
+                        ),
+                      ),
+                    ],
+                  ),
+                  const SizedBox(height: 16),
+                  // Date filters row
+                  Row(
+                    children: [
+                      // From Date filter
+                      Expanded(
+                        child: Column(
+                          crossAxisAlignment: CrossAxisAlignment.start,
+                          children: [
+                            Text(
+                              'From Time',
+                              style: TextStyle(
+                                fontWeight: FontWeight.bold,
+                                color: isDarkTheme ? Colors.white : Colors.black,
+                              ),
+                            ),
+                            const SizedBox(height: 4),
+                            InkWell(
+                              onTap: () async {
+                                final DateTime? picked = await showDatePicker(
+                                  context: context,
+                                  initialDate: _tradeFromDate ?? DateTime.now(),
+                                  firstDate: DateTime(2020),
+                                  lastDate: DateTime.now(),
+                                  builder: (context, child) {
+                                    return Theme(
+                                      data: isDarkTheme 
+                                          ? ThemeData.dark() 
+                                          : ThemeData.light(),
+                                      child: child!,
+                                    );
+                                  },
+                                );
+                                if (picked != null) {
+                                  setState(() {
+                                    _tradeFromDate = picked;
+                                  });
+                                }
+                              },
+                              child: Container(
+                                padding: const EdgeInsets.symmetric(vertical: 12, horizontal: 8),
+                                decoration: BoxDecoration(
+                                  border: Border.all(color: isDarkTheme ? Colors.grey[600]! : Colors.grey[400]!),
+                                  borderRadius: BorderRadius.circular(4),
+                                ),
+                                child: Row(
+                                  children: [
+                                    Expanded(
+                                      child: Text(
+                                        _tradeFromDate != null 
+                                            ? '${_tradeFromDate!.year}-${_tradeFromDate!.month.toString().padLeft(2, '0')}-${_tradeFromDate!.day.toString().padLeft(2, '0')}'
+                                            : 'Select date',
+                                        style: TextStyle(
+                                          color: isDarkTheme ? Colors.white : Colors.black,
+                                          fontSize: 14,
+                                        ),
+                                      ),
+                                    ),
+                                    Icon(
+                                      Icons.calendar_today,
+                                      size: 16,
+                                      color: isDarkTheme ? Colors.grey[400] : Colors.grey[600],
+                                    ),
+                                  ],
+                                ),
+                              ),
+                            ),
+                          ],
+                        ),
+                      ),
+                      const SizedBox(width: 16),
+                      // To Date filter
+                      Expanded(
+                        child: Column(
+                          crossAxisAlignment: CrossAxisAlignment.start,
+                          children: [
+                            Text(
+                              'To Time',
+                              style: TextStyle(
+                                fontWeight: FontWeight.bold,
+                                color: isDarkTheme ? Colors.white : Colors.black,
+                              ),
+                            ),
+                            const SizedBox(height: 4),
+                            InkWell(
+                              onTap: () async {
+                                final DateTime? picked = await showDatePicker(
+                                  context: context,
+                                  initialDate: _tradeToDate ?? DateTime.now(),
+                                  firstDate: DateTime(2020),
+                                  lastDate: DateTime.now(),
+                                  builder: (context, child) {
+                                    return Theme(
+                                      data: isDarkTheme 
+                                          ? ThemeData.dark() 
+                                          : ThemeData.light(),
+                                      child: child!,
+                                    );
+                                  },
+                                );
+                                if (picked != null) {
+                                  setState(() {
+                                    _tradeToDate = picked;
+                                  });
+                                }
+                              },
+                              child: Container(
+                                padding: const EdgeInsets.symmetric(vertical: 12, horizontal: 8),
+                                decoration: BoxDecoration(
+                                  border: Border.all(color: isDarkTheme ? Colors.grey[600]! : Colors.grey[400]!),
+                                  borderRadius: BorderRadius.circular(4),
+                                ),
+                                child: Row(
+                                  children: [
+                                    Expanded(
+                                      child: Text(
+                                        _tradeToDate != null 
+                                            ? '${_tradeToDate!.year}-${_tradeToDate!.month.toString().padLeft(2, '0')}-${_tradeToDate!.day.toString().padLeft(2, '0')}'
+                                            : 'Select date',
+                                        style: TextStyle(
+                                          color: isDarkTheme ? Colors.white : Colors.black,
+                                          fontSize: 14,
+                                        ),
+                                      ),
+                                    ),
+                                    Icon(
+                                      Icons.calendar_today,
+                                      size: 16,
+                                      color: isDarkTheme ? Colors.grey[400] : Colors.grey[600],
+                                    ),
+                                  ],
+                                ),
+                              ),
                             ),
                           ],
                         ),
@@ -1076,7 +1235,7 @@ class _ActivityPageState extends State<ActivityPage> {
                           Row(
                             children: [
                               Expanded(
-                                flex: 3,
+                                flex: 1,
                                 child: Padding(
                                   padding: const EdgeInsets.only(left: 16),
                                   child: Text(
@@ -1089,22 +1248,11 @@ class _ActivityPageState extends State<ActivityPage> {
                                 ),
                               ),
                               Expanded(
-                                flex: 3,
-                                child: Text(
-                                  'Quantity',
-                                  textAlign: TextAlign.center,
-                                  style: TextStyle(
-                                    fontSize: 14,
-                                    color: isDarkTheme ? Colors.grey[400] : Colors.grey[600],
-                                  ),
-                                ),
-                              ),
-                              Expanded(
-                                flex: 4,
+                                flex: 1,
                                 child: Padding(
                                   padding: const EdgeInsets.only(right: 16),
                                   child: Text(
-                                    'Time',
+                                    'Quantity',
                                     textAlign: TextAlign.right,
                                     style: TextStyle(
                                       fontSize: 14,
@@ -1143,7 +1291,7 @@ class _ActivityPageState extends State<ActivityPage> {
                                           children: [
                                             // Price
                                             Expanded(
-                                              flex: 3,
+                                              flex: 1,
                                               child: Padding(
                                                 padding: const EdgeInsets.only(left: 16),
                                                 child: Text(
@@ -1159,24 +1307,11 @@ class _ActivityPageState extends State<ActivityPage> {
                                             ),
                                             // Quantity
                                             Expanded(
-                                              flex: 3,
-                                              child: Text(
-                                                trade['quantity']?.toString() ?? 'N/A',
-                                                textAlign: TextAlign.center,
-                                                style: TextStyle(
-                                                  fontSize: 16,
-                                                  color: isDarkTheme ? Colors.white : Colors.black,
-                                                ),
-                                                overflow: TextOverflow.ellipsis,
-                                              ),
-                                            ),
-                                            // Time
-                                            Expanded(
-                                              flex: 4,
+                                              flex: 1,
                                               child: Padding(
                                                 padding: const EdgeInsets.only(right: 16),
                                                 child: Text(
-                                                  trade['timestamp']?.toString() ?? trade['executed_at']?.toString() ?? 'N/A',
+                                                  trade['quantity']?.toString() ?? 'N/A',
                                                   textAlign: TextAlign.right,
                                                   style: TextStyle(
                                                     fontSize: 16,

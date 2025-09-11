@@ -365,7 +365,7 @@ class _PortfolioPageState extends State<PortfolioPage> {
     return Theme(
       data: _isDarkTheme ? ThemeData.dark() : ThemeData.light(),
       child: Scaffold(
-        backgroundColor: _isDarkTheme ? const Color(0xFF1A1A1A) : Colors.grey[100],
+        backgroundColor: _isDarkTheme ? const Color(0x000000) : Colors.grey[100],
         body: Column(
           children: [
             // Header Section
@@ -862,37 +862,28 @@ class _PortfolioPageState extends State<PortfolioPage> {
                       ),
                     );
                   },
-                  child: ClipRRect(
-                    borderRadius: const BorderRadius.only(
-                      topLeft: Radius.circular(8),
-                      topRight: Radius.circular(8),
+                  child: Container(
+                    height: 45,
+                    padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 9),
+                    decoration: BoxDecoration(
+                      color: Colors.transparent,
+                      border: Border(
+                        top: BorderSide(color: Colors.white.withOpacity(0.3), width: 1),
+                        left: BorderSide(color: Colors.white.withOpacity(0.3), width: 1),
+                        right: BorderSide(color: Colors.white.withOpacity(0.3), width: 1),
+                        bottom: BorderSide(color: Colors.white.withOpacity(0.3), width: 1),
+                      ),
+                      borderRadius: const BorderRadius.only(
+                        topLeft: Radius.circular(8),
+                        topRight: Radius.circular(8),
+                      ),
                     ),
-                    child: BackdropFilter(
-                      filter: ImageFilter.blur(sigmaX: 2, sigmaY: 2),
-                      child: Container(
-                        height: 45,
-                        padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 9),
-                        decoration: BoxDecoration(
-                          color: Colors.white.withOpacity(0.1),
-                          border: Border(
-                            top: BorderSide(color: Colors.white.withOpacity(0.3), width: 1),
-                            left: BorderSide(color: Colors.white.withOpacity(0.3), width: 1),
-                            right: BorderSide(color: Colors.white.withOpacity(0.3), width: 1),
-                            bottom: BorderSide(color: Colors.white.withOpacity(0.3), width: 1),
-                          ),
-                          borderRadius: const BorderRadius.only(
-                            topLeft: Radius.circular(8),
-                            topRight: Radius.circular(8),
-                          ),
-                        ),
-                        child: const Text(
-                          'Activity',
-                          style: TextStyle(
-                            fontSize: 13,
-                            fontWeight: FontWeight.w500,
-                            color: Colors.white70,
-                          ),
-                        ),
+                    child: const Text(
+                      'Activity',
+                      style: TextStyle(
+                        fontSize: 13,
+                        fontWeight: FontWeight.w500,
+                        color: Colors.white70,
                       ),
                     ),
                   ),
@@ -912,37 +903,28 @@ class _PortfolioPageState extends State<PortfolioPage> {
                       ),
                     );
                   },
-                  child: ClipRRect(
-                    borderRadius: const BorderRadius.only(
-                      topLeft: Radius.circular(8),
-                      topRight: Radius.circular(8),
+                  child: Container(
+                    height: 45,
+                    padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 9),
+                    decoration: BoxDecoration(
+                      color: Colors.transparent,
+                      border: Border(
+                        top: BorderSide(color: Colors.white.withOpacity(0.3), width: 1),
+                        left: BorderSide(color: Colors.white.withOpacity(0.3), width: 1),
+                        right: BorderSide(color: Colors.white.withOpacity(0.3), width: 1),
+                        bottom: BorderSide(color: Colors.white.withOpacity(0.3), width: 1),
+                      ),
+                      borderRadius: const BorderRadius.only(
+                        topLeft: Radius.circular(8),
+                        topRight: Radius.circular(8),
+                      ),
                     ),
-                    child: BackdropFilter(
-                      filter: ImageFilter.blur(sigmaX: 2, sigmaY: 2),
-                      child: Container(
-                        height: 45,
-                        padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 9),
-                        decoration: BoxDecoration(
-                          color: Colors.white.withOpacity(0.1),
-                          border: Border(
-                            top: BorderSide(color: Colors.white.withOpacity(0.3), width: 1),
-                            left: BorderSide(color: Colors.white.withOpacity(0.3), width: 1),
-                            right: BorderSide(color: Colors.white.withOpacity(0.3), width: 1),
-                            bottom: BorderSide(color: Colors.white.withOpacity(0.3), width: 1),
-                          ),
-                          borderRadius: const BorderRadius.only(
-                            topLeft: Radius.circular(8),
-                            topRight: Radius.circular(8),
-                          ),
-                        ),
-                        child: const Text(
-                          'Trading',
-                          style: TextStyle(
-                            fontSize: 13,
-                            fontWeight: FontWeight.w500,
-                            color: Colors.white70,
-                          ),
-                        ),
+                    child: const Text(
+                      'Trading',
+                      style: TextStyle(
+                        fontSize: 13,
+                        fontWeight: FontWeight.w500,
+                        color: Colors.white70,
                       ),
                     ),
                   ),

@@ -1167,11 +1167,33 @@ class GrpcurlHelper {
       }
       
       if (fromTime != null) {
-        requestPayload['from_time'] = fromTime;
+        // Check if fromTime is a JSON string containing a timestamp object
+        try {
+          final parsedFromTime = jsonDecode(fromTime);
+          if (parsedFromTime is Map<String, dynamic> && parsedFromTime.containsKey('ts')) {
+            requestPayload['from_time'] = parsedFromTime;
+          } else {
+            requestPayload['from_time'] = fromTime;
+          }
+        } catch (e) {
+          // If not valid JSON, treat as regular string
+          requestPayload['from_time'] = fromTime;
+        }
       }
       
       if (toTime != null) {
-        requestPayload['to_time'] = toTime;
+        // Check if toTime is a JSON string containing a timestamp object
+        try {
+          final parsedToTime = jsonDecode(toTime);
+          if (parsedToTime is Map<String, dynamic> && parsedToTime.containsKey('ts')) {
+            requestPayload['to_time'] = parsedToTime;
+          } else {
+            requestPayload['to_time'] = toTime;
+          }
+        } catch (e) {
+          // If not valid JSON, treat as regular string
+          requestPayload['to_time'] = toTime;
+        }
       }
       
       if (side != null) {
