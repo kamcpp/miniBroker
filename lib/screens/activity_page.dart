@@ -55,6 +55,16 @@ class _ActivityPageState extends State<ActivityPage> {
   int _tradePageNumber = 1;
   bool _showTradeFilters = false;
   
+  // Market and Asset dropdown data
+  List<Map<String, dynamic>> _availableMarkets = [];
+  List<Map<String, dynamic>> _availableAssets = [];
+  String? _selectedOrdersMarket;
+  String? _selectedOrdersAsset;
+  String? _selectedTradesMarket;
+  String? _selectedTradesAsset;
+  bool _isLoadingMarkets = false;
+  bool _isLoadingAssets = false;
+  
   // Text controllers for page number fields
   late TextEditingController _pageNumberController;
   late TextEditingController _tradePageNumberController;
@@ -70,6 +80,10 @@ class _ActivityPageState extends State<ActivityPage> {
     
     // Fetch both orders and trades when page loads
     _fetchActivityData();
+    
+    // Load dropdown data
+    _fetchMarketList();
+    _fetchAssetList();
   }
 
   @override
@@ -299,11 +313,17 @@ class _ActivityPageState extends State<ActivityPage> {
         };
       }
       
+      // Build market filters array from selected dropdown value
+      final marketFilters = _selectedOrdersMarket != null ? [_selectedOrdersMarket!] : <String>[];
+      
+      // Build instrument filters array from selected dropdown value  
+      final instrumentFilters = _selectedOrdersAsset != null ? [_selectedOrdersAsset!] : <String>[];
+
       final inputParams = {
         'ref_request_id': 'flutter-get-orders-${DateTime.now().millisecondsSinceEpoch}',
         'account_id': accountId,
-        'market_id_or_name_regexes': _marketFilters,
-        'instrument_id_or_symbol_regexes': _instrumentFilters,
+        'market_id_or_name_regexes': marketFilters,
+        'instrument_id_or_symbol_regexes': instrumentFilters,
         'from_time': fromTimeFormatted,
         'to_time': toTimeFormatted,
         'side': _selectedSide,
@@ -409,11 +429,17 @@ class _ActivityPageState extends State<ActivityPage> {
         };
       }
       
+      // Build market filters array from selected dropdown value
+      final tradeMarketFilters = _selectedTradesMarket != null ? [_selectedTradesMarket!] : <String>[];
+      
+      // Build instrument filters array from selected dropdown value
+      final tradeInstrumentFilters = _selectedTradesAsset != null ? [_selectedTradesAsset!] : <String>[];
+      
       final tradeInputParams = {
         'ref_request_id': 'flutter-get-trades-${DateTime.now().millisecondsSinceEpoch}',
         'account_id': accountId,
-        'market_id_or_name_regexes': _tradeMarketFilters,
-        'instrument_id_or_symbol_regexes': _tradeInstrumentFilters,
+        'market_id_or_name_regexes': tradeMarketFilters,
+        'instrument_id_or_symbol_regexes': tradeInstrumentFilters,
         'from_time': fromTimeFormatted,
         'to_time': toTimeFormatted,
         'side': _selectedTradeSide,
@@ -425,8 +451,8 @@ class _ActivityPageState extends State<ActivityPage> {
 
       print('🔍 GetAccountTrades REQUEST PARAMETERS:');
       print('   Account ID: $accountId');
-      print('   Market Filters: $_tradeMarketFilters');
-      print('   Instrument Filters: $_tradeInstrumentFilters');
+      print('   Market Filters: $tradeMarketFilters');
+      print('   Instrument Filters: $tradeInstrumentFilters');
       print('   From Date: $fromTimeFormatted');
       print('   To Date: $toTimeFormatted');
       print('   Side: $_selectedTradeSide');
@@ -497,6 +523,158 @@ class _ActivityPageState extends State<ActivityPage> {
     }
     
     print('🏁 _fetchTrades() completed');
+  }
+
+  /// Fetch market list for dropdown filters
+  Future<void> _fetchMarketList() async {
+    if (_isLoadingMarkets) return;
+    
+    setState(() {
+      _isLoadingMarkets = true;
+    });
+    
+    try {
+      print('📋 Fetching market list for dropdown filters...');
+      
+      final response = await realGrpcClient.getMarketList();
+      
+      if (mounted) {
+        setState(() {
+          _isLoadingMarkets = false;
+          
+          if (response['success'] == true) {
+            final output = response['output'] as Map<String, dynamic>;
+            final marketsList = output['markets'] as List<dynamic>? ?? [];
+            
+            _availableMarkets = marketsList.map((market) => market as Map<String, dynamic>).toList();
+            print('✅ Markets loaded successfully: ${_availableMarkets.length} markets found');
+          } else {
+            print('❌ Failed to fetch markets: ${response['output']['error']}');
+            _availableMarkets = [];
+          }
+        });
+      }
+    } catch (e) {
+      print('❌ Exception fetching markets: $e');
+      if (mounted) {
+        setState(() {
+          _isLoadingMarkets = false;
+          _availableMarkets = [];
+        });
+      }
+    }
+  }
+
+  /// Fetch asset list for dropdown filters using GetOrderbook
+  Future<void> _fetchAssetList() async {
+    if (_isLoadingAssets) return;
+    
+    setState(() {
+      _isLoadingAssets = true;
+    });
+    
+    try {
+      print('📋 Fetching asset list for dropdown filters...');
+      
+      // First get a market to use for fetching assets
+      if (_availableMarkets.isEmpty) {
+        await _fetchMarketList();
+      }
+      
+      if (_availableMarkets.isNotEmpty) {
+        // Try to get orderbooks from different markets to find available instruments
+        Set<Map<String, dynamic>> allAssets = {};
+        
+        for (final market in _availableMarkets.take(2)) { // Try first 2 markets
+          try {
+            final marketId = (market['identifiers'] as List?)?.first ?? market['id'] ?? '';
+            print('📋 Trying to get orderbook for market: $marketId');
+            
+            // Try common instrument IDs to discover available instruments
+            final commonInstruments = ['BTC', 'ETH', 'USD', 'USDT', 'ALL', '*'];
+            
+            for (final instrumentId in commonInstruments) {
+              try {
+                final response = await realGrpcClient.getOrderbook(
+                  marketId: marketId,
+                  instrumentId: instrumentId,
+                );
+                
+                if (response['success'] == true) {
+                  final output = response['output'] as Map<String, dynamic>;
+                  print('📋 GetOrderbook response for $marketId/$instrumentId: ${output.keys.toList()}');
+                  
+                  // Check various possible fields for instruments
+                  final possibleInstrumentFields = ['instruments', 'assets', 'symbols', 'orderbook'];
+                  for (final field in possibleInstrumentFields) {
+                    if (output.containsKey(field)) {
+                      final fieldData = output[field];
+                      if (fieldData is List) {
+                        for (final item in fieldData) {
+                          if (item is Map<String, dynamic>) {
+                            allAssets.add(item);
+                          }
+                        }
+                      } else if (fieldData is Map<String, dynamic>) {
+                        // Maybe the orderbook contains instrument info
+                        if (fieldData.containsKey('instrument') || fieldData.containsKey('symbol')) {
+                          allAssets.add({
+                            'id': instrumentId,
+                            'symbol': instrumentId,
+                            'instrument_id': instrumentId,
+                          });
+                        }
+                      }
+                    }
+                  }
+                  
+                  // If we found some assets, we can break early
+                  if (allAssets.isNotEmpty) {
+                    print('✅ Found ${allAssets.length} assets from $marketId/$instrumentId');
+                    break;
+                  }
+                }
+              } catch (e) {
+                // Continue trying other instruments
+                print('⚠️ Failed to get orderbook for $marketId/$instrumentId: $e');
+              }
+            }
+            
+            // If we found assets from this market, we can stop trying other markets
+            if (allAssets.isNotEmpty) break;
+          } catch (e) {
+            print('⚠️ Failed to process market ${market}: $e');
+          }
+        }
+        
+        if (mounted) {
+          setState(() {
+            _isLoadingAssets = false;
+            _availableAssets = allAssets.toList();
+            print('✅ Total assets loaded: ${_availableAssets.length}');
+            if (_availableAssets.isNotEmpty) {
+              print('📋 Sample assets: ${_availableAssets.take(3).toList()}');
+            }
+          });
+        }
+      } else {
+        if (mounted) {
+          setState(() {
+            _isLoadingAssets = false;
+            _availableAssets = [];
+          });
+        }
+        print('❌ No markets available to fetch assets');
+      }
+    } catch (e) {
+      print('❌ Exception fetching assets: $e');
+      if (mounted) {
+        setState(() {
+          _isLoadingAssets = false;
+          _availableAssets = [];
+        });
+      }
+    }
   }
 
   /// Build orders table widget
@@ -727,6 +905,96 @@ class _ActivityPageState extends State<ActivityPage> {
                           ],
                         ),
                       ),
+                    ],
+                  ),
+                  const SizedBox(height: 16),
+                  // Second row - Market and Asset filters
+                  Row(
+                    children: [
+                      // Market filter
+                      Expanded(
+                        child: Column(
+                          crossAxisAlignment: CrossAxisAlignment.start,
+                          children: [
+                            Text(
+                              'Market',
+                              style: TextStyle(
+                                fontWeight: FontWeight.bold,
+                                color: isDarkTheme ? Colors.white : Colors.black,
+                              ),
+                            ),
+                            const SizedBox(height: 4),
+                            DropdownButton<String?>(
+                              value: _selectedOrdersMarket,
+                              isExpanded: true,
+                              dropdownColor: isDarkTheme ? const Color(0xFF2a2a2a) : Colors.white,
+                              items: [
+                                DropdownMenuItem(value: null, child: Text('All Markets', style: TextStyle(color: isDarkTheme ? Colors.white : Colors.black))),
+                                ..._availableMarkets.map<DropdownMenuItem<String?>>((market) => 
+                                  DropdownMenuItem<String?>(
+                                    value: (market['identifiers'] as List?)?.first ?? market['id'] ?? '',
+                                    child: Text(
+                                      (market['names'] as List?)?.first ?? market['name'] ?? 'Unknown',
+                                      style: TextStyle(color: isDarkTheme ? Colors.white : Colors.black)
+                                    )
+                                  )
+                                ).toList(),
+                              ],
+                              onChanged: (value) {
+                                setState(() {
+                                  _selectedOrdersMarket = value;
+                                });
+                                // Refresh orders data when filter changes
+                                _fetchOrders();
+                              },
+                            ),
+                          ],
+                        ),
+                      ),
+                      const SizedBox(width: 16),
+                      // Asset filter
+                      Expanded(
+                        child: Column(
+                          crossAxisAlignment: CrossAxisAlignment.start,
+                          children: [
+                            Text(
+                              'Asset',
+                              style: TextStyle(
+                                fontWeight: FontWeight.bold,
+                                color: isDarkTheme ? Colors.white : Colors.black,
+                              ),
+                            ),
+                            const SizedBox(height: 4),
+                            DropdownButton<String?>(
+                              value: _selectedOrdersAsset,
+                              isExpanded: true,
+                              dropdownColor: isDarkTheme ? const Color(0xFF2a2a2a) : Colors.white,
+                              items: [
+                                DropdownMenuItem(value: null, child: Text('All Assets', style: TextStyle(color: isDarkTheme ? Colors.white : Colors.black))),
+                                ..._availableAssets.map<DropdownMenuItem<String?>>((asset) => 
+                                  DropdownMenuItem<String?>(
+                                    value: asset['id'] ?? asset['symbol'] ?? asset['instrument_id'] ?? '',
+                                    child: Text(
+                                      asset['symbol'] ?? asset['id'] ?? asset['instrument_id'] ?? 'Unknown',
+                                      style: TextStyle(color: isDarkTheme ? Colors.white : Colors.black)
+                                    )
+                                  )
+                                ).toList(),
+                              ],
+                              onChanged: (value) {
+                                setState(() {
+                                  _selectedOrdersAsset = value;
+                                });
+                                // Refresh orders data when filter changes
+                                _fetchOrders();
+                              },
+                            ),
+                          ],
+                        ),
+                      ),
+                      const SizedBox(width: 16),
+                      // Empty space to balance the row
+                      Expanded(child: Container()),
                     ],
                   ),
                   const SizedBox(height: 16),
@@ -1344,6 +1612,96 @@ class _ActivityPageState extends State<ActivityPage> {
                           ],
                         ),
                       ),
+                    ],
+                  ),
+                  const SizedBox(height: 16),
+                  // Market and Asset filters row for trades
+                  Row(
+                    children: [
+                      // Market filter for trades
+                      Expanded(
+                        child: Column(
+                          crossAxisAlignment: CrossAxisAlignment.start,
+                          children: [
+                            Text(
+                              'Market',
+                              style: TextStyle(
+                                fontWeight: FontWeight.bold,
+                                color: isDarkTheme ? Colors.white : Colors.black,
+                              ),
+                            ),
+                            const SizedBox(height: 4),
+                            DropdownButton<String?>(
+                              value: _selectedTradesMarket,
+                              isExpanded: true,
+                              dropdownColor: isDarkTheme ? const Color(0xFF2a2a2a) : Colors.white,
+                              items: [
+                                DropdownMenuItem(value: null, child: Text('All Markets', style: TextStyle(color: isDarkTheme ? Colors.white : Colors.black))),
+                                ..._availableMarkets.map<DropdownMenuItem<String?>>((market) => 
+                                  DropdownMenuItem<String?>(
+                                    value: (market['identifiers'] as List?)?.first ?? market['id'] ?? '',
+                                    child: Text(
+                                      (market['names'] as List?)?.first ?? market['name'] ?? 'Unknown',
+                                      style: TextStyle(color: isDarkTheme ? Colors.white : Colors.black)
+                                    )
+                                  )
+                                ).toList(),
+                              ],
+                              onChanged: (value) {
+                                setState(() {
+                                  _selectedTradesMarket = value;
+                                });
+                                // Refresh trades data when filter changes
+                                _fetchTrades();
+                              },
+                            ),
+                          ],
+                        ),
+                      ),
+                      const SizedBox(width: 16),
+                      // Asset filter for trades
+                      Expanded(
+                        child: Column(
+                          crossAxisAlignment: CrossAxisAlignment.start,
+                          children: [
+                            Text(
+                              'Asset',
+                              style: TextStyle(
+                                fontWeight: FontWeight.bold,
+                                color: isDarkTheme ? Colors.white : Colors.black,
+                              ),
+                            ),
+                            const SizedBox(height: 4),
+                            DropdownButton<String?>(
+                              value: _selectedTradesAsset,
+                              isExpanded: true,
+                              dropdownColor: isDarkTheme ? const Color(0xFF2a2a2a) : Colors.white,
+                              items: [
+                                DropdownMenuItem(value: null, child: Text('All Assets', style: TextStyle(color: isDarkTheme ? Colors.white : Colors.black))),
+                                ..._availableAssets.map<DropdownMenuItem<String?>>((asset) => 
+                                  DropdownMenuItem<String?>(
+                                    value: asset['id'] ?? asset['symbol'] ?? asset['instrument_id'] ?? '',
+                                    child: Text(
+                                      asset['symbol'] ?? asset['id'] ?? asset['instrument_id'] ?? 'Unknown',
+                                      style: TextStyle(color: isDarkTheme ? Colors.white : Colors.black)
+                                    )
+                                  )
+                                ).toList(),
+                              ],
+                              onChanged: (value) {
+                                setState(() {
+                                  _selectedTradesAsset = value;
+                                });
+                                // Refresh trades data when filter changes
+                                _fetchTrades();
+                              },
+                            ),
+                          ],
+                        ),
+                      ),
+                      const SizedBox(width: 16),
+                      // Empty space to balance the row
+                      Expanded(child: Container()),
                     ],
                   ),
                   const SizedBox(height: 16),

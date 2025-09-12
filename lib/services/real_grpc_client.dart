@@ -943,6 +943,97 @@ class RealGrpcClient {
     }
   }
 
+  /// Real GetMarketList call to MarketService.GetMarketList using grpcurl
+  Future<Map<String, dynamic>> getMarketList({Duration? timeout}) async {
+    if (!_isConnected) {
+      return {
+        'input': {},
+        'output': {'error': 'Not connected to server'},
+        'requestTime': _toUnixTimestamp(DateTime.now()).toString(),
+        'serverType': 'disconnected',
+        'success': false,
+      };
+    }
+
+    try {
+      print('📋 Getting market list from real server...');
+
+      final inputParams = {
+        'ref_request_id': 'get_markets_${DateTime.now().millisecondsSinceEpoch}',
+      };
+
+      final result = await GrpcurlHelper.getMarketList();
+
+      print('📤 GetMarketList OUTPUT: ${result.toString()}');
+      return {
+        'input': inputParams,
+        'output': result['success'] ? result['output'] : {'error': result['error'] ?? 'Unknown error'},
+        'requestTime': _toUnixTimestamp(DateTime.now()).toString(),
+        'serverType': 'real_grpc',
+        'success': result['success'] ?? false,
+      };
+    } catch (e) {
+      print('❌ Critical error in getMarketList: $e');
+      return {
+        'input': {},
+        'output': {'error': 'Critical error: $e'},
+        'requestTime': _toUnixTimestamp(DateTime.now()).toString(),
+        'serverType': 'critical-error',
+        'success': false,
+      };
+    }
+  }
+
+  /// Real GetOrderbook call to MarketService.GetOrderbook using grpcurl
+  Future<Map<String, dynamic>> getOrderbook({
+    required String marketId,
+    required String instrumentId,
+    Duration? timeout,
+  }) async {
+    if (!_isConnected) {
+      return {
+        'input': {'market_id': marketId, 'instrument_id': instrumentId},
+        'output': {'error': 'Not connected to server'},
+        'requestTime': _toUnixTimestamp(DateTime.now()).toString(),
+        'serverType': 'disconnected',
+        'success': false,
+      };
+    }
+
+    try {
+      print('📋 Getting orderbook for market: $marketId, instrument: $instrumentId from real server...');
+
+      final inputParams = {
+        'ref_request_id': 'get_orderbook_${DateTime.now().millisecondsSinceEpoch}',
+        'market_id': marketId,
+        'instrument_id': instrumentId,
+      };
+
+      final result = await GrpcurlHelper.getOrderbook(
+        marketId: marketId,
+        instrumentId: instrumentId,
+      );
+
+      print('📤 GetOrderbook OUTPUT: ${result.toString()}');
+      return {
+        'input': inputParams,
+        'output': result['success'] ? result['output'] : {'error': result['error'] ?? 'Unknown error'},
+        'requestTime': _toUnixTimestamp(DateTime.now()).toString(),
+        'serverType': 'real_grpc',
+        'success': result['success'] ?? false,
+      };
+    } catch (e) {
+      print('❌ Critical error in getOrderbook: $e');
+      return {
+        'input': {'market_id': marketId, 'instrument_id': instrumentId},
+        'output': {'error': 'Critical error: $e'},
+        'requestTime': _toUnixTimestamp(DateTime.now()).toString(),
+        'serverType': 'critical-error',
+        'success': false,
+      };
+    }
+  }
+
   /// Dispose and clean up resources
   void dispose() {
     disconnect();
