@@ -16,6 +16,29 @@ class _UsersAdminPageState extends State<UsersAdminPage> {
   bool _isLoading = true;
   bool _isSyncing = false;
 
+  /// Parse Unix timestamp to DateTime, handling both int and string inputs
+  DateTime? _parseUnixTimestamp(dynamic timestamp) {
+    if (timestamp == null) return null;
+    
+    int? unixTime;
+    if (timestamp is int) {
+      unixTime = timestamp;
+    } else if (timestamp is String) {
+      unixTime = int.tryParse(timestamp);
+    }
+    
+    if (unixTime != null) {
+      return DateTime.fromMillisecondsSinceEpoch(unixTime * 1000);
+    }
+    
+    // Fallback to try ISO8601 parsing for backward compatibility
+    if (timestamp is String) {
+      return DateTime.tryParse(timestamp);
+    }
+    
+    return null;
+  }
+
   @override
   void initState() {
     super.initState();
@@ -167,8 +190,8 @@ class _UsersAdminPageState extends State<UsersAdminPage> {
                   itemCount: _users.length,
                   itemBuilder: (context, index) {
                     final user = _users[index];
-                    final createdAt = DateTime.tryParse(user['created_at'] ?? '');
-                    final lastLogin = DateTime.tryParse(user['last_login'] ?? '');
+                    final createdAt = _parseUnixTimestamp(user['created_at']);
+                    final lastLogin = _parseUnixTimestamp(user['last_login']);
 
                     return Card(
                       margin: const EdgeInsets.only(bottom: 12),

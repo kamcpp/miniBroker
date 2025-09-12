@@ -4,6 +4,11 @@ import 'database_helper.dart';
 import 'real_grpc_client.dart';
 
 class AuthService extends ChangeNotifier {
+  
+  /// Convert DateTime to Unix timestamp (seconds since epoch)
+  static int _toUnixTimestamp(DateTime dateTime) {
+    return dateTime.millisecondsSinceEpoch ~/ 1000;
+  }
   static final AuthService _instance = AuthService._internal();
   factory AuthService() => _instance;
   AuthService._internal();
@@ -117,7 +122,7 @@ class AuthService extends ChangeNotifier {
           print('🌐 Creating server account for user: $user');
           final serverResponse = await realGrpcClient.newAccount(
             externalAccountId: user.toLowerCase().trim(),
-            auxData: 'Created from Flutter app signup - ${DateTime.now().toIso8601String()}',
+            auxData: 'Created from Flutter app signup - ${_toUnixTimestamp(DateTime.now()).toString()}',
           );
           
           if (serverResponse['success'] == true) {

@@ -2,6 +2,11 @@ import 'package:grpc/grpc.dart';
 
 /// Simple gRPC client for basic connectivity testing
 class SimpleGrpcClient {
+  
+  /// Convert DateTime to Unix timestamp (seconds since epoch)
+  static int _toUnixTimestamp(DateTime dateTime) {
+    return dateTime.millisecondsSinceEpoch ~/ 1000;
+  }
   late ClientChannel _channel;
   bool _isConnected = false;
   String? _host;
@@ -118,7 +123,7 @@ class SimpleGrpcClient {
         'port': _port?.toString() ?? 'unknown',
         'status': 'connected',
         'type': 'simprtagent',
-        'timestamp': DateTime.now().toIso8601String(),
+        'timestamp': _toUnixTimestamp(DateTime.now()).toString(),
       };
     } catch (e) {
       throw Exception('Failed to get server info: $e');
@@ -174,28 +179,28 @@ class SimpleGrpcClient {
               'id': 'account_001',
               'externalId': 'flutter_user_001',
               'status': 'ACTIVE',
-              'createdAt': DateTime.now().subtract(const Duration(days: 30)).toIso8601String(),
+              'createdAt': _toUnixTimestamp(DateTime.now().subtract(const Duration(days: 30))).toString(),
               'balance': '1500.00',
             },
             {
               'id': 'account_002', 
               'externalId': 'flutter_user_002',
               'status': 'ACTIVE',
-              'createdAt': DateTime.now().subtract(const Duration(days: 15)).toIso8601String(),
+              'createdAt': _toUnixTimestamp(DateTime.now().subtract(const Duration(days: 15))).toString(),
               'balance': '2750.50',
             },
             {
               'id': 'account_003',
               'externalId': 'demo_account',
               'status': 'ACTIVE', 
-              'createdAt': DateTime.now().subtract(const Duration(days: 7)).toIso8601String(),
+              'createdAt': _toUnixTimestamp(DateTime.now().subtract(const Duration(days: 7))).toString(),
               'balance': '500.00',
             },
           ],
-          'createdAt': DateTime.now().toIso8601String(),
+          'createdAt': _toUnixTimestamp(DateTime.now()).toString(),
         },
-        'requestTime': DateTime.now().toIso8601String(),
-        'responseTime': DateTime.now().add(const Duration(milliseconds: 300)).toIso8601String(),
+        'requestTime': _toUnixTimestamp(DateTime.now()).toString(),
+        'responseTime': _toUnixTimestamp(DateTime.now().add(const Duration(milliseconds: 300))).toString(),
       };
 
       print('📬 Response Output: ${simulatedResponse['output']}');
@@ -232,7 +237,7 @@ class SimpleGrpcClient {
           'status': 'ACTIVE',
           'permissions': ['READ', 'TRADE', 'MANAGE_ACCOUNTS'],
         },
-        'requestTime': DateTime.now().toIso8601String(),
+        'requestTime': _toUnixTimestamp(DateTime.now()).toString(),
       };
 
       print('📬 GetParticipantInfo Response: ${simulatedResponse['output']}');

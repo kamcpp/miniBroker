@@ -4,6 +4,11 @@ import 'package:crypto/crypto.dart';
 import 'dart:convert';
 
 class DatabaseHelper {
+  
+  /// Convert DateTime to Unix timestamp (seconds since epoch)
+  static int _toUnixTimestamp(DateTime dateTime) {
+    return dateTime.millisecondsSinceEpoch ~/ 1000;
+  }
   static final DatabaseHelper _instance = DatabaseHelper._internal();
   static Database? _database;
 
@@ -55,7 +60,7 @@ class DatabaseHelper {
         {
           'username': 'admin',
           'password': hashedPassword,
-          'created_at': DateTime.now().toIso8601String(),
+          'created_at': _toUnixTimestamp(DateTime.now()),
         },
         conflictAlgorithm: ConflictAlgorithm.ignore, // Ignore if admin already exists
       );
@@ -100,7 +105,7 @@ class DatabaseHelper {
         {
           'username': username.toLowerCase().trim(),
           'password': hashedPassword,
-          'created_at': DateTime.now().toIso8601String(),
+          'created_at': _toUnixTimestamp(DateTime.now()),
         },
         conflictAlgorithm: ConflictAlgorithm.abort,
       );
@@ -128,7 +133,7 @@ class DatabaseHelper {
         // Update last login time
         await db.update(
           'users',
-          {'last_login': DateTime.now().toIso8601String()},
+          {'last_login': _toUnixTimestamp(DateTime.now())},
           where: 'id = ?',
           whereArgs: [results.first['id']],
         );

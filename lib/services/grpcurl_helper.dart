@@ -5,6 +5,11 @@ import 'dart:io';
 /// Helper class to make gRPC calls using system grpcurl command
 /// This ensures we get real responses from your server
 class GrpcurlHelper {
+  
+  /// Convert DateTime to Unix timestamp (seconds since epoch)
+  static int _toUnixTimestamp(DateTime dateTime) {
+    return dateTime.millisecondsSinceEpoch ~/ 1000;
+  }
   static const String _host = 'localhost';
   static const int _port = 50051;
   
@@ -145,7 +150,7 @@ class GrpcurlHelper {
           'error': 'Operation already in progress',
           'message': 'A ping operation is already in progress. Please wait for it to complete.',
         },
-        'requestTime': DateTime.now().toIso8601String(),
+        'requestTime': _toUnixTimestamp(DateTime.now()).toString(),
         'serverType': 'concurrent-blocked',
         'success': false,
       };
@@ -167,7 +172,7 @@ class GrpcurlHelper {
           'message': 'An unhandled exception occurred: ${error.toString()}',
           'details': stack.toString(),
         },
-        'requestTime': DateTime.now().toIso8601String(),
+        'requestTime': _toUnixTimestamp(DateTime.now()).toString(),
         'serverType': 'critical-error',
         'success': false,
       };
@@ -207,7 +212,7 @@ class GrpcurlHelper {
             'message': 'The standalone macOS app cannot access grpcurl due to sandbox restrictions. This feature works when running with "flutter run --debug" but not in built apps. The server connection requires external process execution which is restricted in sandboxed macOS applications.',
             'suggestion': 'Use "echo "1" | flutter run --debug" to test this functionality',
           },
-          'requestTime': DateTime.now().toIso8601String(),
+          'requestTime': _toUnixTimestamp(DateTime.now()).toString(),
           'serverType': 'grpcurl-sandbox-restricted',
           'success': false,
         };
@@ -236,7 +241,7 @@ class GrpcurlHelper {
             'error': 'Request timed out',
             'message': 'The ping request timed out after 3 seconds. Check if server is running on localhost:50051.',
           },
-          'requestTime': DateTime.now().toIso8601String(),
+          'requestTime': _toUnixTimestamp(DateTime.now()).toString(),
           'serverType': 'timeout',
           'success': false,
         };
@@ -250,7 +255,7 @@ class GrpcurlHelper {
             'message': 'The macOS app sandbox prevents external process execution. This is a security restriction.',
             'details': e.toString(),
           },
-          'requestTime': DateTime.now().toIso8601String(),
+          'requestTime': _toUnixTimestamp(DateTime.now()).toString(),
           'serverType': 'sandbox-restricted',
           'success': false,
         };
@@ -265,7 +270,7 @@ class GrpcurlHelper {
           return {
             'input': request,
             'output': parsedResponse,
-            'requestTime': DateTime.now().toIso8601String(),
+            'requestTime': _toUnixTimestamp(DateTime.now()).toString(),
             'serverType': 'simprtagent-real-grpcurl',
             'success': true,
           };
@@ -276,7 +281,7 @@ class GrpcurlHelper {
               'raw_response': responseJson,
               'parse_error': e.toString(),
             },
-            'requestTime': DateTime.now().toIso8601String(),
+            'requestTime': _toUnixTimestamp(DateTime.now()).toString(),
             'serverType': 'simprtagent-real-grpcurl',
             'success': false,
           };
@@ -291,7 +296,7 @@ class GrpcurlHelper {
             'error': error,
             'exit_code': result.exitCode,
           },
-          'requestTime': DateTime.now().toIso8601String(),
+          'requestTime': _toUnixTimestamp(DateTime.now()).toString(),
           'serverType': 'simprtagent-real-grpcurl',
           'success': false,
         };
@@ -306,7 +311,7 @@ class GrpcurlHelper {
           'suggestion': 'Use "echo "1" | flutter run --debug" to test this functionality',
           'details': e.toString(),
         },
-        'requestTime': DateTime.now().toIso8601String(),
+        'requestTime': _toUnixTimestamp(DateTime.now()).toString(),
         'serverType': 'grpcurl-unavailable',
         'success': false,
       };
@@ -330,7 +335,7 @@ class GrpcurlHelper {
           'error': 'Operation already in progress',
           'message': 'Another account operation is already in progress. Please wait for it to complete.',
         },
-        'requestTime': DateTime.now().toIso8601String(),
+        'requestTime': _toUnixTimestamp(DateTime.now()).toString(),
         'serverType': 'concurrent-blocked',
         'success': false,
       };
@@ -355,7 +360,7 @@ class GrpcurlHelper {
           'message': 'An unhandled exception occurred: ${error.toString()}',
           'details': stack.toString(),
         },
-        'requestTime': DateTime.now().toIso8601String(),
+        'requestTime': _toUnixTimestamp(DateTime.now()).toString(),
         'serverType': 'critical-error',
         'success': false,
       };
@@ -397,7 +402,7 @@ class GrpcurlHelper {
             'message': 'The standalone macOS app cannot access grpcurl due to sandbox restrictions. This feature works when running with "flutter run --debug" but not in built apps. The server connection requires external process execution which is restricted in sandboxed macOS applications.',
             'suggestion': 'Use "echo "1" | flutter run --debug" to test this functionality',
           },
-          'requestTime': DateTime.now().toIso8601String(),
+          'requestTime': _toUnixTimestamp(DateTime.now()).toString(),
           'serverType': 'grpcurl-sandbox-restricted',
           'success': false,
         };
@@ -426,7 +431,7 @@ class GrpcurlHelper {
             'error': 'Request timed out',
             'message': 'The new account request timed out after 10 seconds. Check if server is running on localhost:50051.',
           },
-          'requestTime': DateTime.now().toIso8601String(),
+          'requestTime': _toUnixTimestamp(DateTime.now()).toString(),
           'serverType': 'timeout',
           'success': false,
         };
@@ -440,7 +445,7 @@ class GrpcurlHelper {
             'message': 'The macOS app sandbox prevents external process execution. This is a security restriction.',
             'details': e.toString(),
           },
-          'requestTime': DateTime.now().toIso8601String(),
+          'requestTime': _toUnixTimestamp(DateTime.now()).toString(),
           'serverType': 'sandbox-restricted',
           'success': false,
         };
@@ -455,7 +460,7 @@ class GrpcurlHelper {
           return {
             'input': request,
             'output': parsedResponse,
-            'requestTime': DateTime.now().toIso8601String(),
+            'requestTime': _toUnixTimestamp(DateTime.now()).toString(),
             'serverType': 'simprtagent-real-grpcurl',
             'success': true,
           };
@@ -466,7 +471,7 @@ class GrpcurlHelper {
               'raw_response': responseJson,
               'parse_error': e.toString(),
             },
-            'requestTime': DateTime.now().toIso8601String(),
+            'requestTime': _toUnixTimestamp(DateTime.now()).toString(),
             'serverType': 'simprtagent-real-grpcurl',
             'success': false,
           };
@@ -481,7 +486,7 @@ class GrpcurlHelper {
             'error': error,
             'exit_code': result.exitCode,
           },
-          'requestTime': DateTime.now().toIso8601String(),
+          'requestTime': _toUnixTimestamp(DateTime.now()).toString(),
           'serverType': 'simprtagent-real-grpcurl',
           'success': false,
         };
@@ -496,7 +501,7 @@ class GrpcurlHelper {
           'suggestion': 'Use "echo "1" | flutter run --debug" to test this functionality',
           'details': e.toString(),
         },
-        'requestTime': DateTime.now().toIso8601String(),
+        'requestTime': _toUnixTimestamp(DateTime.now()).toString(),
         'serverType': 'grpcurl-unavailable',
         'success': false,
       };
@@ -516,7 +521,7 @@ class GrpcurlHelper {
           'error': 'Operation already in progress',
           'message': 'A getAccountList operation is already in progress. Please wait for it to complete.',
         },
-        'requestTime': DateTime.now().toIso8601String(),
+        'requestTime': _toUnixTimestamp(DateTime.now()).toString(),
         'serverType': 'concurrent-blocked',
         'success': false,
       };
@@ -537,7 +542,7 @@ class GrpcurlHelper {
           'message': 'An unhandled exception occurred: ${error.toString()}',
           'details': stack.toString(),
         },
-        'requestTime': DateTime.now().toIso8601String(),
+        'requestTime': _toUnixTimestamp(DateTime.now()).toString(),
         'serverType': 'critical-error',
         'success': false,
       };
@@ -574,7 +579,7 @@ class GrpcurlHelper {
             'message': 'The standalone macOS app cannot access grpcurl due to sandbox restrictions. This feature works when running with "flutter run --debug" but not in built apps. The server connection requires external process execution which is restricted in sandboxed macOS applications.',
             'suggestion': 'Use "echo "1" | flutter run --debug" to test this functionality',
           },
-          'requestTime': DateTime.now().toIso8601String(),
+          'requestTime': _toUnixTimestamp(DateTime.now()).toString(),
           'serverType': 'grpcurl-sandbox-restricted',
           'success': false,
         };
@@ -603,7 +608,7 @@ class GrpcurlHelper {
             'error': 'Request timed out',
             'message': 'The account list request timed out after 3 seconds. Check if server is running on localhost:50051.',
           },
-          'requestTime': DateTime.now().toIso8601String(),
+          'requestTime': _toUnixTimestamp(DateTime.now()).toString(),
           'serverType': 'timeout',
           'success': false,
         };
@@ -617,7 +622,7 @@ class GrpcurlHelper {
             'message': 'The macOS app sandbox prevents external process execution. This is a security restriction.',
             'details': e.toString(),
           },
-          'requestTime': DateTime.now().toIso8601String(),
+          'requestTime': _toUnixTimestamp(DateTime.now()).toString(),
           'serverType': 'sandbox-restricted',
           'success': false,
         };
@@ -632,7 +637,7 @@ class GrpcurlHelper {
           return {
             'input': request,
             'output': parsedResponse,
-            'requestTime': DateTime.now().toIso8601String(),
+            'requestTime': _toUnixTimestamp(DateTime.now()).toString(),
             'serverType': 'simprtagent-real-grpcurl',
             'success': true,
           };
@@ -643,7 +648,7 @@ class GrpcurlHelper {
               'raw_response': responseJson,
               'parse_error': e.toString(),
             },
-            'requestTime': DateTime.now().toIso8601String(),
+            'requestTime': _toUnixTimestamp(DateTime.now()).toString(),
             'serverType': 'simprtagent-real-grpcurl',
             'success': false,
           };
@@ -658,7 +663,7 @@ class GrpcurlHelper {
             'error': error,
             'exit_code': result.exitCode,
           },
-          'requestTime': DateTime.now().toIso8601String(),
+          'requestTime': _toUnixTimestamp(DateTime.now()).toString(),
           'serverType': 'simprtagent-real-grpcurl',
           'success': false,
         };
@@ -673,7 +678,7 @@ class GrpcurlHelper {
           'suggestion': 'Use "echo "1" | flutter run --debug" to test this functionality',
           'details': e.toString(),
         },
-        'requestTime': DateTime.now().toIso8601String(),
+        'requestTime': _toUnixTimestamp(DateTime.now()).toString(),
         'serverType': 'grpcurl-unavailable',
         'success': false,
       };
@@ -715,7 +720,7 @@ class GrpcurlHelper {
             'message': 'The standalone macOS app cannot access grpcurl due to sandbox restrictions. This feature works when running with "flutter run --debug" but not in built apps. The server connection requires external process execution which is restricted in sandboxed macOS applications.',
             'suggestion': 'Use "echo "1" | flutter run --debug" to test this functionality',
           },
-          'requestTime': DateTime.now().toIso8601String(),
+          'requestTime': _toUnixTimestamp(DateTime.now()).toString(),
           'serverType': 'grpcurl-sandbox-restricted',
           'success': false,
         };
@@ -744,7 +749,7 @@ class GrpcurlHelper {
             'error': 'Request timed out',
             'message': 'The account market portfolio request timed out after 5 seconds. Check if server is running on localhost:50051.',
           },
-          'requestTime': DateTime.now().toIso8601String(),
+          'requestTime': _toUnixTimestamp(DateTime.now()).toString(),
           'serverType': 'timeout',
           'success': false,
         };
@@ -758,7 +763,7 @@ class GrpcurlHelper {
             'message': 'The macOS app sandbox prevents external process execution. This is a security restriction.',
             'details': e.toString(),
           },
-          'requestTime': DateTime.now().toIso8601String(),
+          'requestTime': _toUnixTimestamp(DateTime.now()).toString(),
           'serverType': 'sandbox-restricted',
           'success': false,
         };
@@ -773,7 +778,7 @@ class GrpcurlHelper {
           return {
             'input': request,
             'output': parsedResponse,
-            'requestTime': DateTime.now().toIso8601String(),
+            'requestTime': _toUnixTimestamp(DateTime.now()).toString(),
             'serverType': 'simprtagent-real-grpcurl',
             'success': true,
           };
@@ -784,7 +789,7 @@ class GrpcurlHelper {
               'raw_response': responseJson,
               'parse_error': e.toString(),
             },
-            'requestTime': DateTime.now().toIso8601String(),
+            'requestTime': _toUnixTimestamp(DateTime.now()).toString(),
             'serverType': 'simprtagent-real-grpcurl',
             'success': false,
           };
@@ -799,7 +804,7 @@ class GrpcurlHelper {
             'error': error,
             'exit_code': result.exitCode,
           },
-          'requestTime': DateTime.now().toIso8601String(),
+          'requestTime': _toUnixTimestamp(DateTime.now()).toString(),
           'serverType': 'simprtagent-real-grpcurl',
           'success': false,
         };
@@ -814,7 +819,7 @@ class GrpcurlHelper {
           'suggestion': 'Use "echo "1" | flutter run --debug" to test this functionality',
           'details': e.toString(),
         },
-        'requestTime': DateTime.now().toIso8601String(),
+        'requestTime': _toUnixTimestamp(DateTime.now()).toString(),
         'serverType': 'grpcurl-unavailable',
         'success': false,
       };
@@ -854,7 +859,7 @@ class GrpcurlHelper {
             'message': 'The standalone macOS app cannot access grpcurl due to sandbox restrictions. This feature works when running with "flutter run --debug" but not in built apps. The server connection requires external process execution which is restricted in sandboxed macOS applications.',
             'suggestion': 'Use "echo "1" | flutter run --debug" to test this functionality',
           },
-          'requestTime': DateTime.now().toIso8601String(),
+          'requestTime': _toUnixTimestamp(DateTime.now()).toString(),
           'serverType': 'grpcurl-sandbox-restricted',
           'success': false,
         };
@@ -883,7 +888,7 @@ class GrpcurlHelper {
             'error': 'Request timed out',
             'message': 'The account cash holdings request timed out after 5 seconds. Check if server is running on localhost:50051.',
           },
-          'requestTime': DateTime.now().toIso8601String(),
+          'requestTime': _toUnixTimestamp(DateTime.now()).toString(),
           'serverType': 'timeout',
           'success': false,
         };
@@ -897,7 +902,7 @@ class GrpcurlHelper {
             'message': 'The macOS app sandbox prevents external process execution. This is a security restriction.',
             'details': e.toString(),
           },
-          'requestTime': DateTime.now().toIso8601String(),
+          'requestTime': _toUnixTimestamp(DateTime.now()).toString(),
           'serverType': 'sandbox-restricted',
           'success': false,
         };
@@ -912,7 +917,7 @@ class GrpcurlHelper {
           return {
             'input': request,
             'output': parsedResponse,
-            'requestTime': DateTime.now().toIso8601String(),
+            'requestTime': _toUnixTimestamp(DateTime.now()).toString(),
             'serverType': 'simprtagent-real-grpcurl',
             'success': true,
           };
@@ -923,7 +928,7 @@ class GrpcurlHelper {
               'raw_response': responseJson,
               'parse_error': e.toString(),
             },
-            'requestTime': DateTime.now().toIso8601String(),
+            'requestTime': _toUnixTimestamp(DateTime.now()).toString(),
             'serverType': 'simprtagent-real-grpcurl',
             'success': false,
           };
@@ -938,7 +943,7 @@ class GrpcurlHelper {
             'error': error,
             'exit_code': result.exitCode,
           },
-          'requestTime': DateTime.now().toIso8601String(),
+          'requestTime': _toUnixTimestamp(DateTime.now()).toString(),
           'serverType': 'simprtagent-real-grpcurl',
           'success': false,
         };
@@ -953,7 +958,7 @@ class GrpcurlHelper {
           'suggestion': 'Use "echo "1" | flutter run --debug" to test this functionality',
           'details': e.toString(),
         },
-        'requestTime': DateTime.now().toIso8601String(),
+        'requestTime': _toUnixTimestamp(DateTime.now()).toString(),
         'serverType': 'grpcurl-unavailable',
         'success': false,
       };
@@ -1019,7 +1024,7 @@ class GrpcurlHelper {
         return {
           'success': false,
           'output': {'error': 'grpcurl not available'},
-          'requestTime': DateTime.now().toIso8601String(),
+          'requestTime': _toUnixTimestamp(DateTime.now()).toString(),
           'serverType': 'grpcurl_unavailable',
         };
       }
@@ -1099,7 +1104,7 @@ class GrpcurlHelper {
         return {
           'success': false,
           'output': {'error': 'Process execution failed', 'details': e.toString()},
-          'requestTime': DateTime.now().toIso8601String(),
+          'requestTime': _toUnixTimestamp(DateTime.now()).toString(),
           'serverType': 'process_error',
         };
       }
@@ -1107,7 +1112,7 @@ class GrpcurlHelper {
       final responseData = {
         'input': requestPayload,
         'output': {},
-        'requestTime': DateTime.now().toIso8601String(),
+        'requestTime': _toUnixTimestamp(DateTime.now()).toString(),
         'serverType': 'real_grpc',
         'success': false,
       };
@@ -1142,7 +1147,7 @@ class GrpcurlHelper {
       return {
         'success': false,
         'output': {'error': 'Exception occurred', 'details': e.toString()},
-        'requestTime': DateTime.now().toIso8601String(),
+        'requestTime': _toUnixTimestamp(DateTime.now()).toString(),
         'serverType': 'exception',
       };
     }
@@ -1168,7 +1173,7 @@ class GrpcurlHelper {
         return {
           'success': false,
           'output': {'error': 'grpcurl not available'},
-          'requestTime': DateTime.now().toIso8601String(),
+          'requestTime': _toUnixTimestamp(DateTime.now()).toString(),
           'serverType': 'grpcurl_unavailable',
         };
       }
@@ -1244,7 +1249,7 @@ class GrpcurlHelper {
         return {
           'success': false,
           'output': {'error': 'Process execution failed', 'details': e.toString()},
-          'requestTime': DateTime.now().toIso8601String(),
+          'requestTime': _toUnixTimestamp(DateTime.now()).toString(),
           'serverType': 'process_error',
         };
       }
@@ -1252,7 +1257,7 @@ class GrpcurlHelper {
       final responseData = {
         'input': requestPayload,
         'output': {},
-        'requestTime': DateTime.now().toIso8601String(),
+        'requestTime': _toUnixTimestamp(DateTime.now()).toString(),
         'serverType': 'real_grpc',
         'success': false,
       };
@@ -1287,7 +1292,7 @@ class GrpcurlHelper {
       return {
         'success': false,
         'output': {'error': 'Exception occurred', 'details': e.toString()},
-        'requestTime': DateTime.now().toIso8601String(),
+        'requestTime': _toUnixTimestamp(DateTime.now()).toString(),
         'serverType': 'exception',
       };
     }

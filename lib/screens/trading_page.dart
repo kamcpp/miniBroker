@@ -421,7 +421,7 @@ class _TradingPageState extends State<TradingPage> {
         onTimeout: () => {
           'input': {'ref_request_id': 'timeout'},
           'output': {'error': 'Request timed out', 'message': 'Cash holdings request timed out after 15 seconds'},
-          'requestTime': DateTime.now().toIso8601String(),
+          'requestTime': (DateTime.now().millisecondsSinceEpoch ~/ 1000).toString(),
           'serverType': 'timeout',
           'success': false,
         },

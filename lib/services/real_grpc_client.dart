@@ -4,6 +4,11 @@ import 'grpcurl_helper.dart';
 
 /// Real gRPC client that uses grpcurl to communicate with the actual simprtagent server
 class RealGrpcClient {
+  
+  /// Convert DateTime to Unix timestamp (seconds since epoch)
+  static int _toUnixTimestamp(DateTime dateTime) {
+    return dateTime.millisecondsSinceEpoch ~/ 1000;
+  }
   bool _isConnected = false;
   String? _host;
   int? _port;
@@ -125,7 +130,7 @@ class RealGrpcClient {
           'error': 'Server not reachable',
           'message': 'Cannot connect to the gRPC server at $_host:$_port. Please check if the server is running.',
         },
-        'requestTime': DateTime.now().toIso8601String(),
+        'requestTime': _toUnixTimestamp(DateTime.now()).toString(),
         'serverType': 'not-reachable',
         'success': false,
       };
@@ -156,7 +161,7 @@ class RealGrpcClient {
               'error': 'Request timed out',
               'message': 'The ping request timed out after 5 seconds. Check if server is running properly.',
             },
-            'requestTime': DateTime.now().toIso8601String(),
+            'requestTime': _toUnixTimestamp(DateTime.now()).toString(),
             'serverType': 'timeout',
             'success': false,
           };
@@ -172,7 +177,7 @@ class RealGrpcClient {
             'error': 'Ping execution failed',
             'message': 'Failed to execute ping: ${error.toString()}',
           },
-          'requestTime': DateTime.now().toIso8601String(),
+          'requestTime': _toUnixTimestamp(DateTime.now()).toString(),
           'serverType': 'execution-error',
           'success': false,
         };
@@ -210,7 +215,7 @@ class RealGrpcClient {
           'message': 'A critical error occurred during ping: ${e.toString()}',
           'details': stackTrace.toString(),
         },
-        'requestTime': DateTime.now().toIso8601String(),
+        'requestTime': _toUnixTimestamp(DateTime.now()).toString(),
         'serverType': 'critical-error',
         'success': false,
       };
@@ -239,7 +244,7 @@ class RealGrpcClient {
           'error': 'Server not reachable',
           'message': 'Cannot connect to the gRPC server at $_host:$_port. Please check if the server is running.',
         },
-        'requestTime': DateTime.now().toIso8601String(),
+        'requestTime': _toUnixTimestamp(DateTime.now()).toString(),
         'serverType': 'not-reachable',
         'success': false,
       };
@@ -275,7 +280,7 @@ class RealGrpcClient {
               'error': 'Request timed out',
               'message': 'The new account request timed out after 10 seconds. Check if server is running properly.',
             },
-            'requestTime': DateTime.now().toIso8601String(),
+            'requestTime': _toUnixTimestamp(DateTime.now()).toString(),
             'serverType': 'timeout',
             'success': false,
           };
@@ -288,7 +293,7 @@ class RealGrpcClient {
             'error': 'NewAccount execution failed',
             'message': 'Failed to execute NewAccount: ${error.toString()}',
           },
-          'requestTime': DateTime.now().toIso8601String(),
+          'requestTime': _toUnixTimestamp(DateTime.now()).toString(),
           'serverType': 'execution-error',
           'success': false,
         };
@@ -327,7 +332,7 @@ class RealGrpcClient {
           'message': 'A critical error occurred during NewAccount: ${e.toString()}',
           'details': stackTrace.toString(),
         },
-        'requestTime': DateTime.now().toIso8601String(),
+        'requestTime': _toUnixTimestamp(DateTime.now()).toString(),
         'serverType': 'critical-error',
         'success': false,
       };
@@ -355,7 +360,7 @@ class RealGrpcClient {
           'error': 'Server not reachable',
           'message': 'Cannot connect to the gRPC server at $_host:$_port. Please check if the server is running.',
         },
-        'requestTime': DateTime.now().toIso8601String(),
+        'requestTime': _toUnixTimestamp(DateTime.now()).toString(),
         'serverType': 'not-reachable',
         'success': false,
       };
@@ -383,7 +388,7 @@ class RealGrpcClient {
               'error': 'Request timed out',
               'message': 'The account list request timed out after 5 seconds. Check if server is running properly.',
             },
-            'requestTime': DateTime.now().toIso8601String(),
+            'requestTime': _toUnixTimestamp(DateTime.now()).toString(),
             'serverType': 'timeout',
             'success': false,
           };
@@ -398,7 +403,7 @@ class RealGrpcClient {
             'error': 'GetAccountList execution failed',
             'message': 'Failed to execute GetAccountList: ${error.toString()}',
           },
-          'requestTime': DateTime.now().toIso8601String(),
+          'requestTime': _toUnixTimestamp(DateTime.now()).toString(),
           'serverType': 'execution-error',
           'success': false,
         };
@@ -435,7 +440,7 @@ class RealGrpcClient {
           'message': 'A critical error occurred during GetAccountList: ${e.toString()}',
           'details': stackTrace.toString(),
         },
-        'requestTime': DateTime.now().toIso8601String(),
+        'requestTime': _toUnixTimestamp(DateTime.now()).toString(),
         'serverType': 'critical-error',
         'success': false,
       };
@@ -466,7 +471,7 @@ class RealGrpcClient {
           'error': 'Server not reachable',
           'message': 'Cannot connect to the gRPC server at $_host:$_port. Please check if the server is running.',
         },
-        'requestTime': DateTime.now().toIso8601String(),
+        'requestTime': _toUnixTimestamp(DateTime.now()).toString(),
         'serverType': 'not-reachable',
         'success': false,
       };
@@ -501,7 +506,7 @@ class RealGrpcClient {
               'error': 'Request timed out',
               'message': 'The account market portfolio request timed out after 10 seconds. Check if server is running properly.',
             },
-            'requestTime': DateTime.now().toIso8601String(),
+            'requestTime': _toUnixTimestamp(DateTime.now()).toString(),
             'serverType': 'timeout',
             'success': false,
           };
@@ -519,7 +524,7 @@ class RealGrpcClient {
             'error': 'GetAccountMarketPortfolio execution failed',
             'message': 'Failed to execute GetAccountMarketPortfolio: ${error.toString()}',
           },
-          'requestTime': DateTime.now().toIso8601String(),
+          'requestTime': _toUnixTimestamp(DateTime.now()).toString(),
           'serverType': 'execution-error',
           'success': false,
         };
@@ -559,7 +564,7 @@ class RealGrpcClient {
           'message': 'A critical error occurred during GetAccountMarketPortfolio: ${e.toString()}',
           'details': stackTrace.toString(),
         },
-        'requestTime': DateTime.now().toIso8601String(),
+        'requestTime': _toUnixTimestamp(DateTime.now()).toString(),
         'serverType': 'critical-error',
         'success': false,
       };
@@ -588,7 +593,7 @@ class RealGrpcClient {
           'error': 'Server not reachable',
           'message': 'Cannot connect to the gRPC server at $_host:$_port. Please check if the server is running.',
         },
-        'requestTime': DateTime.now().toIso8601String(),
+        'requestTime': _toUnixTimestamp(DateTime.now()).toString(),
         'serverType': 'not-reachable',
         'success': false,
       };
@@ -621,7 +626,7 @@ class RealGrpcClient {
               'error': 'Request timed out',
               'message': 'The account cash holdings request timed out after 10 seconds. Check if server is running properly.',
             },
-            'requestTime': DateTime.now().toIso8601String(),
+            'requestTime': _toUnixTimestamp(DateTime.now()).toString(),
             'serverType': 'timeout',
             'success': false,
           };
@@ -638,7 +643,7 @@ class RealGrpcClient {
             'error': 'GetAccountCashHoldings execution failed',
             'message': 'Failed to execute GetAccountCashHoldings: ${error.toString()}',
           },
-          'requestTime': DateTime.now().toIso8601String(),
+          'requestTime': _toUnixTimestamp(DateTime.now()).toString(),
           'serverType': 'execution-error',
           'success': false,
         };
@@ -677,7 +682,7 @@ class RealGrpcClient {
           'message': 'A critical error occurred during GetAccountCashHoldings: ${e.toString()}',
           'details': stackTrace.toString(),
         },
-        'requestTime': DateTime.now().toIso8601String(),
+        'requestTime': _toUnixTimestamp(DateTime.now()).toString(),
         'serverType': 'critical-error',
         'success': false,
       };
@@ -707,7 +712,7 @@ class RealGrpcClient {
           'server_info': serverInfo,
           'connected_to_real_server': true,
         },
-        'requestTime': DateTime.now().toIso8601String(),
+        'requestTime': _toUnixTimestamp(DateTime.now()).toString(),
         'serverType': 'simprtagent-real',
       };
 
@@ -731,7 +736,7 @@ class RealGrpcClient {
         'status': 'connected',
         'type': 'simprtagent-real',
         'server_name': 'Mock Participant Agent gRPC server',
-        'timestamp': DateTime.now().toIso8601String(),
+        'timestamp': _toUnixTimestamp(DateTime.now()).toString(),
         'services': 'AgentService, AccountService, MarketService, InstrumentService',
       };
     } catch (e) {
@@ -783,7 +788,7 @@ class RealGrpcClient {
       return {
         'input': {'account_id': accountId},
         'output': {'error': 'Not connected to server'},
-        'requestTime': DateTime.now().toIso8601String(),
+        'requestTime': _toUnixTimestamp(DateTime.now()).toString(),
         'serverType': 'disconnected',
         'success': false,
       };
@@ -812,7 +817,7 @@ class RealGrpcClient {
             'error': 'GetAccountOrders execution error',
             'message': error.toString(),
           },
-          'requestTime': DateTime.now().toIso8601String(),
+          'requestTime': _toUnixTimestamp(DateTime.now()).toString(),
           'serverType': 'execution-error',
           'success': false,
         };
@@ -847,7 +852,7 @@ class RealGrpcClient {
           'message': 'A critical error occurred during GetAccountOrders: ${e.toString()}',
           'details': stackTrace.toString(),
         },
-        'requestTime': DateTime.now().toIso8601String(),
+        'requestTime': _toUnixTimestamp(DateTime.now()).toString(),
         'serverType': 'critical-error',
         'success': false,
       };
@@ -868,7 +873,7 @@ class RealGrpcClient {
       return {
         'input': {'account_id': accountId},
         'output': {'error': 'Not connected to server'},
-        'requestTime': DateTime.now().toIso8601String(),
+        'requestTime': _toUnixTimestamp(DateTime.now()).toString(),
         'serverType': 'disconnected',
         'success': false,
       };
@@ -896,7 +901,7 @@ class RealGrpcClient {
             'error': 'GetAccountTrades execution error',
             'message': error.toString(),
           },
-          'requestTime': DateTime.now().toIso8601String(),
+          'requestTime': _toUnixTimestamp(DateTime.now()).toString(),
           'serverType': 'execution-error',
           'success': false,
         };
@@ -931,7 +936,7 @@ class RealGrpcClient {
           'message': 'A critical error occurred during GetAccountTrades: ${e.toString()}',
           'details': stackTrace.toString(),
         },
-        'requestTime': DateTime.now().toIso8601String(),
+        'requestTime': _toUnixTimestamp(DateTime.now()).toString(),
         'serverType': 'critical-error',
         'success': false,
       };
