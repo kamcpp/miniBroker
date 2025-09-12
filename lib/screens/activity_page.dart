@@ -928,235 +928,188 @@ class _ActivityPageState extends State<ActivityPage> {
           // Orders table content
           Container(
             height: _showFilters ? 300 : 400, // Fixed height instead of Expanded
-            child: _isLoadingOrders
-                ? Center(
-                    child: CircularProgressIndicator(
-                      valueColor: AlwaysStoppedAnimation<Color>(
-                        isDarkTheme ? Colors.white : Colors.black,
-                      ),
-                    ),
-                  )
-                : _ordersError.isNotEmpty
-                    ? Center(
-                        child: Padding(
-                          padding: const EdgeInsets.all(16),
-                          child: Column(
-                            mainAxisAlignment: MainAxisAlignment.center,
-                            children: [
-                              Icon(
-                                Icons.error_outline,
-                                size: 48,
-                                color: Colors.red,
-                              ),
-                              const SizedBox(height: 8),
-                              Text(
-                                'Error loading orders',
-                                style: TextStyle(
-                                  fontSize: 16,
-                                  fontWeight: FontWeight.bold,
-                                  color: isDarkTheme ? Colors.white : Colors.black,
-                                ),
-                              ),
-                              const SizedBox(height: 4),
-                              Text(
-                                _ordersError,
-                                textAlign: TextAlign.center,
-                                style: TextStyle(
-                                  fontSize: 14,
-                                  color: isDarkTheme ? Colors.grey[400] : Colors.grey[600],
-                                ),
-                              ),
-                              const SizedBox(height: 16),
-                              ElevatedButton.icon(
-                                onPressed: _fetchOrders,
-                                icon: const Icon(Icons.refresh),
-                                label: const Text('Retry'),
-                                style: ElevatedButton.styleFrom(
-                                  backgroundColor: Colors.blue,
-                                  foregroundColor: Colors.white,
-                                ),
-                              ),
-                              // Show empty table structure even on error
-                              const SizedBox(height: 20),
-                              _buildOrdersTableStructure(isDarkTheme),
-                            ],
+            child: Column(
+              children: [
+                // Table header row - always show
+                Row(
+                  children: [
+                    Expanded(
+                      flex: 3,
+                      child: Padding(
+                        padding: const EdgeInsets.only(left: 16),
+                        child: Text(
+                          'Order ID',
+                          style: TextStyle(
+                            fontSize: 14,
+                            color: isDarkTheme ? Colors.grey[400] : Colors.grey[600],
                           ),
                         ),
-                      )
-                    : Column(
-                        children: [
-                          // Table header row
-                          Row(
-                            children: [
-                              Expanded(
-                                flex: 3,
-                                child: Padding(
-                                  padding: const EdgeInsets.only(left: 16),
-                                  child: Text(
-                                    'Order ID',
-                                    style: TextStyle(
-                                      fontSize: 14,
-                                      color: isDarkTheme ? Colors.grey[400] : Colors.grey[600],
-                                    ),
-                                  ),
-                                ),
-                              ),
-                              Expanded(
-                                flex: 3,
-                                child: Text(
-                                  'Account',
-                                  style: TextStyle(
-                                    fontSize: 14,
-                                    color: isDarkTheme ? Colors.grey[400] : Colors.grey[600],
-                                  ),
-                                ),
-                              ),
-                              Expanded(
-                                flex: 2,
-                                child: Text(
-                                  'Symbol',
-                                  style: TextStyle(
-                                    fontSize: 14,
-                                    color: isDarkTheme ? Colors.grey[400] : Colors.grey[600],
-                                  ),
-                                ),
-                              ),
-                              Expanded(
-                                flex: 2,
-                                child: Text(
-                                  'Quantity',
-                                  textAlign: TextAlign.center,
-                                  style: TextStyle(
-                                    fontSize: 14,
-                                    color: isDarkTheme ? Colors.grey[400] : Colors.grey[600],
-                                  ),
-                                ),
-                              ),
-                              Expanded(
-                                flex: 2,
-                                child: Padding(
-                                  padding: const EdgeInsets.only(right: 16),
-                                  child: Text(
-                                    'Price',
-                                    textAlign: TextAlign.right,
-                                    style: TextStyle(
-                                      fontSize: 14,
-                                      color: isDarkTheme ? Colors.grey[400] : Colors.grey[600],
-                                    ),
-                                  ),
-                                ),
-                              ),
-                            ],
-                          ),
-                          const SizedBox(height: 8),
-                          Container(
-                            height: 1,
-                            color: isDarkTheme ? Colors.grey[700] : Colors.grey[300],
-                          ),
-                          const SizedBox(height: 12),
-                          // Table rows
-                          Flexible(
-                            child: _orders.isEmpty
-                                ? Center(
-                                    child: Text(
-                                      'No orders found',
-                                      style: TextStyle(
-                                        color: isDarkTheme ? Colors.grey[400] : Colors.grey[600],
-                                        fontSize: 14,
-                                      ),
-                                    ),
-                                  )
-                                : ListView.builder(
-                                    itemCount: _orders.length,
-                                    itemBuilder: (context, index) {
-                                      final order = _orders[index];
-                                      return Padding(
-                                        padding: const EdgeInsets.only(bottom: 8),
-                                        child: Row(
-                                          children: [
-                                            // Order ID
-                                            Expanded(
-                                              flex: 3,
-                                              child: Padding(
-                                                padding: const EdgeInsets.only(left: 16),
-                                                child: Text(
-                                                  order['orderId']?.toString() ?? 
-                                                  order['id']?.toString() ?? 
-                                                  order['order_id']?.toString() ?? 
-                                                  'N/A',
-                                                  style: TextStyle(
-                                                    fontSize: 16,
-                                                    color: isDarkTheme ? Colors.white : Colors.black,
-                                                    fontWeight: FontWeight.w500,
-                                                  ),
-                                                  overflow: TextOverflow.ellipsis,
-                                                ),
-                                              ),
-                                            ),
-                                            // Account
-                                            Expanded(
-                                              flex: 3,
-                                              child: Text(
-                                                order['participantAccountId']?.toString() ?? 
-                                                order['account_id']?.toString() ?? 
-                                                order['participant_account']?.toString() ?? 
-                                                'N/A',
-                                                style: TextStyle(
-                                                  fontSize: 16,
-                                                  color: isDarkTheme ? Colors.white : Colors.black,
-                                                ),
-                                                overflow: TextOverflow.ellipsis,
-                                              ),
-                                            ),
-                                            // Symbol
-                                            Expanded(
-                                              flex: 2,
-                                              child: Text(
-                                                order['symbol']?.toString() ?? 
-                                                order['asset_id']?.toString() ?? 
-                                                'N/A',
-                                                style: TextStyle(
-                                                  fontSize: 16,
-                                                  color: isDarkTheme ? Colors.white : Colors.black,
-                                                ),
-                                              ),
-                                            ),
-                                            // Quantity
-                                            Expanded(
-                                              flex: 2,
-                                              child: Text(
-                                                order['quantity']?.toString() ?? 'N/A',
-                                                textAlign: TextAlign.center,
-                                                style: TextStyle(
-                                                  fontSize: 16,
-                                                  color: isDarkTheme ? Colors.white : Colors.black,
-                                                ),
-                                              ),
-                                            ),
-                                            // Price
-                                            Expanded(
-                                              flex: 2,
-                                              child: Padding(
-                                                padding: const EdgeInsets.only(right: 16),
-                                                child: Text(
-                                                  order['price']?.toString() ?? 'N/A',
-                                                  textAlign: TextAlign.right,
-                                                  style: TextStyle(
-                                                    fontSize: 16,
-                                                    color: isDarkTheme ? Colors.white : Colors.black,
-                                                    fontWeight: FontWeight.w500,
-                                                  ),
-                                                ),
-                                              ),
-                                            ),
-                                          ],
-                                        ),
-                                      );
-                                    },
-                                  ),
-                          ),
-                        ],
                       ),
+                    ),
+                    Expanded(
+                      flex: 3,
+                      child: Text(
+                        'Account',
+                        style: TextStyle(
+                          fontSize: 14,
+                          color: isDarkTheme ? Colors.grey[400] : Colors.grey[600],
+                        ),
+                      ),
+                    ),
+                    Expanded(
+                      flex: 2,
+                      child: Text(
+                        'Symbol',
+                        style: TextStyle(
+                          fontSize: 14,
+                          color: isDarkTheme ? Colors.grey[400] : Colors.grey[600],
+                        ),
+                      ),
+                    ),
+                    Expanded(
+                      flex: 2,
+                      child: Text(
+                        'Quantity',
+                        textAlign: TextAlign.center,
+                        style: TextStyle(
+                          fontSize: 14,
+                          color: isDarkTheme ? Colors.grey[400] : Colors.grey[600],
+                        ),
+                      ),
+                    ),
+                    Expanded(
+                      flex: 2,
+                      child: Padding(
+                        padding: const EdgeInsets.only(right: 16),
+                        child: Text(
+                          'Price',
+                          textAlign: TextAlign.right,
+                          style: TextStyle(
+                            fontSize: 14,
+                            color: isDarkTheme ? Colors.grey[400] : Colors.grey[600],
+                          ),
+                        ),
+                      ),
+                    ),
+                  ],
+                ),
+                const SizedBox(height: 8),
+                Container(
+                  height: 1,
+                  color: isDarkTheme ? Colors.grey[700] : Colors.grey[300],
+                ),
+                const SizedBox(height: 12),
+                // Table rows
+                Flexible(
+                  child: _isLoadingOrders
+                      ? Center(
+                          child: CircularProgressIndicator(
+                            valueColor: AlwaysStoppedAnimation<Color>(
+                              isDarkTheme ? Colors.white : Colors.black,
+                            ),
+                          ),
+                        )
+                      : _orders.isEmpty
+                          ? Center(
+                              child: Text(
+                                'No orders found',
+                                style: TextStyle(
+                                  color: isDarkTheme ? Colors.grey[400] : Colors.grey[600],
+                                  fontSize: 14,
+                                ),
+                              ),
+                            )
+                          : ListView.builder(
+                              itemCount: _orders.length,
+                              itemBuilder: (context, index) {
+                                final order = _orders[index];
+                                return Padding(
+                                  padding: const EdgeInsets.only(bottom: 8),
+                                  child: Row(
+                                    children: [
+                                      // Order ID
+                                      Expanded(
+                                        flex: 3,
+                                        child: Padding(
+                                          padding: const EdgeInsets.only(left: 16),
+                                          child: Text(
+                                            order['orderId']?.toString() ?? 
+                                            order['id']?.toString() ?? 
+                                            order['order_id']?.toString() ?? 
+                                            'N/A',
+                                            style: TextStyle(
+                                              fontSize: 16,
+                                              color: isDarkTheme ? Colors.white : Colors.black,
+                                              fontWeight: FontWeight.w500,
+                                            ),
+                                            overflow: TextOverflow.ellipsis,
+                                          ),
+                                        ),
+                                      ),
+                                      // Account
+                                      Expanded(
+                                        flex: 3,
+                                        child: Text(
+                                          order['participantAccountId']?.toString() ?? 
+                                          order['account_id']?.toString() ?? 
+                                          order['participant_account']?.toString() ?? 
+                                          'N/A',
+                                          style: TextStyle(
+                                            fontSize: 16,
+                                            color: isDarkTheme ? Colors.white : Colors.black,
+                                          ),
+                                          overflow: TextOverflow.ellipsis,
+                                        ),
+                                      ),
+                                      // Symbol
+                                      Expanded(
+                                        flex: 2,
+                                        child: Text(
+                                          order['symbol']?.toString() ?? 
+                                          order['asset_id']?.toString() ?? 
+                                          'N/A',
+                                          style: TextStyle(
+                                            fontSize: 16,
+                                            color: isDarkTheme ? Colors.white : Colors.black,
+                                          ),
+                                        ),
+                                      ),
+                                      // Quantity
+                                      Expanded(
+                                        flex: 2,
+                                        child: Text(
+                                          order['quantity']?.toString() ?? 'N/A',
+                                          textAlign: TextAlign.center,
+                                          style: TextStyle(
+                                            fontSize: 16,
+                                            color: isDarkTheme ? Colors.white : Colors.black,
+                                          ),
+                                        ),
+                                      ),
+                                      // Price
+                                      Expanded(
+                                        flex: 2,
+                                        child: Padding(
+                                          padding: const EdgeInsets.only(right: 16),
+                                          child: Text(
+                                            order['price']?.toString() ?? 'N/A',
+                                            textAlign: TextAlign.right,
+                                            style: TextStyle(
+                                              fontSize: 16,
+                                              color: isDarkTheme ? Colors.white : Colors.black,
+                                              fontWeight: FontWeight.w500,
+                                            ),
+                                          ),
+                                        ),
+                                      ),
+                                    ],
+                                  ),
+                                );
+                              },
+                            ),
+                ),
+              ],
+            ),
           ),
         ],
       ),
@@ -1539,158 +1492,114 @@ class _ActivityPageState extends State<ActivityPage> {
           // Table content
           Container(
             height: _showTradeFilters ? 200 : 300, // Adjust height when filters are shown
-            child: _isLoadingTrades
-                ? Center(
-                    child: CircularProgressIndicator(
-                      valueColor: AlwaysStoppedAnimation<Color>(
-                        isDarkTheme ? Colors.white : Colors.black,
-                      ),
-                    ),
-                  )
-                : _tradesError.isNotEmpty
-                    ? Center(
-                        child: Padding(
-                          padding: const EdgeInsets.all(16),
-                          child: Column(
-                            mainAxisAlignment: MainAxisAlignment.center,
-                            children: [
-                              Icon(
-                                Icons.error_outline,
-                                size: 48,
-                                color: Colors.red,
-                              ),
-                              const SizedBox(height: 8),
-                              Text(
-                                'Error loading trades',
-                                style: TextStyle(
-                                  fontSize: 16,
-                                  fontWeight: FontWeight.bold,
-                                  color: isDarkTheme ? Colors.white : Colors.black,
-                                ),
-                              ),
-                              const SizedBox(height: 4),
-                              Text(
-                                _tradesError,
-                                textAlign: TextAlign.center,
-                                style: TextStyle(
-                                  fontSize: 14,
-                                  color: isDarkTheme ? Colors.grey[400] : Colors.grey[600],
-                                ),
-                              ),
-                              const SizedBox(height: 16),
-                              ElevatedButton.icon(
-                                onPressed: _fetchTrades,
-                                icon: const Icon(Icons.refresh),
-                                label: const Text('Retry'),
-                                style: ElevatedButton.styleFrom(
-                                  backgroundColor: Colors.blue,
-                                  foregroundColor: Colors.white,
-                                ),
-                              ),
-                            ],
+            child: Column(
+              children: [
+                // Trades table header row - always show
+                Row(
+                  children: [
+                    Expanded(
+                      flex: 1,
+                      child: Padding(
+                        padding: const EdgeInsets.only(left: 16),
+                        child: Text(
+                          'Price',
+                          style: TextStyle(
+                            fontSize: 14,
+                            color: isDarkTheme ? Colors.grey[400] : Colors.grey[600],
                           ),
                         ),
-                      )
-                    : Column(
-                        children: [
-                          // Trades table header row
-                          Row(
-                            children: [
-                              Expanded(
-                                flex: 1,
-                                child: Padding(
-                                  padding: const EdgeInsets.only(left: 16),
-                                  child: Text(
-                                    'Price',
-                                    style: TextStyle(
-                                      fontSize: 14,
-                                      color: isDarkTheme ? Colors.grey[400] : Colors.grey[600],
-                                    ),
-                                  ),
-                                ),
-                              ),
-                              Expanded(
-                                flex: 1,
-                                child: Padding(
-                                  padding: const EdgeInsets.only(right: 16),
-                                  child: Text(
-                                    'Quantity',
-                                    textAlign: TextAlign.right,
-                                    style: TextStyle(
-                                      fontSize: 14,
-                                      color: isDarkTheme ? Colors.grey[400] : Colors.grey[600],
-                                    ),
-                                  ),
-                                ),
-                              ),
-                            ],
-                          ),
-                          const SizedBox(height: 8),
-                          Container(
-                            height: 1,
-                            color: isDarkTheme ? Colors.grey[700] : Colors.grey[300],
-                          ),
-                          const SizedBox(height: 12),
-                          // Trades table rows
-                          Flexible(
-                            child: _trades.isEmpty
-                                ? Center(
-                                    child: Text(
-                                      'No trades found',
-                                      style: TextStyle(
-                                        color: isDarkTheme ? Colors.grey[400] : Colors.grey[600],
-                                        fontSize: 14,
-                                      ),
-                                    ),
-                                  )
-                                : ListView.builder(
-                                    itemCount: _trades.length,
-                                    itemBuilder: (context, index) {
-                                      final trade = _trades[index];
-                                      return Padding(
-                                        padding: const EdgeInsets.only(bottom: 8),
-                                        child: Row(
-                                          children: [
-                                            // Price
-                                            Expanded(
-                                              flex: 1,
-                                              child: Padding(
-                                                padding: const EdgeInsets.only(left: 16),
-                                                child: Text(
-                                                  '\$${trade['price']?.toString() ?? 'N/A'}',
-                                                  style: TextStyle(
-                                                    fontSize: 16,
-                                                    color: isDarkTheme ? Colors.white : Colors.black,
-                                                    fontWeight: FontWeight.w500,
-                                                  ),
-                                                  overflow: TextOverflow.ellipsis,
-                                                ),
-                                              ),
-                                            ),
-                                            // Quantity
-                                            Expanded(
-                                              flex: 1,
-                                              child: Padding(
-                                                padding: const EdgeInsets.only(right: 16),
-                                                child: Text(
-                                                  trade['quantity']?.toString() ?? 'N/A',
-                                                  textAlign: TextAlign.right,
-                                                  style: TextStyle(
-                                                    fontSize: 16,
-                                                    color: isDarkTheme ? Colors.white : Colors.black,
-                                                  ),
-                                                  overflow: TextOverflow.ellipsis,
-                                                ),
-                                              ),
-                                            ),
-                                          ],
-                                        ),
-                                      );
-                                    },
-                                  ),
-                          ),
-                        ],
                       ),
+                    ),
+                    Expanded(
+                      flex: 1,
+                      child: Padding(
+                        padding: const EdgeInsets.only(right: 16),
+                        child: Text(
+                          'Quantity',
+                          textAlign: TextAlign.right,
+                          style: TextStyle(
+                            fontSize: 14,
+                            color: isDarkTheme ? Colors.grey[400] : Colors.grey[600],
+                          ),
+                        ),
+                      ),
+                    ),
+                  ],
+                ),
+                const SizedBox(height: 8),
+                Container(
+                  height: 1,
+                  color: isDarkTheme ? Colors.grey[700] : Colors.grey[300],
+                ),
+                const SizedBox(height: 12),
+                // Trades table rows
+                Flexible(
+                  child: _isLoadingTrades
+                      ? Center(
+                          child: CircularProgressIndicator(
+                            valueColor: AlwaysStoppedAnimation<Color>(
+                              isDarkTheme ? Colors.white : Colors.black,
+                            ),
+                          ),
+                        )
+                      : _trades.isEmpty
+                          ? Center(
+                              child: Text(
+                                'No trades found',
+                                style: TextStyle(
+                                  color: isDarkTheme ? Colors.grey[400] : Colors.grey[600],
+                                  fontSize: 14,
+                                ),
+                              ),
+                            )
+                          : ListView.builder(
+                              itemCount: _trades.length,
+                              itemBuilder: (context, index) {
+                                final trade = _trades[index];
+                                return Padding(
+                                  padding: const EdgeInsets.only(bottom: 8),
+                                  child: Row(
+                                    children: [
+                                      // Price
+                                      Expanded(
+                                        flex: 1,
+                                        child: Padding(
+                                          padding: const EdgeInsets.only(left: 16),
+                                          child: Text(
+                                            '\$${trade['price']?.toString() ?? 'N/A'}',
+                                            style: TextStyle(
+                                              fontSize: 16,
+                                              color: isDarkTheme ? Colors.white : Colors.black,
+                                              fontWeight: FontWeight.w500,
+                                            ),
+                                            overflow: TextOverflow.ellipsis,
+                                          ),
+                                        ),
+                                      ),
+                                      // Quantity
+                                      Expanded(
+                                        flex: 1,
+                                        child: Padding(
+                                          padding: const EdgeInsets.only(right: 16),
+                                          child: Text(
+                                            trade['quantity']?.toString() ?? 'N/A',
+                                            textAlign: TextAlign.right,
+                                            style: TextStyle(
+                                              fontSize: 16,
+                                              color: isDarkTheme ? Colors.white : Colors.black,
+                                            ),
+                                            overflow: TextOverflow.ellipsis,
+                                          ),
+                                        ),
+                                      ),
+                                    ],
+                                  ),
+                                );
+                              },
+                            ),
+                ),
+              ],
+            ),
           ),
         ],
       ),
@@ -1714,103 +1623,6 @@ class _ActivityPageState extends State<ActivityPage> {
     }
   }
 
-  /// Build empty orders table structure (shown on error)
-  Widget _buildOrdersTableStructure(bool isDarkTheme) {
-    return Container(
-      width: double.infinity,
-      decoration: BoxDecoration(
-        color: isDarkTheme ? const Color(0xFF1e1e1e) : Colors.white,
-        border: Border.all(
-          color: isDarkTheme ? Colors.grey[600]! : Colors.grey[400]!,
-          width: 1,
-        ),
-      ),
-      child: Column(
-        children: [
-          // Table header
-          Container(
-            padding: const EdgeInsets.symmetric(vertical: 12, horizontal: 16),
-            decoration: BoxDecoration(
-              color: isDarkTheme ? const Color(0xFF2d2d2d) : Colors.grey[200],
-            ),
-            child: Row(
-              children: [
-                Expanded(
-                  flex: 3,
-                  child: Text(
-                    'Order ID',
-                    style: TextStyle(
-                      fontWeight: FontWeight.bold,
-                      color: isDarkTheme ? Colors.white : Colors.black,
-                      fontSize: 14,
-                    ),
-                  ),
-                ),
-                Expanded(
-                  flex: 3,
-                  child: Text(
-                    'Participant Account',
-                    style: TextStyle(
-                      fontWeight: FontWeight.bold,
-                      color: isDarkTheme ? Colors.white : Colors.black,
-                      fontSize: 14,
-                    ),
-                  ),
-                ),
-                Expanded(
-                  flex: 2,
-                  child: Text(
-                    'Symbol',
-                    style: TextStyle(
-                      fontWeight: FontWeight.bold,
-                      color: isDarkTheme ? Colors.white : Colors.black,
-                      fontSize: 14,
-                    ),
-                    textAlign: TextAlign.center,
-                  ),
-                ),
-                Expanded(
-                  flex: 2,
-                  child: Text(
-                    'Quantity',
-                    style: TextStyle(
-                      fontWeight: FontWeight.bold,
-                      color: isDarkTheme ? Colors.white : Colors.black,
-                      fontSize: 14,
-                    ),
-                    textAlign: TextAlign.center,
-                  ),
-                ),
-                Expanded(
-                  flex: 2,
-                  child: Text(
-                    'Price',
-                    style: TextStyle(
-                      fontWeight: FontWeight.bold,
-                      color: isDarkTheme ? Colors.white : Colors.black,
-                      fontSize: 14,
-                    ),
-                    textAlign: TextAlign.right,
-                  ),
-                ),
-              ],
-            ),
-          ),
-          // Empty state
-          Container(
-            padding: const EdgeInsets.all(20),
-            child: Text(
-              'Orders will be displayed here once loaded',
-              style: TextStyle(
-                color: isDarkTheme ? Colors.grey[400] : Colors.grey[600],
-                fontSize: 14,
-              ),
-            ),
-          ),
-        ],
-      ),
-    );
-  }
 
   @override
   Widget build(BuildContext context) {

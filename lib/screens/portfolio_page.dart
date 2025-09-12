@@ -705,15 +705,6 @@ class _PortfolioPageState extends State<PortfolioPage> {
                 color: isDarkTheme ? Colors.white : Colors.black,
               ),
             ),
-            const SizedBox(height: 8),
-            Text(
-              'Click the "Portfolio" button above to fetch your portfolio data from the server',
-              textAlign: TextAlign.center,
-              style: TextStyle(
-                fontSize: 14,
-                color: isDarkTheme ? Colors.grey[400] : Colors.grey[600],
-              ),
-            ),
           ],
         ),
       );
