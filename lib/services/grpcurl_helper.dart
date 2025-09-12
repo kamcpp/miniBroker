@@ -1366,10 +1366,9 @@ class GrpcurlHelper {
     }
   }
 
-  /// Get Orderbook using grpcurl
-  static Future<Map<String, dynamic>> getOrderbook({
+  /// Get Market Instrument List using grpcurl
+  static Future<Map<String, dynamic>> getMarketInstrumentList({
     required String marketId,
-    required String instrumentId,
   }) async {
     final responseData = <String, dynamic>{
       'success': false,
@@ -1379,7 +1378,7 @@ class GrpcurlHelper {
     };
 
     try {
-      print('📋 Getting orderbook for market: $marketId, instrument: $instrumentId from real server...');
+      print('📋 Getting market instrument list for market: $marketId from real server...');
 
       // Check server reachability first
       if (!await _isServerReachable()) {
@@ -1396,9 +1395,8 @@ class GrpcurlHelper {
       }
 
       final inputParams = {
-        'ref_request_id': 'get_orderbook_${DateTime.now().millisecondsSinceEpoch}',
+        'ref_request_id': 'get_market_instrument_list_${DateTime.now().millisecondsSinceEpoch}',
         'market_id': marketId,
-        'instrument_id': instrumentId,
       };
 
       final result = await Process.run(
@@ -1407,7 +1405,7 @@ class GrpcurlHelper {
           '-plaintext',
           '-d', jsonEncode(inputParams),
           '$_host:$_port',
-          'qomet.agora.daemons.prtagent.v1.MarketService/GetOrderbook'
+          'qomet.agora.daemons.prtagent.v1.MarketService/GetMarketInstrumentList'
         ],
         environment: {'PATH': '/usr/local/bin:/opt/homebrew/bin:${Platform.environment['PATH']}'},
       ).timeout(const Duration(seconds: 10));
@@ -1416,7 +1414,7 @@ class GrpcurlHelper {
         final responseJson = jsonDecode(result.stdout);
         responseData['success'] = true;
         responseData['output'] = responseJson;
-        print('✅ GetOrderbook successful');
+        print('✅ GetMarketInstrumentList successful');
       } else {
         responseData['output'] = {
           'error': 'gRPC call failed',
@@ -1424,12 +1422,12 @@ class GrpcurlHelper {
           'stdout': result.stdout.toString(),
           'exit_code': result.exitCode,
         };
-        print('❌ GetOrderbook failed: ${result.stderr}');
+        print('❌ GetMarketInstrumentList failed: ${result.stderr}');
       }
 
       return responseData;
     } catch (e) {
-      print('❌ GetOrderbook exception: $e');
+      print('❌ GetMarketInstrumentList exception: $e');
       return {
         'success': false,
         'output': {'error': 'Exception occurred', 'details': e.toString()},

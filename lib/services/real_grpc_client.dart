@@ -984,15 +984,14 @@ class RealGrpcClient {
     }
   }
 
-  /// Real GetOrderbook call to MarketService.GetOrderbook using grpcurl
-  Future<Map<String, dynamic>> getOrderbook({
+  /// Real GetMarketInstrumentList call to MarketService.GetMarketInstrumentList using grpcurl
+  Future<Map<String, dynamic>> getMarketInstrumentList({
     required String marketId,
-    required String instrumentId,
     Duration? timeout,
   }) async {
     if (!_isConnected) {
       return {
-        'input': {'market_id': marketId, 'instrument_id': instrumentId},
+        'input': {'market_id': marketId},
         'output': {'error': 'Not connected to server'},
         'requestTime': _toUnixTimestamp(DateTime.now()).toString(),
         'serverType': 'disconnected',
@@ -1001,20 +1000,18 @@ class RealGrpcClient {
     }
 
     try {
-      print('📋 Getting orderbook for market: $marketId, instrument: $instrumentId from real server...');
+      print('📋 Getting market instrument list for market: $marketId from real server...');
 
       final inputParams = {
-        'ref_request_id': 'get_orderbook_${DateTime.now().millisecondsSinceEpoch}',
+        'ref_request_id': 'get_market_instrument_list_${DateTime.now().millisecondsSinceEpoch}',
         'market_id': marketId,
-        'instrument_id': instrumentId,
       };
 
-      final result = await GrpcurlHelper.getOrderbook(
+      final result = await GrpcurlHelper.getMarketInstrumentList(
         marketId: marketId,
-        instrumentId: instrumentId,
       );
 
-      print('📤 GetOrderbook OUTPUT: ${result.toString()}');
+      print('📤 GetMarketInstrumentList OUTPUT: ${result.toString()}');
       return {
         'input': inputParams,
         'output': result['success'] ? result['output'] : {'error': result['error'] ?? 'Unknown error'},
@@ -1023,9 +1020,9 @@ class RealGrpcClient {
         'success': result['success'] ?? false,
       };
     } catch (e) {
-      print('❌ Critical error in getOrderbook: $e');
+      print('❌ Critical error in getMarketInstrumentList: $e');
       return {
-        'input': {'market_id': marketId, 'instrument_id': instrumentId},
+        'input': {'market_id': marketId},
         'output': {'error': 'Critical error: $e'},
         'requestTime': _toUnixTimestamp(DateTime.now()).toString(),
         'serverType': 'critical-error',

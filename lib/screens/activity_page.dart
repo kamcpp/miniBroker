@@ -41,7 +41,7 @@ class _ActivityPageState extends State<ActivityPage> {
   bool _showOnlyFilled = false;
   bool _showOnlyCancelled = false;
   bool _showOnlyExpired = false;
-  int _pageSize = 50;
+  int? _pageSize = 50;
   int _pageNumber = 1;
   bool _showFilters = false;
 
@@ -51,7 +51,7 @@ class _ActivityPageState extends State<ActivityPage> {
   List<String> _tradeInstrumentFilters = [];
   DateTime? _tradeFromDate;
   DateTime? _tradeToDate;
-  int _tradePageSize = 50;
+  int? _tradePageSize = 50;
   int _tradePageNumber = 1;
   bool _showTradeFilters = false;
   
@@ -64,6 +64,12 @@ class _ActivityPageState extends State<ActivityPage> {
   String? _selectedTradesAsset;
   bool _isLoadingMarkets = false;
   bool _isLoadingAssets = false;
+  
+  // Temporary filter state (used before applying filters)
+  String? _tempSelectedOrdersMarket;
+  String? _tempSelectedOrdersAsset;
+  String? _tempSelectedTradesMarket;
+  String? _tempSelectedTradesAsset;
   
   // Text controllers for page number fields
   late TextEditingController _pageNumberController;
@@ -83,7 +89,7 @@ class _ActivityPageState extends State<ActivityPage> {
     
     // Load dropdown data
     _fetchMarketList();
-    _fetchAssetList();
+    // Asset list will be fetched when market is selected
   }
 
   @override
@@ -292,7 +298,12 @@ class _ActivityPageState extends State<ActivityPage> {
       print('📋 Fetching orders with account ID: $accountId');
 
       // Prepare filter parameters
-      final pagination = {'page_size': _pageSize, 'page_nr': _pageNumber};
+      final pagination = <String, dynamic>{
+        'page_nr': _pageNumber,
+      };
+      if (_pageSize != null) {
+        pagination['page_size'] = _pageSize!;
+      }
       final statusFilters = [_showOnlyFilled, _showOnlyCancelled, _showOnlyExpired];
       
       // Format date filters in the required timestamp format
@@ -328,10 +339,7 @@ class _ActivityPageState extends State<ActivityPage> {
         'to_time': toTimeFormatted,
         'side': _selectedSide,
         'status_filters': statusFilters,
-        'pagination': {
-          'page_size': _pageSize,
-          'page_nr': _pageNumber,
-        },
+        'pagination': pagination,
       };
 
       print('🔍 GetAccountOrders INPUT: ${jsonEncode(inputParams)}');
@@ -409,7 +417,12 @@ class _ActivityPageState extends State<ActivityPage> {
       print('📋 Fetching trades with account ID: $accountId');
 
       // Prepare filter parameters for trades
-      final tradePagination = {'page_size': _tradePageSize, 'page_nr': _tradePageNumber};
+      final tradePagination = <String, dynamic>{
+        'page_nr': _tradePageNumber,
+      };
+      if (_tradePageSize != null) {
+        tradePagination['page_size'] = _tradePageSize!;
+      }
       
       // Format date filters in the required timestamp format
       Map<String, dynamic>? fromTimeFormatted;
@@ -443,10 +456,7 @@ class _ActivityPageState extends State<ActivityPage> {
         'from_time': fromTimeFormatted,
         'to_time': toTimeFormatted,
         'side': _selectedTradeSide,
-        'pagination': {
-          'page_size': _tradePageSize,
-          'page_nr': _tradePageNumber,
-        },
+        'pagination': tradePagination,
       };
 
       print('🔍 GetAccountTrades REQUEST PARAMETERS:');
@@ -565,106 +575,101 @@ class _ActivityPageState extends State<ActivityPage> {
     }
   }
 
+  /// Apply filter changes and refresh data
+  void _applyFilters() {
+    setState(() {
+      // Apply temporary filter state to actual filter state
+      _selectedOrdersMarket = _tempSelectedOrdersMarket;
+      _selectedOrdersAsset = _tempSelectedOrdersAsset;
+      _selectedTradesMarket = _tempSelectedTradesMarket;
+      _selectedTradesAsset = _tempSelectedTradesAsset;
+    });
+    
+    // Refresh data with new filters
+    _fetchOrders();
+    _fetchTrades();
+  }
+
   /// Fetch asset list for dropdown filters using GetOrderbook
-  Future<void> _fetchAssetList() async {
+  Future<void> _fetchAssetList(String? marketId) async {
     if (_isLoadingAssets) return;
     
+    if (marketId == null || marketId.isEmpty) {
+      setState(() {
+        _availableAssets = [];
+      });
+      return;
+    }
+
     setState(() {
       _isLoadingAssets = true;
     });
     
     try {
-      print('📋 Fetching asset list for dropdown filters...');
+      print('📋 Fetching assets for market: $marketId...');
       
-      // First get a market to use for fetching assets
-      if (_availableMarkets.isEmpty) {
-        await _fetchMarketList();
-      }
+      final result = await realGrpcClient.getMarketInstrumentList(
+        marketId: marketId,
+      );
       
-      if (_availableMarkets.isNotEmpty) {
-        // Try to get orderbooks from different markets to find available instruments
-        Set<Map<String, dynamic>> allAssets = {};
-        
-        for (final market in _availableMarkets.take(2)) { // Try first 2 markets
-          try {
-            final marketId = (market['identifiers'] as List?)?.first ?? market['id'] ?? '';
-            print('📋 Trying to get orderbook for market: $marketId');
+      if (mounted) {
+        setState(() {
+          _isLoadingAssets = false;
+          if (result['success'] == true) {
+            final output = result['output'];
+            print('✅ GetMarketInstrumentList response for market $marketId: $output');
             
-            // Try common instrument IDs to discover available instruments
-            final commonInstruments = ['BTC', 'ETH', 'USD', 'USDT', 'ALL', '*'];
-            
-            for (final instrumentId in commonInstruments) {
-              try {
-                final response = await realGrpcClient.getOrderbook(
-                  marketId: marketId,
-                  instrumentId: instrumentId,
-                );
-                
-                if (response['success'] == true) {
-                  final output = response['output'] as Map<String, dynamic>;
-                  print('📋 GetOrderbook response for $marketId/$instrumentId: ${output.keys.toList()}');
-                  
-                  // Check various possible fields for instruments
-                  final possibleInstrumentFields = ['instruments', 'assets', 'symbols', 'orderbook'];
-                  for (final field in possibleInstrumentFields) {
-                    if (output.containsKey(field)) {
-                      final fieldData = output[field];
-                      if (fieldData is List) {
-                        for (final item in fieldData) {
-                          if (item is Map<String, dynamic>) {
-                            allAssets.add(item);
+            if (output is Map<String, dynamic>) {
+              // Extract instruments from the response based on actual server structure
+              final instruments = output['instruments'] ?? output['instrumentList'] ?? output['instrument_list'] ?? [];
+              if (instruments is List && instruments.isNotEmpty) {
+                // Process instruments to extract the symbol values from nested structure
+                final processedAssets = <Map<String, dynamic>>[];
+                for (final instrument in instruments) {
+                  if (instrument is Map<String, dynamic>) {
+                    // Navigate through the nested structure: instrument -> zonedSymbols -> symbols -> value
+                    final zonedSymbols = instrument['zonedSymbols'] ?? [];
+                    if (zonedSymbols is List && zonedSymbols.isNotEmpty) {
+                      for (final zonedSymbol in zonedSymbols) {
+                        if (zonedSymbol is Map<String, dynamic>) {
+                          final symbols = zonedSymbol['symbols'] ?? [];
+                          if (symbols is List && symbols.isNotEmpty) {
+                            for (final symbol in symbols) {
+                              if (symbol is Map<String, dynamic> && symbol.containsKey('value')) {
+                                final symbolValue = symbol['value'];
+                                processedAssets.add({
+                                  'id': symbolValue,
+                                  'symbol': symbolValue,
+                                  'instrument_id': symbolValue,
+                                  'description': instrument['description'] ?? symbolValue,
+                                });
+                              }
+                            }
                           }
-                        }
-                      } else if (fieldData is Map<String, dynamic>) {
-                        // Maybe the orderbook contains instrument info
-                        if (fieldData.containsKey('instrument') || fieldData.containsKey('symbol')) {
-                          allAssets.add({
-                            'id': instrumentId,
-                            'symbol': instrumentId,
-                            'instrument_id': instrumentId,
-                          });
                         }
                       }
                     }
                   }
-                  
-                  // If we found some assets, we can break early
-                  if (allAssets.isNotEmpty) {
-                    print('✅ Found ${allAssets.length} assets from $marketId/$instrumentId');
-                    break;
-                  }
                 }
-              } catch (e) {
-                // Continue trying other instruments
-                print('⚠️ Failed to get orderbook for $marketId/$instrumentId: $e');
+                
+                _availableAssets = processedAssets;
+                print('✅ Assets loaded for market $marketId: ${_availableAssets.length} assets found');
+                if (_availableAssets.isNotEmpty) {
+                  print('📋 Sample assets: ${_availableAssets.take(3).map((a) => a['symbol']).toList()}');
+                }
+              } else {
+                _availableAssets = [];
+                print('⚠️ No instruments found in market $marketId response');
               }
+            } else {
+              _availableAssets = [];
+              print('⚠️ Unexpected response format for market $marketId');
             }
-            
-            // If we found assets from this market, we can stop trying other markets
-            if (allAssets.isNotEmpty) break;
-          } catch (e) {
-            print('⚠️ Failed to process market ${market}: $e');
-          }
-        }
-        
-        if (mounted) {
-          setState(() {
-            _isLoadingAssets = false;
-            _availableAssets = allAssets.toList();
-            print('✅ Total assets loaded: ${_availableAssets.length}');
-            if (_availableAssets.isNotEmpty) {
-              print('📋 Sample assets: ${_availableAssets.take(3).toList()}');
-            }
-          });
-        }
-      } else {
-        if (mounted) {
-          setState(() {
-            _isLoadingAssets = false;
+          } else {
+            print('❌ GetMarketInstrumentList failed for market $marketId: ${result['output']}');
             _availableAssets = [];
-          });
-        }
-        print('❌ No markets available to fetch assets');
+          }
+        });
       }
     } catch (e) {
       print('❌ Exception fetching assets: $e');
@@ -768,24 +773,33 @@ class _ActivityPageState extends State<ActivityPage> {
                               'Side',
                               style: TextStyle(
                                 fontWeight: FontWeight.bold,
-                                color: isDarkTheme ? Colors.white : Colors.black,
+                                color: Colors.grey,
                               ),
                             ),
                             const SizedBox(height: 4),
-                            DropdownButton<String?>(
-                              value: _selectedSide,
-                              isExpanded: true,
-                              dropdownColor: isDarkTheme ? const Color(0xFF2a2a2a) : Colors.white,
-                              items: [
-                                DropdownMenuItem(value: null, child: Text('All', style: TextStyle(color: isDarkTheme ? Colors.white : Colors.black))),
-                                DropdownMenuItem(value: '1', child: Text('Buy', style: TextStyle(color: Colors.green))),
-                                DropdownMenuItem(value: '2', child: Text('Sell', style: TextStyle(color: Colors.red))),
-                              ],
-                              onChanged: (value) {
-                                setState(() {
-                                  _selectedSide = value;
-                                });
-                              },
+                            Container(
+                              height: 48,
+                              padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
+                              decoration: BoxDecoration(
+                                border: Border.all(color: isDarkTheme ? Colors.grey[600]! : Colors.grey[400]!),
+                                borderRadius: BorderRadius.circular(4),
+                              ),
+                              child: DropdownButton<String?>(
+                                value: _selectedSide,
+                                isExpanded: true,
+                                underline: SizedBox.shrink(),
+                                dropdownColor: isDarkTheme ? const Color(0xFF2a2a2a) : Colors.white,
+                                items: [
+                                  DropdownMenuItem(value: null, child: Text('All', style: TextStyle(color: isDarkTheme ? Colors.white : Colors.black))),
+                                  DropdownMenuItem(value: '1', child: Text('Buy', style: TextStyle(color: Colors.green))),
+                                  DropdownMenuItem(value: '2', child: Text('Sell', style: TextStyle(color: Colors.red))),
+                                ],
+                                onChanged: (value) {
+                                  setState(() {
+                                    _selectedSide = value;
+                                  });
+                                },
+                              ),
                             ),
                           ],
                         ),
@@ -800,27 +814,40 @@ class _ActivityPageState extends State<ActivityPage> {
                               'Page Size',
                               style: TextStyle(
                                 fontWeight: FontWeight.bold,
-                                color: isDarkTheme ? Colors.white : Colors.black,
+                                color: Colors.grey,
                               ),
                             ),
                             const SizedBox(height: 4),
-                            DropdownButton<int>(
-                              value: _pageSize,
-                              isExpanded: true,
-                              dropdownColor: isDarkTheme ? const Color(0xFF2a2a2a) : Colors.white,
-                              items: [10, 25, 50, 100].map((size) => 
-                                DropdownMenuItem(
-                                  value: size, 
-                                  child: Text('$size', style: TextStyle(color: isDarkTheme ? Colors.white : Colors.black))
-                                )
-                              ).toList(),
-                              onChanged: (value) {
-                                if (value != null) {
+                            Container(
+                              height: 48,
+                              padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
+                              decoration: BoxDecoration(
+                                border: Border.all(color: isDarkTheme ? Colors.grey[600]! : Colors.grey[400]!),
+                                borderRadius: BorderRadius.circular(4),
+                              ),
+                              child: DropdownButton<int?>(
+                                value: _pageSize,
+                                isExpanded: true,
+                                underline: SizedBox.shrink(),
+                                dropdownColor: isDarkTheme ? const Color(0xFF2a2a2a) : Colors.white,
+                                items: [
+                                  DropdownMenuItem(
+                                    value: null, 
+                                    child: Text('All', style: TextStyle(color: isDarkTheme ? Colors.white : Colors.black))
+                                  ),
+                                  ...[10, 25, 50, 100].map((size) => 
+                                    DropdownMenuItem(
+                                      value: size, 
+                                      child: Text('$size', style: TextStyle(color: isDarkTheme ? Colors.white : Colors.black))
+                                    )
+                                  ).toList(),
+                                ],
+                                onChanged: (value) {
                                   setState(() {
                                     _pageSize = value;
                                   });
-                                }
-                              },
+                                },
+                              ),
                             ),
                           ],
                         ),
@@ -835,7 +862,7 @@ class _ActivityPageState extends State<ActivityPage> {
                               'Page Number',
                               style: TextStyle(
                                 fontWeight: FontWeight.bold,
-                                color: isDarkTheme ? Colors.white : Colors.black,
+                                color: Colors.grey,
                               ),
                             ),
                             const SizedBox(height: 4),
@@ -920,33 +947,48 @@ class _ActivityPageState extends State<ActivityPage> {
                               'Market',
                               style: TextStyle(
                                 fontWeight: FontWeight.bold,
-                                color: isDarkTheme ? Colors.white : Colors.black,
+                                color: Colors.grey,
                               ),
                             ),
                             const SizedBox(height: 4),
-                            DropdownButton<String?>(
-                              value: _selectedOrdersMarket,
-                              isExpanded: true,
-                              dropdownColor: isDarkTheme ? const Color(0xFF2a2a2a) : Colors.white,
-                              items: [
-                                DropdownMenuItem(value: null, child: Text('All Markets', style: TextStyle(color: isDarkTheme ? Colors.white : Colors.black))),
-                                ..._availableMarkets.map<DropdownMenuItem<String?>>((market) => 
-                                  DropdownMenuItem<String?>(
-                                    value: (market['identifiers'] as List?)?.first ?? market['id'] ?? '',
-                                    child: Text(
-                                      (market['names'] as List?)?.first ?? market['name'] ?? 'Unknown',
-                                      style: TextStyle(color: isDarkTheme ? Colors.white : Colors.black)
+                            Container(
+                              height: 48,
+                              padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
+                              decoration: BoxDecoration(
+                                border: Border.all(color: isDarkTheme ? Colors.grey[600]! : Colors.grey[400]!),
+                                borderRadius: BorderRadius.circular(4),
+                              ),
+                              child: DropdownButton<String?>(
+                                value: _tempSelectedOrdersMarket ?? _selectedOrdersMarket,
+                                isExpanded: true,
+                                underline: SizedBox.shrink(),
+                                dropdownColor: isDarkTheme ? const Color(0xFF2a2a2a) : Colors.white,
+                                items: [
+                                  DropdownMenuItem(value: null, child: Text('All Markets', style: TextStyle(color: isDarkTheme ? Colors.white : Colors.black))),
+                                  ..._availableMarkets.map<DropdownMenuItem<String?>>((market) => 
+                                    DropdownMenuItem<String?>(
+                                      value: (market['identifiers'] as List?)?.first ?? market['id'] ?? '',
+                                      child: Text(
+                                        (market['names'] as List?)?.first ?? market['name'] ?? 'Unknown',
+                                        style: TextStyle(color: isDarkTheme ? Colors.white : Colors.black)
+                                      )
                                     )
-                                  )
-                                ).toList(),
-                              ],
-                              onChanged: (value) {
-                                setState(() {
-                                  _selectedOrdersMarket = value;
-                                });
-                                // Refresh orders data when filter changes
-                                _fetchOrders();
-                              },
+                                  ).toList(),
+                                ],
+                                onChanged: (value) {
+                                  setState(() {
+                                    _tempSelectedOrdersMarket = value;
+                                    // Reset asset selection when market changes
+                                    _tempSelectedOrdersAsset = null;
+                                  });
+                                  // Fetch assets for the selected market
+                                  if (value != null) {
+                                    _fetchAssetList(value);
+                                  } else {
+                                    _availableAssets = [];
+                                  }
+                                },
+                              ),
                             ),
                           ],
                         ),
@@ -961,33 +1003,42 @@ class _ActivityPageState extends State<ActivityPage> {
                               'Asset',
                               style: TextStyle(
                                 fontWeight: FontWeight.bold,
-                                color: isDarkTheme ? Colors.white : Colors.black,
+                                color: Colors.grey,
                               ),
                             ),
                             const SizedBox(height: 4),
-                            DropdownButton<String?>(
-                              value: _selectedOrdersAsset,
-                              isExpanded: true,
-                              dropdownColor: isDarkTheme ? const Color(0xFF2a2a2a) : Colors.white,
-                              items: [
-                                DropdownMenuItem(value: null, child: Text('All Assets', style: TextStyle(color: isDarkTheme ? Colors.white : Colors.black))),
-                                ..._availableAssets.map<DropdownMenuItem<String?>>((asset) => 
-                                  DropdownMenuItem<String?>(
-                                    value: asset['id'] ?? asset['symbol'] ?? asset['instrument_id'] ?? '',
-                                    child: Text(
-                                      asset['symbol'] ?? asset['id'] ?? asset['instrument_id'] ?? 'Unknown',
-                                      style: TextStyle(color: isDarkTheme ? Colors.white : Colors.black)
+                            Container(
+                              height: 48,
+                              padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
+                              decoration: BoxDecoration(
+                                border: Border.all(color: isDarkTheme ? Colors.grey[600]! : Colors.grey[400]!),
+                                borderRadius: BorderRadius.circular(4),
+                              ),
+                              child: DropdownButton<String?>(
+                                value: _tempSelectedOrdersAsset ?? _selectedOrdersAsset,
+                                isExpanded: true,
+                                underline: SizedBox.shrink(),
+                                dropdownColor: isDarkTheme ? const Color(0xFF2a2a2a) : Colors.white,
+                                items: (_tempSelectedOrdersMarket ?? _selectedOrdersMarket) == null ? [
+                                  DropdownMenuItem(value: null, child: Text('Select Market First', style: TextStyle(color: isDarkTheme ? Colors.grey : Colors.grey)))
+                                ] : [
+                                  DropdownMenuItem(value: null, child: Text('All Assets', style: TextStyle(color: isDarkTheme ? Colors.white : Colors.black))),
+                                  ..._availableAssets.map<DropdownMenuItem<String?>>((asset) => 
+                                    DropdownMenuItem<String?>(
+                                      value: asset['id'] ?? asset['symbol'] ?? asset['instrument_id'] ?? '',
+                                      child: Text(
+                                        asset['symbol'] ?? asset['id'] ?? asset['instrument_id'] ?? 'Unknown',
+                                        style: TextStyle(color: isDarkTheme ? Colors.white : Colors.black)
+                                      )
                                     )
-                                  )
-                                ).toList(),
-                              ],
-                              onChanged: (value) {
-                                setState(() {
-                                  _selectedOrdersAsset = value;
-                                });
-                                // Refresh orders data when filter changes
-                                _fetchOrders();
-                              },
+                                  ).toList(),
+                                ],
+                                onChanged: (_tempSelectedOrdersMarket ?? _selectedOrdersMarket) == null ? null : (value) {
+                                  setState(() {
+                                    _tempSelectedOrdersAsset = value;
+                                  });
+                                },
+                              ),
                             ),
                           ],
                         ),
@@ -1003,7 +1054,7 @@ class _ActivityPageState extends State<ActivityPage> {
                     'Status Filters',
                     style: TextStyle(
                       fontWeight: FontWeight.bold,
-                      color: isDarkTheme ? Colors.white : Colors.black,
+                      color: Colors.grey,
                     ),
                   ),
                   const SizedBox(height: 8),
@@ -1063,7 +1114,7 @@ class _ActivityPageState extends State<ActivityPage> {
                               'From Time',
                               style: TextStyle(
                                 fontWeight: FontWeight.bold,
-                                color: isDarkTheme ? Colors.white : Colors.black,
+                                color: Colors.grey,
                               ),
                             ),
                             const SizedBox(height: 4),
@@ -1125,7 +1176,7 @@ class _ActivityPageState extends State<ActivityPage> {
                               'To Time',
                               style: TextStyle(
                                 fontWeight: FontWeight.bold,
-                                color: isDarkTheme ? Colors.white : Colors.black,
+                                color: Colors.grey,
                               ),
                             ),
                             const SizedBox(height: 4),
@@ -1180,7 +1231,7 @@ class _ActivityPageState extends State<ActivityPage> {
                   Center(
                     child: ElevatedButton.icon(
                       onPressed: () {
-                        _fetchOrders(); // Refresh orders with current filters
+                        _applyFilters(); // Apply filter changes and refresh orders
                       },
                       icon: const Icon(Icons.refresh),
                       label: const Text('Apply Filters'),
@@ -1475,24 +1526,33 @@ class _ActivityPageState extends State<ActivityPage> {
                               'Side',
                               style: TextStyle(
                                 fontWeight: FontWeight.bold,
-                                color: isDarkTheme ? Colors.white : Colors.black,
+                                color: Colors.grey,
                               ),
                             ),
                             const SizedBox(height: 4),
-                            DropdownButton<String?>(
-                              value: _selectedTradeSide,
-                              isExpanded: true,
-                              dropdownColor: isDarkTheme ? const Color(0xFF2a2a2a) : Colors.white,
-                              items: [
-                                DropdownMenuItem(value: null, child: Text('All', style: TextStyle(color: isDarkTheme ? Colors.white : Colors.black))),
-                                DropdownMenuItem(value: '1', child: Text('Buy', style: TextStyle(color: Colors.green))),
-                                DropdownMenuItem(value: '2', child: Text('Sell', style: TextStyle(color: Colors.red))),
-                              ],
-                              onChanged: (value) {
-                                setState(() {
-                                  _selectedTradeSide = value;
-                                });
-                              },
+                            Container(
+                              height: 48,
+                              padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
+                              decoration: BoxDecoration(
+                                border: Border.all(color: isDarkTheme ? Colors.grey[600]! : Colors.grey[400]!),
+                                borderRadius: BorderRadius.circular(4),
+                              ),
+                              child: DropdownButton<String?>(
+                                value: _selectedTradeSide,
+                                isExpanded: true,
+                                underline: SizedBox.shrink(),
+                                dropdownColor: isDarkTheme ? const Color(0xFF2a2a2a) : Colors.white,
+                                items: [
+                                  DropdownMenuItem(value: null, child: Text('All', style: TextStyle(color: isDarkTheme ? Colors.white : Colors.black))),
+                                  DropdownMenuItem(value: '1', child: Text('Buy', style: TextStyle(color: Colors.green))),
+                                  DropdownMenuItem(value: '2', child: Text('Sell', style: TextStyle(color: Colors.red))),
+                                ],
+                                onChanged: (value) {
+                                  setState(() {
+                                    _selectedTradeSide = value;
+                                  });
+                                },
+                              ),
                             ),
                           ],
                         ),
@@ -1507,27 +1567,40 @@ class _ActivityPageState extends State<ActivityPage> {
                               'Page Size',
                               style: TextStyle(
                                 fontWeight: FontWeight.bold,
-                                color: isDarkTheme ? Colors.white : Colors.black,
+                                color: Colors.grey,
                               ),
                             ),
                             const SizedBox(height: 4),
-                            DropdownButton<int>(
-                              value: _tradePageSize,
-                              isExpanded: true,
-                              dropdownColor: isDarkTheme ? const Color(0xFF2a2a2a) : Colors.white,
-                              items: [10, 25, 50, 100].map((size) => 
-                                DropdownMenuItem(
-                                  value: size, 
-                                  child: Text('$size', style: TextStyle(color: isDarkTheme ? Colors.white : Colors.black))
-                                )
-                              ).toList(),
-                              onChanged: (value) {
-                                if (value != null) {
+                            Container(
+                              height: 48,
+                              padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
+                              decoration: BoxDecoration(
+                                border: Border.all(color: isDarkTheme ? Colors.grey[600]! : Colors.grey[400]!),
+                                borderRadius: BorderRadius.circular(4),
+                              ),
+                              child: DropdownButton<int?>(
+                                value: _tradePageSize,
+                                isExpanded: true,
+                                underline: SizedBox.shrink(),
+                                dropdownColor: isDarkTheme ? const Color(0xFF2a2a2a) : Colors.white,
+                                items: [
+                                  DropdownMenuItem(
+                                    value: null, 
+                                    child: Text('All', style: TextStyle(color: isDarkTheme ? Colors.white : Colors.black))
+                                  ),
+                                  ...[10, 25, 50, 100].map((size) => 
+                                    DropdownMenuItem(
+                                      value: size, 
+                                      child: Text('$size', style: TextStyle(color: isDarkTheme ? Colors.white : Colors.black))
+                                    )
+                                  ).toList(),
+                                ],
+                                onChanged: (value) {
                                   setState(() {
                                     _tradePageSize = value;
                                   });
-                                }
-                              },
+                                },
+                              ),
                             ),
                           ],
                         ),
@@ -1542,7 +1615,7 @@ class _ActivityPageState extends State<ActivityPage> {
                               'Page Number',
                               style: TextStyle(
                                 fontWeight: FontWeight.bold,
-                                color: isDarkTheme ? Colors.white : Colors.black,
+                                color: Colors.grey,
                               ),
                             ),
                             const SizedBox(height: 4),
@@ -1627,33 +1700,48 @@ class _ActivityPageState extends State<ActivityPage> {
                               'Market',
                               style: TextStyle(
                                 fontWeight: FontWeight.bold,
-                                color: isDarkTheme ? Colors.white : Colors.black,
+                                color: Colors.grey,
                               ),
                             ),
                             const SizedBox(height: 4),
-                            DropdownButton<String?>(
-                              value: _selectedTradesMarket,
-                              isExpanded: true,
-                              dropdownColor: isDarkTheme ? const Color(0xFF2a2a2a) : Colors.white,
-                              items: [
-                                DropdownMenuItem(value: null, child: Text('All Markets', style: TextStyle(color: isDarkTheme ? Colors.white : Colors.black))),
-                                ..._availableMarkets.map<DropdownMenuItem<String?>>((market) => 
-                                  DropdownMenuItem<String?>(
-                                    value: (market['identifiers'] as List?)?.first ?? market['id'] ?? '',
-                                    child: Text(
-                                      (market['names'] as List?)?.first ?? market['name'] ?? 'Unknown',
-                                      style: TextStyle(color: isDarkTheme ? Colors.white : Colors.black)
+                            Container(
+                              height: 48,
+                              padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
+                              decoration: BoxDecoration(
+                                border: Border.all(color: isDarkTheme ? Colors.grey[600]! : Colors.grey[400]!),
+                                borderRadius: BorderRadius.circular(4),
+                              ),
+                              child: DropdownButton<String?>(
+                                value: _tempSelectedTradesMarket ?? _selectedTradesMarket,
+                                isExpanded: true,
+                                underline: SizedBox.shrink(),
+                                dropdownColor: isDarkTheme ? const Color(0xFF2a2a2a) : Colors.white,
+                                items: [
+                                  DropdownMenuItem(value: null, child: Text('All Markets', style: TextStyle(color: isDarkTheme ? Colors.white : Colors.black))),
+                                  ..._availableMarkets.map<DropdownMenuItem<String?>>((market) => 
+                                    DropdownMenuItem<String?>(
+                                      value: (market['identifiers'] as List?)?.first ?? market['id'] ?? '',
+                                      child: Text(
+                                        (market['names'] as List?)?.first ?? market['name'] ?? 'Unknown',
+                                        style: TextStyle(color: isDarkTheme ? Colors.white : Colors.black)
+                                      )
                                     )
-                                  )
-                                ).toList(),
-                              ],
-                              onChanged: (value) {
-                                setState(() {
-                                  _selectedTradesMarket = value;
-                                });
-                                // Refresh trades data when filter changes
-                                _fetchTrades();
-                              },
+                                  ).toList(),
+                                ],
+                                onChanged: (value) {
+                                  setState(() {
+                                    _tempSelectedTradesMarket = value;
+                                    // Reset asset selection when market changes
+                                    _tempSelectedTradesAsset = null;
+                                  });
+                                  // Fetch assets for the selected market
+                                  if (value != null) {
+                                    _fetchAssetList(value);
+                                  } else {
+                                    _availableAssets = [];
+                                  }
+                                },
+                              ),
                             ),
                           ],
                         ),
@@ -1668,33 +1756,42 @@ class _ActivityPageState extends State<ActivityPage> {
                               'Asset',
                               style: TextStyle(
                                 fontWeight: FontWeight.bold,
-                                color: isDarkTheme ? Colors.white : Colors.black,
+                                color: Colors.grey,
                               ),
                             ),
                             const SizedBox(height: 4),
-                            DropdownButton<String?>(
-                              value: _selectedTradesAsset,
-                              isExpanded: true,
-                              dropdownColor: isDarkTheme ? const Color(0xFF2a2a2a) : Colors.white,
-                              items: [
-                                DropdownMenuItem(value: null, child: Text('All Assets', style: TextStyle(color: isDarkTheme ? Colors.white : Colors.black))),
-                                ..._availableAssets.map<DropdownMenuItem<String?>>((asset) => 
-                                  DropdownMenuItem<String?>(
-                                    value: asset['id'] ?? asset['symbol'] ?? asset['instrument_id'] ?? '',
-                                    child: Text(
-                                      asset['symbol'] ?? asset['id'] ?? asset['instrument_id'] ?? 'Unknown',
-                                      style: TextStyle(color: isDarkTheme ? Colors.white : Colors.black)
+                            Container(
+                              height: 48,
+                              padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
+                              decoration: BoxDecoration(
+                                border: Border.all(color: isDarkTheme ? Colors.grey[600]! : Colors.grey[400]!),
+                                borderRadius: BorderRadius.circular(4),
+                              ),
+                              child: DropdownButton<String?>(
+                                value: _tempSelectedTradesAsset ?? _selectedTradesAsset,
+                                isExpanded: true,
+                                underline: SizedBox.shrink(),
+                                dropdownColor: isDarkTheme ? const Color(0xFF2a2a2a) : Colors.white,
+                                items: (_tempSelectedTradesMarket ?? _selectedTradesMarket) == null ? [
+                                  DropdownMenuItem(value: null, child: Text('Select Market First', style: TextStyle(color: isDarkTheme ? Colors.grey : Colors.grey)))
+                                ] : [
+                                  DropdownMenuItem(value: null, child: Text('All Assets', style: TextStyle(color: isDarkTheme ? Colors.white : Colors.black))),
+                                  ..._availableAssets.map<DropdownMenuItem<String?>>((asset) => 
+                                    DropdownMenuItem<String?>(
+                                      value: asset['id'] ?? asset['symbol'] ?? asset['instrument_id'] ?? '',
+                                      child: Text(
+                                        asset['symbol'] ?? asset['id'] ?? asset['instrument_id'] ?? 'Unknown',
+                                        style: TextStyle(color: isDarkTheme ? Colors.white : Colors.black)
+                                      )
                                     )
-                                  )
-                                ).toList(),
-                              ],
-                              onChanged: (value) {
-                                setState(() {
-                                  _selectedTradesAsset = value;
-                                });
-                                // Refresh trades data when filter changes
-                                _fetchTrades();
-                              },
+                                  ).toList(),
+                                ],
+                                onChanged: (_tempSelectedTradesMarket ?? _selectedTradesMarket) == null ? null : (value) {
+                                  setState(() {
+                                    _tempSelectedTradesAsset = value;
+                                  });
+                                },
+                              ),
                             ),
                           ],
                         ),
@@ -1717,7 +1814,7 @@ class _ActivityPageState extends State<ActivityPage> {
                               'From Time',
                               style: TextStyle(
                                 fontWeight: FontWeight.bold,
-                                color: isDarkTheme ? Colors.white : Colors.black,
+                                color: Colors.grey,
                               ),
                             ),
                             const SizedBox(height: 4),
@@ -1779,7 +1876,7 @@ class _ActivityPageState extends State<ActivityPage> {
                               'To Time',
                               style: TextStyle(
                                 fontWeight: FontWeight.bold,
-                                color: isDarkTheme ? Colors.white : Colors.black,
+                                color: Colors.grey,
                               ),
                             ),
                             const SizedBox(height: 4),
@@ -1834,7 +1931,7 @@ class _ActivityPageState extends State<ActivityPage> {
                   Center(
                     child: ElevatedButton.icon(
                       onPressed: () {
-                        _fetchTrades(); // Refresh trades with current filters
+                        _applyFilters(); // Apply filter changes and refresh trades
                       },
                       icon: const Icon(Icons.refresh),
                       label: const Text('Apply Trade Filters'),
