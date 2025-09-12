@@ -42,6 +42,7 @@ class _ActivityPageState extends State<ActivityPage> {
   bool _showOnlyCancelled = false;
   bool _showOnlyExpired = false;
   int _pageSize = 50;
+  int _pageNumber = 1;
   bool _showFilters = false;
 
   // Filter state for trades (similar to orders but without status filters)
@@ -51,6 +52,7 @@ class _ActivityPageState extends State<ActivityPage> {
   DateTime? _tradeFromDate;
   DateTime? _tradeToDate;
   int _tradePageSize = 50;
+  int _tradePageNumber = 1;
   bool _showTradeFilters = false;
   
   @override
@@ -260,7 +262,7 @@ class _ActivityPageState extends State<ActivityPage> {
       print('📋 Fetching orders with account ID: $accountId');
 
       // Prepare filter parameters
-      final pagination = {'page_size': _pageSize, 'page_nr': 1};
+      final pagination = {'page_size': _pageSize, 'page_nr': _pageNumber};
       final statusFilters = [_showOnlyFilled, _showOnlyCancelled, _showOnlyExpired];
       
       // Format date filters in the required timestamp format
@@ -292,7 +294,7 @@ class _ActivityPageState extends State<ActivityPage> {
         'status_filters': statusFilters,
         'pagination': {
           'page_size': _pageSize,
-          'page_nr': 1,
+          'page_nr': _pageNumber,
         },
       };
 
@@ -371,7 +373,7 @@ class _ActivityPageState extends State<ActivityPage> {
       print('📋 Fetching trades with account ID: $accountId');
 
       // Prepare filter parameters for trades
-      final tradePagination = {'page_size': _tradePageSize, 'page_nr': 1};
+      final tradePagination = {'page_size': _tradePageSize, 'page_nr': _tradePageNumber};
       
       // Format date filters in the required timestamp format
       Map<String, dynamic>? fromTimeFormatted;
@@ -401,7 +403,7 @@ class _ActivityPageState extends State<ActivityPage> {
         'side': _selectedTradeSide,
         'pagination': {
           'page_size': _tradePageSize,
-          'page_nr': 1,
+          'page_nr': _tradePageNumber,
         },
       };
 
@@ -625,6 +627,84 @@ class _ActivityPageState extends State<ActivityPage> {
                                   });
                                 }
                               },
+                            ),
+                          ],
+                        ),
+                      ),
+                      const SizedBox(width: 16),
+                      // Page number filter
+                      Expanded(
+                        child: Column(
+                          crossAxisAlignment: CrossAxisAlignment.start,
+                          children: [
+                            Text(
+                              'Page Number',
+                              style: TextStyle(
+                                fontWeight: FontWeight.bold,
+                                color: isDarkTheme ? Colors.white : Colors.black,
+                              ),
+                            ),
+                            const SizedBox(height: 4),
+                            Row(
+                              children: [
+                                Expanded(
+                                  child: Container(
+                                    padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
+                                    decoration: BoxDecoration(
+                                      border: Border.all(color: isDarkTheme ? Colors.grey[600]! : Colors.grey[400]!),
+                                      borderRadius: BorderRadius.circular(4),
+                                    ),
+                                    child: TextFormField(
+                                      initialValue: _pageNumber.toString(),
+                                      keyboardType: TextInputType.number,
+                                      style: TextStyle(
+                                        color: isDarkTheme ? Colors.white : Colors.black,
+                                        fontSize: 14,
+                                      ),
+                                      decoration: const InputDecoration(
+                                        border: InputBorder.none,
+                                        isDense: true,
+                                        contentPadding: EdgeInsets.zero,
+                                      ),
+                                      onChanged: (value) {
+                                        final pageNum = int.tryParse(value);
+                                        if (pageNum != null && pageNum > 0) {
+                                          setState(() {
+                                            _pageNumber = pageNum;
+                                          });
+                                        }
+                                      },
+                                    ),
+                                  ),
+                                ),
+                                const SizedBox(width: 8),
+                                IconButton(
+                                  onPressed: _pageNumber > 1 ? () {
+                                    setState(() {
+                                      _pageNumber = _pageNumber - 1;
+                                    });
+                                  } : null,
+                                  icon: Icon(
+                                    Icons.keyboard_arrow_left,
+                                    color: _pageNumber > 1 
+                                        ? (isDarkTheme ? Colors.white : Colors.black)
+                                        : Colors.grey,
+                                  ),
+                                  iconSize: 20,
+                                ),
+                                IconButton(
+                                  onPressed: () {
+                                    setState(() {
+                                      _pageNumber = _pageNumber + 1;
+                                    });
+                                  },
+                                  icon: Icon(
+                                    Icons.keyboard_arrow_right,
+                                    color: isDarkTheme ? Colors.white : Colors.black,
+                                  ),
+                                  iconSize: 20,
+                                ),
+                              ],
                             ),
                           ],
                         ),
@@ -1209,6 +1289,84 @@ class _ActivityPageState extends State<ActivityPage> {
                                   });
                                 }
                               },
+                            ),
+                          ],
+                        ),
+                      ),
+                      const SizedBox(width: 16),
+                      // Page number filter
+                      Expanded(
+                        child: Column(
+                          crossAxisAlignment: CrossAxisAlignment.start,
+                          children: [
+                            Text(
+                              'Page Number',
+                              style: TextStyle(
+                                fontWeight: FontWeight.bold,
+                                color: isDarkTheme ? Colors.white : Colors.black,
+                              ),
+                            ),
+                            const SizedBox(height: 4),
+                            Row(
+                              children: [
+                                Expanded(
+                                  child: Container(
+                                    padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
+                                    decoration: BoxDecoration(
+                                      border: Border.all(color: isDarkTheme ? Colors.grey[600]! : Colors.grey[400]!),
+                                      borderRadius: BorderRadius.circular(4),
+                                    ),
+                                    child: TextFormField(
+                                      initialValue: _tradePageNumber.toString(),
+                                      keyboardType: TextInputType.number,
+                                      style: TextStyle(
+                                        color: isDarkTheme ? Colors.white : Colors.black,
+                                        fontSize: 14,
+                                      ),
+                                      decoration: const InputDecoration(
+                                        border: InputBorder.none,
+                                        isDense: true,
+                                        contentPadding: EdgeInsets.zero,
+                                      ),
+                                      onChanged: (value) {
+                                        final pageNum = int.tryParse(value);
+                                        if (pageNum != null && pageNum > 0) {
+                                          setState(() {
+                                            _tradePageNumber = pageNum;
+                                          });
+                                        }
+                                      },
+                                    ),
+                                  ),
+                                ),
+                                const SizedBox(width: 8),
+                                IconButton(
+                                  onPressed: _tradePageNumber > 1 ? () {
+                                    setState(() {
+                                      _tradePageNumber = _tradePageNumber - 1;
+                                    });
+                                  } : null,
+                                  icon: Icon(
+                                    Icons.keyboard_arrow_left,
+                                    color: _tradePageNumber > 1 
+                                        ? (isDarkTheme ? Colors.white : Colors.black)
+                                        : Colors.grey,
+                                  ),
+                                  iconSize: 20,
+                                ),
+                                IconButton(
+                                  onPressed: () {
+                                    setState(() {
+                                      _tradePageNumber = _tradePageNumber + 1;
+                                    });
+                                  },
+                                  icon: Icon(
+                                    Icons.keyboard_arrow_right,
+                                    color: isDarkTheme ? Colors.white : Colors.black,
+                                  ),
+                                  iconSize: 20,
+                                ),
+                              ],
                             ),
                           ],
                         ),
