@@ -2564,13 +2564,13 @@ class _TradingPageState extends State<TradingPage> {
   // Helper method to get selected asset symbol
   String _getSelectedAssetSymbol() {
     if (_assets.isEmpty || _selectedSymbol.isEmpty) {
-      return 'AC1'; // Default fallback
+      return ''; // Default fallback
     }
     
     // Extract the base symbol from the trading pair
     // For example: "BTC-USD" -> "BTC", "ETH-USD" -> "ETH"
     final parts = _selectedSymbol.split('-');
-    return parts.isNotEmpty ? parts[0] : 'AC1';
+    return parts.isNotEmpty ? parts[0] : '';
   }
   
   // Helper method to calculate order total

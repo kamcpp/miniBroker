@@ -55,12 +55,28 @@ class _ActivityPageState extends State<ActivityPage> {
   int _tradePageNumber = 1;
   bool _showTradeFilters = false;
   
+  // Text controllers for page number fields
+  late TextEditingController _pageNumberController;
+  late TextEditingController _tradePageNumberController;
+  
   @override
   void initState() {
     super.initState();
     print('🏁 ActivityPage initState() called - initializing activity data fetch');
+    
+    // Initialize text controllers
+    _pageNumberController = TextEditingController(text: _pageNumber.toString());
+    _tradePageNumberController = TextEditingController(text: _tradePageNumber.toString());
+    
     // Fetch both orders and trades when page loads
     _fetchActivityData();
+  }
+
+  @override
+  void dispose() {
+    _pageNumberController.dispose();
+    _tradePageNumberController.dispose();
+    super.dispose();
   }
 
   /// Show date and time picker combined
@@ -655,7 +671,7 @@ class _ActivityPageState extends State<ActivityPage> {
                                       borderRadius: BorderRadius.circular(4),
                                     ),
                                     child: TextFormField(
-                                      initialValue: _pageNumber.toString(),
+                                      controller: _pageNumberController,
                                       keyboardType: TextInputType.number,
                                       style: TextStyle(
                                         color: isDarkTheme ? Colors.white : Colors.black,
@@ -682,6 +698,7 @@ class _ActivityPageState extends State<ActivityPage> {
                                   onPressed: _pageNumber > 1 ? () {
                                     setState(() {
                                       _pageNumber = _pageNumber - 1;
+                                      _pageNumberController.text = _pageNumber.toString();
                                     });
                                   } : null,
                                   icon: Icon(
@@ -696,6 +713,7 @@ class _ActivityPageState extends State<ActivityPage> {
                                   onPressed: () {
                                     setState(() {
                                       _pageNumber = _pageNumber + 1;
+                                      _pageNumberController.text = _pageNumber.toString();
                                     });
                                   },
                                   icon: Icon(
@@ -1317,7 +1335,7 @@ class _ActivityPageState extends State<ActivityPage> {
                                       borderRadius: BorderRadius.circular(4),
                                     ),
                                     child: TextFormField(
-                                      initialValue: _tradePageNumber.toString(),
+                                      controller: _tradePageNumberController,
                                       keyboardType: TextInputType.number,
                                       style: TextStyle(
                                         color: isDarkTheme ? Colors.white : Colors.black,
@@ -1344,6 +1362,7 @@ class _ActivityPageState extends State<ActivityPage> {
                                   onPressed: _tradePageNumber > 1 ? () {
                                     setState(() {
                                       _tradePageNumber = _tradePageNumber - 1;
+                                      _tradePageNumberController.text = _tradePageNumber.toString();
                                     });
                                   } : null,
                                   icon: Icon(
@@ -1358,6 +1377,7 @@ class _ActivityPageState extends State<ActivityPage> {
                                   onPressed: () {
                                     setState(() {
                                       _tradePageNumber = _tradePageNumber + 1;
+                                      _tradePageNumberController.text = _tradePageNumber.toString();
                                     });
                                   },
                                   icon: Icon(
