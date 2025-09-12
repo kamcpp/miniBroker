@@ -61,6 +61,63 @@ class _ActivityPageState extends State<ActivityPage> {
     _fetchActivityData();
   }
 
+  /// Show date and time picker combined
+  Future<DateTime?> _showDateTimePicker(BuildContext context, {
+    DateTime? initialDateTime,
+    DateTime? firstDate,
+    DateTime? lastDate,
+    String title = 'Select Date & Time',
+  }) async {
+    final theme = Theme.of(context);
+    final isDarkTheme = theme.brightness == Brightness.dark;
+    
+    // First show date picker
+    final DateTime? pickedDate = await showDatePicker(
+      context: context,
+      initialDate: initialDateTime ?? DateTime.now(),
+      firstDate: firstDate ?? DateTime(2020),
+      lastDate: lastDate ?? DateTime.now(),
+      builder: (context, child) {
+        return Theme(
+          data: isDarkTheme ? ThemeData.dark() : ThemeData.light(),
+          child: child!,
+        );
+      },
+    );
+    
+    if (pickedDate == null) return null;
+    
+    // Then show time picker
+    final TimeOfDay? pickedTime = await showTimePicker(
+      context: context,
+      initialTime: TimeOfDay.fromDateTime(initialDateTime ?? DateTime.now()),
+      builder: (context, child) {
+        return Theme(
+          data: isDarkTheme ? ThemeData.dark() : ThemeData.light(),
+          child: child!,
+        );
+      },
+    );
+    
+    if (pickedTime == null) return pickedDate;
+    
+    // Combine date and time
+    return DateTime(
+      pickedDate.year,
+      pickedDate.month,
+      pickedDate.day,
+      pickedTime.hour,
+      pickedTime.minute,
+    );
+  }
+
+  /// Format DateTime for display with date and time
+  String _formatDateTime(DateTime? dateTime) {
+    if (dateTime == null) return 'Select date & time';
+    return '${dateTime.year}-${dateTime.month.toString().padLeft(2, '0')}-${dateTime.day.toString().padLeft(2, '0')} '
+           '${dateTime.hour.toString().padLeft(2, '0')}:${dateTime.minute.toString().padLeft(2, '0')}';
+  }
+
   /// Fetch both orders and trades data
   Future<void> _fetchActivityData() async {
     print('🚀 _fetchActivityData() called - starting parallel fetch of orders and trades');
@@ -206,13 +263,31 @@ class _ActivityPageState extends State<ActivityPage> {
       final pagination = {'page_size': _pageSize, 'page_nr': 1};
       final statusFilters = [_showOnlyFilled, _showOnlyCancelled, _showOnlyExpired];
       
+      // Format date filters in the required timestamp format
+      Map<String, dynamic>? fromTimeFormatted;
+      Map<String, dynamic>? toTimeFormatted;
+      
+      if (_fromDate != null) {
+        // Use exact time selected by user
+        fromTimeFormatted = {
+          "ts": _fromDate!.toUtc().toIso8601String()
+        };
+      }
+      
+      if (_toDate != null) {
+        // Use exact time selected by user
+        toTimeFormatted = {
+          "ts": _toDate!.toUtc().toIso8601String()
+        };
+      }
+      
       final inputParams = {
         'ref_request_id': 'flutter-get-orders-${DateTime.now().millisecondsSinceEpoch}',
         'account_id': accountId,
         'market_id_or_name_regexes': _marketFilters,
         'instrument_id_or_symbol_regexes': _instrumentFilters,
-        'from_time': _fromDate?.toIso8601String(),
-        'to_time': _toDate?.toIso8601String(),
+        'from_time': fromTimeFormatted,
+        'to_time': toTimeFormatted,
         'side': _selectedSide,
         'status_filters': statusFilters,
         'pagination': {
@@ -228,8 +303,8 @@ class _ActivityPageState extends State<ActivityPage> {
         accountId: accountId,
         marketIdOrNameRegexes: _marketFilters.isNotEmpty ? _marketFilters : null,
         pagination: pagination,
-        fromTime: _fromDate?.toIso8601String(),
-        toTime: _toDate?.toIso8601String(),
+        fromTime: fromTimeFormatted != null ? jsonEncode(fromTimeFormatted) : null,
+        toTime: toTimeFormatted != null ? jsonEncode(toTimeFormatted) : null,
         side: _selectedSide,
         statusFilters: statusFilters.contains(true) ? statusFilters : null,
         instrumentIdOrSymbolRegexes: _instrumentFilters.isNotEmpty ? _instrumentFilters : null,
@@ -303,18 +378,16 @@ class _ActivityPageState extends State<ActivityPage> {
       Map<String, dynamic>? toTimeFormatted;
       
       if (_tradeFromDate != null) {
-        // Set from time to start of day
-        final fromDateTime = DateTime(_tradeFromDate!.year, _tradeFromDate!.month, _tradeFromDate!.day, 0, 0, 0);
+        // Use exact time selected by user
         fromTimeFormatted = {
-          "ts": fromDateTime.toUtc().toIso8601String()
+          "ts": _tradeFromDate!.toUtc().toIso8601String()
         };
       }
       
       if (_tradeToDate != null) {
-        // Set to time to end of day
-        final toDateTime = DateTime(_tradeToDate!.year, _tradeToDate!.month, _tradeToDate!.day, 23, 59, 59);
+        // Use exact time selected by user
         toTimeFormatted = {
-          "ts": toDateTime.toUtc().toIso8601String()
+          "ts": _tradeToDate!.toUtc().toIso8601String()
         };
       }
       
@@ -607,6 +680,131 @@ class _ActivityPageState extends State<ActivityPage> {
                           },
                           controlAffinity: ListTileControlAffinity.leading,
                           dense: true,
+                        ),
+                      ),
+                    ],
+                  ),
+                  const SizedBox(height: 16),
+                  // Date filters row
+                  Row(
+                    children: [
+                      // From Date filter
+                      Expanded(
+                        child: Column(
+                          crossAxisAlignment: CrossAxisAlignment.start,
+                          children: [
+                            Text(
+                              'From Time',
+                              style: TextStyle(
+                                fontWeight: FontWeight.bold,
+                                color: isDarkTheme ? Colors.white : Colors.black,
+                              ),
+                            ),
+                            const SizedBox(height: 4),
+                            InkWell(
+                              onTap: () async {
+                                final DateTime? picked = await _showDateTimePicker(
+                                  context,
+                                  initialDateTime: _fromDate ?? DateTime.now(),
+                                  firstDate: DateTime(2020),
+                                  lastDate: DateTime.now(),
+                                  title: 'Select From Date & Time',
+                                );
+                                if (picked != null) {
+                                  setState(() {
+                                    _fromDate = picked;
+                                    // Reset toDate if it's before the new fromDate
+                                    if (_toDate != null && _toDate!.isBefore(picked)) {
+                                      _toDate = null;
+                                    }
+                                  });
+                                }
+                              },
+                              child: Container(
+                                padding: const EdgeInsets.symmetric(vertical: 12, horizontal: 8),
+                                decoration: BoxDecoration(
+                                  border: Border.all(color: isDarkTheme ? Colors.grey[600]! : Colors.grey[400]!),
+                                  borderRadius: BorderRadius.circular(4),
+                                ),
+                                child: Row(
+                                  children: [
+                                    Expanded(
+                                      child: Text(
+                                        _formatDateTime(_fromDate),
+                                        style: TextStyle(
+                                          color: isDarkTheme ? Colors.white : Colors.black,
+                                          fontSize: 14,
+                                        ),
+                                      ),
+                                    ),
+                                    Icon(
+                                      Icons.calendar_today,
+                                      size: 16,
+                                      color: isDarkTheme ? Colors.grey[400] : Colors.grey[600],
+                                    ),
+                                  ],
+                                ),
+                              ),
+                            ),
+                          ],
+                        ),
+                      ),
+                      const SizedBox(width: 16),
+                      // To Date filter
+                      Expanded(
+                        child: Column(
+                          crossAxisAlignment: CrossAxisAlignment.start,
+                          children: [
+                            Text(
+                              'To Time',
+                              style: TextStyle(
+                                fontWeight: FontWeight.bold,
+                                color: isDarkTheme ? Colors.white : Colors.black,
+                              ),
+                            ),
+                            const SizedBox(height: 4),
+                            InkWell(
+                              onTap: () async {
+                                final DateTime? picked = await _showDateTimePicker(
+                                  context,
+                                  initialDateTime: _toDate ?? DateTime.now(),
+                                  firstDate: _fromDate ?? DateTime(2020), // Cannot be before fromDate
+                                  lastDate: DateTime.now(),
+                                  title: 'Select To Date & Time',
+                                );
+                                if (picked != null) {
+                                  setState(() {
+                                    _toDate = picked;
+                                  });
+                                }
+                              },
+                              child: Container(
+                                padding: const EdgeInsets.symmetric(vertical: 12, horizontal: 8),
+                                decoration: BoxDecoration(
+                                  border: Border.all(color: isDarkTheme ? Colors.grey[600]! : Colors.grey[400]!),
+                                  borderRadius: BorderRadius.circular(4),
+                                ),
+                                child: Row(
+                                  children: [
+                                    Expanded(
+                                      child: Text(
+                                        _formatDateTime(_toDate),
+                                        style: TextStyle(
+                                          color: isDarkTheme ? Colors.white : Colors.black,
+                                          fontSize: 14,
+                                        ),
+                                      ),
+                                    ),
+                                    Icon(
+                                      Icons.calendar_today,
+                                      size: 16,
+                                      color: isDarkTheme ? Colors.grey[400] : Colors.grey[600],
+                                    ),
+                                  ],
+                                ),
+                              ),
+                            ),
+                          ],
                         ),
                       ),
                     ],
@@ -1036,23 +1234,20 @@ class _ActivityPageState extends State<ActivityPage> {
                             const SizedBox(height: 4),
                             InkWell(
                               onTap: () async {
-                                final DateTime? picked = await showDatePicker(
-                                  context: context,
-                                  initialDate: _tradeFromDate ?? DateTime.now(),
+                                final DateTime? picked = await _showDateTimePicker(
+                                  context,
+                                  initialDateTime: _tradeFromDate ?? DateTime.now(),
                                   firstDate: DateTime(2020),
                                   lastDate: DateTime.now(),
-                                  builder: (context, child) {
-                                    return Theme(
-                                      data: isDarkTheme 
-                                          ? ThemeData.dark() 
-                                          : ThemeData.light(),
-                                      child: child!,
-                                    );
-                                  },
+                                  title: 'Select From Date & Time',
                                 );
                                 if (picked != null) {
                                   setState(() {
                                     _tradeFromDate = picked;
+                                    // Reset tradeToDate if it's before the new tradeFromDate
+                                    if (_tradeToDate != null && _tradeToDate!.isBefore(picked)) {
+                                      _tradeToDate = null;
+                                    }
                                   });
                                 }
                               },
@@ -1066,9 +1261,7 @@ class _ActivityPageState extends State<ActivityPage> {
                                   children: [
                                     Expanded(
                                       child: Text(
-                                        _tradeFromDate != null 
-                                            ? '${_tradeFromDate!.year}-${_tradeFromDate!.month.toString().padLeft(2, '0')}-${_tradeFromDate!.day.toString().padLeft(2, '0')}'
-                                            : 'Select date',
+                                        _formatDateTime(_tradeFromDate),
                                         style: TextStyle(
                                           color: isDarkTheme ? Colors.white : Colors.black,
                                           fontSize: 14,
@@ -1103,19 +1296,12 @@ class _ActivityPageState extends State<ActivityPage> {
                             const SizedBox(height: 4),
                             InkWell(
                               onTap: () async {
-                                final DateTime? picked = await showDatePicker(
-                                  context: context,
-                                  initialDate: _tradeToDate ?? DateTime.now(),
-                                  firstDate: DateTime(2020),
+                                final DateTime? picked = await _showDateTimePicker(
+                                  context,
+                                  initialDateTime: _tradeToDate ?? DateTime.now(),
+                                  firstDate: _tradeFromDate ?? DateTime(2020), // Cannot be before tradeFromDate
                                   lastDate: DateTime.now(),
-                                  builder: (context, child) {
-                                    return Theme(
-                                      data: isDarkTheme 
-                                          ? ThemeData.dark() 
-                                          : ThemeData.light(),
-                                      child: child!,
-                                    );
-                                  },
+                                  title: 'Select To Date & Time',
                                 );
                                 if (picked != null) {
                                   setState(() {
@@ -1133,9 +1319,7 @@ class _ActivityPageState extends State<ActivityPage> {
                                   children: [
                                     Expanded(
                                       child: Text(
-                                        _tradeToDate != null 
-                                            ? '${_tradeToDate!.year}-${_tradeToDate!.month.toString().padLeft(2, '0')}-${_tradeToDate!.day.toString().padLeft(2, '0')}'
-                                            : 'Select date',
+                                        _formatDateTime(_tradeToDate),
                                         style: TextStyle(
                                           color: isDarkTheme ? Colors.white : Colors.black,
                                           fontSize: 14,
