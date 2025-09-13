@@ -1031,6 +1031,45 @@ class RealGrpcClient {
     }
   }
 
+  /// Get supported currencies using the real gRPC server
+  Future<Map<String, dynamic>> getSupportedCurrencies({
+    int pageNumber = 1,
+    int pageSize = 100,
+  }) async {
+    try {
+      print('🏦 Getting supported currencies...');
+
+      final result = await GrpcurlHelper.getSupportedCurrencies(
+        pageNumber: pageNumber,
+        pageSize: pageSize,
+      );
+
+      print('📤 GetSupportedCurrencies OUTPUT: ${result.toString()}');
+      return {
+        'input': {
+          'page_nr': pageNumber,
+          'page_size': pageSize,
+        },
+        'output': result['success'] ? result['output'] : {'error': result['output']?['error'] ?? 'Unknown error'},
+        'requestTime': _toUnixTimestamp(DateTime.now()).toString(),
+        'serverType': 'real_grpc',
+        'success': result['success'] ?? false,
+      };
+    } catch (e) {
+      print('❌ Critical error in getSupportedCurrencies: $e');
+      return {
+        'input': {
+          'page_nr': pageNumber,
+          'page_size': pageSize,
+        },
+        'output': {'error': 'Critical error: $e'},
+        'requestTime': _toUnixTimestamp(DateTime.now()).toString(),
+        'serverType': 'critical-error',
+        'success': false,
+      };
+    }
+  }
+
   /// Dispose and clean up resources
   void dispose() {
     disconnect();

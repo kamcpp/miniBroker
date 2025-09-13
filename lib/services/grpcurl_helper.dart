@@ -1436,4 +1436,73 @@ class GrpcurlHelper {
       };
     }
   }
+
+  /// Make a real GetSupportedCurrencies call using grpcurl
+  static Future<Map<String, dynamic>> getSupportedCurrencies({
+    int pageNumber = 1,
+    int pageSize = 100,
+  }) async {
+    Map<String, dynamic> responseData = {
+      'success': false,
+      'output': {},
+      'requestTime': _toUnixTimestamp(DateTime.now()).toString(),
+      'serverType': 'simprtagent-real-grpcurl',
+    };
+
+    try {
+      final grpcurlPath = await _findGrpcurlPath();
+      if (grpcurlPath == null) {
+        responseData['output'] = {'error': 'grpcurl not found'};
+        responseData['serverType'] = 'grpcurl-not-found';
+        return responseData;
+      }
+
+      final inputParams = {
+        'ref_request_id': 'get_supported_currencies_${DateTime.now().millisecondsSinceEpoch}',
+        'pagination': {
+          'page_nr': pageNumber,
+          'page_size': pageSize,
+        },
+      };
+
+      print('📨 GetSupportedCurrencies Request: $inputParams');
+
+      final result = await Process.run(
+        grpcurlPath,
+        [
+          '-plaintext',
+          '-d', jsonEncode(inputParams),
+          '$_host:$_port',
+          'qomet.agora.daemons.prtagent.v1.AgentService/GetSupportedCurrencies'
+        ],
+        environment: {'PATH': '/usr/local/bin:/opt/homebrew/bin:${Platform.environment['PATH']}'},
+      ).timeout(const Duration(seconds: 10));
+
+      if (result.exitCode == 0) {
+        final responseJson = jsonDecode(result.stdout);
+        responseData['success'] = true;
+        responseData['output'] = responseJson;
+        print('✅ GetSupportedCurrencies successful');
+        print('📬 GetSupportedCurrencies Response: $responseJson');
+      } else {
+        responseData['output'] = {
+          'error': 'gRPC call failed',
+          'stderr': result.stderr.toString(),
+          'stdout': result.stdout.toString(),
+          'exit_code': result.exitCode,
+        };
+        print('❌ GetSupportedCurrencies failed: ${result.stderr}');
+      }
+
+      return responseData;
+    } catch (e) {
+      print('❌ GetSupportedCurrencies exception: $e');
+      return {
+        'success': false,
+        'output': {'error': 'Exception occurred', 'details': e.toString()},
+        'requestTime': _toUnixTimestamp(DateTime.now()).toString(),
+        'serverType': 'exception',
+      };
+    }
+  }
 }

@@ -190,12 +190,99 @@ class _TradingPageState extends State<TradingPage> {
     _hasMoreTradeHistory = true;
     _fetchTradeHistoryForAsset(symbol, page: 1, append: false);
   }
+
+  /// Fetch supported currencies from the server
+  Future<void> _fetchSupportedCurrencies() async {
+    if (_isLoadingSupportedCurrencies) return;
+    
+    setState(() {
+      _isLoadingSupportedCurrencies = true;
+    });
+
+    try {
+      print('🏦 Fetching supported currencies...');
+      final result = await realGrpcClient.getSupportedCurrencies();
+      
+      if (result['success'] == true && result['output'] != null) {
+        final output = result['output'] as Map<String, dynamic>;
+        final currencies = output['currencies'] as List<dynamic>? ?? [];
+        
+        final List<String> currencySymbols = [];
+        
+        for (final currency in currencies) {
+          if (currency is Map<String, dynamic>) {
+            final zonedSymbols = currency['zonedSymbols'] as List<dynamic>? ?? [];
+            for (final zonedSymbol in zonedSymbols) {
+              if (zonedSymbol is Map<String, dynamic>) {
+                final symbols = zonedSymbol['symbols'] as List<dynamic>? ?? [];
+                
+                // Extract currency name and symbol
+                String? currencyName;
+                String? currencySymbol;
+                
+                for (final symbol in symbols) {
+                  if (symbol is Map<String, dynamic>) {
+                    final value = symbol['value'] as String?;
+                    if (value != null && value.isNotEmpty) {
+                      // First symbol is typically the currency name (USD)
+                      if (currencyName == null) {
+                        currencyName = value;
+                      } 
+                      // Second symbol is typically the currency symbol ($)
+                      else if (currencySymbol == null) {
+                        currencySymbol = value;
+                      }
+                    }
+                  }
+                }
+                
+                // Format as "USD($)" if both name and symbol are available
+                if (currencyName != null) {
+                  if (currencySymbol != null && currencySymbol != currencyName) {
+                    currencySymbols.add('$currencyName($currencySymbol)');
+                  } else {
+                    currencySymbols.add(currencyName);
+                  }
+                }
+              }
+            }
+          }
+        }
+        
+        setState(() {
+          _supportedCurrencies = currencySymbols;
+          if (_selectedCurrency.isEmpty && _supportedCurrencies.isNotEmpty) {
+            _selectedCurrency = _supportedCurrencies.first;
+          }
+          _isLoadingSupportedCurrencies = false;
+        });
+        
+        print('✅ Loaded ${_supportedCurrencies.length} supported currencies');
+      } else {
+        print('❌ Failed to fetch supported currencies: ${result['output']}');
+        setState(() {
+          _isLoadingSupportedCurrencies = false;
+        });
+      }
+    } catch (e) {
+      print('❌ Error fetching supported currencies: $e');
+      setState(() {
+        _isLoadingSupportedCurrencies = false;
+      });
+    }
+  }
+  
   final List<Map<String, dynamic>> _assets = [];
   List<Map<String, dynamic>> _tradeHistory = [];
   String _selectedSymbol = '';  // Will be set when assets are loaded
   String _orderType = 'Limit';
   String _expiryPeriod = '1 Month'; // Add expiry period variable
   bool _isBuySelected = true;
+  
+  // Supported currencies data
+  List<String> _supportedCurrencies = [];
+  String _selectedCurrency = '';
+  bool _isLoadingSupportedCurrencies = false;
   
   // Trade history pagination
   int _currentTradeHistoryPage = 1;
@@ -276,6 +363,9 @@ class _TradingPageState extends State<TradingPage> {
     
     // Fetch cash holdings for buying power
     _fetchCashHoldings();
+    
+    // Fetch supported currencies for the dropdown
+    _fetchSupportedCurrencies();
     
       // Fetch trade history and orderbook for default symbol when page is shown and assets are loaded
       WidgetsBinding.instance.addPostFrameCallback((_) {
@@ -2031,7 +2121,19 @@ class _TradingPageState extends State<TradingPage> {
           
           const SizedBox(height: 16),
           
-          // Asset Selection Dropdown (made 2x smaller)
+          // Supported Currencies title
+          Text(
+            'Currency',
+            style: TextStyle(
+              fontSize: 14,
+              color: _isDarkTheme ? Colors.grey[400] : Colors.grey[600],
+              fontWeight: FontWeight.w500,
+            ),
+          ),
+          
+          const SizedBox(height: 8),
+          
+          // Supported Currencies Dropdown
           Container(
             height: 35, // Made much smaller (was default ~48)
             padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4), // Reduced padding
@@ -2043,25 +2145,15 @@ class _TradingPageState extends State<TradingPage> {
             ),
             child: DropdownButtonHideUnderline(
               child: DropdownButton<String>(
-                value: _assets.isEmpty 
+                value: _supportedCurrencies.isEmpty 
                     ? '' 
-                    : (_assets.any((asset) => asset['symbol'] == _selectedSymbol) 
-                        ? _selectedSymbol 
-                        : _assets.isNotEmpty ? _assets.first['symbol'] : ''),
+                    : (_supportedCurrencies.contains(_selectedCurrency) 
+                        ? _selectedCurrency 
+                        : _supportedCurrencies.isNotEmpty ? _supportedCurrencies.first : ''),
                 isExpanded: true,
-                onChanged: _assets.isEmpty ? null : (String? newValue) {
+                onChanged: _supportedCurrencies.isEmpty ? null : (String? newValue) {
                   setState(() {
-                    _selectedSymbol = newValue!;
-                  });
-                  _fetchChartData(newValue!);
-                  _resetAndFetchTradeHistory(newValue!);
-                  _fetchOrderbookData(newValue!);
-                  WidgetsBinding.instance.addPostFrameCallback((_) {
-                    Future.delayed(const Duration(milliseconds: 200), () {
-                      if (mounted && _scrollController.hasClients) {
-                        _scrollToSelectedAsset();
-                      }
-                    });
+                    _selectedCurrency = newValue!;
                   });
                 },
                 dropdownColor: _isDarkTheme ? const Color(0xFF2d2d2d) : Colors.white,
@@ -2069,16 +2161,15 @@ class _TradingPageState extends State<TradingPage> {
                   color: _isDarkTheme ? Colors.white : Colors.black,
                   fontSize: 14, // Smaller font size
                 ),
-                items: _assets.isEmpty 
+                items: _supportedCurrencies.isEmpty 
                     ? [DropdownMenuItem<String>(
                         value: '',
-                        child: Text('Loading symbols...'),
+                        child: Text(_isLoadingSupportedCurrencies ? 'Loading currencies...' : 'No currencies available'),
                       )]
-                    : _assets.map<DropdownMenuItem<String>>((asset) {
-                        final symbol = asset['symbol'] as String;
+                    : _supportedCurrencies.map<DropdownMenuItem<String>>((currency) {
                         return DropdownMenuItem<String>(
-                          value: symbol,
-                          child: Text(symbol),
+                          value: currency,
+                          child: Text(currency),
                         );
                       }).toList(),
               ),
