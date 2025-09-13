@@ -207,7 +207,7 @@ class _TradingPageState extends State<TradingPage> {
         final output = result['output'] as Map<String, dynamic>;
         final currencies = output['currencies'] as List<dynamic>? ?? [];
         
-        final List<String> currencySymbols = [];
+        final List<Map<String, String>> currencyData = [];
         
         for (final currency in currencies) {
           if (currency is Map<String, dynamic>) {
@@ -217,16 +217,16 @@ class _TradingPageState extends State<TradingPage> {
                 final symbols = zonedSymbol['symbols'] as List<dynamic>? ?? [];
                 
                 // Extract currency name and symbol
-                String? currencyName;
+                String? currencyCode;
                 String? currencySymbol;
                 
                 for (final symbol in symbols) {
                   if (symbol is Map<String, dynamic>) {
                     final value = symbol['value'] as String?;
                     if (value != null && value.isNotEmpty) {
-                      // First symbol is typically the currency name (USD)
-                      if (currencyName == null) {
-                        currencyName = value;
+                      // First symbol is typically the currency code (USD)
+                      if (currencyCode == null) {
+                        currencyCode = value;
                       } 
                       // Second symbol is typically the currency symbol ($)
                       else if (currencySymbol == null) {
@@ -236,13 +236,16 @@ class _TradingPageState extends State<TradingPage> {
                   }
                 }
                 
-                // Format as "USD($)" if both name and symbol are available
-                if (currencyName != null) {
-                  if (currencySymbol != null && currencySymbol != currencyName) {
-                    currencySymbols.add('$currencyName($currencySymbol)');
-                  } else {
-                    currencySymbols.add(currencyName);
-                  }
+                // Add currency data if we have at least the code
+                if (currencyCode != null) {
+                  final currencyMap = {
+                    'code': currencyCode,
+                    'symbol': currencySymbol ?? currencyCode, // fallback to code if no symbol
+                    'display': currencySymbol != null && currencySymbol != currencyCode 
+                        ? '$currencyCode($currencySymbol)'
+                        : currencyCode,
+                  };
+                  currencyData.add(currencyMap);
                 }
               }
             }
@@ -250,9 +253,13 @@ class _TradingPageState extends State<TradingPage> {
         }
         
         setState(() {
-          _supportedCurrencies = currencySymbols;
+          _supportedCurrencies = currencyData;
           if (_selectedCurrency.isEmpty && _supportedCurrencies.isNotEmpty) {
             _selectedCurrency = _supportedCurrencies.first;
+            // Fetch cash holdings for the initially selected currency
+            WidgetsBinding.instance.addPostFrameCallback((_) {
+              _fetchCashHoldingsForCurrency(_selectedCurrency['code']!);
+            });
           }
           _isLoadingSupportedCurrencies = false;
         });
@@ -271,6 +278,59 @@ class _TradingPageState extends State<TradingPage> {
       });
     }
   }
+
+  /// Fetch cash holdings for a specific currency
+  Future<void> _fetchCashHoldingsForCurrency(String currencyCode) async {
+    try {
+      print('💰 Fetching cash holdings for currency: $currencyCode');
+      
+      // Check if we have a cached account ID
+      if (_cachedAccountId == null || _cachedAccountId!.isEmpty) {
+        print('❌ No cached account ID available for cash holdings');
+        return;
+      }
+
+      final cashHoldingsResponse = await realGrpcClient.getAccountCashHoldings(
+        accountId: _cachedAccountId!,
+        cashAssetIds: [currencyCode], // Use the selected currency code
+      ).timeout(
+        const Duration(seconds: 15),
+        onTimeout: () => {
+          'input': {'ref_request_id': 'timeout'},
+          'output': {'error': 'Request timed out', 'message': 'Cash holdings request timed out after 15 seconds'},
+          'requestTime': (DateTime.now().millisecondsSinceEpoch ~/ 1000).toString(),
+          'serverType': 'timeout',
+          'success': false,
+        },
+      );
+
+      print('💰 Cash Holdings Response: $cashHoldingsResponse');
+
+      if (cashHoldingsResponse['success'] == true) {
+        // Extract balance from the response for the specific currency
+        final output = cashHoldingsResponse['output'] as Map<String, dynamic>;
+        final cashHoldings = output['cashHoldings'] as Map<String, dynamic>? ?? {};
+        final balances = cashHoldings['balances'] as Map<String, dynamic>? ?? {};
+        final currencyBalance = balances[currencyCode]?.toString() ?? '0';
+        
+        setState(() {
+          _buyingPower = currencyBalance;
+        });
+        
+        print('✅ Updated buying power for $currencyCode: $currencyBalance');
+      } else {
+        print('❌ Failed to fetch cash holdings for $currencyCode: ${cashHoldingsResponse['output']}');
+        setState(() {
+          _buyingPower = '0';
+        });
+      }
+    } catch (e) {
+      print('❌ Error fetching cash holdings for $currencyCode: $e');
+      setState(() {
+        _buyingPower = '0';
+      });
+    }
+  }
   
   final List<Map<String, dynamic>> _assets = [];
   List<Map<String, dynamic>> _tradeHistory = [];
@@ -280,8 +340,8 @@ class _TradingPageState extends State<TradingPage> {
   bool _isBuySelected = true;
   
   // Supported currencies data
-  List<String> _supportedCurrencies = [];
-  String _selectedCurrency = '';
+  List<Map<String, String>> _supportedCurrencies = [];
+  Map<String, String> _selectedCurrency = {};
   bool _isLoadingSupportedCurrencies = false;
   
   // Trade history pagination
@@ -2144,17 +2204,21 @@ class _TradingPageState extends State<TradingPage> {
               borderRadius: BorderRadius.circular(8),
             ),
             child: DropdownButtonHideUnderline(
-              child: DropdownButton<String>(
+              child: DropdownButton<Map<String, String>>(
                 value: _supportedCurrencies.isEmpty 
-                    ? '' 
-                    : (_supportedCurrencies.contains(_selectedCurrency) 
+                    ? null 
+                    : (_supportedCurrencies.any((currency) => currency['code'] == _selectedCurrency['code']) 
                         ? _selectedCurrency 
-                        : _supportedCurrencies.isNotEmpty ? _supportedCurrencies.first : ''),
+                        : _supportedCurrencies.isNotEmpty ? _supportedCurrencies.first : null),
                 isExpanded: true,
-                onChanged: _supportedCurrencies.isEmpty ? null : (String? newValue) {
-                  setState(() {
-                    _selectedCurrency = newValue!;
-                  });
+                onChanged: _supportedCurrencies.isEmpty ? null : (Map<String, String>? newValue) {
+                  if (newValue != null) {
+                    setState(() {
+                      _selectedCurrency = newValue;
+                    });
+                    // Call cash holdings with the selected currency code
+                    _fetchCashHoldingsForCurrency(newValue['code']!);
+                  }
                 },
                 dropdownColor: _isDarkTheme ? const Color(0xFF2d2d2d) : Colors.white,
                 style: TextStyle(
@@ -2162,14 +2226,14 @@ class _TradingPageState extends State<TradingPage> {
                   fontSize: 14, // Smaller font size
                 ),
                 items: _supportedCurrencies.isEmpty 
-                    ? [DropdownMenuItem<String>(
-                        value: '',
+                    ? [DropdownMenuItem<Map<String, String>>(
+                        value: {'code': '', 'symbol': '', 'display': ''},
                         child: Text(_isLoadingSupportedCurrencies ? 'Loading currencies...' : 'No currencies available'),
                       )]
-                    : _supportedCurrencies.map<DropdownMenuItem<String>>((currency) {
-                        return DropdownMenuItem<String>(
+                    : _supportedCurrencies.map<DropdownMenuItem<Map<String, String>>>((currency) {
+                        return DropdownMenuItem<Map<String, String>>(
                           value: currency,
-                          child: Text(currency),
+                          child: Text(currency['display'] ?? currency['code']!),
                         );
                       }).toList(),
               ),
@@ -2339,7 +2403,9 @@ class _TradingPageState extends State<TradingPage> {
                       ),
                     )
                   : Text(
-                      _isBuySelected ? '$_buyingPower \$' : _buyingPower,
+                      _isBuySelected 
+                          ? '$_buyingPower ${_selectedCurrency['symbol'] ?? ''}' 
+                          : _buyingPower,
                       style: TextStyle(
                         fontSize: 18,
                         fontWeight: FontWeight.w600,
