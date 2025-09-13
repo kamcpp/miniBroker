@@ -5,6 +5,7 @@ import '../services/auth_service.dart';
 import '../services/theme_service.dart';
 import '../services/real_grpc_client.dart';
 import '../services/database_helper.dart';
+import '../utils/connectivity_checker.dart';
 import 'trading_page.dart';
 import 'activity_page.dart';
 import 'profile_page.dart';
@@ -26,6 +27,12 @@ class _PortfolioPageState extends State<PortfolioPage> {
   @override
   void initState() {
     super.initState();
+    
+    // Check server connectivity when page opens
+    WidgetsBinding.instance.addPostFrameCallback((_) {
+      ConnectivityChecker.checkAndShowErrorIfNeeded(context, 'Portfolio');
+    });
+    
     // Automatically fetch portfolio data when page loads
     _initializePortfolioData();
   }

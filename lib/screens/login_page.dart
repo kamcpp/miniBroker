@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 import 'dart:ui';
 import '../services/auth_service.dart';
+import '../utils/connectivity_checker.dart';
 import '../main.dart';
 import 'signup_page.dart';
 
@@ -31,6 +32,12 @@ class _LoginPageState extends State<LoginPage> with TickerProviderStateMixin {
   @override
   void initState() {
     super.initState();
+    
+    // Check server connectivity when page opens
+    WidgetsBinding.instance.addPostFrameCallback((_) {
+      ConnectivityChecker.checkAndShowErrorIfNeeded(context, 'Login');
+    });
+    
     _flipController = AnimationController(
       duration: const Duration(milliseconds: 800),
       vsync: this,

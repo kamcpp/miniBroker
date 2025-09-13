@@ -9,6 +9,7 @@ import 'package:http/http.dart' as http;
 import '../services/auth_service.dart';
 import '../services/theme_service.dart';
 import '../services/real_grpc_client.dart';
+import '../utils/connectivity_checker.dart';
 import 'portfolio_page.dart';
 import 'activity_page.dart';
 import 'profile_page.dart';
@@ -255,6 +256,12 @@ class _TradingPageState extends State<TradingPage> {
   @override
   void initState() {
     super.initState();
+    
+    // Check server connectivity when page opens
+    WidgetsBinding.instance.addPostFrameCallback((_) {
+      ConnectivityChecker.checkAndShowErrorIfNeeded(context, 'Trading');
+    });
+    
     // Listen for connection status changes and show notifications
     _listenToConnectionStatus();
     // Listen for FIX messages to handle Security Definition Responses

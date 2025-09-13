@@ -3,6 +3,7 @@ import 'package:provider/provider.dart';
 import '../services/auth_service.dart';
 import '../services/theme_service.dart';
 import '../services/database_helper.dart';
+import '../utils/connectivity_checker.dart';
 
 class ProfilePage extends StatefulWidget {
   const ProfilePage({super.key});
@@ -26,6 +27,12 @@ class _ProfilePageState extends State<ProfilePage> {
   @override
   void initState() {
     super.initState();
+    
+    // Check server connectivity when page opens
+    WidgetsBinding.instance.addPostFrameCallback((_) {
+      ConnectivityChecker.checkAndShowErrorIfNeeded(context, 'Profile');
+    });
+    
     _loadUserData();
   }
 

@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 import '../services/auth_service.dart';
+import '../utils/connectivity_checker.dart';
 
 class SignupPage extends StatefulWidget {
   const SignupPage({super.key});
@@ -17,6 +18,16 @@ class _SignupPageState extends State<SignupPage> {
   bool _isLoading = false;
   bool _isPasswordVisible = false;
   bool _isConfirmPasswordVisible = false;
+
+  @override
+  void initState() {
+    super.initState();
+    
+    // Check server connectivity when page opens
+    WidgetsBinding.instance.addPostFrameCallback((_) {
+      ConnectivityChecker.checkAndShowErrorIfNeeded(context, 'Signup');
+    });
+  }
 
   @override
   void dispose() {

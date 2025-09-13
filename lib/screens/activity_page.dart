@@ -6,6 +6,7 @@ import 'package:provider/provider.dart';
 import '../services/auth_service.dart';
 import '../services/theme_service.dart';
 import '../services/real_grpc_client.dart';
+import '../utils/connectivity_checker.dart';
 import 'portfolio_page.dart';
 import 'trading_page.dart';
 import 'profile_page.dart';
@@ -83,6 +84,11 @@ class _ActivityPageState extends State<ActivityPage> {
     // Initialize text controllers
     _pageNumberController = TextEditingController(text: _pageNumber.toString());
     _tradePageNumberController = TextEditingController(text: _tradePageNumber.toString());
+    
+    // Check server connectivity when page opens
+    WidgetsBinding.instance.addPostFrameCallback((_) {
+      ConnectivityChecker.checkAndShowErrorIfNeeded(context, 'Activity');
+    });
     
     // Fetch both orders and trades when page loads
     _fetchActivityData();
