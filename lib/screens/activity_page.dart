@@ -2250,35 +2250,6 @@ class _ActivityPageState extends State<ActivityPage> {
                 ),
               ),
               
-              // Activity Button (current page)
-              MouseRegion(
-                cursor: SystemMouseCursors.click,
-                child: Container(
-                  height: 55,
-                  padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
-                  decoration: BoxDecoration(
-                    color: isDarkTheme ? const Color(0xFF121212) : Colors.grey[100],
-                    border: Border(
-                      top: BorderSide(color: Colors.white.withOpacity(0.3), width: 1),
-                      left: BorderSide(color: Colors.white.withOpacity(0.3), width: 1),
-                      right: BorderSide(color: Colors.white.withOpacity(0.3), width: 1),
-                    ),
-                    borderRadius: const BorderRadius.only(
-                      topLeft: Radius.circular(8),
-                      topRight: Radius.circular(8),
-                    ),
-                  ),
-                  child: Text(
-                    'Activity',
-                    style: TextStyle(
-                      fontSize: 13,
-                      fontWeight: FontWeight.w600,
-                      color: isDarkTheme ? Colors.white : Colors.black,
-                    ),
-                  ),
-                ),
-              ),
-              
               // Trading Button
               MouseRegion(
                 cursor: SystemMouseCursors.click,
@@ -2324,6 +2295,35 @@ class _ActivityPageState extends State<ActivityPage> {
                           ),
                         ),
                       ),
+                    ),
+                  ),
+                ),
+              ),
+              
+              // Activity Button (current page)
+              MouseRegion(
+                cursor: SystemMouseCursors.click,
+                child: Container(
+                  height: 55,
+                  padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
+                  decoration: BoxDecoration(
+                    color: isDarkTheme ? const Color(0xFF121212) : Colors.grey[100],
+                    border: Border(
+                      top: BorderSide(color: Colors.white.withOpacity(0.3), width: 1),
+                      left: BorderSide(color: Colors.white.withOpacity(0.3), width: 1),
+                      right: BorderSide(color: Colors.white.withOpacity(0.3), width: 1),
+                    ),
+                    borderRadius: const BorderRadius.only(
+                      topLeft: Radius.circular(8),
+                      topRight: Radius.circular(8),
+                    ),
+                  ),
+                  child: Text(
+                    'Activity',
+                    style: TextStyle(
+                      fontSize: 13,
+                      fontWeight: FontWeight.w600,
+                      color: isDarkTheme ? Colors.white : Colors.black,
                     ),
                   ),
                 ),

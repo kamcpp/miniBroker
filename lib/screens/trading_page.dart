@@ -279,6 +279,172 @@ class _TradingPageState extends State<TradingPage> {
     }
   }
 
+  /// Fetch markets from the server
+  Future<void> _fetchMarketList() async {
+    if (_isLoadingMarkets) return;
+    
+    setState(() {
+      _isLoadingMarkets = true;
+    });
+
+    try {
+      print('🏪 Fetching market list...');
+      final result = await realGrpcClient.getMarketList();
+      
+      if (result['success'] == true && result['output'] != null) {
+        final output = result['output'] as Map<String, dynamic>;
+        final markets = output['markets'] as List<dynamic>? ?? [];
+        
+        final List<Map<String, String>> marketData = [];
+        
+        for (final market in markets) {
+          if (market is Map<String, dynamic>) {
+            final identifiers = market['identifiers'] as List<dynamic>? ?? [];
+            final names = market['names'] as List<dynamic>? ?? [];
+            final description = market['description'] as String?;
+            
+            // Use the first identifier and name if available
+            final marketId = identifiers.isNotEmpty ? identifiers[0].toString() : null;
+            final marketName = names.isNotEmpty ? names[0].toString() : null;
+            
+            if (marketId != null && marketId.isNotEmpty) {
+              final marketMap = {
+                'id': marketId,
+                'name': marketName ?? marketId,
+                'description': description ?? '',
+                'display': marketName ?? marketId, // Show the name in dropdown
+              };
+              marketData.add(marketMap);
+            }
+          }
+        }
+        
+        setState(() {
+          _markets = marketData;
+          if (_selectedMarket.isEmpty && _markets.isNotEmpty) {
+            _selectedMarket = _markets.first;
+          }
+          _isLoadingMarkets = false;
+        });
+        
+        print('✅ Loaded ${_markets.length} markets');
+        
+        // Load instruments for the first market if available
+        if (_selectedMarket.isNotEmpty && _selectedMarket['id']!.isNotEmpty) {
+          _fetchMarketInstruments(_selectedMarket['id']!);
+        }
+      } else {
+        print('❌ Failed to fetch markets: ${result['output']}');
+        setState(() {
+          _isLoadingMarkets = false;
+        });
+      }
+    } catch (e) {
+      print('❌ Error fetching markets: $e');
+      setState(() {
+        _isLoadingMarkets = false;
+      });
+    }
+  }
+
+  /// Fetch instruments for a specific market
+  Future<void> _fetchMarketInstruments(String marketId) async {
+    try {
+      print('🏪 Fetching instruments for market: $marketId');
+      
+      setState(() {
+        _isLoadingMarketInstruments = true;
+        _assets.clear(); // Clear existing assets
+        _selectedSymbol = ''; // Reset selected symbol
+      });
+      
+      final result = await realGrpcClient.getMarketInstrumentList(
+        marketId: marketId,
+        pageNumber: 1,
+        pageSize: 100, // Get more instruments
+      );
+      
+      if (result['success'] == true && result['output'] != null) {
+        final output = result['output'] as Map<String, dynamic>;
+        final instruments = output['instruments'] as List<dynamic>? ?? [];
+        
+        final List<Map<String, dynamic>> processedAssets = [];
+        
+        for (final instrument in instruments) {
+          if (instrument is Map<String, dynamic>) {
+            // Extract symbol from zonedSymbols structure
+            String symbol = '';
+            final zonedSymbols = instrument['zonedSymbols'] as List<dynamic>? ?? [];
+            if (zonedSymbols.isNotEmpty) {
+              final firstZonedSymbol = zonedSymbols[0] as Map<String, dynamic>? ?? {};
+              final symbols = firstZonedSymbol['symbols'] as List<dynamic>? ?? [];
+              if (symbols.isNotEmpty) {
+                final firstSymbol = symbols[0] as Map<String, dynamic>? ?? {};
+                symbol = firstSymbol['value']?.toString() ?? '';
+              }
+            }
+            
+            final description = instrument['description']?.toString() ?? symbol;
+            final exchangePairId = instrument['exchangePairId']?.toString() ?? '';
+            
+            if (symbol.isNotEmpty) {
+              final assetMap = {
+                'symbol': symbol,
+                'description': description,
+                'exchangePairId': exchangePairId,
+                'price': '0.00',
+                'change': '0.00',
+                'changePercent': '0.00%',
+                'coverAddress': 'https://picsum.photos/112/120?random=${processedAssets.length}',
+                'last': 0.0,
+                'orderbook': instrument['orderbook']?.toString() ?? '',
+                'quoteTokenDecimal': instrument['quoteTokenDecimal'] ?? 0,
+              };
+              processedAssets.add(assetMap);
+            }
+          }
+        }
+        
+        setState(() {
+          _assets.clear();
+          _assets.addAll(processedAssets);
+          if (_selectedSymbol.isEmpty && _assets.isNotEmpty) {
+            _selectedSymbol = _assets.first['symbol'];
+          }
+          _isLoadingMarketInstruments = false;
+        });
+        
+        print('✅ Loaded ${_assets.length} instruments for market $marketId');
+        if (_assets.isNotEmpty) {
+          print('📋 Sample instruments: ${_assets.take(3).map((a) => a['symbol']).toList()}');
+          
+          // Fetch last prices for the loaded instruments
+          for (final asset in _assets) {
+            _fetchLastPriceForAsset(asset);
+          }
+          
+          // Load trade history and orderbook for the first asset
+          if (_selectedSymbol.isNotEmpty) {
+            _fetchTradeHistoryForAsset(_selectedSymbol, page: 1, append: false);
+            _fetchOrderbookData(_selectedSymbol);
+          }
+        }
+      } else {
+        print('❌ Failed to fetch instruments for market $marketId: ${result['output']}');
+        setState(() {
+          _assets.clear();
+          _isLoadingMarketInstruments = false;
+        });
+      }
+    } catch (e) {
+      print('❌ Error fetching instruments for market $marketId: $e');
+      setState(() {
+        _assets.clear();
+        _isLoadingMarketInstruments = false;
+      });
+    }
+  }
+
   /// Fetch cash holdings for a specific currency
   Future<void> _fetchCashHoldingsForCurrency(String currencyCode) async {
     try {
@@ -339,6 +505,12 @@ class _TradingPageState extends State<TradingPage> {
   String _expiryPeriod = '1 Month'; // Add expiry period variable
   bool _isBuySelected = true;
   
+  // Market data
+  List<Map<String, String>> _markets = [];
+  Map<String, String> _selectedMarket = {};
+  bool _isLoadingMarkets = false;
+  bool _isLoadingMarketInstruments = false;
+
   // Supported currencies data
   List<Map<String, String>> _supportedCurrencies = [];
   Map<String, String> _selectedCurrency = {};
@@ -375,7 +547,7 @@ class _TradingPageState extends State<TradingPage> {
   double _orderbookHeight = 150.0; // Default orderbook height
   bool _isDraggingHorizontal = false;
   double _marketOverviewHeight = 190.0; // Increased by 1.1x (215 * 1.1 = 236.5)
-  bool _isDraggingMarketOverview = false; // State for market overview splitter
+  bool _isDraggingMarketOverview = false; // State for market splitter
   
   // Chart data variables
   Map<String, List<Map<String, dynamic>>> _chartData = {}; // Cache chart data by symbol
@@ -419,10 +591,13 @@ class _TradingPageState extends State<TradingPage> {
     _priceController.addListener(() => setState(() {}));
     
     // Fetch pairs from API immediately when page opens, independent of FIX connection
-    _fetchPairsFromAPI();
+    // _fetchPairsFromAPI(); // Disabled - now using GetMarketInstrumentList based on selected market
     
     // Fetch cash holdings for buying power
     _fetchCashHoldings();
+    
+    // Fetch market list for the dropdown
+    _fetchMarketList();
     
     // Fetch supported currencies for the dropdown
     _fetchSupportedCurrencies();
@@ -1610,7 +1785,7 @@ class _TradingPageState extends State<TradingPage> {
                             final minMarketOverviewHeight = 150.0;
                             final maxMarketOverviewHeight = maxMiddleHeight - 200; // Leave space for chart and orderbook
                             
-                            // Constrain market overview height
+                            // Constrain market height
                             _marketOverviewHeight = _marketOverviewHeight.clamp(minMarketOverviewHeight, maxMarketOverviewHeight);
                             
                             return Column(
@@ -1621,7 +1796,7 @@ class _TradingPageState extends State<TradingPage> {
                                   child: _buildAssetSection(themeService),
                                 ),
                                 
-                                // Horizontal Splitter between Market Overview and Chart
+                                // Horizontal Splitter between Market and Chart
                                 _buildHorizontalSplitter(
                                   onDrag: (delta) {
                                     setState(() {
@@ -1908,6 +2083,35 @@ class _TradingPageState extends State<TradingPage> {
                 ),
               ),
               
+              // Trading Button (current page)
+              MouseRegion(
+                cursor: SystemMouseCursors.click,
+                child: Container(
+                  height: 55,
+                  padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
+                  decoration: BoxDecoration(
+                    color: isDarkTheme ? Colors.black : Colors.white,
+                    border: Border(
+                      top: BorderSide(color: Colors.white.withOpacity(0.3), width: 1),
+                      left: BorderSide(color: Colors.white.withOpacity(0.3), width: 1),
+                      right: BorderSide(color: Colors.white.withOpacity(0.3), width: 1),
+                    ),
+                    borderRadius: const BorderRadius.only(
+                      topLeft: Radius.circular(8),
+                      topRight: Radius.circular(8),
+                    ),
+                  ),
+                  child: Text(
+                    'Trading',
+                    style: TextStyle(
+                      fontSize: 13,
+                      fontWeight: FontWeight.w600,
+                      color: isDarkTheme ? Colors.white : Colors.black,
+                    ),
+                  ),
+                ),
+              ),
+              
               // Activity Button
               MouseRegion(
                 cursor: SystemMouseCursors.click,
@@ -1953,35 +2157,6 @@ class _TradingPageState extends State<TradingPage> {
                           ),
                         ),
                       ),
-                    ),
-                  ),
-                ),
-              ),
-              
-              // Trading Button (current page)
-              MouseRegion(
-                cursor: SystemMouseCursors.click,
-                child: Container(
-                  height: 55,
-                  padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
-                  decoration: BoxDecoration(
-                    color: isDarkTheme ? Colors.black : Colors.white,
-                    border: Border(
-                      top: BorderSide(color: Colors.white.withOpacity(0.3), width: 1),
-                      left: BorderSide(color: Colors.white.withOpacity(0.3), width: 1),
-                      right: BorderSide(color: Colors.white.withOpacity(0.3), width: 1),
-                    ),
-                    borderRadius: const BorderRadius.only(
-                      topLeft: Radius.circular(8),
-                      topRight: Radius.circular(8),
-                    ),
-                  ),
-                  child: Text(
-                    'Trading',
-                    style: TextStyle(
-                      fontSize: 13,
-                      fontWeight: FontWeight.w600,
-                      color: isDarkTheme ? Colors.white : Colors.black,
                     ),
                   ),
                 ),
@@ -2768,44 +2943,106 @@ class _TradingPageState extends State<TradingPage> {
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
           Text(
-            'Market Overview',
+            'Market',
             style: TextStyle(
               fontSize: 18,
               fontWeight: FontWeight.bold,
               color: _isDarkTheme ? Colors.white : Colors.black,
             ),
           ),
-          const SizedBox(height: 10), // Space between title and asset boxes
+          const SizedBox(height: 10), // Space between title and dropdown
+          
+          // Market Dropdown
+          Container(
+            height: 35,
+            padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
+            decoration: BoxDecoration(
+              border: Border.all(
+                color: _isDarkTheme ? Colors.grey[600]! : Colors.grey[400]!,
+              ),
+              borderRadius: BorderRadius.circular(8),
+            ),
+            child: DropdownButtonHideUnderline(
+              child: DropdownButton<Map<String, String>>(
+                value: _markets.isEmpty 
+                    ? null 
+                    : (_markets.any((market) => market['id'] == _selectedMarket['id']) 
+                        ? _selectedMarket 
+                        : _markets.isNotEmpty ? _markets.first : null),
+                isExpanded: true,
+                onChanged: _markets.isEmpty ? null : (Map<String, String>? newValue) {
+                  if (newValue != null) {
+                    setState(() {
+                      _selectedMarket = newValue;
+                    });
+                    // Load instruments for the selected market
+                    _fetchMarketInstruments(newValue['id']!);
+                  }
+                },
+                dropdownColor: _isDarkTheme ? const Color(0xFF2d2d2d) : Colors.white,
+                style: TextStyle(
+                  color: _isDarkTheme ? Colors.white : Colors.black,
+                  fontSize: 14,
+                ),
+                items: _markets.isEmpty 
+                    ? [DropdownMenuItem<Map<String, String>>(
+                        value: {'id': '', 'description': '', 'display': ''},
+                        child: Text(_isLoadingMarkets ? 'Loading markets...' : 'No markets available'),
+                      )]
+                    : _markets.map<DropdownMenuItem<Map<String, String>>>((market) {
+                        return DropdownMenuItem<Map<String, String>>(
+                          value: market,
+                          child: Text(market['display'] ?? market['id']!),
+                        );
+                      }).toList(),
+              ),
+            ),
+          ),
+          
+          const SizedBox(height: 10), // Space between dropdown and asset boxes
           Expanded(
-            child: _assets.isEmpty 
+            child: _isLoadingMarketInstruments 
                 ? Center(
                     child: Column(
                       mainAxisAlignment: MainAxisAlignment.center,
                       children: [
-                        Icon(
-                          Icons.hourglass_empty,
-                          size: 48,
-                          color: _isDarkTheme ? Colors.grey[400] : Colors.grey[600],
+                        CircularProgressIndicator(
+                          valueColor: AlwaysStoppedAnimation<Color>(
+                            _isDarkTheme ? Colors.white : const Color(0xFF1a1754),
+                          ),
                         ),
-                        SizedBox(height: 12),
+                        SizedBox(height: 16),
                         Text(
-                          'Loading trading pairs...',
+                          'Loading...',
                           style: TextStyle(
                             fontSize: 16,
                             color: _isDarkTheme ? Colors.grey[400] : Colors.grey[600],
                           ),
                         ),
-                        const SizedBox(height: 8),
-                        Text(
-                          'Fetching from API...',
-                          style: TextStyle(
-                            fontSize: 12,
-                            color: _isDarkTheme ? Colors.grey[500] : Colors.grey[500],
-                          ),
-                        ),
                       ],
                     ),
                   )
+                : _assets.isEmpty 
+                    ? Center(
+                        child: Column(
+                          mainAxisAlignment: MainAxisAlignment.center,
+                          children: [
+                            Icon(
+                              Icons.search_off,
+                              size: 48,
+                              color: _isDarkTheme ? Colors.grey[400] : Colors.grey[600],
+                            ),
+                            SizedBox(height: 12),
+                            Text(
+                              'No asset found',
+                              style: TextStyle(
+                                fontSize: 16,
+                                color: _isDarkTheme ? Colors.grey[400] : Colors.grey[600],
+                              ),
+                            ),
+                          ],
+                        ),
+                      )
                 : SizedBox(
                     height: 70, // Reduced from 200 to 100 for half-size boxes
                     child: Stack(
@@ -2821,9 +3058,8 @@ class _TradingPageState extends State<TradingPage> {
                             final isSelected = asset['symbol'] == _selectedSymbol;
                             
                             return Container(
-                              width: 145,
-                              height: 140,
-                              margin: const EdgeInsets.only(right: 8), // Reduced margin
+                              width: 120,
+                              margin: const EdgeInsets.only(right: 12),
                               child: GestureDetector(
                                 onTap: () {
                                   setState(() {
@@ -2833,175 +3069,47 @@ class _TradingPageState extends State<TradingPage> {
                                   _resetAndFetchTradeHistory(asset['symbol']);
                                   _fetchOrderbookData(asset['symbol']);
                                 },
-                                child: AnimatedContainer(
-                                  duration: const Duration(milliseconds: 200),
+                                child: Container(
+                                  padding: const EdgeInsets.all(12),
                                   decoration: BoxDecoration(
-                                    gradient: LinearGradient(
-                                      begin: Alignment.topLeft,
-                                      end: Alignment.bottomRight,
-                                      colors: isSelected 
-                                        ? [
-                                            const Color(0xFF1a1754),
-                                            const Color(0xFF2a2764),
-                                          ]
-                                        : _isDarkTheme 
-                                        ? [
-                                            const Color(0xFF2d2d2d),
-                                            const Color(0xFF1e1e1e),
-                                          ]
-                                        : [
-                                            Colors.white,
-                                            Colors.grey[50]!,
-                                          ],
-                                    ),
-                                    borderRadius: BorderRadius.circular(12),
                                     border: isSelected 
-                                        ? Border.all(color: const Color(0xFF00b8fb), width: 2)
+                                        ? Border.all(color: const Color(0xFF1a1754), width: 2)
                                         : Border.all(
                                             color: _isDarkTheme ? Colors.grey[700]! : Colors.grey[300]!,
                                             width: 1,
                                           ),
-                                    boxShadow: [
-                                      BoxShadow(
-                                        color: Colors.black.withOpacity(0.1),
-                                        blurRadius: 4,
-                                        offset: const Offset(0, 2),
-                                      ),
-                                    ],
+                                    borderRadius: BorderRadius.circular(8),
+                                    color: isSelected 
+                                        ? (_isDarkTheme ? const Color(0xFF1a1754).withOpacity(0.1) : const Color(0xFF1a1754).withOpacity(0.05))
+                                        : (_isDarkTheme ? const Color(0xFF2d2d2d) : Colors.white),
                                   ),
-                                  child: Stack(
+                                  child: Column(
+                                    crossAxisAlignment: CrossAxisAlignment.start,
+                                    mainAxisSize: MainAxisSize.min,
                                     children: [
-                                      // Cover photo background (faded)
-                                      Positioned.fill(
-                                        child: ClipRRect(
-                                          borderRadius: BorderRadius.circular(12),
-                                          child: Opacity(
-                                            opacity: _isDarkTheme ? 0.4 : 0.2, // More faded in light theme
-                                            child: asset['coverAddress'] != null && asset['coverAddress'].isNotEmpty
-                                                ? Image.network(
-                                                    asset['coverAddress'],
-                                                    fit: BoxFit.cover,
-                                                    errorBuilder: (context, error, stackTrace) {
-                                                      return Container(
-                                                        decoration: BoxDecoration(
-                                                          gradient: LinearGradient(
-                                                            begin: Alignment.topLeft,
-                                                            end: Alignment.bottomRight,
-                                                            colors: [
-                                                              const Color(0xFF1a1754).withOpacity(0.3),
-                                                              const Color(0xFF2a2764).withOpacity(0.6),
-                                                            ],
-                                                          ),
-                                                        ),
-                                                      );
-                                                    },
-                                                  )
-                                                : Container(
-                                                    decoration: BoxDecoration(
-                                                      gradient: LinearGradient(
-                                                        begin: Alignment.topLeft,
-                                                        end: Alignment.bottomRight,
-                                                        colors: [
-                                                          const Color(0xFF1a1754).withOpacity(0.3),
-                                                          const Color(0xFF2a2764).withOpacity(0.6),
-                                                        ],
-                                                      ),
-                                                    ),
-                                                  ),
-                                          ),
+                                      // Value (symbol)
+                                      Text(
+                                        asset['symbol'],
+                                        style: TextStyle(
+                                          fontSize: 14,
+                                          fontWeight: FontWeight.bold,
+                                          color: isSelected 
+                                              ? const Color(0xFF1a1754)
+                                              : (_isDarkTheme ? Colors.white : Colors.black),
                                         ),
+                                        maxLines: 1,
+                                        overflow: TextOverflow.ellipsis,
                                       ),
-                                      // Overlay gradient for text readability
-                                      Positioned.fill(
-                                        child: Container(
-                                          decoration: BoxDecoration(
-                                            borderRadius: BorderRadius.circular(12),
-                                            gradient: LinearGradient(
-                                              begin: Alignment.topCenter,
-                                              end: Alignment.bottomCenter,
-                                              colors: _isDarkTheme 
-                                                ? [
-                                                    Colors.black.withOpacity(0.3),
-                                                    Colors.black.withOpacity(0.7),
-                                                  ]
-                                                : [
-                                                    Colors.white.withOpacity(0.1),
-                                                    Colors.black.withOpacity(0.3),
-                                                  ],
-                                            ),
-                                          ),
+                                      const SizedBox(height: 8),
+                                      // Description
+                                      Text(
+                                        asset['description'] ?? '',
+                                        style: TextStyle(
+                                          fontSize: 12,
+                                          color: _isDarkTheme ? Colors.grey[400] : Colors.grey[600],
                                         ),
-                                      ),
-                                      // Content
-                                      Padding(
-                                        padding: const EdgeInsets.all(12.0),
-                                        child: Column(
-                                          crossAxisAlignment: CrossAxisAlignment.start,
-                                          children: [
-                                            Row(
-                                              children: [
-                                                asset['logoAddress'] != null && asset['logoAddress'].isNotEmpty
-                                                    ? ClipOval(
-                                                        child: Image.network(
-                                                          asset['logoAddress'],
-                                                          width: 32,
-                                                          height: 32,
-                                                          fit: BoxFit.cover,
-                                                          errorBuilder: (context, error, stackTrace) {
-                                                            return const Icon(
-                                                              Icons.currency_exchange,
-                                                              color: Colors.white,
-                                                              size: 18,
-                                                            );
-                                                          },
-                                                        ),
-                                                      )
-                                                    : const Icon(
-                                                        Icons.currency_exchange,
-                                                        color: Colors.white,
-                                                        size: 18,
-                                                      ),
-                                                const SizedBox(width: 12),
-                                                Expanded(
-                                                  child: Text(
-                                                    asset['symbol'],
-                                                    style: TextStyle(
-                                                      fontSize: asset['symbol'].length > 8 ? 11.0 : 14.0, // Smaller font for longer names
-                                                      fontWeight: FontWeight.bold,
-                                                      color: Colors.white,
-                                                    ),
-                                                    maxLines: asset['symbol'].length > 12 ? 2 : 1, // Use 2 lines for very long names
-                                                    overflow: TextOverflow.visible, // Show full text instead of ellipsis
-                                                  ),
-                                                ),
-                                              ],
-                                            ),
-                                            const SizedBox(height: 10),
-                                            // Title (second row)
-                                            Text(
-                                              asset['title'] ?? asset['name'] ?? '',
-                                              style: TextStyle(
-                                                fontSize: (asset['title'] ?? asset['name'] ?? '').length > 20 ? 10.0 : 11.0, // Smaller font for longer titles
-                                                color: Colors.white,
-                                                fontWeight: FontWeight.w500,
-                                              ),
-                                              maxLines: 2, // Allow 2 lines for titles
-                                              overflow: TextOverflow.visible, // Show full text instead of ellipsis
-                                            ),
-                                            const Spacer(),
-                                            // Price
-                                            Text(
-                                              asset['last'] != null && asset['last'].toString().isNotEmpty
-                                                  ? '\$${asset['last']}'
-                                                  : asset['price'],
-                                              style: const TextStyle(
-                                                fontSize: 16, // Smaller price text
-                                                fontWeight: FontWeight.bold,
-                                                color: Colors.white,
-                                              ),
-                                            ),
-                                          ],
-                                        ),
+                                        maxLines: 2,
+                                        overflow: TextOverflow.ellipsis,
                                       ),
                                     ],
                                   ),

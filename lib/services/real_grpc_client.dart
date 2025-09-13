@@ -987,6 +987,8 @@ class RealGrpcClient {
   /// Real GetMarketInstrumentList call to MarketService.GetMarketInstrumentList using grpcurl
   Future<Map<String, dynamic>> getMarketInstrumentList({
     required String marketId,
+    int pageNumber = 1,
+    int pageSize = 10,
     Duration? timeout,
   }) async {
     if (!_isConnected) {
@@ -1009,6 +1011,8 @@ class RealGrpcClient {
 
       final result = await GrpcurlHelper.getMarketInstrumentList(
         marketId: marketId,
+        pageNumber: pageNumber,
+        pageSize: pageSize,
       );
 
       print('📤 GetMarketInstrumentList OUTPUT: ${result.toString()}');

@@ -1369,6 +1369,8 @@ class GrpcurlHelper {
   /// Get Market Instrument List using grpcurl
   static Future<Map<String, dynamic>> getMarketInstrumentList({
     required String marketId,
+    int pageNumber = 1,
+    int pageSize = 10,
   }) async {
     final responseData = <String, dynamic>{
       'success': false,
@@ -1396,6 +1398,10 @@ class GrpcurlHelper {
 
       final inputParams = {
         'ref_request_id': 'get_market_instrument_list_${DateTime.now().millisecondsSinceEpoch}',
+        'pagination': {
+          'page_nr': pageNumber,
+          'page_size': pageSize,
+        },
         'market_id': marketId,
       };
 
