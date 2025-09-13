@@ -3060,29 +3060,31 @@ class _TradingPageState extends State<TradingPage> {
                             return Container(
                               width: 120,
                               margin: const EdgeInsets.only(right: 12),
-                              child: GestureDetector(
-                                onTap: () {
-                                  setState(() {
-                                    _selectedSymbol = asset['symbol'];
-                                  });
-                                  _fetchChartData(asset['symbol']);
-                                  _resetAndFetchTradeHistory(asset['symbol']);
-                                  _fetchOrderbookData(asset['symbol']);
-                                },
-                                child: Container(
-                                  padding: const EdgeInsets.all(12),
-                                  decoration: BoxDecoration(
-                                    border: isSelected 
-                                        ? Border.all(color: const Color(0xFF1a1754), width: 2)
-                                        : Border.all(
-                                            color: _isDarkTheme ? Colors.grey[700]! : Colors.grey[300]!,
-                                            width: 1,
-                                          ),
-                                    borderRadius: BorderRadius.circular(8),
-                                    color: isSelected 
-                                        ? (_isDarkTheme ? const Color(0xFF1a1754).withOpacity(0.1) : const Color(0xFF1a1754).withOpacity(0.05))
-                                        : (_isDarkTheme ? const Color(0xFF2d2d2d) : Colors.white),
-                                  ),
+                              child: MouseRegion(
+                                cursor: SystemMouseCursors.click,
+                                child: GestureDetector(
+                                  onTap: () {
+                                    setState(() {
+                                      _selectedSymbol = asset['symbol'];
+                                    });
+                                    _fetchChartData(asset['symbol']);
+                                    _resetAndFetchTradeHistory(asset['symbol']);
+                                    _fetchOrderbookData(asset['symbol']);
+                                  },
+                                  child: Container(
+                                    padding: const EdgeInsets.all(12),
+                                    decoration: BoxDecoration(
+                                      border: isSelected 
+                                          ? Border.all(color: const Color(0xFF00b8fb), width: 2)
+                                          : Border.all(
+                                              color: _isDarkTheme ? Colors.grey[700]! : Colors.grey[300]!,
+                                              width: 1,
+                                            ),
+                                      borderRadius: BorderRadius.circular(8),
+                                      color: isSelected 
+                                          ? (_isDarkTheme ? const Color(0xFF00b8fb).withOpacity(0.1) : const Color(0xFF00b8fb).withOpacity(0.05))
+                                          : (_isDarkTheme ? const Color(0xFF2d2d2d) : Colors.white),
+                                    ),
                                   child: Column(
                                     crossAxisAlignment: CrossAxisAlignment.start,
                                     mainAxisSize: MainAxisSize.min,
@@ -3093,9 +3095,7 @@ class _TradingPageState extends State<TradingPage> {
                                         style: TextStyle(
                                           fontSize: 14,
                                           fontWeight: FontWeight.bold,
-                                          color: isSelected 
-                                              ? const Color(0xFF1a1754)
-                                              : (_isDarkTheme ? Colors.white : Colors.black),
+                                          color: _isDarkTheme ? Colors.white : Colors.black,
                                         ),
                                         maxLines: 1,
                                         overflow: TextOverflow.ellipsis,
@@ -3105,7 +3105,7 @@ class _TradingPageState extends State<TradingPage> {
                                       Text(
                                         asset['description'] ?? '',
                                         style: TextStyle(
-                                          fontSize: 12,
+                                          fontSize: 7,
                                           color: _isDarkTheme ? Colors.grey[400] : Colors.grey[600],
                                         ),
                                         maxLines: 2,
@@ -3115,6 +3115,7 @@ class _TradingPageState extends State<TradingPage> {
                                   ),
                                 ),
                               ),
+                            ),
                             );
                           },
                         ),
@@ -3137,9 +3138,11 @@ class _TradingPageState extends State<TradingPage> {
                               ),
                             ),
                             child: Center(
-                              child: GestureDetector(
-                                onTap: _scrollLeft,
-                                child: Container(
+                              child: MouseRegion(
+                                cursor: SystemMouseCursors.click,
+                                child: GestureDetector(
+                                  onTap: _scrollLeft,
+                                  child: Container(
                                   width: 32,
                                   height: 32,
                                   decoration: BoxDecoration(
@@ -3160,6 +3163,7 @@ class _TradingPageState extends State<TradingPage> {
                                   ),
                                 ),
                               ),
+                            ),
                             ),
                           ),
                         ),
@@ -3182,9 +3186,11 @@ class _TradingPageState extends State<TradingPage> {
                               ),
                             ),
                             child: Center(
-                              child: GestureDetector(
-                                onTap: _scrollRight,
-                                child: Container(
+                              child: MouseRegion(
+                                cursor: SystemMouseCursors.click,
+                                child: GestureDetector(
+                                  onTap: _scrollRight,
+                                  child: Container(
                                   width: 32,
                                   height: 32,
                                   decoration: BoxDecoration(
@@ -3205,6 +3211,7 @@ class _TradingPageState extends State<TradingPage> {
                                   ),
                                 ),
                               ),
+                            ),
                             ),
                           ),
                         ),
