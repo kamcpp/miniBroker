@@ -2080,6 +2080,9 @@ class _ActivityPageState extends State<ActivityPage> {
           child: Container(
             decoration: BoxDecoration(
               color: isDarkTheme ? const Color(0xFF2d2d2d) : Colors.white,
+              border: Border.all(
+                color: isDarkTheme ? const Color(0xFF2d2d2d) : Colors.white, // Same as selected tab background
+              ),
               borderRadius: const BorderRadius.only(
                 topRight: Radius.circular(8),
                 bottomLeft: Radius.circular(8),
