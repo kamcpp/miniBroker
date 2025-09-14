@@ -500,47 +500,52 @@ class _TradingPageState extends State<TradingPage> {
 
   /// Fetch account market portfolio for available balance
   Future<void> _fetchAccountMarketPortfolio() async {
+    // Call the new method with current selected market
+    await _fetchAccountMarketPortfolioForMarket(_selectedMarket['id'] ?? '');
+  }
+
+  Future<void> _fetchAccountMarketPortfolioForMarket(String marketId) async {
     try {
-      print('📊 Fetching account market portfolio...');
-      
+      print('📊 Fetching account market portfolio for market: $marketId...');
+
       // Check if we have required data
       if (_cachedAccountId == null || _cachedAccountId!.isEmpty) {
         print('❌ No cached account ID available for portfolio');
         return;
       }
-      
-      if (_selectedMarket.isEmpty || _selectedMarket['id']!.isEmpty) {
-        print('❌ No market selected for portfolio');
+
+      if (marketId.isEmpty) {
+        print('❌ No market ID provided for portfolio');
         return;
       }
-      
+
       if (_selectedSymbol.isEmpty) {
         print('❌ No asset selected for portfolio');
         return;
       }
-      
+
       // Extract asset ID from selected symbol (e.g., "ETH/USD" -> "ETH")
       final assetId = _selectedSymbol.split('/').first;
-      
+
       print('📨 GetAccountMarketPortfolio REQUEST:');
       print('   account_id: ${_cachedAccountId!}');
-      print('   market_id: ${_selectedMarket['id']!}');
+      print('   market_id: $marketId');
       print('   asset_ids: [$assetId]');
-      
+
       final portfolioResponse = await realGrpcClient.getAccountMarketPortfolio(
         accountId: _cachedAccountId!,
-        marketId: _selectedMarket['id']!,
+        marketId: marketId,
         assetIds: [assetId],
       ).timeout(const Duration(seconds: 10));
-      
+
       print('📬 GetAccountMarketPortfolio RESPONSE: ${portfolioResponse.toString()}');
-      
+
       if (portfolioResponse['success'] == true && portfolioResponse['output'] != null) {
         final output = portfolioResponse['output'] as Map<String, dynamic>;
-        
+
         // Look for balance in the response
         String balance = '0';
-        
+
         // Check if response has portfolio.balances structure
         if (output['portfolio'] != null) {
           final portfolio = output['portfolio'] as Map<String, dynamic>? ?? {};
@@ -565,12 +570,12 @@ class _TradingPageState extends State<TradingPage> {
             }
           }
         }
-        
+
         setState(() {
           _availableBalance = balance;
         });
-        
-        print('✅ Updated available balance for $assetId: $balance');
+
+        print('✅ Updated available balance for $assetId: $balance (market: $marketId)');
       } else {
         print('❌ Failed to fetch account market portfolio: ${portfolioResponse['output']}');
         setState(() {
@@ -578,7 +583,7 @@ class _TradingPageState extends State<TradingPage> {
         });
       }
     } catch (e) {
-      print('❌ Error fetching account market portfolio: $e');
+      print('❌ Error fetching account market portfolio for market $marketId: $e');
       setState(() {
         _availableBalance = '0';
       });
@@ -1726,42 +1731,52 @@ class _TradingPageState extends State<TradingPage> {
     super.dispose();
   }
   
-  void _scrollLeft() {
+  void _scrollLeft() async {
     if (_assets.isNotEmpty) {
       final currentIndex = _assets.indexWhere((asset) => asset['symbol'] == _selectedSymbol);
       final newIndex = currentIndex > 0 ? currentIndex - 1 : _assets.length - 1;
-      
+
       setState(() {
         _selectedSymbol = _assets[newIndex]['symbol'];
       });
-      
+
   // Fetch chart data for newly selected symbol
   _fetchChartData(_assets[newIndex]['symbol']);
   // Fetch trade history for newly selected symbol
   _resetAndFetchTradeHistory(_assets[newIndex]['symbol']);
   // Fetch orderbook data for newly selected symbol
   _fetchOrderbookData(_assets[newIndex]['symbol']);
+  // Update portfolio for sell orders if currently in sell mode
+  // Asset has changed, so asset_ids parameter changes
+  if (!_isBuySelected) {
+    await _fetchAccountMarketPortfolioForMarket(_selectedMarket['id'] ?? '');
+  }
       
       // Scroll to center the selected asset (162px width + 16px margin = 178px per card)
       _scrollToIndex(newIndex);
     }
   }
   
-  void _scrollRight() {
+  void _scrollRight() async {
     if (_assets.isNotEmpty) {
       final currentIndex = _assets.indexWhere((asset) => asset['symbol'] == _selectedSymbol);
       final newIndex = currentIndex < _assets.length - 1 ? currentIndex + 1 : 0;
-      
+
       setState(() {
         _selectedSymbol = _assets[newIndex]['symbol'];
       });
-      
+
   // Fetch chart data for newly selected symbol
   _fetchChartData(_assets[newIndex]['symbol']);
   // Fetch trade history for newly selected symbol
   _resetAndFetchTradeHistory(_assets[newIndex]['symbol']);
   // Fetch orderbook data for newly selected symbol
   _fetchOrderbookData(_assets[newIndex]['symbol']);
+  // Update portfolio for sell orders if currently in sell mode
+  // Asset has changed, so asset_ids parameter changes
+  if (!_isBuySelected) {
+    await _fetchAccountMarketPortfolioForMarket(_selectedMarket['id'] ?? '');
+  }
       
       // Scroll to center the selected asset (162px width + 16px margin = 178px per card)
       _scrollToIndex(newIndex);
@@ -3061,16 +3076,17 @@ class _TradingPageState extends State<TradingPage> {
                         ? _selectedMarket 
                         : _markets.isNotEmpty ? _markets.first : null),
                 isExpanded: true,
-                onChanged: _markets.isEmpty ? null : (Map<String, String>? newValue) {
+                onChanged: _markets.isEmpty ? null : (Map<String, String>? newValue) async {
                   if (newValue != null) {
                     setState(() {
                       _selectedMarket = newValue;
                     });
-                    // Load instruments for the selected market
-                    _fetchMarketInstruments(newValue['id']!);
+                    // Load instruments for the selected market first
+                    await _fetchMarketInstruments(newValue['id']!);
                     // Update portfolio for sell orders if currently in sell mode
+                    // Use the newValue market ID to ensure we're using the correct market
                     if (!_isBuySelected) {
-                      _fetchAccountMarketPortfolio();
+                      await _fetchAccountMarketPortfolioForMarket(newValue['id']!);
                     }
                   }
                 },
@@ -3158,7 +3174,7 @@ class _TradingPageState extends State<TradingPage> {
                               child: MouseRegion(
                                 cursor: SystemMouseCursors.click,
                                 child: GestureDetector(
-                                  onTap: () {
+                                  onTap: () async {
                                     setState(() {
                                       _selectedSymbol = asset['symbol'];
                                     });
@@ -3166,8 +3182,9 @@ class _TradingPageState extends State<TradingPage> {
                                     _resetAndFetchTradeHistory(asset['symbol']);
                                     _fetchOrderbookData(asset['symbol']);
                                     // Update portfolio for sell orders if currently in sell mode
+                                    // Asset has changed, so asset_ids parameter changes
                                     if (!_isBuySelected) {
-                                      _fetchAccountMarketPortfolio();
+                                      await _fetchAccountMarketPortfolioForMarket(_selectedMarket['id'] ?? '');
                                     }
                                   },
                                   child: Container(
