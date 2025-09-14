@@ -119,7 +119,7 @@ class _PortfolioPageState extends State<PortfolioPage> {
       final portfolioResponse = await realGrpcClient.getAccountMarketPortfolio(
         accountId: accountId,
         marketId: '',
-        assetIds: ['ETH', 'OXC','XRP'],
+        assetIds: [],
       ).timeout(
         const Duration(seconds: 15),
         onTimeout: () => {

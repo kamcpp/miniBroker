@@ -497,6 +497,93 @@ class _TradingPageState extends State<TradingPage> {
       });
     }
   }
+
+  /// Fetch account market portfolio for available balance
+  Future<void> _fetchAccountMarketPortfolio() async {
+    try {
+      print('📊 Fetching account market portfolio...');
+      
+      // Check if we have required data
+      if (_cachedAccountId == null || _cachedAccountId!.isEmpty) {
+        print('❌ No cached account ID available for portfolio');
+        return;
+      }
+      
+      if (_selectedMarket.isEmpty || _selectedMarket['id']!.isEmpty) {
+        print('❌ No market selected for portfolio');
+        return;
+      }
+      
+      if (_selectedSymbol.isEmpty) {
+        print('❌ No asset selected for portfolio');
+        return;
+      }
+      
+      // Extract asset ID from selected symbol (e.g., "ETH/USD" -> "ETH")
+      final assetId = _selectedSymbol.split('/').first;
+      
+      print('📨 GetAccountMarketPortfolio REQUEST:');
+      print('   account_id: ${_cachedAccountId!}');
+      print('   market_id: ${_selectedMarket['id']!}');
+      print('   asset_ids: [$assetId]');
+      
+      final portfolioResponse = await realGrpcClient.getAccountMarketPortfolio(
+        accountId: _cachedAccountId!,
+        marketId: _selectedMarket['id']!,
+        assetIds: [assetId],
+      ).timeout(const Duration(seconds: 10));
+      
+      print('📬 GetAccountMarketPortfolio RESPONSE: ${portfolioResponse.toString()}');
+      
+      if (portfolioResponse['success'] == true && portfolioResponse['output'] != null) {
+        final output = portfolioResponse['output'] as Map<String, dynamic>;
+        
+        // Look for balance in the response
+        String balance = '0';
+        
+        // Check if response has portfolio.balances structure
+        if (output['portfolio'] != null) {
+          final portfolio = output['portfolio'] as Map<String, dynamic>? ?? {};
+          print('📊 Found portfolio section: $portfolio');
+          if (portfolio['balances'] != null) {
+            final balances = portfolio['balances'] as Map<String, dynamic>? ?? {};
+            print('💰 Found balances: $balances');
+            balance = balances[assetId]?.toString() ?? '0';
+            print('✅ Extracted balance for $assetId: $balance');
+          }
+        } else if (output['balances'] != null) {
+          final balances = output['balances'] as Map<String, dynamic>? ?? {};
+          balance = balances[assetId]?.toString() ?? '0';
+        } else if (output['balance'] != null) {
+          balance = output['balance'].toString();
+        } else if (output['holdings'] != null) {
+          final holdings = output['holdings'] as List<dynamic>? ?? [];
+          for (final holding in holdings) {
+            if (holding is Map<String, dynamic> && holding['asset_id'] == assetId) {
+              balance = holding['balance']?.toString() ?? '0';
+              break;
+            }
+          }
+        }
+        
+        setState(() {
+          _availableBalance = balance;
+        });
+        
+        print('✅ Updated available balance for $assetId: $balance');
+      } else {
+        print('❌ Failed to fetch account market portfolio: ${portfolioResponse['output']}');
+        setState(() {
+          _availableBalance = '0';
+        });
+      }
+    } catch (e) {
+      print('❌ Error fetching account market portfolio: $e');
+      setState(() {
+        _availableBalance = '0';
+      });
+    }
+  }
   
   final List<Map<String, dynamic>> _assets = [];
   List<Map<String, dynamic>> _tradeHistory = [];
@@ -528,6 +615,7 @@ class _TradingPageState extends State<TradingPage> {
   // Cash holdings data
   bool _isLoadingCashHoldings = false;
   String _buyingPower = '0'; // Default fallback value
+  String _availableBalance = '0'; // For sell orders - available asset balance
   String? _cachedAccountId; // Cache account ID for entire session (doesn't change until logout)
   
   // Message stream subscription
@@ -2457,7 +2545,10 @@ class _TradingPageState extends State<TradingPage> {
                   child: MouseRegion(
                     cursor: SystemMouseCursors.click, // Pointer cursor
                     child: GestureDetector(
-                      onTap: () => setState(() => _isBuySelected = false),
+                      onTap: () {
+                        setState(() => _isBuySelected = false);
+                        _fetchAccountMarketPortfolio();
+                      },
                       child: Container(
                         padding: const EdgeInsets.symmetric(vertical: 8), // Much smaller padding
                         decoration: BoxDecoration(
@@ -2580,7 +2671,7 @@ class _TradingPageState extends State<TradingPage> {
                   : Text(
                       _isBuySelected 
                           ? '$_buyingPower ${_selectedCurrency['symbol'] ?? ''}' 
-                          : _buyingPower,
+                          : _availableBalance,
                       style: TextStyle(
                         fontSize: 18,
                         fontWeight: FontWeight.w600,
@@ -2977,6 +3068,10 @@ class _TradingPageState extends State<TradingPage> {
                     });
                     // Load instruments for the selected market
                     _fetchMarketInstruments(newValue['id']!);
+                    // Update portfolio for sell orders if currently in sell mode
+                    if (!_isBuySelected) {
+                      _fetchAccountMarketPortfolio();
+                    }
                   }
                 },
                 dropdownColor: _isDarkTheme ? const Color(0xFF2d2d2d) : Colors.white,
@@ -3070,6 +3165,10 @@ class _TradingPageState extends State<TradingPage> {
                                     _fetchChartData(asset['symbol']);
                                     _resetAndFetchTradeHistory(asset['symbol']);
                                     _fetchOrderbookData(asset['symbol']);
+                                    // Update portfolio for sell orders if currently in sell mode
+                                    if (!_isBuySelected) {
+                                      _fetchAccountMarketPortfolio();
+                                    }
                                   },
                                   child: Container(
                                     padding: const EdgeInsets.all(12),
