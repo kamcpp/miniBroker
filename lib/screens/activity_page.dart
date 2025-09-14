@@ -75,6 +75,10 @@ class _ActivityPageState extends State<ActivityPage> {
   // Text controllers for page number fields
   late TextEditingController _pageNumberController;
   late TextEditingController _tradePageNumberController;
+
+  // Tab management
+  int _selectedTabIndex = 0;
+  final List<String> _tabNames = ['Orders', 'Trades', 'Settlements', 'Transactions'];
   
   @override
   void initState() {
@@ -694,10 +698,6 @@ class _ActivityPageState extends State<ActivityPage> {
       decoration: BoxDecoration(
         color: isDarkTheme ? const Color(0xFF1e1e1e) : Colors.white,
         borderRadius: BorderRadius.circular(8),
-        border: Border.all(
-          color: isDarkTheme ? Colors.grey[700]! : Colors.grey[300]!,
-          width: 1,
-        ),
       ),
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
@@ -757,12 +757,6 @@ class _ActivityPageState extends State<ActivityPage> {
               padding: const EdgeInsets.all(16),
               decoration: BoxDecoration(
                 color: isDarkTheme ? const Color(0xFF2a2a2a) : Colors.grey[100],
-                border: Border(
-                  bottom: BorderSide(
-                    color: isDarkTheme ? Colors.grey[700]! : Colors.grey[300]!,
-                    width: 1,
-                  ),
-                ),
               ),
               child: Column(
                 crossAxisAlignment: CrossAxisAlignment.start,
@@ -1251,8 +1245,7 @@ class _ActivityPageState extends State<ActivityPage> {
               ),
             ),
           // Orders table content
-          Container(
-            height: _showFilters ? 300 : 400, // Fixed height instead of Expanded
+          Expanded(
             child: Column(
               children: [
                 // Table header row - always show
@@ -1447,10 +1440,6 @@ class _ActivityPageState extends State<ActivityPage> {
       decoration: BoxDecoration(
         color: isDarkTheme ? const Color(0xFF1e1e1e) : Colors.white,
         borderRadius: BorderRadius.circular(8),
-        border: Border.all(
-          color: isDarkTheme ? Colors.grey[700]! : Colors.grey[300]!,
-          width: 1,
-        ),
       ),
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
@@ -1510,12 +1499,6 @@ class _ActivityPageState extends State<ActivityPage> {
               padding: const EdgeInsets.all(16),
               decoration: BoxDecoration(
                 color: isDarkTheme ? const Color(0xFF2a2a2a) : Colors.grey[100],
-                border: Border(
-                  bottom: BorderSide(
-                    color: isDarkTheme ? Colors.grey[700]! : Colors.grey[300]!,
-                    width: 1,
-                  ),
-                ),
               ),
               child: Column(
                 crossAxisAlignment: CrossAxisAlignment.start,
@@ -1951,8 +1934,7 @@ class _ActivityPageState extends State<ActivityPage> {
               ),
             ),
           // Table content
-          Container(
-            height: _showTradeFilters ? 200 : 300, // Adjust height when filters are shown
+          Expanded(
             child: Column(
               children: [
                 // Trades table header row - always show
@@ -2085,6 +2067,176 @@ class _ActivityPageState extends State<ActivityPage> {
   }
 
 
+  /// Build connected tab interface with headers attached to content
+  Widget _buildConnectedTabInterface(bool isDarkTheme) {
+    return Column(
+      mainAxisSize: MainAxisSize.min,
+      crossAxisAlignment: CrossAxisAlignment.start, // Align column content to the left
+      children: [
+        // Connected tab headers
+        _buildConnectedTabHeaders(isDarkTheme),
+        // Connected content area
+        Expanded(
+          child: Container(
+            decoration: BoxDecoration(
+              color: isDarkTheme ? const Color(0xFF2d2d2d) : Colors.white,
+              borderRadius: const BorderRadius.only(
+                topRight: Radius.circular(8),
+                bottomLeft: Radius.circular(8),
+                bottomRight: Radius.circular(8),
+              ),
+            ),
+            child: RefreshIndicator(
+              onRefresh: _fetchActivityData,
+              child: _buildTabContent(isDarkTheme),
+            ),
+          ),
+        ),
+      ],
+    );
+  }
+
+  /// Build connected tab headers that integrate with content
+  Widget _buildConnectedTabHeaders(bool isDarkTheme) {
+    return SingleChildScrollView(
+      scrollDirection: Axis.horizontal,
+      child: Row(
+        crossAxisAlignment: CrossAxisAlignment.end,
+        mainAxisAlignment: MainAxisAlignment.start, // Align tabs to the left
+        children: _tabNames.asMap().entries.map((entry) {
+        final index = entry.key;
+        final tabName = entry.value;
+        final isActive = _selectedTabIndex == index;
+
+        return MouseRegion(
+          cursor: SystemMouseCursors.click,
+          child: GestureDetector(
+            onTap: () {
+              setState(() {
+                _selectedTabIndex = index;
+              });
+            },
+            child: Container(
+              padding: EdgeInsets.symmetric(
+                horizontal: 16,
+                vertical: isActive ? 13.74 : 12,
+              ),
+              decoration: BoxDecoration(
+                color: isActive
+                    ? (isDarkTheme ? const Color(0xFF2d2d2d) : Colors.white)
+                    : (isDarkTheme
+                        ? Colors.black.withOpacity(0.3)
+                        : Colors.grey.withOpacity(0.2)),
+                border: isActive
+                    ? null // No border for selected tab
+                    : Border.all(
+                        color: isDarkTheme ? const Color(0xFF2d2d2d) : Colors.white, // Same as selected background
+                      ),
+                borderRadius: const BorderRadius.only(
+                  topLeft: Radius.circular(8),
+                  topRight: Radius.circular(8),
+                ),
+              ),
+              child: Text(
+                tabName,
+                style: TextStyle(
+                  color: isActive
+                      ? (isDarkTheme ? Colors.white : Colors.black)
+                      : Colors.grey[400],
+                  fontSize: 14,
+                  fontWeight: isActive ? FontWeight.w600 : FontWeight.w500,
+                ),
+              ),
+            ),
+          ),
+        );
+      }).toList(),
+      ),
+    );
+  }
+
+  /// Build tab content based on selected tab
+  Widget _buildTabContent(bool isDarkTheme) {
+    switch (_selectedTabIndex) {
+      case 0: // Orders
+        return _buildOrdersTable(isDarkTheme);
+      case 1: // Trades
+        return _buildTradesTable(isDarkTheme);
+      case 2: // Settlements
+        return _buildSettlementsContent(isDarkTheme);
+      case 3: // Transactions
+        return _buildTransactionsContent(isDarkTheme);
+      default:
+        return _buildOrdersTable(isDarkTheme);
+    }
+  }
+
+  /// Build settlements content (placeholder)
+  Widget _buildSettlementsContent(bool isDarkTheme) {
+    return Center(
+      child: Column(
+        mainAxisAlignment: MainAxisAlignment.center,
+        children: [
+          Icon(
+            Icons.assignment_outlined,
+            size: 48,
+            color: isDarkTheme ? Colors.grey[400] : Colors.grey[600],
+          ),
+          const SizedBox(height: 16),
+          Text(
+            'Settlements',
+            style: TextStyle(
+              fontSize: 18,
+              fontWeight: FontWeight.w600,
+              color: isDarkTheme ? Colors.white : Colors.black87,
+            ),
+          ),
+          const SizedBox(height: 8),
+          Text(
+            'Settlements data will be displayed here',
+            style: TextStyle(
+              fontSize: 14,
+              color: isDarkTheme ? Colors.grey[400] : Colors.grey[600],
+            ),
+          ),
+        ],
+      ),
+    );
+  }
+
+  /// Build transactions content (placeholder)
+  Widget _buildTransactionsContent(bool isDarkTheme) {
+    return Center(
+      child: Column(
+        mainAxisAlignment: MainAxisAlignment.center,
+        children: [
+          Icon(
+            Icons.receipt_long_outlined,
+            size: 48,
+            color: isDarkTheme ? Colors.grey[400] : Colors.grey[600],
+          ),
+          const SizedBox(height: 16),
+          Text(
+            'Transactions',
+            style: TextStyle(
+              fontSize: 18,
+              fontWeight: FontWeight.w600,
+              color: isDarkTheme ? Colors.white : Colors.black87,
+            ),
+          ),
+          const SizedBox(height: 8),
+          Text(
+            'Transactions data will be displayed here',
+            style: TextStyle(
+              fontSize: 14,
+              color: isDarkTheme ? Colors.grey[400] : Colors.grey[600],
+            ),
+          ),
+        ],
+      ),
+    );
+  }
+
   @override
   Widget build(BuildContext context) {
     final authService = Provider.of<AuthService>(context);
@@ -2100,24 +2252,9 @@ class _ActivityPageState extends State<ActivityPage> {
           
           // Main content area
           Expanded(
-            child: RefreshIndicator(
-              onRefresh: _fetchActivityData,
-              child: SingleChildScrollView(
-                physics: const AlwaysScrollableScrollPhysics(),
-                padding: const EdgeInsets.all(16),
-                child: Column(
-                  crossAxisAlignment: CrossAxisAlignment.start,
-                  children: [
-                    // Orders table (top)
-                    _buildOrdersTable(isDarkTheme),
-                    
-                    const SizedBox(height: 24),
-                    
-                    // Trades table (bottom)
-                    _buildTradesTable(isDarkTheme),
-                  ],
-                ),
-              ),
+            child: Padding(
+              padding: const EdgeInsets.all(16),
+              child: _buildConnectedTabInterface(isDarkTheme),
             ),
           ),
         ],
