@@ -668,7 +668,16 @@ class _TradingPageState extends State<TradingPage> {
   bool _hasMoreBuyOrders = true;
   int _totalSellOrdersPages = 1;
   int _totalBuyOrdersPages = 1;
-  
+
+  // Trade orders tab management
+  int _selectedTradeTabIndex = 0;
+  final List<String> _tradeTabNames = ['Create Order', 'Replace Order', 'Cancel Order'];
+
+  // Trade orders data
+  List<Map<String, dynamic>> _createOrders = [];
+  List<Map<String, dynamic>> _replaceOrders = [];
+  List<Map<String, dynamic>> _cancelOrders = [];
+
   @override
   void initState() {
     super.initState();
@@ -712,8 +721,17 @@ class _TradingPageState extends State<TradingPage> {
           _fetchOrderbookData(_selectedSymbol);
         }
       });
+
+    // Initialize sample data for demonstration
+    _initializeSampleTradeOrdersData();
   }
-  
+
+  void _initializeSampleTradeOrdersData() {
+    // Remove mock data from Replace Order and Cancel Order tabs
+    _replaceOrders = [];
+    _cancelOrders = [];
+  }
+
   void _listenToConnectionStatus() {
     // FIX connection status removed - no longer needed
     print('Connection status monitoring disabled - FIX functionality removed');
@@ -2292,7 +2310,7 @@ class _TradingPageState extends State<TradingPage> {
                   height: 55,
                   padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
                   decoration: BoxDecoration(
-                    color: isDarkTheme ? Colors.black : Colors.white,
+                    color: isDarkTheme ? Colors.black : Colors.grey[100],
                     border: Border(
                       top: BorderSide(color: Colors.white.withOpacity(0.3), width: 1),
                       left: BorderSide(color: Colors.white.withOpacity(0.3), width: 1),
@@ -2541,7 +2559,7 @@ class _TradingPageState extends State<TradingPage> {
     return Container(
       padding: const EdgeInsets.all(20),
       decoration: BoxDecoration(
-        color: _isDarkTheme ? const Color(0xFF1e1e1e) : Colors.white,
+        color: _isDarkTheme ? Colors.black : Colors.grey[100],
       ),
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
@@ -2555,572 +2573,14 @@ class _TradingPageState extends State<TradingPage> {
               color: _isDarkTheme ? Colors.white : Colors.black,
             ),
           ),
-          
+
           const SizedBox(height: 16),
-          
-          // Supported Currencies title
-          Text(
-            'Currency',
-            style: TextStyle(
-              fontSize: 14,
-              color: _isDarkTheme ? Colors.grey[400] : Colors.grey[600],
-              fontWeight: FontWeight.w500,
-            ),
+
+          // Trade Orders Tabs Section
+          Expanded(
+            child: _buildTradeOrdersTabs(_isDarkTheme),
           ),
-          
-          const SizedBox(height: 8),
-          
-          // Supported Currencies Dropdown
-          Container(
-            height: 35, // Made much smaller (was default ~48)
-            padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4), // Reduced padding
-            decoration: BoxDecoration(
-              border: Border.all(
-                color: _isDarkTheme ? Colors.grey[600]! : Colors.grey[400]!,
-              ),
-              borderRadius: BorderRadius.circular(8),
-            ),
-            child: DropdownButtonHideUnderline(
-              child: DropdownButton<Map<String, String>>(
-                value: _supportedCurrencies.isEmpty 
-                    ? null 
-                    : (_supportedCurrencies.any((currency) => currency['code'] == _selectedCurrency['code']) 
-                        ? _selectedCurrency 
-                        : _supportedCurrencies.isNotEmpty ? _supportedCurrencies.first : null),
-                isExpanded: true,
-                onChanged: _supportedCurrencies.isEmpty ? null : (Map<String, String>? newValue) {
-                  if (newValue != null) {
-                    setState(() {
-                      _selectedCurrency = newValue;
-                    });
-                    // Call cash holdings with the selected currency code
-                    _fetchCashHoldingsForCurrency(newValue['code']!);
-                  }
-                },
-                dropdownColor: _isDarkTheme ? const Color(0xFF2d2d2d) : Colors.white,
-                style: TextStyle(
-                  color: _isDarkTheme ? Colors.white : Colors.black,
-                  fontSize: 14, // Smaller font size
-                ),
-                items: _supportedCurrencies.isEmpty 
-                    ? [DropdownMenuItem<Map<String, String>>(
-                        value: {'code': '', 'symbol': '', 'display': ''},
-                        child: Text(_isLoadingSupportedCurrencies ? 'Loading currencies...' : 'No currencies available'),
-                      )]
-                    : _supportedCurrencies.map<DropdownMenuItem<Map<String, String>>>((currency) {
-                        return DropdownMenuItem<Map<String, String>>(
-                          value: currency,
-                          child: Text(currency['display'] ?? currency['code']!),
-                        );
-                      }).toList(),
-              ),
-            ),
-          ),
-          
-          const SizedBox(height: 16), // Reduced from 20
-          
-          // Buy/Sell Toggle Buttons (stretches with container width)
-          Container(
-            decoration: BoxDecoration(
-              color: _isDarkTheme ? const Color(0xFF2d2d2d) : Colors.grey[100],
-              borderRadius: BorderRadius.circular(20),
-            ),
-            child: Row(
-              children: [
-                Expanded(
-                  child: MouseRegion(
-                    cursor: SystemMouseCursors.click, // Pointer cursor
-                    child: GestureDetector(
-                      onTap: () {
-                        setState(() => _isBuySelected = true);
-                        _calculateOrderFees();
-                      },
-                      child: Container(
-                        padding: const EdgeInsets.symmetric(vertical: 8), // Much smaller padding
-                        decoration: BoxDecoration(
-                          color: _isBuySelected 
-                              ? const Color(0xFF00D4AA) // Cyan color for buy
-                              : Colors.transparent,
-                          borderRadius: BorderRadius.circular(20),
-                        ),
-                        child: Text(
-                          'Buy',
-                          textAlign: TextAlign.center,
-                          style: TextStyle(
-                            color: _isBuySelected 
-                                ? Colors.white 
-                                : (_isDarkTheme ? Colors.grey[400] : Colors.grey[600]),
-                            fontWeight: FontWeight.w600,
-                            fontSize: 14, // Smaller font size
-                          ),
-                        ),
-                      ),
-                    ),
-                  ),
-                ),
-                Expanded(
-                  child: MouseRegion(
-                    cursor: SystemMouseCursors.click, // Pointer cursor
-                    child: GestureDetector(
-                      onTap: () {
-                        setState(() => _isBuySelected = false);
-                        _calculateOrderFees();
-                        _fetchAccountMarketPortfolio();
-                      },
-                      child: Container(
-                        padding: const EdgeInsets.symmetric(vertical: 8), // Much smaller padding
-                        decoration: BoxDecoration(
-                          color: !_isBuySelected 
-                              ? const Color(0xFFFF4081) // Pink/red color for sell
-                              : Colors.transparent,
-                          borderRadius: BorderRadius.circular(20),
-                        ),
-                        child: Text(
-                          'Sell',
-                          textAlign: TextAlign.center,
-                          style: TextStyle(
-                            color: !_isBuySelected 
-                                ? Colors.white 
-                                : (_isDarkTheme ? Colors.grey[400] : Colors.grey[600]),
-                            fontWeight: FontWeight.w600,
-                            fontSize: 14, // Smaller font size
-                          ),
-                        ),
-                      ),
-                    ),
-                  ),
-                ),
-              ],
-            ),
-          ),
-          
-          const SizedBox(height: 16), // Reduced space before order type
-          
-          // Order Type Toggle Buttons with mouse cursor and smaller height (like buy/sell area)
-          Container(
-            decoration: BoxDecoration(
-              color: _isDarkTheme ? const Color(0xFF2d2d2d) : Colors.grey[100],
-              borderRadius: BorderRadius.circular(8),
-            ),
-            child: Row(
-              children: [
-                Expanded(
-                  child: MouseRegion(
-                    cursor: SystemMouseCursors.click, // Pointer cursor
-                    child: GestureDetector(
-                      onTap: () {
-                        setState(() => _orderType = 'Limit');
-                        _calculateOrderFees();
-                      },
-                      child: Container(
-                        padding: const EdgeInsets.symmetric(vertical: 8), // Reduced to match buy/sell area
-                        decoration: BoxDecoration(
-                          color: Colors.transparent,
-                        ),
-                        child: Text(
-                          'Limit order',
-                          textAlign: TextAlign.center,
-                          style: TextStyle(
-                            color: _orderType == 'Limit' 
-                                ? (_isBuySelected 
-                                    ? const Color(0xFF00D4AA) // Cyan for buy
-                                    : const Color(0xFFFF4081)) // Pink for sell
-                                : (_isDarkTheme ? Colors.grey[400] : Colors.grey[600]),
-                            fontWeight: FontWeight.w500,
-                            fontSize: 14, // Reduced to match buy/sell area
-                          ),
-                        ),
-                      ),
-                    ),
-                  ),
-                ),
-                Expanded(
-                  child: MouseRegion(
-                    cursor: SystemMouseCursors.click, // Pointer cursor
-                    child: GestureDetector(
-                      onTap: () {
-                        setState(() => _orderType = 'Market');
-                        _calculateOrderFees();
-                      },
-                      child: Container(
-                        padding: const EdgeInsets.symmetric(vertical: 8), // Reduced to match buy/sell area
-                        decoration: BoxDecoration(
-                          color: Colors.transparent,
-                        ),
-                        child: Text(
-                          'Market order',
-                          textAlign: TextAlign.center,
-                          style: TextStyle(
-                            color: _orderType == 'Market' 
-                                ? (_isBuySelected 
-                                    ? const Color(0xFF00D4AA) // Cyan for buy
-                                    : const Color(0xFFFF4081)) // Pink for sell
-                                : (_isDarkTheme ? Colors.grey[400] : Colors.grey[600]),
-                            fontWeight: FontWeight.w500,
-                            fontSize: 14, // Reduced to match buy/sell area
-                          ),
-                        ),
-                      ),
-                    ),
-                  ),
-                ),
-              ],
-            ),
-          ),
-          
-          const SizedBox(height: 16), // Reduced space after order type
-          
-          // Available Balance / Buying Power
-          Text(
-            _isBuySelected ? 'Buying power' : 'Available',
-            style: TextStyle(
-              fontSize: 14,
-              color: _isDarkTheme ? Colors.grey[400] : Colors.grey[600],
-            ),
-          ),
-          const SizedBox(height: 8),
-          Row(
-            children: [
-              _isLoadingCashHoldings 
-                  ? SizedBox(
-                      width: 20,
-                      height: 20,
-                      child: CircularProgressIndicator(
-                        strokeWidth: 2,
-                        valueColor: AlwaysStoppedAnimation<Color>(
-                          _isDarkTheme ? Colors.white : Colors.black,
-                        ),
-                      ),
-                    )
-                  : Text(
-                      _isBuySelected 
-                          ? '$_buyingPower ${_selectedCurrency['symbol'] ?? ''}' 
-                          : _availableBalance,
-                      style: TextStyle(
-                        fontSize: 18,
-                        fontWeight: FontWeight.w600,
-                        color: _isDarkTheme ? Colors.white : Colors.black,
-                      ),
-                    ),
-              const SizedBox(width: 4),
-              (!_isBuySelected && _assets.isEmpty)
-                  ? SizedBox(
-                      width: 14,
-                      height: 14,
-                      child: CircularProgressIndicator(
-                        strokeWidth: 1.5,
-                        valueColor: AlwaysStoppedAnimation<Color>(
-                          _isDarkTheme ? Colors.white : Colors.black,
-                        ),
-                      ),
-                    )
-                  : (!_isBuySelected
-                      ? Text(
-                          _getSelectedAssetSymbol(),
-                          style: TextStyle(
-                            fontSize: 18,
-                            fontWeight: FontWeight.w600,
-                            color: _isDarkTheme ? Colors.white : Colors.black,
-                          ),
-                        )
-                      : SizedBox.shrink()),
-            ],
-          ),
-          
-          const SizedBox(height: 12),
-          
-          // Amount Input
-          Text(
-            'Amount',
-            style: TextStyle(
-              fontSize: 14,
-              color: _isDarkTheme ? Colors.grey[400] : Colors.grey[600],
-            ),
-          ),
-          const SizedBox(height: 8),
-          Container(
-            decoration: BoxDecoration(
-              color: _isDarkTheme ? const Color(0xFF2d2d2d) : Colors.grey[100],
-              borderRadius: BorderRadius.circular(8),
-            ),
-            child: Row(
-              children: [
-                Expanded(
-                  child: TextField(
-                    controller: _quantityController,
-                    keyboardType: TextInputType.number,
-                    style: TextStyle(
-                      color: _isDarkTheme ? Colors.white : Colors.black,
-                      fontSize: 16,
-                    ),
-                    decoration: InputDecoration(
-                      hintText: '0',
-                      hintStyle: TextStyle(
-                        color: _isDarkTheme ? Colors.grey[500] : Colors.grey[400],
-                      ),
-                      border: InputBorder.none,
-                      contentPadding: const EdgeInsets.symmetric(horizontal: 16, vertical: 16),
-                    ),
-                  ),
-                ),
-                Container(
-                  padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 8),
-                  child: Row(
-                    mainAxisSize: MainAxisSize.min,
-                    children: [
-                      // Show Max button only for Sell orders (when _isBuySelected is false)
-                      if (!_isBuySelected) ...[
-                        MouseRegion(
-                          cursor: SystemMouseCursors.click, // Pointer cursor for Max button
-                          child: GestureDetector(
-                            onTap: () {
-                              // Set quantity to maximum available selling amount
-                              setState(() {
-                                _quantityController.text = _buyingPower;
-                              });
-                            },
-                            child: Container(
-                              child: Text(
-                                'Max',
-                                style: TextStyle(
-                                  color: const Color(0xFFFF4081), // Pink for sell
-                                  fontSize: 12,
-                                  fontWeight: FontWeight.w600,
-                                ),
-                              ),
-                            ),
-                          ),
-                        ),
-                        const SizedBox(width: 8),
-                      ],
-                      _assets.isEmpty
-                          ? SizedBox(
-                              width: 14,
-                              height: 14,
-                              child: CircularProgressIndicator(
-                                strokeWidth: 1.5,
-                                valueColor: AlwaysStoppedAnimation<Color>(
-                                  _isDarkTheme ? Colors.white : Colors.black,
-                                ),
-                              ),
-                            )
-                          : Text(
-                              _getSelectedAssetSymbol(),
-                              style: TextStyle(
-                                color: _isDarkTheme ? Colors.white : Colors.black,
-                                fontSize: 14,
-                                fontWeight: FontWeight.w500,
-                              ),
-                            ),
-                    ],
-                  ),
-                ),
-              ],
-            ),
-          ),
-          
-          if (_orderType == 'Limit') ...[
-            const SizedBox(height: 20),
-            
-            // Price Input
-            Text(
-              'Price',
-              style: TextStyle(
-                fontSize: 14,
-                color: _isDarkTheme ? Colors.grey[400] : Colors.grey[600],
-              ),
-            ),
-            const SizedBox(height: 8),
-            Container(
-              decoration: BoxDecoration(
-                color: _isDarkTheme ? const Color(0xFF2d2d2d) : Colors.grey[100],
-                borderRadius: BorderRadius.circular(8),
-              ),
-              child: Row(
-                children: [
-                  Expanded(
-                    child: TextField(
-                      controller: _priceController,
-                      keyboardType: TextInputType.number,
-                      style: TextStyle(
-                        color: _isDarkTheme ? Colors.white : Colors.black,
-                        fontSize: 16,
-                      ),
-                      decoration: InputDecoration(
-                        hintText: '0',
-                        hintStyle: TextStyle(
-                          color: _isDarkTheme ? Colors.grey[500] : Colors.grey[400],
-                        ),
-                        border: InputBorder.none,
-                        contentPadding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
-                      ),
-                    ),
-                  ),
-                  Container(
-                    padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
-                    child: Text(
-                      '\$',
-                      style: TextStyle(
-                        color: _isDarkTheme ? Colors.white : Colors.black,
-                        fontSize: 14,
-                        fontWeight: FontWeight.w500,
-                      ),
-                    ),
-                  ),
-                ],
-              ),
-            ),
-            
-            const SizedBox(height: 20),
-            
-            // Expiry Dropdown
-            Text(
-              'Expiry',
-              style: TextStyle(
-                fontSize: 14,
-                color: _isDarkTheme ? Colors.grey[400] : Colors.grey[600],
-              ),
-            ),
-            const SizedBox(height: 8),
-            Container(
-              decoration: BoxDecoration(
-                color: _isDarkTheme ? const Color(0xFF2d2d2d) : Colors.grey[100],
-                borderRadius: BorderRadius.circular(8),
-              ),
-              child: Padding(
-                padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
-                child: DropdownButtonHideUnderline(
-                  child: DropdownButton<String>(
-                    value: _expiryPeriod,
-                    isExpanded: true,
-                    isDense: true,
-                    onChanged: (String? newValue) {
-                      setState(() {
-                        _expiryPeriod = newValue!;
-                      });
-                    },
-                    dropdownColor: _isDarkTheme ? const Color(0xFF2d2d2d) : Colors.white,
-                    style: TextStyle(
-                      color: _isDarkTheme ? Colors.white : Colors.black,
-                      fontSize: 14,
-                    ),
-                    icon: Icon(
-                      Icons.keyboard_arrow_down,
-                      color: _isDarkTheme ? Colors.grey[400] : Colors.grey[600],
-                    ),
-                  items: ['1 Day', '3 Days', '1 Week', '2 Weeks', '1 Month']
-                      .map<DropdownMenuItem<String>>((String value) {
-                    return DropdownMenuItem<String>(
-                      value: value,
-                      child: Padding(
-                        padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 2),
-                        child: Text(value),
-                      ),
-                    );
-                  }).toList(),
-                  ),
-                ),
-              ),
-            ),
-          ],
-          
-          const Spacer(),
-          
-          const SizedBox(height: 20), // Add space between amount field and est.fee total area
-          
-          // Order Summary (no border)
-          Container(
-            padding: const EdgeInsets.all(16),
-            decoration: BoxDecoration(
-              color: _isDarkTheme ? const Color(0xFF2d2d2d) : Colors.grey[50],
-              borderRadius: BorderRadius.circular(12),
-              // Removed border
-            ),
-            child: Column(
-              children: [
-                Row(
-                  mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                  children: [
-                    Text(
-                      'Est. Fee',
-                      style: TextStyle(
-                        fontSize: 14,
-                        color: _isDarkTheme ? Colors.grey[400] : Colors.grey[600],
-                      ),
-                    ),
-                    _isLoadingFee
-                        ? SizedBox(
-                            width: 16,
-                            height: 16,
-                            child: CircularProgressIndicator(
-                              strokeWidth: 2,
-                              valueColor: AlwaysStoppedAnimation<Color>(
-                                _isDarkTheme ? Colors.white : Colors.black,
-                              ),
-                            ),
-                          )
-                        : Text(
-                            _estimatedFee,
-                            style: TextStyle(
-                              fontSize: 14,
-                              color: _isDarkTheme ? Colors.white : Colors.black,
-                            ),
-                          ),
-                  ],
-                ),
-                const SizedBox(height: 8),
-                Row(
-                  mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                  children: [
-                    Text(
-                      'Total',
-                      style: TextStyle(
-                        fontSize: 14,
-                        fontWeight: FontWeight.w600,
-                        color: _isDarkTheme ? Colors.grey[400] : Colors.grey[600],
-                      ),
-                    ),
-                    Text(
-                      '${_calculateTotal().toStringAsFixed(2)} \$',
-                      style: TextStyle(
-                        fontSize: 14,
-                        fontWeight: FontWeight.w600,
-                        color: _isDarkTheme ? Colors.white : Colors.black,
-                      ),
-                    ),
-                  ],
-                ),
-              ],
-            ),
-          ),
-          
-          const SizedBox(height: 16),
-          
-          // Buy/Sell Order Button
-          SizedBox(
-            width: double.infinity,
-            child: ElevatedButton(
-              onPressed: _placeOrder,
-              style: ElevatedButton.styleFrom(
-                backgroundColor: _isBuySelected 
-                    ? const Color(0xFF00D4AA) // Cyan for buy
-                    : const Color(0xFFFF4081), // Pink for sell
-                foregroundColor: Colors.white,
-                padding: const EdgeInsets.symmetric(vertical: 16),
-                shape: RoundedRectangleBorder(
-                  borderRadius: BorderRadius.circular(30),
-                ),
-                elevation: 0,
-              ),
-              child: Text(
-                '${_isBuySelected ? 'Buy' : 'Sell'} Order',
-                style: const TextStyle(
-                  fontSize: 16,
-                  fontWeight: FontWeight.w600,
-                ),
-              ),
-            ),
-          ),
+
         ],
       ),
     );
@@ -3210,7 +2670,7 @@ class _TradingPageState extends State<TradingPage> {
                     }
                   }
                 },
-                dropdownColor: _isDarkTheme ? const Color(0xFF2d2d2d) : Colors.white,
+                dropdownColor: _isDarkTheme ? const Color(0xFF1e1e1e) : Colors.white,
                 style: TextStyle(
                   color: _isDarkTheme ? Colors.white : Colors.black,
                   fontSize: 14,
@@ -3246,7 +2706,7 @@ class _TradingPageState extends State<TradingPage> {
                         Text(
                           'Loading...',
                           style: TextStyle(
-                            fontSize: 16,
+                            fontSize: 14,
                             color: _isDarkTheme ? Colors.grey[400] : Colors.grey[600],
                           ),
                         ),
@@ -3267,7 +2727,7 @@ class _TradingPageState extends State<TradingPage> {
                             Text(
                               'No asset found',
                               style: TextStyle(
-                                fontSize: 16,
+                                fontSize: 14,
                                 color: _isDarkTheme ? Colors.grey[400] : Colors.grey[600],
                               ),
                             ),
@@ -3320,7 +2780,7 @@ class _TradingPageState extends State<TradingPage> {
                                       borderRadius: BorderRadius.circular(8),
                                       color: isSelected 
                                           ? (_isDarkTheme ? const Color(0xFF00b8fb).withOpacity(0.1) : const Color(0xFF00b8fb).withOpacity(0.05))
-                                          : (_isDarkTheme ? const Color(0xFF2d2d2d) : Colors.white),
+                                          : (_isDarkTheme ? Colors.black : Colors.white),
                                     ),
                                   child: Column(
                                     crossAxisAlignment: CrossAxisAlignment.start,
@@ -3481,7 +2941,7 @@ class _TradingPageState extends State<TradingPage> {
             child: Container(
               width: double.infinity,
               decoration: BoxDecoration(
-                color: _isDarkTheme ? const Color(0xFF2d2d2d) : Colors.grey[50],
+                color: _isDarkTheme ? const Color(0xFF3d3d3d) : Colors.grey[50],
                 borderRadius: BorderRadius.circular(8),
                 border: Border.all(
                   color: _isDarkTheme ? Colors.grey[600]! : Colors.grey[300]!,
@@ -3798,7 +3258,7 @@ class _TradingPageState extends State<TradingPage> {
       return Container(
         padding: const EdgeInsets.all(20),
         decoration: BoxDecoration(
-          color: _isDarkTheme ? const Color(0xFF1e1e1e) : Colors.white,
+          color: _isDarkTheme ? Colors.black : Colors.grey[100],
         ),
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.start,
@@ -3838,7 +3298,7 @@ class _TradingPageState extends State<TradingPage> {
     return Container(
       padding: const EdgeInsets.all(20),
       decoration: BoxDecoration(
-        color: _isDarkTheme ? const Color(0xFF1e1e1e) : Colors.white,
+        color: _isDarkTheme ? Colors.black : Colors.grey[100],
         // Removed left border since we have a splitter now
       ),
       child: Column(
@@ -4031,7 +3491,7 @@ class _TradingPageState extends State<TradingPage> {
                           color: _isDarkTheme ? Colors.white : Colors.black,
                         ),
                       ),
-                      const SizedBox(height: 12),
+                      const SizedBox(height: 8),
                       Row(
                         children: [
                           Expanded(
@@ -4060,7 +3520,7 @@ class _TradingPageState extends State<TradingPage> {
                         height: 1,
                         color: _isDarkTheme ? Colors.grey[700] : Colors.grey[300],
                       ),
-                      const SizedBox(height: 12),
+                      const SizedBox(height: 8),
                       Expanded(
                         child: _isLoadingSellOrders
                             ? const Center(
@@ -4091,7 +3551,7 @@ class _TradingPageState extends State<TradingPage> {
                                                     child: Text(
                                                       _formatPrice(order['price']),
                                                       style: const TextStyle(
-                                                        fontSize: 16,
+                                                        fontSize: 14,
                                                         color: Color(0xFFFF4081),
                                                         fontWeight: FontWeight.w500,
                                                       ),
@@ -4102,7 +3562,7 @@ class _TradingPageState extends State<TradingPage> {
                                                       order['quantity'].toString(),
                                                       textAlign: TextAlign.right,
                                                       style: TextStyle(
-                                                        fontSize: 16,
+                                                        fontSize: 14,
                                                         color: _isDarkTheme ? Colors.white : Colors.black,
                                                       ),
                                                     ),
@@ -4160,7 +3620,7 @@ class _TradingPageState extends State<TradingPage> {
                           color: _isDarkTheme ? Colors.white : Colors.black,
                         ),
                       ),
-                      const SizedBox(height: 12),
+                      const SizedBox(height: 8),
                       Row(
                         children: [
                           Expanded(
@@ -4189,7 +3649,7 @@ class _TradingPageState extends State<TradingPage> {
                         height: 1,
                         color: _isDarkTheme ? Colors.grey[700] : Colors.grey[300],
                       ),
-                      const SizedBox(height: 12),
+                      const SizedBox(height: 8),
                       Expanded(
                         child: _isLoadingBuyOrders
                             ? const Center(
@@ -4220,7 +3680,7 @@ class _TradingPageState extends State<TradingPage> {
                                                     child: Text(
                                                       _formatPrice(order['price']),
                                                       style: const TextStyle(
-                                                        fontSize: 16,
+                                                        fontSize: 14,
                                                         color: Color(0xFF00D4AA),
                                                         fontWeight: FontWeight.w500,
                                                       ),
@@ -4231,7 +3691,7 @@ class _TradingPageState extends State<TradingPage> {
                                                       order['quantity'].toString(),
                                                       textAlign: TextAlign.right,
                                                       style: TextStyle(
-                                                        fontSize: 16,
+                                                        fontSize: 14,
                                                         color: _isDarkTheme ? Colors.white : Colors.black,
                                                       ),
                                                     ),
@@ -4388,6 +3848,18 @@ class _TradingPageState extends State<TradingPage> {
           ),
         );
 
+        // Add order to Create Order table
+        setState(() {
+          _createOrders.insert(0, {
+            'symbol': _selectedSymbol,
+            'side': side,
+            'quantity': _quantityController.text.trim(),
+            'price': price == '0' ? 'Market' : price,
+            'orderId': proposedOrderId,
+            'timestamp': DateTime.now().toString(),
+          });
+        });
+
         // Clear form after successful order
         _quantityController.clear();
         _priceController.clear();
@@ -4415,6 +3887,771 @@ class _TradingPageState extends State<TradingPage> {
         ),
       );
     }
+  }
+
+  Widget _buildTradeOrdersTabs(bool isDarkTheme) {
+    return Column(
+      children: [
+        // Tab Headers
+        _buildTradeTabHeaders(isDarkTheme),
+        // Tab Content
+        Expanded(
+          child: Container(
+            decoration: BoxDecoration(
+              color: isDarkTheme ? const Color(0xFF1e1e1e) : Colors.white,
+              border: Border.all(
+                color: isDarkTheme ? const Color(0xFF1e1e1e) : Colors.white,
+              ),
+              borderRadius: const BorderRadius.only(
+                topRight: Radius.circular(0),
+                bottomLeft: Radius.circular(8),
+                bottomRight: Radius.circular(8),
+              ),
+            ),
+            child: _buildTradeTabContent(isDarkTheme),
+          ),
+        ),
+      ],
+    );
+  }
+
+  Widget _buildTradeTabHeaders(bool isDarkTheme) {
+    return Row(
+      crossAxisAlignment: CrossAxisAlignment.end,
+      mainAxisAlignment: MainAxisAlignment.start,
+      children: _tradeTabNames.asMap().entries.map((entry) {
+        final index = entry.key;
+        final tabName = entry.value;
+        final isActive = _selectedTradeTabIndex == index;
+
+        return Expanded(
+          child: MouseRegion(
+            cursor: SystemMouseCursors.click,
+            child: GestureDetector(
+              onTap: () {
+                setState(() {
+                  _selectedTradeTabIndex = index;
+                });
+              },
+              child: Container(
+                padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 8),
+                decoration: BoxDecoration(
+                  color: isActive
+                      ? (isDarkTheme ? const Color(0xFF1e1e1e) : Colors.white)
+                      : (isDarkTheme ? Colors.black : Colors.grey[100]),
+                  borderRadius: const BorderRadius.only(
+                    topLeft: Radius.circular(8),
+                    topRight: Radius.circular(8),
+                  ),
+                  border: isActive ? null : Border(
+                    top: BorderSide(
+                      color: isDarkTheme ? const Color(0xFF1e1e1e) : Colors.white,
+                    ),
+                    left: BorderSide(
+                      color: isDarkTheme ? const Color(0xFF1e1e1e) : Colors.white,
+                    ),
+                    right: BorderSide(
+                      color: isDarkTheme ? const Color(0xFF1e1e1e) : Colors.white,
+                    ),
+                  ),
+                ),
+                child: Text(
+                  tabName,
+                  textAlign: TextAlign.center,
+                  style: TextStyle(
+                    fontSize: 12,
+                    fontWeight: isActive ? FontWeight.w600 : FontWeight.w400,
+                    color: isActive
+                        ? (isDarkTheme ? Colors.white : Colors.black)
+                        : (isDarkTheme ? Colors.grey[400] : Colors.grey[600]),
+                  ),
+                ),
+              ),
+            ),
+          ),
+        );
+      }).toList(),
+    );
+  }
+
+  Widget _buildTradeTabContent(bool isDarkTheme) {
+    if (_selectedTradeTabIndex == 0) {
+      // Create Order tab - show the trading form
+      return Padding(
+        padding: const EdgeInsets.all(8.0),
+        child: _buildCreateOrderForm(isDarkTheme),
+      );
+    } else {
+      // Replace Order and Cancel Order tabs - show the table
+      return Padding(
+        padding: const EdgeInsets.all(8.0),
+        child: _buildTradeOrdersTable(isDarkTheme),
+      );
+    }
+  }
+
+  Widget _buildCreateOrderForm(bool isDarkTheme) {
+    return SingleChildScrollView(
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          // Supported Currencies title
+          Text(
+            'Currency',
+            style: TextStyle(
+              fontSize: 14,
+              color: isDarkTheme ? Colors.grey[400] : Colors.grey[600],
+              fontWeight: FontWeight.w500,
+            ),
+          ),
+
+          const SizedBox(height: 8),
+
+          // Supported Currencies Dropdown
+          Container(
+            height: 35, // Made much smaller (was default ~48)
+            padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4), // Reduced padding
+            decoration: BoxDecoration(
+              border: Border.all(
+                color: isDarkTheme ? Colors.grey[600]! : Colors.grey[400]!,
+              ),
+              borderRadius: BorderRadius.circular(8),
+            ),
+            child: DropdownButtonHideUnderline(
+              child: DropdownButton<Map<String, String>>(
+                value: _supportedCurrencies.isEmpty
+                    ? null
+                    : (_supportedCurrencies.any((currency) => currency['code'] == _selectedCurrency['code'])
+                        ? _selectedCurrency
+                        : _supportedCurrencies.isNotEmpty ? _supportedCurrencies.first : null),
+                isExpanded: true,
+                onChanged: _supportedCurrencies.isEmpty ? null : (Map<String, String>? newValue) {
+                  if (newValue != null) {
+                    setState(() {
+                      _selectedCurrency = newValue;
+                    });
+                    // Call cash holdings with the selected currency code
+                    _fetchCashHoldingsForCurrency(newValue['code']!);
+                  }
+                },
+                dropdownColor: isDarkTheme ? const Color(0xFF1e1e1e) : Colors.white,
+                style: TextStyle(
+                  color: isDarkTheme ? Colors.white : Colors.black,
+                  fontSize: 14, // Smaller font size
+                ),
+                items: _supportedCurrencies.isEmpty
+                    ? [DropdownMenuItem<Map<String, String>>(
+                        value: {'code': '', 'symbol': '', 'display': ''},
+                        child: Text(_isLoadingSupportedCurrencies ? 'Loading currencies...' : 'No currencies available'),
+                      )]
+                    : _supportedCurrencies.map<DropdownMenuItem<Map<String, String>>>((currency) {
+                        return DropdownMenuItem<Map<String, String>>(
+                          value: currency,
+                          child: Text(currency['display'] ?? currency['code']!),
+                        );
+                      }).toList(),
+              ),
+            ),
+          ),
+
+          const SizedBox(height: 16), // Reduced from 20
+
+          // Buy/Sell Toggle Buttons (stretches with container width)
+          Container(
+            decoration: BoxDecoration(
+              color: isDarkTheme ? const Color(0xFF2d2d2d) : Colors.grey[100],
+              borderRadius: BorderRadius.circular(20),
+            ),
+            child: Row(
+              children: [
+                Expanded(
+                  child: MouseRegion(
+                    cursor: SystemMouseCursors.click, // Pointer cursor
+                    child: GestureDetector(
+                      onTap: () {
+                        setState(() => _isBuySelected = true);
+                        _calculateOrderFees();
+                      },
+                      child: Container(
+                        padding: const EdgeInsets.symmetric(vertical: 8), // Much smaller padding
+                        decoration: BoxDecoration(
+                          color: _isBuySelected
+                              ? const Color(0xFF00D4AA) // Cyan color for buy
+                              : Colors.transparent,
+                          borderRadius: BorderRadius.circular(20),
+                        ),
+                        child: Text(
+                          'Buy',
+                          textAlign: TextAlign.center,
+                          style: TextStyle(
+                            color: _isBuySelected
+                                ? Colors.white
+                                : (isDarkTheme ? Colors.grey[400] : Colors.grey[600]),
+                            fontWeight: FontWeight.w600,
+                            fontSize: 14, // Smaller font size
+                          ),
+                        ),
+                      ),
+                    ),
+                  ),
+                ),
+                Expanded(
+                  child: MouseRegion(
+                    cursor: SystemMouseCursors.click, // Pointer cursor
+                    child: GestureDetector(
+                      onTap: () {
+                        setState(() => _isBuySelected = false);
+                        _calculateOrderFees();
+                        _fetchAccountMarketPortfolio();
+                      },
+                      child: Container(
+                        padding: const EdgeInsets.symmetric(vertical: 8), // Much smaller padding
+                        decoration: BoxDecoration(
+                          color: !_isBuySelected
+                              ? const Color(0xFFFF4081) // Pink/red color for sell
+                              : Colors.transparent,
+                          borderRadius: BorderRadius.circular(20),
+                        ),
+                        child: Text(
+                          'Sell',
+                          textAlign: TextAlign.center,
+                          style: TextStyle(
+                            color: !_isBuySelected
+                                ? Colors.white
+                                : (isDarkTheme ? Colors.grey[400] : Colors.grey[600]),
+                            fontWeight: FontWeight.w600,
+                            fontSize: 14, // Smaller font size
+                          ),
+                        ),
+                      ),
+                    ),
+                  ),
+                ),
+              ],
+            ),
+          ),
+
+          const SizedBox(height: 16), // Reduced space before order type
+
+          // Order Type Toggle Buttons with mouse cursor and smaller height (like buy/sell area)
+          Container(
+            decoration: BoxDecoration(
+              color: isDarkTheme ? const Color(0xFF2d2d2d) : Colors.grey[100],
+              borderRadius: BorderRadius.circular(8),
+            ),
+            child: Row(
+              children: [
+                Expanded(
+                  child: MouseRegion(
+                    cursor: SystemMouseCursors.click, // Pointer cursor
+                    child: GestureDetector(
+                      onTap: () {
+                        setState(() => _orderType = 'Limit');
+                        _calculateOrderFees();
+                      },
+                      child: Container(
+                        padding: const EdgeInsets.symmetric(vertical: 8), // Reduced to match buy/sell area
+                        decoration: BoxDecoration(
+                          color: Colors.transparent,
+                        ),
+                        child: Text(
+                          'Limit order',
+                          textAlign: TextAlign.center,
+                          style: TextStyle(
+                            color: _orderType == 'Limit'
+                                ? (_isBuySelected
+                                    ? const Color(0xFF00D4AA) // Cyan for buy
+                                    : const Color(0xFFFF4081)) // Pink for sell
+                                : (isDarkTheme ? Colors.grey[400] : Colors.grey[600]),
+                            fontWeight: FontWeight.w500,
+                            fontSize: 14, // Reduced to match buy/sell area
+                          ),
+                        ),
+                      ),
+                    ),
+                  ),
+                ),
+                Expanded(
+                  child: MouseRegion(
+                    cursor: SystemMouseCursors.click, // Pointer cursor
+                    child: GestureDetector(
+                      onTap: () {
+                        setState(() => _orderType = 'Market');
+                        _calculateOrderFees();
+                      },
+                      child: Container(
+                        padding: const EdgeInsets.symmetric(vertical: 8), // Reduced to match buy/sell area
+                        decoration: BoxDecoration(
+                          color: Colors.transparent,
+                        ),
+                        child: Text(
+                          'Market order',
+                          textAlign: TextAlign.center,
+                          style: TextStyle(
+                            color: _orderType == 'Market'
+                                ? (_isBuySelected
+                                    ? const Color(0xFF00D4AA) // Cyan for buy
+                                    : const Color(0xFFFF4081)) // Pink for sell
+                                : (isDarkTheme ? Colors.grey[400] : Colors.grey[600]),
+                            fontWeight: FontWeight.w500,
+                            fontSize: 14, // Reduced to match buy/sell area
+                          ),
+                        ),
+                      ),
+                    ),
+                  ),
+                ),
+              ],
+            ),
+          ),
+
+          const SizedBox(height: 16), // Reduced space after order type
+
+          // Available Balance / Buying Power
+          Text(
+            _isBuySelected ? 'Buying power' : 'Available',
+            style: TextStyle(
+              fontSize: 14,
+              color: isDarkTheme ? Colors.grey[400] : Colors.grey[600],
+            ),
+          ),
+          const SizedBox(height: 8),
+          Row(
+            children: [
+              _isLoadingCashHoldings
+                  ? SizedBox(
+                      width: 20,
+                      height: 20,
+                      child: CircularProgressIndicator(
+                        strokeWidth: 2,
+                        valueColor: AlwaysStoppedAnimation<Color>(
+                          isDarkTheme ? Colors.white : Colors.black,
+                        ),
+                      ),
+                    )
+                  : Text(
+                      _isBuySelected
+                          ? '$_buyingPower ${_selectedCurrency['symbol'] ?? ''}'
+                          : _availableBalance,
+                      style: TextStyle(
+                        fontSize: 18,
+                        fontWeight: FontWeight.w600,
+                        color: isDarkTheme ? Colors.white : Colors.black,
+                      ),
+                    ),
+              const SizedBox(width: 4),
+              (!_isBuySelected && _assets.isEmpty)
+                  ? SizedBox(
+                      width: 14,
+                      height: 14,
+                      child: CircularProgressIndicator(
+                        strokeWidth: 1.5,
+                        valueColor: AlwaysStoppedAnimation<Color>(
+                          isDarkTheme ? Colors.white : Colors.black,
+                        ),
+                      ),
+                    )
+                  : (!_isBuySelected
+                      ? Text(
+                          _getSelectedAssetSymbol(),
+                          style: TextStyle(
+                            fontSize: 18,
+                            fontWeight: FontWeight.w600,
+                            color: isDarkTheme ? Colors.white : Colors.black,
+                          ),
+                        )
+                      : SizedBox.shrink()),
+            ],
+          ),
+
+          const SizedBox(height: 8),
+
+          // Amount Input
+          Text(
+            'Amount',
+            style: TextStyle(
+              fontSize: 14,
+              color: isDarkTheme ? Colors.grey[400] : Colors.grey[600],
+            ),
+          ),
+          const SizedBox(height: 8),
+          Container(
+            decoration: BoxDecoration(
+              color: isDarkTheme ? const Color(0xFF2d2d2d) : Colors.grey[100],
+              borderRadius: BorderRadius.circular(8),
+            ),
+            child: Row(
+              children: [
+                Expanded(
+                  child: TextField(
+                    controller: _quantityController,
+                    keyboardType: TextInputType.number,
+                    style: TextStyle(
+                      color: isDarkTheme ? Colors.white : Colors.black,
+                      fontSize: 14,
+                    ),
+                    decoration: InputDecoration(
+                      hintText: '0',
+                      hintStyle: TextStyle(
+                        color: isDarkTheme ? Colors.grey[500] : Colors.grey[400],
+                      ),
+                      border: InputBorder.none,
+                      isDense: true,
+                      contentPadding: const EdgeInsets.symmetric(horizontal: 12, vertical: 4),
+                    ),
+                  ),
+                ),
+                Container(
+                  padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 8),
+                  child: Row(
+                    mainAxisSize: MainAxisSize.min,
+                    children: [
+                      // Show Max button only for Sell orders (when _isBuySelected is false)
+                      if (!_isBuySelected) ...[
+                        MouseRegion(
+                          cursor: SystemMouseCursors.click, // Pointer cursor for Max button
+                          child: GestureDetector(
+                            onTap: () {
+                              // Set quantity to maximum available selling amount
+                              setState(() {
+                                _quantityController.text = _buyingPower;
+                              });
+                            },
+                            child: Container(
+                              child: Text(
+                                'Max',
+                                style: TextStyle(
+                                  color: const Color(0xFFFF4081), // Pink for sell
+                                  fontSize: 12,
+                                  fontWeight: FontWeight.w600,
+                                ),
+                              ),
+                            ),
+                          ),
+                        ),
+                        const SizedBox(width: 8),
+                      ],
+                      _assets.isEmpty
+                          ? SizedBox(
+                              width: 14,
+                              height: 14,
+                              child: CircularProgressIndicator(
+                                strokeWidth: 1.5,
+                                valueColor: AlwaysStoppedAnimation<Color>(
+                                  isDarkTheme ? Colors.white : Colors.black,
+                                ),
+                              ),
+                            )
+                          : Text(
+                              _getSelectedAssetSymbol(),
+                              style: TextStyle(
+                                color: isDarkTheme ? Colors.white : Colors.black,
+                                fontSize: 14,
+                                fontWeight: FontWeight.w500,
+                              ),
+                            ),
+                    ],
+                  ),
+                ),
+              ],
+            ),
+          ),
+
+          if (_orderType == 'Limit') ...[
+            const SizedBox(height: 12),
+
+            // Price Input
+            Text(
+              'Price',
+              style: TextStyle(
+                fontSize: 14,
+                color: isDarkTheme ? Colors.grey[400] : Colors.grey[600],
+              ),
+            ),
+            const SizedBox(height: 8),
+            Container(
+              decoration: BoxDecoration(
+                color: isDarkTheme ? const Color(0xFF2d2d2d) : Colors.grey[100],
+                borderRadius: BorderRadius.circular(8),
+              ),
+              child: Row(
+                children: [
+                  Expanded(
+                    child: TextField(
+                      controller: _priceController,
+                      keyboardType: TextInputType.number,
+                      style: TextStyle(
+                        color: isDarkTheme ? Colors.white : Colors.black,
+                        fontSize: 14,
+                      ),
+                      decoration: InputDecoration(
+                        hintText: '0',
+                        hintStyle: TextStyle(
+                          color: isDarkTheme ? Colors.grey[500] : Colors.grey[400],
+                        ),
+                        border: InputBorder.none,
+                        isDense: true,
+                        contentPadding: const EdgeInsets.symmetric(horizontal: 12, vertical: 4),
+                      ),
+                    ),
+                  ),
+                  Container(
+                    padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 6),
+                    child: Text(
+                      '\$',
+                      style: TextStyle(
+                        color: isDarkTheme ? Colors.white : Colors.black,
+                        fontSize: 14,
+                        fontWeight: FontWeight.w500,
+                      ),
+                    ),
+                  ),
+                ],
+              ),
+            ),
+
+            const SizedBox(height: 12),
+
+            // Expiry Dropdown
+            Text(
+              'Expiry',
+              style: TextStyle(
+                fontSize: 14,
+                color: isDarkTheme ? Colors.grey[400] : Colors.grey[600],
+              ),
+            ),
+            const SizedBox(height: 8),
+            Container(
+              decoration: BoxDecoration(
+                color: isDarkTheme ? const Color(0xFF2d2d2d) : Colors.grey[100],
+                borderRadius: BorderRadius.circular(8),
+              ),
+              child: Padding(
+                padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 6),
+                child: DropdownButtonHideUnderline(
+                  child: DropdownButton<String>(
+                    value: _expiryPeriod,
+                    isExpanded: true,
+                    isDense: true,
+                    onChanged: (String? newValue) {
+                      setState(() {
+                        _expiryPeriod = newValue!;
+                      });
+                    },
+                    dropdownColor: isDarkTheme ? const Color(0xFF1e1e1e) : Colors.white,
+                    style: TextStyle(
+                      color: isDarkTheme ? Colors.white : Colors.black,
+                      fontSize: 14,
+                    ),
+                    icon: Icon(
+                      Icons.keyboard_arrow_down,
+                      color: isDarkTheme ? Colors.grey[400] : Colors.grey[600],
+                    ),
+                  items: ['1 Day', '3 Days', '1 Week', '2 Weeks', '1 Month']
+                      .map<DropdownMenuItem<String>>((String value) {
+                    return DropdownMenuItem<String>(
+                      value: value,
+                      child: Padding(
+                        padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 2),
+                        child: Text(value),
+                      ),
+                    );
+                  }).toList(),
+                  ),
+                ),
+              ),
+            ),
+          ],
+
+          const SizedBox(height: 12), // Add space between amount field and est.fee total area
+
+          // Order Summary (no border)
+          Container(
+            padding: const EdgeInsets.all(16),
+            decoration: BoxDecoration(
+              color: isDarkTheme ? const Color(0xFF3d3d3d) : Colors.grey[50],
+              borderRadius: BorderRadius.circular(12),
+              // Removed border
+            ),
+            child: Column(
+              children: [
+                Row(
+                  mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                  children: [
+                    Text(
+                      'Est. Fee',
+                      style: TextStyle(
+                        fontSize: 14,
+                        color: isDarkTheme ? Colors.grey[400] : Colors.grey[600],
+                      ),
+                    ),
+                    _isLoadingFee
+                        ? SizedBox(
+                            width: 16,
+                            height: 16,
+                            child: CircularProgressIndicator(
+                              strokeWidth: 2,
+                              valueColor: AlwaysStoppedAnimation<Color>(
+                                isDarkTheme ? Colors.white : Colors.black,
+                              ),
+                            ),
+                          )
+                        : Text(
+                            _estimatedFee,
+                            style: TextStyle(
+                              fontSize: 14,
+                              color: isDarkTheme ? Colors.white : Colors.black,
+                            ),
+                          ),
+                  ],
+                ),
+                const SizedBox(height: 8),
+                Row(
+                  mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                  children: [
+                    Text(
+                      'Total',
+                      style: TextStyle(
+                        fontSize: 14,
+                        fontWeight: FontWeight.w600,
+                        color: isDarkTheme ? Colors.grey[400] : Colors.grey[600],
+                      ),
+                    ),
+                    Text(
+                      '${_calculateTotal().toStringAsFixed(2)} \$',
+                      style: TextStyle(
+                        fontSize: 14,
+                        fontWeight: FontWeight.w600,
+                        color: isDarkTheme ? Colors.white : Colors.black,
+                      ),
+                    ),
+                  ],
+                ),
+              ],
+            ),
+          ),
+
+          const SizedBox(height: 16),
+
+          // Buy/Sell Order Button
+          SizedBox(
+            width: double.infinity,
+            child: ElevatedButton(
+              onPressed: _placeOrder,
+              style: ElevatedButton.styleFrom(
+                backgroundColor: _isBuySelected
+                    ? const Color(0xFF00D4AA) // Cyan for buy
+                    : const Color(0xFFFF4081), // Pink for sell
+                foregroundColor: Colors.white,
+                padding: const EdgeInsets.symmetric(vertical: 16),
+                shape: RoundedRectangleBorder(
+                  borderRadius: BorderRadius.circular(30),
+                ),
+                elevation: 0,
+              ),
+              child: Text(
+                '${_isBuySelected ? 'Buy' : 'Sell'} Order',
+                style: const TextStyle(
+                  fontSize: 16,
+                  fontWeight: FontWeight.w600,
+                ),
+              ),
+            ),
+          ),
+        ],
+      ),
+    );
+  }
+
+  Widget _buildTradeOrdersTable(bool isDarkTheme) {
+    List<Map<String, dynamic>> currentData;
+    String emptyMessage;
+
+    switch (_selectedTradeTabIndex) {
+      case 0: // Create Order
+        currentData = _createOrders;
+        emptyMessage = 'No create orders available';
+        break;
+      case 1: // Replace Order
+        currentData = _replaceOrders;
+        emptyMessage = 'No replace orders available';
+        break;
+      case 2: // Cancel Order
+        currentData = _cancelOrders;
+        emptyMessage = 'No cancel orders available';
+        break;
+      default:
+        currentData = [];
+        emptyMessage = 'No data available';
+    }
+
+    if (currentData.isEmpty) {
+      return Center(
+        child: Text(
+          emptyMessage,
+          style: TextStyle(
+            color: isDarkTheme ? Colors.grey[400] : Colors.grey[600],
+            fontSize: 14,
+          ),
+        ),
+      );
+    }
+
+    return ListView.builder(
+      itemCount: currentData.length,
+      itemBuilder: (context, index) {
+        final item = currentData[index];
+        return Container(
+          margin: const EdgeInsets.only(bottom: 8),
+          padding: const EdgeInsets.all(8),
+          decoration: BoxDecoration(
+            color: isDarkTheme ? const Color(0xFF3d3d3d) : Colors.grey[50],
+            borderRadius: BorderRadius.circular(4),
+          ),
+          child: Row(
+            children: [
+              Expanded(
+                child: Text(
+                  item['symbol'] ?? 'N/A',
+                  style: TextStyle(
+                    color: isDarkTheme ? Colors.white : Colors.black,
+                    fontSize: 12,
+                    fontWeight: FontWeight.w500,
+                  ),
+                ),
+              ),
+              Expanded(
+                child: Text(
+                  item['side'] ?? 'N/A',
+                  style: TextStyle(
+                    color: isDarkTheme ? Colors.white : Colors.black,
+                    fontSize: 12,
+                  ),
+                ),
+              ),
+              Expanded(
+                child: Text(
+                  item['quantity'] ?? 'N/A',
+                  style: TextStyle(
+                    color: isDarkTheme ? Colors.white : Colors.black,
+                    fontSize: 12,
+                  ),
+                ),
+              ),
+              Expanded(
+                child: Text(
+                  item['price'] ?? 'N/A',
+                  style: TextStyle(
+                    color: isDarkTheme ? Colors.white : Colors.black,
+                    fontSize: 12,
+                  ),
+                ),
+              ),
+            ],
+          ),
+        );
+      },
+    );
   }
 }
 
