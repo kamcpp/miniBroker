@@ -622,6 +622,10 @@ class _TradingPageState extends State<TradingPage> {
   String _buyingPower = '0'; // Default fallback value
   String _availableBalance = '0'; // For sell orders - available asset balance
   String? _cachedAccountId; // Cache account ID for entire session (doesn't change until logout)
+
+  // Order fee calculation
+  bool _isLoadingFee = false;
+  String _estimatedFee = '0.00'; // Store the estimated fee
   
   // Message stream subscription
   StreamSubscription<String>? _messageSubscription;
@@ -680,8 +684,14 @@ class _TradingPageState extends State<TradingPage> {
     _listenToFixMessages();
     
     // Add listeners to text controllers to update total calculation
-    _quantityController.addListener(() => setState(() {}));
-    _priceController.addListener(() => setState(() {}));
+    _quantityController.addListener(() {
+      setState(() {});
+      _calculateOrderFees();
+    });
+    _priceController.addListener(() {
+      setState(() {});
+      _calculateOrderFees();
+    });
     
     // Fetch pairs from API immediately when page opens, independent of FIX connection
     // _fetchPairsFromAPI(); // Disabled - now using GetMarketInstrumentList based on selected market
@@ -892,7 +902,88 @@ class _TradingPageState extends State<TradingPage> {
       }
     }
   }
-  
+
+  /// Calculate order fees using the real GetOrderFees API
+  Future<void> _calculateOrderFees() async {
+    // Skip if required fields are missing
+    if (_cachedAccountId == null ||
+        _selectedSymbol.isEmpty ||
+        _quantityController.text.trim().isEmpty) {
+      return;
+    }
+
+    // Skip for Market orders without price
+    if (_orderType == 'Market' && _priceController.text.trim().isEmpty) {
+      return;
+    }
+
+    if (_isLoadingFee) return;
+
+    setState(() {
+      _isLoadingFee = true;
+    });
+
+    try {
+      print('💰 Calculating order fees...');
+
+      final instrumentId = _selectedSymbol.split('/').first; // Extract asset part from symbol
+      final orderTypeApi = _orderType == 'Limit' ? 'LIMIT' : 'MARKET';
+      final sideApi = _isBuySelected ? 'BUY' : 'SELL';
+      final quantity = _quantityController.text.trim();
+      final price = _priceController.text.trim();
+
+      final result = await realGrpcClient.getOrderFees(
+        accountId: _cachedAccountId!,
+        feePayerAccountId: _cachedAccountId!,
+        instrumentId: instrumentId,
+        orderType: orderTypeApi,
+        side: sideApi,
+        quantity: quantity,
+        price: orderTypeApi == 'LIMIT' ? price : null,
+        timeInForce: "0",
+      );
+
+      if (result['success'] == true && result['output'] != null) {
+        final output = result['output'] as Map<String, dynamic>;
+        final feeStructure = output['feeStructure'] as Map<String, dynamic>?;
+
+        if (feeStructure != null && feeStructure['totalEstimatedFee'] != null) {
+          final totalFee = feeStructure['totalEstimatedFee'].toString();
+          final currency = feeStructure['currency']?.toString() ?? '\$';
+
+          setState(() {
+            _estimatedFee = '$totalFee $currency';
+            _isLoadingFee = false;
+          });
+
+          print('✅ Fee calculated successfully: $_estimatedFee');
+        } else {
+          // Fallback to 0.00 if fee structure is incomplete
+          setState(() {
+            _estimatedFee = '0.00 \$';
+            _isLoadingFee = false;
+          });
+          print('⚠️ Fee structure incomplete, using default');
+        }
+      } else {
+        // On error, fallback to 0.00
+        setState(() {
+          _estimatedFee = '0.00 \$';
+          _isLoadingFee = false;
+        });
+        final error = result['output']?['error'] ?? 'Unknown error';
+        print('❌ Failed to calculate fees: $error');
+      }
+    } catch (e) {
+      // On exception, fallback to 0.00
+      setState(() {
+        _estimatedFee = '0.00 \$';
+        _isLoadingFee = false;
+      });
+      print('❌ Error calculating fees: $e');
+    }
+  }
+
   // Fetch last price for asset using exchangePairId
   Future<void> _fetchLastPriceForAsset(Map<String, dynamic> asset) async {
     final exchangePairId = asset['exchangePairId']?.toString() ?? '';
@@ -2532,7 +2623,10 @@ class _TradingPageState extends State<TradingPage> {
                   child: MouseRegion(
                     cursor: SystemMouseCursors.click, // Pointer cursor
                     child: GestureDetector(
-                      onTap: () => setState(() => _isBuySelected = true),
+                      onTap: () {
+                        setState(() => _isBuySelected = true);
+                        _calculateOrderFees();
+                      },
                       child: Container(
                         padding: const EdgeInsets.symmetric(vertical: 8), // Much smaller padding
                         decoration: BoxDecoration(
@@ -2562,6 +2656,7 @@ class _TradingPageState extends State<TradingPage> {
                     child: GestureDetector(
                       onTap: () {
                         setState(() => _isBuySelected = false);
+                        _calculateOrderFees();
                         _fetchAccountMarketPortfolio();
                       },
                       child: Container(
@@ -2605,7 +2700,10 @@ class _TradingPageState extends State<TradingPage> {
                   child: MouseRegion(
                     cursor: SystemMouseCursors.click, // Pointer cursor
                     child: GestureDetector(
-                      onTap: () => setState(() => _orderType = 'Limit'),
+                      onTap: () {
+                        setState(() => _orderType = 'Limit');
+                        _calculateOrderFees();
+                      },
                       child: Container(
                         padding: const EdgeInsets.symmetric(vertical: 8), // Reduced to match buy/sell area
                         decoration: BoxDecoration(
@@ -2632,7 +2730,10 @@ class _TradingPageState extends State<TradingPage> {
                   child: MouseRegion(
                     cursor: SystemMouseCursors.click, // Pointer cursor
                     child: GestureDetector(
-                      onTap: () => setState(() => _orderType = 'Market'),
+                      onTap: () {
+                        setState(() => _orderType = 'Market');
+                        _calculateOrderFees();
+                      },
                       child: Container(
                         padding: const EdgeInsets.symmetric(vertical: 8), // Reduced to match buy/sell area
                         decoration: BoxDecoration(
@@ -2939,13 +3040,24 @@ class _TradingPageState extends State<TradingPage> {
                         color: _isDarkTheme ? Colors.grey[400] : Colors.grey[600],
                       ),
                     ),
-                    Text(
-                      '0.00 \$',
-                      style: TextStyle(
-                        fontSize: 14,
-                        color: _isDarkTheme ? Colors.white : Colors.black,
-                      ),
-                    ),
+                    _isLoadingFee
+                        ? SizedBox(
+                            width: 16,
+                            height: 16,
+                            child: CircularProgressIndicator(
+                              strokeWidth: 2,
+                              valueColor: AlwaysStoppedAnimation<Color>(
+                                _isDarkTheme ? Colors.white : Colors.black,
+                              ),
+                            ),
+                          )
+                        : Text(
+                            _estimatedFee,
+                            style: TextStyle(
+                              fontSize: 14,
+                              color: _isDarkTheme ? Colors.white : Colors.black,
+                            ),
+                          ),
                   ],
                 ),
                 const SizedBox(height: 8),
@@ -3181,6 +3293,7 @@ class _TradingPageState extends State<TradingPage> {
                                     _fetchChartData(asset['symbol']);
                                     _resetAndFetchTradeHistory(asset['symbol']);
                                     _fetchOrderbookData(asset['symbol']);
+                                    _calculateOrderFees();
                                     // Update portfolio for sell orders if currently in sell mode
                                     // Asset has changed, so asset_ids parameter changes
                                     if (!_isBuySelected) {

@@ -1511,4 +1511,87 @@ class GrpcurlHelper {
       };
     }
   }
+
+  /// Get order fees using grpcurl
+  static Future<Map<String, dynamic>> getOrderFees({
+    required String accountId,
+    required String feePayerAccountId,
+    required String instrumentId,
+    required String orderType, // "LIMIT" or "MARKET"
+    required String side, // "BUY" or "SELL"
+    required String quantity,
+    String? price, // Required for LIMIT orders
+    String timeInForce = "0", // Always 0 according to requirements
+  }) async {
+    Map<String, dynamic> responseData = {
+      'success': false,
+      'output': {},
+      'requestTime': _toUnixTimestamp(DateTime.now()).toString(),
+      'serverType': 'simprtagent-real-grpcurl',
+    };
+
+    try {
+      final grpcurlPath = await _findGrpcurlPath();
+      if (grpcurlPath == null) {
+        responseData['output'] = {'error': 'grpcurl not found'};
+        responseData['serverType'] = 'grpcurl-not-found';
+        return responseData;
+      }
+
+      final inputParams = {
+        'ref_request_id': 'get_order_fees_${DateTime.now().millisecondsSinceEpoch}',
+        'account_id': accountId,
+        'fee_payer_account_id': feePayerAccountId,
+        'instrument_id': instrumentId,
+        'order_type': orderType,
+        'side': side == "BUY" ? "ORDER_SIDE__BUY" : "ORDER_SIDE__SELL",
+        'quantity': quantity,
+        'time_in_force': timeInForce,
+      };
+
+      // Add price for LIMIT orders
+      if (price != null) {
+        inputParams['price'] = price;
+      }
+
+      print('📨 GetOrderFees Request: $inputParams');
+
+      final result = await Process.run(
+        grpcurlPath,
+        [
+          '-plaintext',
+          '-d', jsonEncode(inputParams),
+          '$_host:$_port',
+          'qomet.agora.daemons.prtagent.v1.MarketService/GetOrderFees'
+        ],
+        environment: {'PATH': '/usr/local/bin:/opt/homebrew/bin:${Platform.environment['PATH']}'},
+      ).timeout(const Duration(seconds: 10));
+
+      if (result.exitCode == 0) {
+        final responseJson = jsonDecode(result.stdout);
+        responseData['success'] = true;
+        responseData['output'] = responseJson;
+        print('✅ GetOrderFees successful');
+        print('📬 GetOrderFees Response: $responseJson');
+      } else {
+        responseData['output'] = {
+          'error': 'gRPC call failed',
+          'stderr': result.stderr.toString(),
+          'stdout': result.stdout.toString(),
+          'exit_code': result.exitCode,
+        };
+        print('❌ GetOrderFees failed: ${result.stderr}');
+      }
+
+      return responseData;
+    } catch (e) {
+      print('❌ GetOrderFees exception: $e');
+      return {
+        'success': false,
+        'output': {'error': 'Exception occurred', 'details': e.toString()},
+        'requestTime': _toUnixTimestamp(DateTime.now()).toString(),
+        'serverType': 'exception',
+      };
+    }
+  }
 }

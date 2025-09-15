@@ -1074,6 +1074,69 @@ class RealGrpcClient {
     }
   }
 
+  /// Get order fees using the real gRPC server
+  Future<Map<String, dynamic>> getOrderFees({
+    required String accountId,
+    required String feePayerAccountId,
+    required String instrumentId,
+    required String orderType, // "LIMIT" or "MARKET"
+    required String side, // "BUY" or "SELL"
+    required String quantity,
+    String? price, // Required for LIMIT orders
+    String timeInForce = "0", // Always 0 according to requirements
+  }) async {
+    try {
+      print('💰 Getting order fees...');
+
+      final result = await GrpcurlHelper.getOrderFees(
+        accountId: accountId,
+        feePayerAccountId: feePayerAccountId,
+        instrumentId: instrumentId,
+        orderType: orderType,
+        side: side,
+        quantity: quantity,
+        price: price,
+        timeInForce: timeInForce,
+      );
+
+      print('📤 GetOrderFees OUTPUT: ${result.toString()}');
+      return {
+        'input': {
+          'account_id': accountId,
+          'fee_payer_account_id': feePayerAccountId,
+          'instrument_id': instrumentId,
+          'order_type': orderType,
+          'side': side,
+          'quantity': quantity,
+          'price': price,
+          'time_in_force': timeInForce,
+        },
+        'output': result['success'] ? result['output'] : {'error': result['error'] ?? 'Unknown error'},
+        'requestTime': _toUnixTimestamp(DateTime.now()).toString(),
+        'serverType': 'real_grpc',
+        'success': result['success'] ?? false,
+      };
+    } catch (e) {
+      print('❌ Critical error in getOrderFees: $e');
+      return {
+        'input': {
+          'account_id': accountId,
+          'fee_payer_account_id': feePayerAccountId,
+          'instrument_id': instrumentId,
+          'order_type': orderType,
+          'side': side,
+          'quantity': quantity,
+          'price': price,
+          'time_in_force': timeInForce,
+        },
+        'output': {'error': 'Critical error: $e'},
+        'requestTime': _toUnixTimestamp(DateTime.now()).toString(),
+        'serverType': 'critical-error',
+        'success': false,
+      };
+    }
+  }
+
   /// Dispose and clean up resources
   void dispose() {
     disconnect();
