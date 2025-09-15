@@ -625,7 +625,7 @@ class _TradingPageState extends State<TradingPage> {
 
   // Order fee calculation
   bool _isLoadingFee = false;
-  String _estimatedFee = '0.00'; // Store the estimated fee
+  String _estimatedFee = '0.00 \$'; // Store the estimated fee
   
   // Message stream subscription
   StreamSubscription<String>? _messageSubscription;
@@ -905,15 +905,23 @@ class _TradingPageState extends State<TradingPage> {
 
   /// Calculate order fees using the real GetOrderFees API
   Future<void> _calculateOrderFees() async {
-    // Skip if required fields are missing
+    // Reset fee to default if required fields are missing
     if (_cachedAccountId == null ||
         _selectedSymbol.isEmpty ||
         _quantityController.text.trim().isEmpty) {
+      setState(() {
+        _estimatedFee = '0.00 \$';
+        _isLoadingFee = false;
+      });
       return;
     }
 
-    // Skip for Market orders without price
-    if (_orderType == 'Market' && _priceController.text.trim().isEmpty) {
+    // Reset fee for Limit orders without price
+    if (_orderType == 'Limit' && _priceController.text.trim().isEmpty) {
+      setState(() {
+        _estimatedFee = '0.00 \$';
+        _isLoadingFee = false;
+      });
       return;
     }
 
