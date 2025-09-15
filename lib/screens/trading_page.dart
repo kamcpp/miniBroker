@@ -4281,7 +4281,7 @@ class _TradingPageState extends State<TradingPage> {
     );
   }
 
-  void _placeOrder() {
+  void _placeOrder() async {
     if (_quantityController.text.isEmpty) {
       ScaffoldMessenger.of(context).showSnackBar(
         const SnackBar(
@@ -4302,22 +4302,119 @@ class _TradingPageState extends State<TradingPage> {
       return;
     }
 
-    // Simulate order placement
-    final orderType = _isBuySelected ? 'BUY' : 'SELL';
-    final price = _orderType == 'Limit' ? _priceController.text : 'Market';
-    
-    ScaffoldMessenger.of(context).showSnackBar(
-      SnackBar(
-        content: Text(
-          '$orderType order placed: $_selectedSymbol × ${_quantityController.text} at $price',
+    if (_cachedAccountId == null || _cachedAccountId!.isEmpty) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(
+          content: Text('Account ID not available'),
+          backgroundColor: Colors.red,
         ),
-        backgroundColor: _isBuySelected ? Colors.green : Colors.red,
-      ),
-    );
+      );
+      return;
+    }
 
-    // Clear form
-    _quantityController.clear();
-    _priceController.clear();
+    if (_selectedSymbol.isEmpty) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(
+          content: Text('No instrument selected'),
+          backgroundColor: Colors.red,
+        ),
+      );
+      return;
+    }
+
+    try {
+      // Extract instrument ID from symbol (e.g., "BTC-USD" -> "BTC")
+      final instrumentId = _selectedSymbol.split('-').first;
+
+      // Generate unique participant order ID
+      final participantOrderId = 'order_${DateTime.now().millisecondsSinceEpoch}';
+
+      // Determine order side
+      final side = _isBuySelected ? 'BUY' : 'SELL';
+
+      // Set price (0 for market orders)
+      final price = _orderType == 'Market' ? '0' : _priceController.text;
+
+      // Show loading indicator
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(
+          content: Row(
+            children: [
+              SizedBox(
+                width: 16,
+                height: 16,
+                child: CircularProgressIndicator(
+                  strokeWidth: 2,
+                  valueColor: AlwaysStoppedAnimation<Color>(Colors.white),
+                ),
+              ),
+              SizedBox(width: 12),
+              Text('Placing ${side.toLowerCase()} order...'),
+            ],
+          ),
+          duration: Duration(seconds: 30), // Long duration for loading
+          backgroundColor: _isBuySelected ? Colors.green : Colors.red,
+        ),
+      );
+
+      // Call CreateOrder API
+      final result = await realGrpcClient.createOrder(
+        accountId: _cachedAccountId!,
+        feePayerAccountId: _cachedAccountId!,
+        instrumentId: instrumentId,
+        orderType: _orderType.toUpperCase(),
+        side: side,
+        quantity: _quantityController.text.trim(),
+        price: price,
+        timeInForce: "0", // GTC by default
+        participantOrderId: participantOrderId,
+      );
+
+      // Hide loading indicator
+      ScaffoldMessenger.of(context).hideCurrentSnackBar();
+
+      if (result['success'] == true) {
+        // Success
+        final output = result['output'] as Map<String, dynamic>?;
+        final proposedOrderId = output?['proposedOrderId'] ?? 'Unknown';
+
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(
+            content: Text(
+              '$side order placed successfully!\nOrder ID: $proposedOrderId',
+            ),
+            backgroundColor: Colors.green,
+            duration: Duration(seconds: 5),
+          ),
+        );
+
+        // Clear form after successful order
+        _quantityController.clear();
+        _priceController.clear();
+      } else {
+        // Error
+        final errorMessage = result['output']?['error'] ?? 'Unknown error occurred';
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(
+            content: Text('Order failed: $errorMessage'),
+            backgroundColor: Colors.red,
+            duration: Duration(seconds: 7),
+          ),
+        );
+      }
+    } catch (e) {
+      // Hide loading indicator
+      ScaffoldMessenger.of(context).hideCurrentSnackBar();
+
+      // Show error
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(
+          content: Text('Order failed: $e'),
+          backgroundColor: Colors.red,
+          duration: Duration(seconds: 7),
+        ),
+      );
+    }
   }
 }
 

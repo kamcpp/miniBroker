@@ -1137,6 +1137,64 @@ class RealGrpcClient {
     }
   }
 
+  Future<Map<String, dynamic>> createOrder({
+    required String accountId,
+    required String feePayerAccountId,
+    required String instrumentId,
+    required String orderType, // "LIMIT" or "MARKET"
+    required String side, // "BUY" or "SELL"
+    required String quantity,
+    required String price, // Must be zero for MARKET orders
+    String timeInForce = "0", // "0" for GTC, "1" for IOC, "2" for FOK, "3" for DAY
+    DateTime? expireTime,
+    required String participantOrderId,
+    String? metadata,
+    String? auxData,
+  }) async {
+    try {
+      // Ensure connection
+      if (!isConnected) {
+        await connect(host: _host ?? 'localhost', port: _port ?? 50051);
+      }
+
+      final result = await GrpcurlHelper.createOrder(
+        accountId: accountId,
+        feePayerAccountId: feePayerAccountId,
+        instrumentId: instrumentId,
+        orderType: orderType,
+        side: side,
+        quantity: quantity,
+        price: price,
+        timeInForce: timeInForce,
+        expireTime: expireTime,
+        participantOrderId: participantOrderId,
+        metadata: metadata,
+        auxData: auxData,
+      );
+
+      return result;
+    } catch (e) {
+      print('❌ Critical error in createOrder: $e');
+      return {
+        'request': {
+          'account_id': accountId,
+          'fee_payer_account_id': feePayerAccountId,
+          'instrument_id': instrumentId,
+          'order_type': orderType,
+          'side': side,
+          'quantity': quantity,
+          'price': price,
+          'time_in_force': timeInForce,
+          'participant_order_id': participantOrderId,
+        },
+        'output': {'error': 'Critical error: $e'},
+        'requestTime': _toUnixTimestamp(DateTime.now()).toString(),
+        'serverType': 'critical-error',
+        'success': false,
+      };
+    }
+  }
+
   /// Dispose and clean up resources
   void dispose() {
     disconnect();

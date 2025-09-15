@@ -1594,4 +1594,130 @@ class GrpcurlHelper {
       };
     }
   }
+
+  static Future<Map<String, dynamic>> createOrder({
+    required String accountId,
+    required String feePayerAccountId,
+    required String instrumentId,
+    required String orderType, // "LIMIT" or "MARKET"
+    required String side, // "BUY" or "SELL"
+    required String quantity,
+    required String price, // Must be zero for MARKET orders
+    String timeInForce = "0", // "0" for GTC, "1" for IOC, "2" for FOK, "3" for DAY
+    DateTime? expireTime,
+    required String participantOrderId,
+    String? metadata,
+    String? auxData,
+  }) async {
+    try {
+      // Convert order side to the required enum value
+      String orderSideValue;
+      switch (side.toUpperCase()) {
+        case 'BUY':
+          orderSideValue = '1';
+          break;
+        case 'SELL':
+          orderSideValue = '2';
+          break;
+        default:
+          throw ArgumentError('Invalid side: $side. Must be BUY or SELL');
+      }
+
+      // Build the JSON request
+      final Map<String, dynamic> request = {
+        'ref_request_id': 'create_order_${DateTime.now().millisecondsSinceEpoch}',
+        'account_id': accountId,
+        'fee_payer_account_id': feePayerAccountId,
+        'instrument_id': instrumentId,
+        'order_type': orderType,
+        'side': orderSideValue,
+        'quantity': quantity,
+        'price': price,
+        'time_in_force': timeInForce,
+        'participant_order_id': participantOrderId,
+      };
+
+      // Add optional fields
+      if (expireTime != null) {
+        request['expire_time'] = {
+          'ts': expireTime.toUtc().toIso8601String(),
+        };
+      }
+
+      if (metadata != null) {
+        request['metadata'] = metadata;
+      }
+
+      if (auxData != null) {
+        request['aux_data'] = auxData;
+      }
+
+      final jsonRequest = json.encode(request);
+      print('🚀 CreateOrder Request: $jsonRequest');
+
+      final result = await Process.run(
+        'grpcurl',
+        [
+          '-plaintext',
+          '-d',
+          jsonRequest,
+          '$_host:$_port',
+          'qomet.agora.daemons.prtagent.v1.MarketService/CreateOrder',
+        ],
+      );
+
+      print('📬 CreateOrder Response (stdout): ${result.stdout}');
+      print('📬 CreateOrder Response (stderr): ${result.stderr}');
+      print('📬 CreateOrder Exit code: ${result.exitCode}');
+
+      if (result.exitCode == 0 && result.stdout.toString().trim().isNotEmpty) {
+        try {
+          final Map<String, dynamic> output = json.decode(result.stdout);
+          print('📬 CreateOrder Response: $output');
+          return {
+            'success': true,
+            'output': output,
+            'requestTime': _toUnixTimestamp(DateTime.now()).toString(),
+            'serverType': 'grpcurl',
+          };
+        } catch (e) {
+          print('❌ Error parsing CreateOrder JSON response: $e');
+          print('❌ Raw response: ${result.stdout}');
+          return {
+            'success': false,
+            'output': {
+              'error': 'Failed to parse response JSON',
+              'rawResponse': result.stdout.toString(),
+              'parseError': e.toString()
+            },
+            'requestTime': _toUnixTimestamp(DateTime.now()).toString(),
+            'serverType': 'grpcurl',
+          };
+        }
+      } else {
+        print('❌ CreateOrder grpcurl command failed');
+        print('❌ Exit code: ${result.exitCode}');
+        print('❌ Stderr: ${result.stderr}');
+        return {
+          'success': false,
+          'output': {
+            'error': 'grpcurl command failed',
+            'exitCode': result.exitCode,
+            'stderr': result.stderr.toString(),
+            'stdout': result.stdout.toString(),
+          },
+          'requestTime': _toUnixTimestamp(DateTime.now()).toString(),
+          'serverType': 'grpcurl',
+        };
+      }
+    } catch (e) {
+      print('❌ Exception in createOrder: $e');
+      return {
+        'success': false,
+        'output': {'error': 'Exception occurred', 'details': e.toString()},
+        'requestTime': _toUnixTimestamp(DateTime.now()).toString(),
+        'serverType': 'exception',
+      };
+    }
+  }
 }
