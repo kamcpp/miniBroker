@@ -635,8 +635,8 @@ class _TradingPageState extends State<TradingPage> {
   Timer? _securityRequestTimeout;
   
   // Panel width variables for resizable panels
-  double _leftPanelWidth = 255.0; // Reduced by 15% (300 * 0.85 = 255)
-  double _rightPanelWidth = 255.0; // Reduced by 15% (300 * 0.85 = 255)
+  double _leftPanelWidth = 357.0; // Increased by 40% (255 * 1.40 = 357)
+  double _rightPanelWidth = 357.0; // Increased by 40% (255 * 1.40 = 357)
   bool _isDraggingLeft = false;
   bool _isDraggingRight = false;
   
