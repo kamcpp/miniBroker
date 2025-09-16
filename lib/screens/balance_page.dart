@@ -864,11 +864,13 @@ class _BalancePageState extends State<BalancePage> {
                 color: isDarkTheme ? Colors.grey[400] : Colors.grey[600],
               ),
             ),
-            const SizedBox(width: 10),
+            const SizedBox(width: 30),
             Container(
               padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
+              width: 180,
+              height: 40,
               decoration: BoxDecoration(
-                color: isDarkTheme ? const Color(0xFF404040) : Colors.grey[50],
+                color: isDarkTheme ? const Color(0xFF505050) : Colors.white, // Enhanced background color
                 borderRadius: BorderRadius.circular(8),
                 border: Border.all(
                   color: isDarkTheme ? Colors.grey[700]! : Colors.grey[200]!,
@@ -882,7 +884,7 @@ class _BalancePageState extends State<BalancePage> {
                       : (_supportedCurrencies.any((currency) => currency['code'] == _selectedCurrency['code'])
                           ? _selectedCurrency
                           : _supportedCurrencies.isNotEmpty ? _supportedCurrencies.first : null),
-                  isExpanded: false,
+                  isExpanded: true, // Expand to fill the fixed width container
                   onChanged: _supportedCurrencies.isEmpty ? null : (Map<String, String>? newValue) {
                     if (newValue != null) {
                       setState(() {
@@ -894,7 +896,7 @@ class _BalancePageState extends State<BalancePage> {
                   dropdownColor: isDarkTheme ? const Color(0xFF1e1e1e) : Colors.white,
                   style: TextStyle(
                     color: isDarkTheme ? Colors.white : Colors.black,
-                    fontSize: 14,
+                    fontSize: 12, // Smaller font for more compact appearance
                   ),
                   items: _supportedCurrencies.isEmpty
                       ? [DropdownMenuItem<Map<String, String>>(
@@ -921,9 +923,8 @@ class _BalancePageState extends State<BalancePage> {
             Text(
               'Total Balance: ',
               style: TextStyle(
-                fontSize: 16,
-                fontWeight: FontWeight.w500,
-                color: isDarkTheme ? Colors.white : Colors.black,
+                fontSize: 14, // Same as Currency title
+                color: isDarkTheme ? Colors.grey[400] : Colors.grey[600], // Same as Currency title
               ),
             ),
             const SizedBox(width: 10),
