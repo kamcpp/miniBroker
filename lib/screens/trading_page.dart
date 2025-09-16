@@ -634,7 +634,7 @@ class _TradingPageState extends State<TradingPage> {
 
   // Order fee calculation
   bool _isLoadingFee = false;
-  String _estimatedFee = '0.00 \$'; // Store the estimated fee
+  String _estimatedFee = '0 \$'; // Store the estimated fee
   
   // Message stream subscription
   StreamSubscription<String>? _messageSubscription;
@@ -937,7 +937,7 @@ class _TradingPageState extends State<TradingPage> {
         _selectedSymbol.isEmpty ||
         _quantityController.text.trim().isEmpty) {
       setState(() {
-        _estimatedFee = '0.00 \$';
+        _estimatedFee = '0 \$';
         _isLoadingFee = false;
       });
       return;
@@ -946,7 +946,7 @@ class _TradingPageState extends State<TradingPage> {
     // Reset fee for Limit orders without price
     if (_orderType == 'Limit' && _priceController.text.trim().isEmpty) {
       setState(() {
-        _estimatedFee = '0.00 \$';
+        _estimatedFee = '0 \$';
         _isLoadingFee = false;
       });
       return;
@@ -996,7 +996,7 @@ class _TradingPageState extends State<TradingPage> {
         } else {
           // Fallback to 0.00 if fee structure is incomplete
           setState(() {
-            _estimatedFee = '0.00 \$';
+            _estimatedFee = '0 \$';
             _isLoadingFee = false;
           });
           print('⚠️ Fee structure incomplete, using default');
@@ -1004,7 +1004,7 @@ class _TradingPageState extends State<TradingPage> {
       } else {
         // On error, fallback to 0.00
         setState(() {
-          _estimatedFee = '0.00 \$';
+          _estimatedFee = '0 \$';
           _isLoadingFee = false;
         });
         final error = result['output']?['error'] ?? 'Unknown error';
@@ -1013,7 +1013,7 @@ class _TradingPageState extends State<TradingPage> {
     } catch (e) {
       // On exception, fallback to 0.00
       setState(() {
-        _estimatedFee = '0.00 \$';
+        _estimatedFee = '0 \$';
         _isLoadingFee = false;
       });
       print('❌ Error calculating fees: $e');
@@ -4674,7 +4674,7 @@ class _TradingPageState extends State<TradingPage> {
                         ),
                       ),
                       Text(
-                        '${_calculateTotal().toStringAsFixed(2)} \$',
+                        '${_formatDecimal(_calculateTotal().toString())} \$',
                         style: TextStyle(
                           fontSize: 14,
                           fontWeight: FontWeight.w600,
