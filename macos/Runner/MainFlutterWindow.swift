@@ -9,27 +9,26 @@ class MainFlutterWindow: NSWindow {
     
     // Get screen size to adapt to different monitors
     let screenSize = NSScreen.main?.visibleFrame.size ?? NSSize(width: 1440, height: 900)
-    
-    // Calculate responsive window size based on screen size
+    let screenFrame = NSScreen.main?.visibleFrame ?? NSRect(x: 0, y: 0, width: 1440, height: 900)
+
+    // Keep original width calculation
     let minWidth: CGFloat = 1237.5  // Increased by 25% (990 * 1.25)
 
-    // Use 107% height for smaller screens (13-inch), 96.3% for larger screens (90% * 1.07)
-    let heightRatio: CGFloat = screenSize.height <= 900 ? 1.07 : 0.963
-    let minHeight: CGFloat = screenSize.height * heightRatio
+    // Use 100% of screen height
+    let fullHeight = screenSize.height
 
-    // Set minimum window size to ensure all content is visible
-    self.minSize = NSSize(width: minWidth, height: minHeight)
+    // Set minimum window size
+    self.minSize = NSSize(width: minWidth, height: fullHeight)
 
-    // Calculate optimal initial size - increased width by 25% and height by 7%
-    let optimalWidth = max(minWidth, min(windowFrame.size.width, screenSize.width * 1.0))  // Increased from 0.8 to 1.0 (25% increase)
-    let optimalHeight = max(minHeight, min(windowFrame.size.height, screenSize.height * heightRatio))
-    
-    // Set initial window size
+    // Calculate optimal width (keep original logic) but use full height
+    let optimalWidth = max(minWidth, min(windowFrame.size.width, screenSize.width * 1.0))
+
+    // Set initial window size with full height
     let newFrame = NSRect(
       x: windowFrame.origin.x,
-      y: windowFrame.origin.y,
+      y: screenFrame.origin.y,
       width: optimalWidth,
-      height: optimalHeight
+      height: fullHeight
     )
     self.setFrame(newFrame, display: true)
 
