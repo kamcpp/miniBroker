@@ -595,6 +595,7 @@ class _TradingPageState extends State<TradingPage> {
   String _selectedSymbol = '';  // Will be set when assets are loaded
   String _orderType = 'Limit';
   String _expiryPeriod = '1 Month'; // Add expiry period variable
+  String _replaceExpiryPeriod = 'Select new expiration time'; // Add replace order expiry period variable
   bool _isBuySelected = true;
   
   // Market data
@@ -621,7 +622,6 @@ class _TradingPageState extends State<TradingPage> {
   final TextEditingController _newOrderIdController = TextEditingController();
   final TextEditingController _newQuantityController = TextEditingController();
   final TextEditingController _newPriceController = TextEditingController();
-  final TextEditingController _newExpirationController = TextEditingController();
   final TextEditingController _replaceReasonController = TextEditingController();
   final ScrollController _scrollController = ScrollController();
   
@@ -1858,7 +1858,6 @@ class _TradingPageState extends State<TradingPage> {
     _newOrderIdController.dispose();
     _newQuantityController.dispose();
     _newPriceController.dispose();
-    _newExpirationController.dispose();
     _replaceReasonController.dispose();
     _scrollController.dispose();
     super.dispose();
@@ -4607,6 +4606,7 @@ class _TradingPageState extends State<TradingPage> {
           ),
           const SizedBox(height: 8),
           Container(
+            height: 34,
             decoration: BoxDecoration(
               color: isDarkTheme ? const Color(0xFF2d2d2d) : Colors.grey[100],
               borderRadius: BorderRadius.circular(8),
@@ -4624,7 +4624,7 @@ class _TradingPageState extends State<TradingPage> {
                 ),
                 border: InputBorder.none,
                 isDense: true,
-                contentPadding: const EdgeInsets.symmetric(horizontal: 12, vertical: 4),
+                contentPadding: const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
               ),
             ),
           ),
@@ -4641,6 +4641,7 @@ class _TradingPageState extends State<TradingPage> {
           ),
           const SizedBox(height: 8),
           Container(
+            height: 34,
             decoration: BoxDecoration(
               color: isDarkTheme ? const Color(0xFF2d2d2d) : Colors.grey[100],
               borderRadius: BorderRadius.circular(8),
@@ -4658,7 +4659,7 @@ class _TradingPageState extends State<TradingPage> {
                 ),
                 border: InputBorder.none,
                 isDense: true,
-                contentPadding: const EdgeInsets.symmetric(horizontal: 12, vertical: 4),
+                contentPadding: const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
               ),
             ),
           ),
@@ -4667,7 +4668,6 @@ class _TradingPageState extends State<TradingPage> {
           // Cancel Order button
           SizedBox(
             width: double.infinity,
-            height: 48,
             child: ElevatedButton(
               onPressed: () {
                 _cancelOrder();
@@ -4675,9 +4675,11 @@ class _TradingPageState extends State<TradingPage> {
               style: ElevatedButton.styleFrom(
                 backgroundColor: Colors.red,
                 foregroundColor: Colors.white,
+                padding: const EdgeInsets.symmetric(vertical: 16),
                 shape: RoundedRectangleBorder(
-                  borderRadius: BorderRadius.circular(8),
+                  borderRadius: BorderRadius.circular(30),
                 ),
+                elevation: 0,
               ),
               child: const Text(
                 'Cancel Order',
@@ -4762,6 +4764,7 @@ class _TradingPageState extends State<TradingPage> {
           ),
           const SizedBox(height: 8),
           Container(
+            height: 34,
             decoration: BoxDecoration(
               color: isDarkTheme ? const Color(0xFF2d2d2d) : Colors.grey[100],
               borderRadius: BorderRadius.circular(8),
@@ -4779,7 +4782,7 @@ class _TradingPageState extends State<TradingPage> {
                 ),
                 border: InputBorder.none,
                 isDense: true,
-                contentPadding: const EdgeInsets.symmetric(horizontal: 12, vertical: 4),
+                contentPadding: const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
               ),
             ),
           ),
@@ -4796,6 +4799,7 @@ class _TradingPageState extends State<TradingPage> {
           ),
           const SizedBox(height: 8),
           Container(
+            height: 34,
             decoration: BoxDecoration(
               color: isDarkTheme ? const Color(0xFF2d2d2d) : Colors.grey[100],
               borderRadius: BorderRadius.circular(8),
@@ -4813,7 +4817,7 @@ class _TradingPageState extends State<TradingPage> {
                 ),
                 border: InputBorder.none,
                 isDense: true,
-                contentPadding: const EdgeInsets.symmetric(horizontal: 12, vertical: 4),
+                contentPadding: const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
               ),
             ),
           ),
@@ -4830,6 +4834,7 @@ class _TradingPageState extends State<TradingPage> {
           ),
           const SizedBox(height: 8),
           Container(
+            height: 34,
             decoration: BoxDecoration(
               color: isDarkTheme ? const Color(0xFF2d2d2d) : Colors.grey[100],
               borderRadius: BorderRadius.circular(8),
@@ -4848,7 +4853,7 @@ class _TradingPageState extends State<TradingPage> {
                 ),
                 border: InputBorder.none,
                 isDense: true,
-                contentPadding: const EdgeInsets.symmetric(horizontal: 12, vertical: 4),
+                contentPadding: const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
               ),
             ),
           ),
@@ -4865,6 +4870,7 @@ class _TradingPageState extends State<TradingPage> {
           ),
           const SizedBox(height: 8),
           Container(
+            height: 34,
             decoration: BoxDecoration(
               color: isDarkTheme ? const Color(0xFF2d2d2d) : Colors.grey[100],
               borderRadius: BorderRadius.circular(8),
@@ -4883,13 +4889,13 @@ class _TradingPageState extends State<TradingPage> {
                 ),
                 border: InputBorder.none,
                 isDense: true,
-                contentPadding: const EdgeInsets.symmetric(horizontal: 12, vertical: 4),
+                contentPadding: const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
               ),
             ),
           ),
           const SizedBox(height: 16),
 
-          // New Expiration Time field
+          // New Expiration Time dropdown
           Text(
             'New Expiration Time (Optional)',
             style: TextStyle(
@@ -4904,20 +4910,38 @@ class _TradingPageState extends State<TradingPage> {
               color: isDarkTheme ? const Color(0xFF2d2d2d) : Colors.grey[100],
               borderRadius: BorderRadius.circular(8),
             ),
-            child: TextField(
-              controller: _newExpirationController,
-              style: TextStyle(
-                color: isDarkTheme ? Colors.white : Colors.black,
-                fontSize: 14,
-              ),
-              decoration: InputDecoration(
-                hintText: 'Enter new expiration time (YYYY-MM-DD HH:MM:SS)',
-                hintStyle: TextStyle(
-                  color: isDarkTheme ? Colors.grey[500] : Colors.grey[400],
+            child: Padding(
+              padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 6),
+              child: DropdownButtonHideUnderline(
+                child: DropdownButton<String>(
+                  value: _replaceExpiryPeriod,
+                  isExpanded: true,
+                  isDense: true,
+                  onChanged: (String? newValue) {
+                    setState(() {
+                      _replaceExpiryPeriod = newValue!;
+                    });
+                  },
+                  dropdownColor: isDarkTheme ? const Color(0xFF1e1e1e) : Colors.white,
+                  style: TextStyle(
+                    color: isDarkTheme ? Colors.white : Colors.black,
+                    fontSize: 14,
+                  ),
+                  icon: Icon(
+                    Icons.keyboard_arrow_down,
+                    color: isDarkTheme ? Colors.grey[400] : Colors.grey[600],
+                  ),
+                  items: ['Select new expiration time', '1 Day', '3 Days', '1 Week', '2 Weeks', '1 Month']
+                      .map<DropdownMenuItem<String>>((String value) {
+                    return DropdownMenuItem<String>(
+                      value: value,
+                      child: Padding(
+                        padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 2),
+                        child: Text(value),
+                      ),
+                    );
+                  }).toList(),
                 ),
-                border: InputBorder.none,
-                isDense: true,
-                contentPadding: const EdgeInsets.symmetric(horizontal: 12, vertical: 4),
               ),
             ),
           ),
@@ -4934,6 +4958,7 @@ class _TradingPageState extends State<TradingPage> {
           ),
           const SizedBox(height: 8),
           Container(
+            height: 34,
             decoration: BoxDecoration(
               color: isDarkTheme ? const Color(0xFF2d2d2d) : Colors.grey[100],
               borderRadius: BorderRadius.circular(8),
@@ -4951,7 +4976,7 @@ class _TradingPageState extends State<TradingPage> {
                 ),
                 border: InputBorder.none,
                 isDense: true,
-                contentPadding: const EdgeInsets.symmetric(horizontal: 12, vertical: 4),
+                contentPadding: const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
               ),
             ),
           ),
@@ -4960,7 +4985,6 @@ class _TradingPageState extends State<TradingPage> {
           // Replace Order button
           SizedBox(
             width: double.infinity,
-            height: 48,
             child: ElevatedButton(
               onPressed: () {
                 _replaceOrder();
@@ -4968,9 +4992,11 @@ class _TradingPageState extends State<TradingPage> {
               style: ElevatedButton.styleFrom(
                 backgroundColor: Colors.orange,
                 foregroundColor: Colors.white,
+                padding: const EdgeInsets.symmetric(vertical: 16),
                 shape: RoundedRectangleBorder(
-                  borderRadius: BorderRadius.circular(8),
+                  borderRadius: BorderRadius.circular(30),
                 ),
+                elevation: 0,
               ),
               child: const Text(
                 'Replace Order',
@@ -5017,7 +5043,7 @@ class _TradingPageState extends State<TradingPage> {
       // Get optional fields
       final newQuantity = _newQuantityController.text.trim();
       final newPrice = _newPriceController.text.trim();
-      final newExpiration = _newExpirationController.text.trim();
+      final newExpiration = _replaceExpiryPeriod == 'Select new expiration time' ? null : _replaceExpiryPeriod; // Use dropdown value only if not default
       final reason = _replaceReasonController.text.trim();
 
       // Create ReplaceOrderRequest
@@ -5027,7 +5053,7 @@ class _TradingPageState extends State<TradingPage> {
         'new_proposed_order_id': newOrderId,
         'new_quantity': newQuantity.isNotEmpty ? newQuantity : null,
         'new_price': newPrice.isNotEmpty ? newPrice : null,
-        'new_expire_time': newExpiration.isNotEmpty ? newExpiration : null,
+        'new_expire_time': newExpiration, // Always include dropdown value
         'reason': reason.isNotEmpty ? reason : null,
       };
 
@@ -5049,8 +5075,10 @@ class _TradingPageState extends State<TradingPage> {
       _newOrderIdController.clear();
       _newQuantityController.clear();
       _newPriceController.clear();
-      _newExpirationController.clear();
       _replaceReasonController.clear();
+      setState(() {
+        _replaceExpiryPeriod = 'Select new expiration time'; // Reset dropdown to default
+      });
 
     } catch (e) {
       print('Error replacing order: $e');
