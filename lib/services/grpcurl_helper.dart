@@ -1443,6 +1443,85 @@ class GrpcurlHelper {
     }
   }
 
+  /// Make a real GetMarketSupportedCurrencies call using grpcurl
+  static Future<Map<String, dynamic>> getMarketSupportedCurrencies({
+    required String marketId,
+    int pageNumber = 1,
+    int pageSize = 100,
+  }) async {
+    Map<String, dynamic> responseData = {
+      'success': false,
+      'output': {},
+      'requestTime': _toUnixTimestamp(DateTime.now()).toString(),
+      'serverType': 'simprtagent-real-grpcurl',
+    };
+
+    try {
+      final grpcurlPath = await _findGrpcurlPath();
+
+      if (grpcurlPath == null) {
+        print('❌ No grpcurl path found');
+        return {
+          'success': false,
+          'output': {
+            'error': 'grpcurl command not available in standalone app',
+            'message': 'The standalone macOS app cannot access grpcurl due to sandbox restrictions. This feature works when running with "flutter run --debug" but not in built apps.',
+          },
+          'requestTime': _toUnixTimestamp(DateTime.now()).toString(),
+          'serverType': 'grpcurl-sandbox-restricted',
+        };
+      }
+
+      final request = {
+        'ref_request_id': 'get_market_supported_currencies_${DateTime.now().millisecondsSinceEpoch}',
+        'pagination': {
+          'page_nr': pageNumber,
+          'page_size': pageSize,
+        },
+        'market_id': marketId,
+      };
+
+      print('🔄 Making real grpcurl call to MarketService.GetMarketSupportedCurrencies using $grpcurlPath');
+      print('📨 Request: $request');
+
+      final result = await Process.run(
+        grpcurlPath,
+        ['-plaintext', '-d', jsonEncode(request), '$_host:$_port', 'qomet.agora.daemons.prtagent.v1.MarketService.GetMarketSupportedCurrencies'],
+      ).timeout(const Duration(seconds: 10));
+
+      print('📤 GetMarketSupportedCurrencies gRPC exit code: ${result.exitCode}');
+      print('📤 GetMarketSupportedCurrencies gRPC stdout: ${result.stdout}');
+      if (result.stderr.isNotEmpty) {
+        print('📤 GetMarketSupportedCurrencies gRPC stderr: ${result.stderr}');
+      }
+
+      if (result.exitCode == 0 && result.stdout.isNotEmpty) {
+        final responseJson = jsonDecode(result.stdout);
+        responseData['success'] = true;
+        responseData['output'] = responseJson;
+        print('✅ GetMarketSupportedCurrencies successful');
+      } else {
+        responseData['output'] = {
+          'error': 'gRPC call failed',
+          'stderr': result.stderr.toString(),
+          'stdout': result.stdout.toString(),
+          'exit_code': result.exitCode,
+        };
+        print('❌ GetMarketSupportedCurrencies failed: ${result.stderr}');
+      }
+
+      return responseData;
+    } catch (e) {
+      print('❌ GetMarketSupportedCurrencies exception: $e');
+      return {
+        'success': false,
+        'output': {'error': 'Exception occurred', 'details': e.toString()},
+        'requestTime': _toUnixTimestamp(DateTime.now()).toString(),
+        'serverType': 'exception',
+      };
+    }
+  }
+
   /// Make a real GetSupportedCurrencies call using grpcurl
   static Future<Map<String, dynamic>> getSupportedCurrencies({
     int pageNumber = 1,

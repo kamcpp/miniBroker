@@ -7,6 +7,7 @@ import '../services/real_grpc_client.dart';
 import '../services/database_helper.dart';
 import '../utils/connectivity_checker.dart';
 import 'trading_page.dart';
+import 'balance_page.dart';
 import 'activity_page.dart';
 import 'profile_page.dart';
 import 'users_admin_page.dart';
@@ -451,7 +452,7 @@ class _PortfolioPageState extends State<PortfolioPage> {
                   ),
                 ),
               ),
-              
+
               // Activity Button
               MouseRegion(
                 cursor: SystemMouseCursors.click,
@@ -490,6 +491,56 @@ class _PortfolioPageState extends State<PortfolioPage> {
                         ),
                         child: const Text(
                           'Activity',
+                          style: TextStyle(
+                            fontSize: 13,
+                            fontWeight: FontWeight.w500,
+                            color: Colors.white70,
+                          ),
+                        ),
+                      ),
+                    ),
+                  ),
+                ),
+              ),
+
+              // Balance Button
+              MouseRegion(
+                cursor: SystemMouseCursors.click,
+                child: GestureDetector(
+                  onTap: () {
+                    Navigator.of(context).push(
+                      PageRouteBuilder(
+                        pageBuilder: (context, animation, secondaryAnimation) => const BalancePage(),
+                        transitionDuration: Duration.zero,
+                        reverseTransitionDuration: Duration.zero,
+                      ),
+                    );
+                  },
+                  child: ClipRRect(
+                    borderRadius: const BorderRadius.only(
+                      topLeft: Radius.circular(8),
+                      topRight: Radius.circular(8),
+                    ),
+                    child: BackdropFilter(
+                      filter: ImageFilter.blur(sigmaX: 2, sigmaY: 2),
+                      child: Container(
+                        height: 45,
+                        padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 9),
+                        decoration: BoxDecoration(
+                          color: Colors.white.withOpacity(0.1),
+                          border: Border(
+                            top: BorderSide(color: Colors.white.withOpacity(0.3), width: 1),
+                            left: BorderSide(color: Colors.white.withOpacity(0.3), width: 1),
+                            right: BorderSide(color: Colors.white.withOpacity(0.3), width: 1),
+                            bottom: BorderSide(color: Colors.white.withOpacity(0.3), width: 1),
+                          ),
+                          borderRadius: const BorderRadius.only(
+                            topLeft: Radius.circular(8),
+                            topRight: Radius.circular(8),
+                          ),
+                        ),
+                        child: const Text(
+                          'Balance',
                           style: TextStyle(
                             fontSize: 13,
                             fontWeight: FontWeight.w500,

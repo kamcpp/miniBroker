@@ -1074,6 +1074,47 @@ class RealGrpcClient {
     }
   }
 
+  /// Get market supported currencies using the real gRPC server
+  Future<Map<String, dynamic>> getMarketSupportedCurrencies({
+    required String marketId,
+    int pageNumber = 1,
+    int pageSize = 100,
+  }) async {
+    try {
+      print('🏦 Getting market supported currencies for market: $marketId');
+      final result = await GrpcurlHelper.getMarketSupportedCurrencies(
+        marketId: marketId,
+        pageNumber: pageNumber,
+        pageSize: pageSize,
+      );
+      print('📤 GetMarketSupportedCurrencies OUTPUT: ${result.toString()}');
+      return {
+        'input': {
+          'market_id': marketId,
+          'page_nr': pageNumber,
+          'page_size': pageSize,
+        },
+        'output': result['success'] ? result['output'] : {'error': result['output']?['error'] ?? 'Unknown error'},
+        'requestTime': _toUnixTimestamp(DateTime.now()).toString(),
+        'serverType': 'real_grpc',
+        'success': result['success'] ?? false,
+      };
+    } catch (e) {
+      print('❌ Critical error in getMarketSupportedCurrencies: $e');
+      return {
+        'input': {
+          'market_id': marketId,
+          'page_nr': pageNumber,
+          'page_size': pageSize,
+        },
+        'output': {'error': 'Critical error: $e'},
+        'requestTime': _toUnixTimestamp(DateTime.now()).toString(),
+        'serverType': 'critical-error',
+        'success': false,
+      };
+    }
+  }
+
   /// Get order fees using the real gRPC server
   Future<Map<String, dynamic>> getOrderFees({
     required String accountId,
