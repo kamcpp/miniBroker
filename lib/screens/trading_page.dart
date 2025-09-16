@@ -615,6 +615,14 @@ class _TradingPageState extends State<TradingPage> {
   bool _isLoadingTradeHistory = false;
   final TextEditingController _quantityController = TextEditingController();
   final TextEditingController _priceController = TextEditingController();
+  final TextEditingController _orderIdController = TextEditingController();
+  final TextEditingController _reasonController = TextEditingController();
+  final TextEditingController _replaceOrderIdController = TextEditingController();
+  final TextEditingController _newOrderIdController = TextEditingController();
+  final TextEditingController _newQuantityController = TextEditingController();
+  final TextEditingController _newPriceController = TextEditingController();
+  final TextEditingController _newExpirationController = TextEditingController();
+  final TextEditingController _replaceReasonController = TextEditingController();
   final ScrollController _scrollController = ScrollController();
   
   // Cash holdings data
@@ -1844,6 +1852,14 @@ class _TradingPageState extends State<TradingPage> {
     _securityRequestTimeout?.cancel();
     _quantityController.dispose();
     _priceController.dispose();
+    _orderIdController.dispose();
+    _reasonController.dispose();
+    _replaceOrderIdController.dispose();
+    _newOrderIdController.dispose();
+    _newQuantityController.dispose();
+    _newPriceController.dispose();
+    _newExpirationController.dispose();
+    _replaceReasonController.dispose();
     _scrollController.dispose();
     super.dispose();
   }
@@ -3981,8 +3997,20 @@ class _TradingPageState extends State<TradingPage> {
         padding: const EdgeInsets.all(8.0),
         child: _buildCreateOrderForm(isDarkTheme),
       );
+    } else if (_selectedTradeTabIndex == 1) {
+      // Replace Order tab - show the replace order form
+      return Padding(
+        padding: const EdgeInsets.all(8.0),
+        child: _buildReplaceOrderForm(isDarkTheme),
+      );
+    } else if (_selectedTradeTabIndex == 2) {
+      // Cancel Order tab - show the cancel order form
+      return Padding(
+        padding: const EdgeInsets.all(8.0),
+        child: _buildCancelOrderForm(isDarkTheme),
+      );
     } else {
-      // Replace Order and Cancel Order tabs - show the table
+      // Fallback - should not happen
       return Padding(
         padding: const EdgeInsets.all(8.0),
         child: _buildTradeOrdersTable(isDarkTheme),
@@ -4561,6 +4589,478 @@ class _TradingPageState extends State<TradingPage> {
         ],
       ),
     );
+  }
+
+  Widget _buildCancelOrderForm(bool isDarkTheme) {
+    return SingleChildScrollView(
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          // Order ID field
+          Text(
+            'Order ID',
+            style: TextStyle(
+              fontSize: 14,
+              color: isDarkTheme ? Colors.grey[400] : Colors.grey[600],
+              fontWeight: FontWeight.w500,
+            ),
+          ),
+          const SizedBox(height: 8),
+          Container(
+            decoration: BoxDecoration(
+              color: isDarkTheme ? const Color(0xFF2d2d2d) : Colors.grey[100],
+              borderRadius: BorderRadius.circular(8),
+            ),
+            child: TextField(
+              controller: _orderIdController,
+              style: TextStyle(
+                color: isDarkTheme ? Colors.white : Colors.black,
+                fontSize: 14,
+              ),
+              decoration: InputDecoration(
+                hintText: 'Enter order ID to cancel',
+                hintStyle: TextStyle(
+                  color: isDarkTheme ? Colors.grey[500] : Colors.grey[400],
+                ),
+                border: InputBorder.none,
+                isDense: true,
+                contentPadding: const EdgeInsets.symmetric(horizontal: 12, vertical: 4),
+              ),
+            ),
+          ),
+          const SizedBox(height: 16),
+
+          // Reason field (optional)
+          Text(
+            'Reason (Optional)',
+            style: TextStyle(
+              fontSize: 14,
+              color: isDarkTheme ? Colors.grey[400] : Colors.grey[600],
+              fontWeight: FontWeight.w500,
+            ),
+          ),
+          const SizedBox(height: 8),
+          Container(
+            decoration: BoxDecoration(
+              color: isDarkTheme ? const Color(0xFF2d2d2d) : Colors.grey[100],
+              borderRadius: BorderRadius.circular(8),
+            ),
+            child: TextField(
+              controller: _reasonController,
+              style: TextStyle(
+                color: isDarkTheme ? Colors.white : Colors.black,
+                fontSize: 14,
+              ),
+              decoration: InputDecoration(
+                hintText: 'Enter cancellation reason',
+                hintStyle: TextStyle(
+                  color: isDarkTheme ? Colors.grey[500] : Colors.grey[400],
+                ),
+                border: InputBorder.none,
+                isDense: true,
+                contentPadding: const EdgeInsets.symmetric(horizontal: 12, vertical: 4),
+              ),
+            ),
+          ),
+          const SizedBox(height: 24),
+
+          // Cancel Order button
+          SizedBox(
+            width: double.infinity,
+            height: 48,
+            child: ElevatedButton(
+              onPressed: () {
+                _cancelOrder();
+              },
+              style: ElevatedButton.styleFrom(
+                backgroundColor: Colors.red,
+                foregroundColor: Colors.white,
+                shape: RoundedRectangleBorder(
+                  borderRadius: BorderRadius.circular(8),
+                ),
+              ),
+              child: const Text(
+                'Cancel Order',
+                style: TextStyle(
+                  fontSize: 16,
+                  fontWeight: FontWeight.w600,
+                ),
+              ),
+            ),
+          ),
+        ],
+      ),
+    );
+  }
+
+  Future<void> _cancelOrder() async {
+    final orderId = _orderIdController.text.trim();
+    final reason = _reasonController.text.trim();
+
+    if (orderId.isEmpty) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(
+          content: Text('Please enter an Order ID'),
+          backgroundColor: Colors.red,
+        ),
+      );
+      return;
+    }
+
+    try {
+      // Generate a unique reference request ID
+      final refRequestId = 'cancel_${DateTime.now().millisecondsSinceEpoch}';
+
+      // Create CancelOrderRequest
+      final cancelOrderRequest = {
+        'ref_request_id': refRequestId,
+        'proposed_order_id': orderId,
+        'reason': reason.isNotEmpty ? reason : null,
+      };
+
+      print('Sending cancel order request: $cancelOrderRequest');
+
+      // TODO: Implement actual gRPC call to cancel order
+      // await realGrpcClient.cancelOrder(cancelOrderRequest);
+
+      // Show success message
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(
+          content: Text('Order cancellation request sent for ID: $orderId'),
+          backgroundColor: Colors.green,
+        ),
+      );
+
+      // Clear the form
+      _orderIdController.clear();
+      _reasonController.clear();
+
+    } catch (e) {
+      print('Error canceling order: $e');
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(
+          content: Text('Failed to cancel order: $e'),
+          backgroundColor: Colors.red,
+        ),
+      );
+    }
+  }
+
+  Widget _buildReplaceOrderForm(bool isDarkTheme) {
+    return SingleChildScrollView(
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          // Order ID field
+          Text(
+            'Order ID',
+            style: TextStyle(
+              fontSize: 14,
+              color: isDarkTheme ? Colors.grey[400] : Colors.grey[600],
+              fontWeight: FontWeight.w500,
+            ),
+          ),
+          const SizedBox(height: 8),
+          Container(
+            decoration: BoxDecoration(
+              color: isDarkTheme ? const Color(0xFF2d2d2d) : Colors.grey[100],
+              borderRadius: BorderRadius.circular(8),
+            ),
+            child: TextField(
+              controller: _replaceOrderIdController,
+              style: TextStyle(
+                color: isDarkTheme ? Colors.white : Colors.black,
+                fontSize: 14,
+              ),
+              decoration: InputDecoration(
+                hintText: 'Enter order ID to replace',
+                hintStyle: TextStyle(
+                  color: isDarkTheme ? Colors.grey[500] : Colors.grey[400],
+                ),
+                border: InputBorder.none,
+                isDense: true,
+                contentPadding: const EdgeInsets.symmetric(horizontal: 12, vertical: 4),
+              ),
+            ),
+          ),
+          const SizedBox(height: 16),
+
+          // New Order ID field
+          Text(
+            'New Order ID',
+            style: TextStyle(
+              fontSize: 14,
+              color: isDarkTheme ? Colors.grey[400] : Colors.grey[600],
+              fontWeight: FontWeight.w500,
+            ),
+          ),
+          const SizedBox(height: 8),
+          Container(
+            decoration: BoxDecoration(
+              color: isDarkTheme ? const Color(0xFF2d2d2d) : Colors.grey[100],
+              borderRadius: BorderRadius.circular(8),
+            ),
+            child: TextField(
+              controller: _newOrderIdController,
+              style: TextStyle(
+                color: isDarkTheme ? Colors.white : Colors.black,
+                fontSize: 14,
+              ),
+              decoration: InputDecoration(
+                hintText: 'Enter new order ID',
+                hintStyle: TextStyle(
+                  color: isDarkTheme ? Colors.grey[500] : Colors.grey[400],
+                ),
+                border: InputBorder.none,
+                isDense: true,
+                contentPadding: const EdgeInsets.symmetric(horizontal: 12, vertical: 4),
+              ),
+            ),
+          ),
+          const SizedBox(height: 16),
+
+          // New Quantity field
+          Text(
+            'New Quantity (Optional)',
+            style: TextStyle(
+              fontSize: 14,
+              color: isDarkTheme ? Colors.grey[400] : Colors.grey[600],
+              fontWeight: FontWeight.w500,
+            ),
+          ),
+          const SizedBox(height: 8),
+          Container(
+            decoration: BoxDecoration(
+              color: isDarkTheme ? const Color(0xFF2d2d2d) : Colors.grey[100],
+              borderRadius: BorderRadius.circular(8),
+            ),
+            child: TextField(
+              controller: _newQuantityController,
+              keyboardType: TextInputType.number,
+              style: TextStyle(
+                color: isDarkTheme ? Colors.white : Colors.black,
+                fontSize: 14,
+              ),
+              decoration: InputDecoration(
+                hintText: 'Enter new quantity',
+                hintStyle: TextStyle(
+                  color: isDarkTheme ? Colors.grey[500] : Colors.grey[400],
+                ),
+                border: InputBorder.none,
+                isDense: true,
+                contentPadding: const EdgeInsets.symmetric(horizontal: 12, vertical: 4),
+              ),
+            ),
+          ),
+          const SizedBox(height: 16),
+
+          // New Price field
+          Text(
+            'New Price (Optional)',
+            style: TextStyle(
+              fontSize: 14,
+              color: isDarkTheme ? Colors.grey[400] : Colors.grey[600],
+              fontWeight: FontWeight.w500,
+            ),
+          ),
+          const SizedBox(height: 8),
+          Container(
+            decoration: BoxDecoration(
+              color: isDarkTheme ? const Color(0xFF2d2d2d) : Colors.grey[100],
+              borderRadius: BorderRadius.circular(8),
+            ),
+            child: TextField(
+              controller: _newPriceController,
+              keyboardType: TextInputType.number,
+              style: TextStyle(
+                color: isDarkTheme ? Colors.white : Colors.black,
+                fontSize: 14,
+              ),
+              decoration: InputDecoration(
+                hintText: 'Enter new price',
+                hintStyle: TextStyle(
+                  color: isDarkTheme ? Colors.grey[500] : Colors.grey[400],
+                ),
+                border: InputBorder.none,
+                isDense: true,
+                contentPadding: const EdgeInsets.symmetric(horizontal: 12, vertical: 4),
+              ),
+            ),
+          ),
+          const SizedBox(height: 16),
+
+          // New Expiration Time field
+          Text(
+            'New Expiration Time (Optional)',
+            style: TextStyle(
+              fontSize: 14,
+              color: isDarkTheme ? Colors.grey[400] : Colors.grey[600],
+              fontWeight: FontWeight.w500,
+            ),
+          ),
+          const SizedBox(height: 8),
+          Container(
+            decoration: BoxDecoration(
+              color: isDarkTheme ? const Color(0xFF2d2d2d) : Colors.grey[100],
+              borderRadius: BorderRadius.circular(8),
+            ),
+            child: TextField(
+              controller: _newExpirationController,
+              style: TextStyle(
+                color: isDarkTheme ? Colors.white : Colors.black,
+                fontSize: 14,
+              ),
+              decoration: InputDecoration(
+                hintText: 'Enter new expiration time (YYYY-MM-DD HH:MM:SS)',
+                hintStyle: TextStyle(
+                  color: isDarkTheme ? Colors.grey[500] : Colors.grey[400],
+                ),
+                border: InputBorder.none,
+                isDense: true,
+                contentPadding: const EdgeInsets.symmetric(horizontal: 12, vertical: 4),
+              ),
+            ),
+          ),
+          const SizedBox(height: 16),
+
+          // Reason field
+          Text(
+            'Reason (Optional)',
+            style: TextStyle(
+              fontSize: 14,
+              color: isDarkTheme ? Colors.grey[400] : Colors.grey[600],
+              fontWeight: FontWeight.w500,
+            ),
+          ),
+          const SizedBox(height: 8),
+          Container(
+            decoration: BoxDecoration(
+              color: isDarkTheme ? const Color(0xFF2d2d2d) : Colors.grey[100],
+              borderRadius: BorderRadius.circular(8),
+            ),
+            child: TextField(
+              controller: _replaceReasonController,
+              style: TextStyle(
+                color: isDarkTheme ? Colors.white : Colors.black,
+                fontSize: 14,
+              ),
+              decoration: InputDecoration(
+                hintText: 'Enter replacement reason',
+                hintStyle: TextStyle(
+                  color: isDarkTheme ? Colors.grey[500] : Colors.grey[400],
+                ),
+                border: InputBorder.none,
+                isDense: true,
+                contentPadding: const EdgeInsets.symmetric(horizontal: 12, vertical: 4),
+              ),
+            ),
+          ),
+          const SizedBox(height: 24),
+
+          // Replace Order button
+          SizedBox(
+            width: double.infinity,
+            height: 48,
+            child: ElevatedButton(
+              onPressed: () {
+                _replaceOrder();
+              },
+              style: ElevatedButton.styleFrom(
+                backgroundColor: Colors.orange,
+                foregroundColor: Colors.white,
+                shape: RoundedRectangleBorder(
+                  borderRadius: BorderRadius.circular(8),
+                ),
+              ),
+              child: const Text(
+                'Replace Order',
+                style: TextStyle(
+                  fontSize: 16,
+                  fontWeight: FontWeight.w600,
+                ),
+              ),
+            ),
+          ),
+        ],
+      ),
+    );
+  }
+
+  Future<void> _replaceOrder() async {
+    final orderId = _replaceOrderIdController.text.trim();
+    final newOrderId = _newOrderIdController.text.trim();
+
+    if (orderId.isEmpty) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(
+          content: Text('Please enter an Order ID'),
+          backgroundColor: Colors.red,
+        ),
+      );
+      return;
+    }
+
+    if (newOrderId.isEmpty) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(
+          content: Text('Please enter a New Order ID'),
+          backgroundColor: Colors.red,
+        ),
+      );
+      return;
+    }
+
+    try {
+      // Generate a unique reference request ID
+      final refRequestId = 'replace_${DateTime.now().millisecondsSinceEpoch}';
+
+      // Get optional fields
+      final newQuantity = _newQuantityController.text.trim();
+      final newPrice = _newPriceController.text.trim();
+      final newExpiration = _newExpirationController.text.trim();
+      final reason = _replaceReasonController.text.trim();
+
+      // Create ReplaceOrderRequest
+      final replaceOrderRequest = {
+        'ref_request_id': refRequestId,
+        'proposed_order_id': orderId,
+        'new_proposed_order_id': newOrderId,
+        'new_quantity': newQuantity.isNotEmpty ? newQuantity : null,
+        'new_price': newPrice.isNotEmpty ? newPrice : null,
+        'new_expire_time': newExpiration.isNotEmpty ? newExpiration : null,
+        'reason': reason.isNotEmpty ? reason : null,
+      };
+
+      print('Sending replace order request: $replaceOrderRequest');
+
+      // TODO: Implement actual gRPC call to replace order
+      // await realGrpcClient.replaceOrder(replaceOrderRequest);
+
+      // Show success message
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(
+          content: Text('Order replacement request sent for ID: $orderId'),
+          backgroundColor: Colors.green,
+        ),
+      );
+
+      // Clear the form
+      _replaceOrderIdController.clear();
+      _newOrderIdController.clear();
+      _newQuantityController.clear();
+      _newPriceController.clear();
+      _newExpirationController.clear();
+      _replaceReasonController.clear();
+
+    } catch (e) {
+      print('Error replacing order: $e');
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(
+          content: Text('Failed to replace order: $e'),
+          backgroundColor: Colors.red,
+        ),
+      );
+    }
   }
 
   Widget _buildTradeOrdersTable(bool isDarkTheme) {
