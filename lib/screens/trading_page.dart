@@ -2317,7 +2317,7 @@ class _TradingPageState extends State<TradingPage> {
                   height: 55,
                   padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
                   decoration: BoxDecoration(
-                    color: isDarkTheme ? Colors.black : Colors.grey[100],
+                    color: isDarkTheme ? Colors.black : Colors.white,
                     border: Border(
                       top: BorderSide(color: Colors.white.withOpacity(0.3), width: 1),
                       left: BorderSide(color: Colors.white.withOpacity(0.3), width: 1),
@@ -2616,7 +2616,7 @@ class _TradingPageState extends State<TradingPage> {
     return Container(
       padding: const EdgeInsets.all(20),
       decoration: BoxDecoration(
-        color: _isDarkTheme ? Colors.black : Colors.grey[100],
+        color: _isDarkTheme ? Colors.black : Colors.white,
       ),
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
@@ -2740,6 +2740,7 @@ class _TradingPageState extends State<TradingPage> {
             height: 35,
             padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
             decoration: BoxDecoration(
+              color: _isDarkTheme ? const Color(0xFF2d2d2d) : Colors.grey[200],
               border: Border.all(
                 color: _isDarkTheme ? Colors.grey[600]! : Colors.grey[400]!,
               ),
@@ -3355,7 +3356,7 @@ class _TradingPageState extends State<TradingPage> {
       return Container(
         padding: const EdgeInsets.all(20),
         decoration: BoxDecoration(
-          color: _isDarkTheme ? Colors.black : Colors.grey[100],
+          color: _isDarkTheme ? Colors.black : Colors.white,
         ),
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.start,
@@ -3395,7 +3396,7 @@ class _TradingPageState extends State<TradingPage> {
     return Container(
       padding: const EdgeInsets.all(20),
       decoration: BoxDecoration(
-        color: _isDarkTheme ? Colors.black : Colors.grey[100],
+        color: _isDarkTheme ? Colors.black : Colors.white,
         // Removed left border since we have a splitter now
       ),
       child: Column(
@@ -4006,6 +4007,7 @@ class _TradingPageState extends State<TradingPage> {
                   height: 35, // Made much smaller (was default ~48)
                   padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4), // Reduced padding
                   decoration: BoxDecoration(
+                    color: isDarkTheme ? const Color(0xFF2d2d2d) : Colors.grey[200],
                     border: Border.all(
                       color: isDarkTheme ? Colors.grey[600]! : Colors.grey[400]!,
                     ),
@@ -4056,7 +4058,7 @@ class _TradingPageState extends State<TradingPage> {
           // Buy/Sell Toggle Buttons (stretches with container width)
           Container(
             decoration: BoxDecoration(
-              color: isDarkTheme ? const Color(0xFF2d2d2d) : Colors.grey[100],
+              color: isDarkTheme ? const Color(0xFF2d2d2d) : Colors.white,
               borderRadius: BorderRadius.circular(20),
             ),
             child: Row(
@@ -4133,7 +4135,7 @@ class _TradingPageState extends State<TradingPage> {
           // Order Type Toggle Buttons with mouse cursor and smaller height (like buy/sell area)
           Container(
             decoration: BoxDecoration(
-              color: isDarkTheme ? const Color(0xFF2d2d2d) : Colors.grey[100],
+              color: isDarkTheme ? const Color(0xFF2d2d2d) : Colors.white,
               borderRadius: BorderRadius.circular(8),
             ),
             child: Row(
@@ -4285,7 +4287,7 @@ class _TradingPageState extends State<TradingPage> {
               Expanded(
                 child: Container(
                   decoration: BoxDecoration(
-                    color: isDarkTheme ? const Color(0xFF2d2d2d) : Colors.grey[100],
+                    color: isDarkTheme ? const Color(0xFF2d2d2d) : Colors.grey[200],
                     borderRadius: BorderRadius.circular(8),
                   ),
                   child: Row(
@@ -4354,7 +4356,7 @@ class _TradingPageState extends State<TradingPage> {
                                     _getSelectedAssetSymbol(),
                                     style: TextStyle(
                                       color: isDarkTheme ? Colors.white : Colors.black,
-                                      fontSize: 14,
+                                      fontSize: 12,
                                       fontWeight: FontWeight.w500,
                                     ),
                                   ),
@@ -4387,7 +4389,7 @@ class _TradingPageState extends State<TradingPage> {
                 Expanded(
                   child: Container(
                     decoration: BoxDecoration(
-                      color: isDarkTheme ? const Color(0xFF2d2d2d) : Colors.grey[100],
+                      color: isDarkTheme ? const Color(0xFF2d2d2d) : Colors.grey[200],
                       borderRadius: BorderRadius.circular(8),
                     ),
                     child: Row(
@@ -4447,7 +4449,7 @@ class _TradingPageState extends State<TradingPage> {
                 Expanded(
                   child: Container(
                     decoration: BoxDecoration(
-                      color: isDarkTheme ? const Color(0xFF2d2d2d) : Colors.grey[100],
+                      color: isDarkTheme ? const Color(0xFF2d2d2d) : Colors.grey[200],
                       borderRadius: BorderRadius.circular(8),
                     ),
                     child: Padding(
@@ -4609,11 +4611,192 @@ class SimpleLinePainter extends CustomPainter {
 
   @override
   void paint(Canvas canvas, Size size) {
-    // Implementation would go here
+    if (data.isEmpty) {
+      print('❌ CustomPainter: No data to paint');
+      return;
+    }
+
+    print('🎨 CustomPainter: Painting chart with size: ${size.width}x${size.height}');
+    print('🎨 CustomPainter: Data points: ${data.length}');
+
+    final lineColor = isDarkTheme ? Colors.blue[400]! : Colors.blue[600]!;
+    final fillColor = lineColor.withOpacity(0.3);
+
+    // Paint for the line
+    final linePaint = Paint()
+      ..color = lineColor
+      ..strokeWidth = 2.0
+      ..style = PaintingStyle.stroke;
+
+    // Paint for the fill
+    final fillPaint = Paint()
+      ..color = fillColor
+      ..style = PaintingStyle.fill;
+
+    final linePath = Path();
+    final fillPath = Path();
+    double minYPrice = minPrice;
+    double maxYPrice = maxPrice;
+    // If only one price, show a range around it (±2%)
+    if ((maxPrice - minPrice).abs() < 1e-6) {
+      minYPrice = minPrice * 0.98;
+      maxYPrice = maxPrice * 1.02;
+    }
+    final priceRange = maxYPrice - minYPrice;
+    if (priceRange <= 0) {
+      minYPrice -= 1;
+      maxYPrice += 1;
+    }
+    // Create paths for line and fill
+    for (int i = 0; i < data.length; i++) {
+      final x = (i / (data.length - 1)) * size.width;
+      final closePrice = _safeToDouble(data[i]['close']);
+      final normalizedPrice = (closePrice - minYPrice) / priceRange;
+      final y = size.height - (normalizedPrice * size.height);
+      if (i == 0) {
+        linePath.moveTo(x, y);
+        fillPath.moveTo(x, size.height); // Start fill from bottom
+        fillPath.lineTo(x, y);
+      } else {
+        linePath.lineTo(x, y);
+        fillPath.lineTo(x, y);
+      }
+    }
+    // Complete the fill path
+    fillPath.lineTo(size.width, size.height);
+    fillPath.close();
+    // Draw fill first, then line
+    canvas.drawPath(fillPath, fillPaint);
+    canvas.drawPath(linePath, linePaint);
+
+    // Draw min/max lines and spots only if maxPrice != minPrice
+    if ((maxPrice - minPrice).abs() > 1e-6) {
+      final minMaxPaint = Paint()
+        ..strokeWidth = 1.0
+        ..style = PaintingStyle.stroke;
+      // Find max and min points
+      int maxIdx = 0;
+      int minIdx = 0;
+      double maxVal = _safeToDouble(data[0]['close']);
+      double minVal = _safeToDouble(data[0]['close']);
+      for (int i = 1; i < data.length; i++) {
+        double val = _safeToDouble(data[i]['close']);
+        if (val > maxVal) {
+          maxVal = val;
+          maxIdx = i;
+        }
+        if (val < minVal) {
+          minVal = val;
+          minIdx = i;
+        }
+      }
+      // Calculate positions
+      final maxX = (maxIdx / (data.length - 1)) * size.width;
+      final maxYSpot = size.height - ((maxVal - minYPrice) / priceRange * size.height);
+      final minX = (minIdx / (data.length - 1)) * size.width;
+      final minYSpot = size.height - ((minVal - minYPrice) / priceRange * size.height);
+      // Draw max spot (green)
+      final spotRadius = 6.0;
+      final spotPaintMax = Paint()..color = Colors.green;
+      canvas.drawCircle(Offset(maxX, maxYSpot), spotRadius, spotPaintMax);
+      // Draw min spot (red)
+      final spotPaintMin = Paint()..color = Colors.red;
+      canvas.drawCircle(Offset(minX, minYSpot), spotRadius, spotPaintMin);
+      // Max line at maxYSpot
+      canvas.drawLine(
+        Offset(0, maxYSpot),
+        Offset(size.width, maxYSpot),
+        minMaxPaint..color = Colors.green,
+      );
+      // Min line at minYSpot
+      canvas.drawLine(
+        Offset(0, minYSpot),
+        Offset(size.width, minYSpot),
+        minMaxPaint..color = Colors.red,
+      );
+    }
+
+    // Draw subtle grid lines
+    final gridPaint = Paint()
+      ..color = (isDarkTheme ? Colors.grey[700]! : Colors.grey[300]!).withOpacity(0.3)
+      ..strokeWidth = 0.5;
+
+    // Horizontal grid lines (fewer lines, more subtle)
+    for (int i = 1; i <= 3; i++) {
+      final y = (i / 4) * size.height;
+      canvas.drawLine(
+        Offset(0, y),
+        Offset(size.width, y),
+        gridPaint,
+      );
+    }
+
+    // Draw horizontal date scale
+    if (data.isNotEmpty) {
+      final labelStyle = TextStyle(
+        color: isDarkTheme ? Colors.white : Colors.black,
+        fontSize: 10,
+      );
+      final labelHeight = 16.0;
+      final labelY = size.height + 2;
+      int labelCount = 6;
+      for (int i = 0; i < labelCount; i++) {
+        final dataIdx = ((i / (labelCount - 1)) * (data.length - 1)).round();
+        final point = data[dataIdx];
+        final ts = point['timestamp'] ?? 0;
+        DateTime dt = DateTime.fromMillisecondsSinceEpoch(ts * 1000);
+        String label;
+        if (_is1dPeriod()) {
+          label = _formatHour(dt);
+        } else {
+          label = _formatDay(dt);
+        }
+        final tp = TextPainter(
+          text: TextSpan(text: label, style: labelStyle),
+          textDirection: TextDirection.ltr,
+        )..layout();
+        final x = (dataIdx / (data.length - 1)) * size.width - tp.width / 2;
+        tp.paint(canvas, Offset(x, labelY));
+      }
+    }
+    print('🎨 CustomPainter: Chart painting completed');
+  }
+
+  bool _is1dPeriod() {
+    // You may want to pass the period as a parameter, but for now infer from data
+    // If data covers less than 2 days, treat as intraday
+    if (data.length < 2) return true;
+    final first = DateTime.fromMillisecondsSinceEpoch((data.first['timestamp'] ?? 0) * 1000);
+    final last = DateTime.fromMillisecondsSinceEpoch((data.last['timestamp'] ?? 0) * 1000);
+    return last.difference(first).inDays < 2;
+  }
+
+  String _formatHour(DateTime dt) {
+    return '${dt.hour.toString().padLeft(2, '0')}:00';
+  }
+
+  String _formatDay(DateTime dt) {
+    return '${dt.day} ${_monthShort(dt.month)}';
+  }
+
+  String _monthShort(int m) {
+    const months = ['Jan','Feb','Mar','Apr','May','Jun','Jul','Aug','Sep','Oct','Nov','Dec'];
+    return months[m-1];
+  }
+
+  // Helper method to safely convert values to double
+  double _safeToDouble(dynamic value) {
+    if (value == null) return 0.0;
+    if (value is double) return value;
+    if (value is int) return value.toDouble();
+    if (value is String) {
+      return double.tryParse(value) ?? 0.0;
+    }
+    return 0.0;
   }
 
   @override
   bool shouldRepaint(covariant CustomPainter oldDelegate) {
-    return false;
+    return true;
   }
 }
