@@ -1041,7 +1041,7 @@ class _BalancePageState extends State<BalancePage> {
                     borderRadius: BorderRadius.circular(8),
                   ),
                   filled: true,
-                  fillColor: isDarkTheme ? const Color(0xFF404040) : Colors.grey[50],
+                  fillColor: isDarkTheme ? Colors.grey[400] : Colors.grey[200],
                 ),
                 style: TextStyle(
                   color: isDarkTheme ? Colors.white : Colors.black,
@@ -1124,7 +1124,7 @@ class _BalancePageState extends State<BalancePage> {
                     borderRadius: BorderRadius.circular(8),
                   ),
                   filled: true,
-                  fillColor: isDarkTheme ? const Color(0xFF404040) : Colors.grey[50],
+                  fillColor: isDarkTheme ? Colors.grey[400] : Colors.grey[200],
                 ),
                 style: TextStyle(
                   color: isDarkTheme ? Colors.white : Colors.black,

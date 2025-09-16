@@ -985,9 +985,10 @@ class _TradingPageState extends State<TradingPage> {
         if (feeStructure != null && feeStructure['totalEstimatedFee'] != null) {
           final totalFee = feeStructure['totalEstimatedFee'].toString();
           final currency = feeStructure['currency']?.toString() ?? '\$';
+          final formattedFee = _formatDecimal(totalFee);
 
           setState(() {
-            _estimatedFee = '$totalFee $currency';
+            _estimatedFee = '$formattedFee $currency';
             _isLoadingFee = false;
           });
 
@@ -2663,19 +2664,59 @@ class _TradingPageState extends State<TradingPage> {
     final parts = _selectedSymbol.split('-');
     return parts.isNotEmpty ? parts[0] : '';
   }
-  
+
+  // Helper method to format decimal numbers cleanly
+  String _formatDecimal(String value) {
+    try {
+      final double number = double.parse(value);
+
+      // If it's a whole number, show without decimals
+      if (number == number.toInt()) {
+        return number.toInt().toString();
+      }
+
+      // Remove trailing zeros after decimal point
+      String formatted = number.toString();
+      if (formatted.contains('.')) {
+        formatted = formatted.replaceAll(RegExp(r'0*$'), '');
+        formatted = formatted.replaceAll(RegExp(r'\.$'), '');
+      }
+
+      return formatted;
+    } catch (e) {
+      // If parsing fails, return original value
+      return value;
+    }
+  }
+
   // Helper method to calculate order total
   double _calculateTotal() {
     final quantity = double.tryParse(_quantityController.text) ?? 0.0;
     final price = _orderType == 'Market' ? 0.0 : (double.tryParse(_priceController.text) ?? 0.0);
-    const estimatedFee = 0.0; // Fee calculation can be implemented later
-    
+
+    // Parse estimated fee (remove currency symbols and parse)
+    double estimatedFee = 0.0;
+    try {
+      String feeStr = _estimatedFee.replaceAll(RegExp(r'[^\d.]'), ''); // Remove non-numeric characters
+      estimatedFee = double.tryParse(feeStr) ?? 0.0;
+    } catch (e) {
+      estimatedFee = 0.0;
+    }
+
     if (_orderType == 'Market') {
-      // For market orders, we can't calculate exact total without current market price
+      // For market orders, we don't show total (return 0)
       return 0.0;
     }
-    
-    return estimatedFee + (quantity * price);
+
+    final subtotal = quantity * price;
+
+    if (_isBuySelected) {
+      // Buy limit order: (amount * price) + EST.fee
+      return subtotal + estimatedFee;
+    } else {
+      // Sell limit order: (amount * price) - EST.fee
+      return subtotal - estimatedFee;
+    }
   }
 
   Widget _buildAssetSection(ThemeService themeService) {
@@ -4073,63 +4114,68 @@ class _TradingPageState extends State<TradingPage> {
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
-          // Supported Currencies title
-          Text(
-            'Currency',
-            style: TextStyle(
-              fontSize: 14,
-              color: isDarkTheme ? Colors.grey[400] : Colors.grey[600],
-              fontWeight: FontWeight.w500,
-            ),
-          ),
-
-          const SizedBox(height: 8),
-
-          // Supported Currencies Dropdown
-          Container(
-            height: 35, // Made much smaller (was default ~48)
-            padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4), // Reduced padding
-            decoration: BoxDecoration(
-              border: Border.all(
-                color: isDarkTheme ? Colors.grey[600]! : Colors.grey[400]!,
-              ),
-              borderRadius: BorderRadius.circular(8),
-            ),
-            child: DropdownButtonHideUnderline(
-              child: DropdownButton<Map<String, String>>(
-                value: _supportedCurrencies.isEmpty
-                    ? null
-                    : (_supportedCurrencies.any((currency) => currency['code'] == _selectedCurrency['code'])
-                        ? _selectedCurrency
-                        : _supportedCurrencies.isNotEmpty ? _supportedCurrencies.first : null),
-                isExpanded: true,
-                onChanged: _supportedCurrencies.isEmpty ? null : (Map<String, String>? newValue) {
-                  if (newValue != null) {
-                    setState(() {
-                      _selectedCurrency = newValue;
-                    });
-                    // Call cash holdings with the selected currency code
-                    _fetchCashHoldingsForCurrency(newValue['code']!);
-                  }
-                },
-                dropdownColor: isDarkTheme ? const Color(0xFF1e1e1e) : Colors.white,
-                style: TextStyle(
-                  color: isDarkTheme ? Colors.white : Colors.black,
-                  fontSize: 14, // Smaller font size
+          // Currency Row Layout
+          Row(
+            children: [
+              SizedBox(
+                width: 80,
+                child: Text(
+                  'Currency',
+                  style: TextStyle(
+                    fontSize: 14,
+                    color: isDarkTheme ? Colors.grey[400] : Colors.grey[600],
+                    fontWeight: FontWeight.w500,
+                  ),
                 ),
-                items: _supportedCurrencies.isEmpty
-                    ? [DropdownMenuItem<Map<String, String>>(
-                        value: {'code': '', 'symbol': '', 'display': ''},
-                        child: Text(_isLoadingSupportedCurrencies ? 'Loading currencies...' : 'No currencies available'),
-                      )]
-                    : _supportedCurrencies.map<DropdownMenuItem<Map<String, String>>>((currency) {
-                        return DropdownMenuItem<Map<String, String>>(
-                          value: currency,
-                          child: Text(currency['display'] ?? currency['code']!),
-                        );
-                      }).toList(),
               ),
-            ),
+              Expanded(
+                child: Container(
+                  height: 35, // Made much smaller (was default ~48)
+                  padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4), // Reduced padding
+                  decoration: BoxDecoration(
+                    border: Border.all(
+                      color: isDarkTheme ? Colors.grey[600]! : Colors.grey[400]!,
+                    ),
+                    borderRadius: BorderRadius.circular(8),
+                  ),
+                  child: DropdownButtonHideUnderline(
+                    child: DropdownButton<Map<String, String>>(
+                      value: _supportedCurrencies.isEmpty
+                          ? null
+                          : (_supportedCurrencies.any((currency) => currency['code'] == _selectedCurrency['code'])
+                              ? _selectedCurrency
+                              : _supportedCurrencies.isNotEmpty ? _supportedCurrencies.first : null),
+                      isExpanded: true,
+                      onChanged: _supportedCurrencies.isEmpty ? null : (Map<String, String>? newValue) {
+                        if (newValue != null) {
+                          setState(() {
+                            _selectedCurrency = newValue;
+                          });
+                          // Call cash holdings with the selected currency code
+                          _fetchCashHoldingsForCurrency(newValue['code']!);
+                        }
+                      },
+                      dropdownColor: isDarkTheme ? const Color(0xFF1e1e1e) : Colors.white,
+                      style: TextStyle(
+                        color: isDarkTheme ? Colors.white : Colors.black,
+                        fontSize: 14, // Smaller font size
+                      ),
+                      items: _supportedCurrencies.isEmpty
+                          ? [DropdownMenuItem<Map<String, String>>(
+                              value: {'code': '', 'symbol': '', 'display': ''},
+                              child: Text(_isLoadingSupportedCurrencies ? 'Loading currencies...' : 'No currencies available'),
+                            )]
+                          : _supportedCurrencies.map<DropdownMenuItem<Map<String, String>>>((currency) {
+                              return DropdownMenuItem<Map<String, String>>(
+                                value: currency,
+                                child: Text(currency['display'] ?? currency['code']!),
+                              );
+                            }).toList(),
+                    ),
+                  ),
+                ),
+              ),
+            ],
           ),
 
           const SizedBox(height: 16), // Reduced from 20
@@ -4285,288 +4331,24 @@ class _TradingPageState extends State<TradingPage> {
 
           const SizedBox(height: 16), // Reduced space after order type
 
-          // Available Balance / Buying Power
-          Text(
-            _isBuySelected ? 'Buying power' : 'Available',
-            style: TextStyle(
-              fontSize: 14,
-              color: isDarkTheme ? Colors.grey[400] : Colors.grey[600],
-            ),
-          ),
-          const SizedBox(height: 8),
+          // Available Balance / Buying Power Row Layout
           Row(
             children: [
-              _isLoadingCashHoldings
-                  ? SizedBox(
-                      width: 20,
-                      height: 20,
-                      child: CircularProgressIndicator(
-                        strokeWidth: 2,
-                        valueColor: AlwaysStoppedAnimation<Color>(
-                          isDarkTheme ? Colors.white : Colors.black,
-                        ),
-                      ),
-                    )
-                  : Text(
-                      _isBuySelected
-                          ? '$_buyingPower ${_selectedCurrency['symbol'] ?? ''}'
-                          : _availableBalance,
-                      style: TextStyle(
-                        fontSize: 18,
-                        fontWeight: FontWeight.w600,
-                        color: isDarkTheme ? Colors.white : Colors.black,
-                      ),
-                    ),
-              const SizedBox(width: 4),
-              (!_isBuySelected && _assets.isEmpty)
-                  ? SizedBox(
-                      width: 14,
-                      height: 14,
-                      child: CircularProgressIndicator(
-                        strokeWidth: 1.5,
-                        valueColor: AlwaysStoppedAnimation<Color>(
-                          isDarkTheme ? Colors.white : Colors.black,
-                        ),
-                      ),
-                    )
-                  : (!_isBuySelected
-                      ? Text(
-                          _getSelectedAssetSymbol(),
-                          style: TextStyle(
-                            fontSize: 18,
-                            fontWeight: FontWeight.w600,
-                            color: isDarkTheme ? Colors.white : Colors.black,
-                          ),
-                        )
-                      : SizedBox.shrink()),
-            ],
-          ),
-
-          const SizedBox(height: 8),
-
-          // Amount Input
-          Text(
-            'Amount',
-            style: TextStyle(
-              fontSize: 14,
-              color: isDarkTheme ? Colors.grey[400] : Colors.grey[600],
-            ),
-          ),
-          const SizedBox(height: 8),
-          Container(
-            decoration: BoxDecoration(
-              color: isDarkTheme ? const Color(0xFF2d2d2d) : Colors.grey[100],
-              borderRadius: BorderRadius.circular(8),
-            ),
-            child: Row(
-              children: [
-                Expanded(
-                  child: TextField(
-                    controller: _quantityController,
-                    keyboardType: TextInputType.number,
-                    style: TextStyle(
-                      color: isDarkTheme ? Colors.white : Colors.black,
-                      fontSize: 14,
-                    ),
-                    decoration: InputDecoration(
-                      hintText: '0',
-                      hintStyle: TextStyle(
-                        color: isDarkTheme ? Colors.grey[500] : Colors.grey[400],
-                      ),
-                      border: InputBorder.none,
-                      isDense: true,
-                      contentPadding: const EdgeInsets.symmetric(horizontal: 12, vertical: 4),
-                    ),
-                  ),
-                ),
-                Container(
-                  padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 8),
-                  child: Row(
-                    mainAxisSize: MainAxisSize.min,
-                    children: [
-                      // Show Max button only for Sell orders (when _isBuySelected is false)
-                      if (!_isBuySelected) ...[
-                        MouseRegion(
-                          cursor: SystemMouseCursors.click, // Pointer cursor for Max button
-                          child: GestureDetector(
-                            onTap: () {
-                              // Set quantity to maximum available selling amount
-                              setState(() {
-                                _quantityController.text = _buyingPower;
-                              });
-                            },
-                            child: Container(
-                              child: Text(
-                                'Max',
-                                style: TextStyle(
-                                  color: const Color(0xFFFF4081), // Pink for sell
-                                  fontSize: 12,
-                                  fontWeight: FontWeight.w600,
-                                ),
-                              ),
-                            ),
-                          ),
-                        ),
-                        const SizedBox(width: 8),
-                      ],
-                      _assets.isEmpty
-                          ? SizedBox(
-                              width: 14,
-                              height: 14,
-                              child: CircularProgressIndicator(
-                                strokeWidth: 1.5,
-                                valueColor: AlwaysStoppedAnimation<Color>(
-                                  isDarkTheme ? Colors.white : Colors.black,
-                                ),
-                              ),
-                            )
-                          : Text(
-                              _getSelectedAssetSymbol(),
-                              style: TextStyle(
-                                color: isDarkTheme ? Colors.white : Colors.black,
-                                fontSize: 14,
-                                fontWeight: FontWeight.w500,
-                              ),
-                            ),
-                    ],
-                  ),
-                ),
-              ],
-            ),
-          ),
-
-          if (_orderType == 'Limit') ...[
-            const SizedBox(height: 12),
-
-            // Price Input
-            Text(
-              'Price',
-              style: TextStyle(
-                fontSize: 14,
-                color: isDarkTheme ? Colors.grey[400] : Colors.grey[600],
-              ),
-            ),
-            const SizedBox(height: 8),
-            Container(
-              decoration: BoxDecoration(
-                color: isDarkTheme ? const Color(0xFF2d2d2d) : Colors.grey[100],
-                borderRadius: BorderRadius.circular(8),
-              ),
-              child: Row(
-                children: [
-                  Expanded(
-                    child: TextField(
-                      controller: _priceController,
-                      keyboardType: TextInputType.number,
-                      style: TextStyle(
-                        color: isDarkTheme ? Colors.white : Colors.black,
-                        fontSize: 14,
-                      ),
-                      decoration: InputDecoration(
-                        hintText: '0',
-                        hintStyle: TextStyle(
-                          color: isDarkTheme ? Colors.grey[500] : Colors.grey[400],
-                        ),
-                        border: InputBorder.none,
-                        isDense: true,
-                        contentPadding: const EdgeInsets.symmetric(horizontal: 12, vertical: 4),
-                      ),
-                    ),
-                  ),
-                  Container(
-                    padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 6),
-                    child: Text(
-                      '\$',
-                      style: TextStyle(
-                        color: isDarkTheme ? Colors.white : Colors.black,
-                        fontSize: 14,
-                        fontWeight: FontWeight.w500,
-                      ),
-                    ),
-                  ),
-                ],
-              ),
-            ),
-
-            const SizedBox(height: 12),
-
-            // Expiry Dropdown
-            Text(
-              'Expiry',
-              style: TextStyle(
-                fontSize: 14,
-                color: isDarkTheme ? Colors.grey[400] : Colors.grey[600],
-              ),
-            ),
-            const SizedBox(height: 8),
-            Container(
-              decoration: BoxDecoration(
-                color: isDarkTheme ? const Color(0xFF2d2d2d) : Colors.grey[100],
-                borderRadius: BorderRadius.circular(8),
-              ),
-              child: Padding(
-                padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 6),
-                child: DropdownButtonHideUnderline(
-                  child: DropdownButton<String>(
-                    value: _expiryPeriod,
-                    isExpanded: true,
-                    isDense: true,
-                    onChanged: (String? newValue) {
-                      setState(() {
-                        _expiryPeriod = newValue!;
-                      });
-                    },
-                    dropdownColor: isDarkTheme ? const Color(0xFF1e1e1e) : Colors.white,
-                    style: TextStyle(
-                      color: isDarkTheme ? Colors.white : Colors.black,
-                      fontSize: 14,
-                    ),
-                    icon: Icon(
-                      Icons.keyboard_arrow_down,
-                      color: isDarkTheme ? Colors.grey[400] : Colors.grey[600],
-                    ),
-                  items: ['1 Day', '3 Days', '1 Week', '2 Weeks', '1 Month']
-                      .map<DropdownMenuItem<String>>((String value) {
-                    return DropdownMenuItem<String>(
-                      value: value,
-                      child: Padding(
-                        padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 2),
-                        child: Text(value),
-                      ),
-                    );
-                  }).toList(),
-                  ),
+              Text(
+                _isBuySelected ? 'Available to Invest' : 'Available',
+                style: TextStyle(
+                  fontSize: 14,
+                  color: isDarkTheme ? Colors.grey[400] : Colors.grey[600],
                 ),
               ),
-            ),
-          ],
-
-          const SizedBox(height: 12), // Add space between amount field and est.fee total area
-
-          // Order Summary (no border)
-          Container(
-            padding: const EdgeInsets.all(16),
-            decoration: BoxDecoration(
-              color: isDarkTheme ? const Color(0xFF3d3d3d) : Colors.grey[50],
-              borderRadius: BorderRadius.circular(12),
-              // Removed border
-            ),
-            child: Column(
-              children: [
-                Row(
-                  mainAxisAlignment: MainAxisAlignment.spaceBetween,
+              const SizedBox(width: 12),
+              Expanded(
+                child: Row(
                   children: [
-                    Text(
-                      'Est. Fee',
-                      style: TextStyle(
-                        fontSize: 14,
-                        color: isDarkTheme ? Colors.grey[400] : Colors.grey[600],
-                      ),
-                    ),
-                    _isLoadingFee
+                    _isLoadingCashHoldings
                         ? SizedBox(
-                            width: 16,
-                            height: 16,
+                            width: 20,
+                            height: 20,
                             child: CircularProgressIndicator(
                               strokeWidth: 2,
                               valueColor: AlwaysStoppedAnimation<Color>(
@@ -4575,39 +4357,336 @@ class _TradingPageState extends State<TradingPage> {
                             ),
                           )
                         : Text(
-                            _estimatedFee,
+                            _isBuySelected
+                                ? '$_buyingPower ${_selectedCurrency['symbol'] ?? ''}'
+                                : _availableBalance,
                             style: TextStyle(
-                              fontSize: 14,
+                              fontSize: 18,
+                              fontWeight: FontWeight.w600,
                               color: isDarkTheme ? Colors.white : Colors.black,
                             ),
                           ),
+                    const SizedBox(width: 4),
+                    (!_isBuySelected && _assets.isEmpty)
+                        ? SizedBox(
+                            width: 14,
+                            height: 14,
+                            child: CircularProgressIndicator(
+                              strokeWidth: 1.5,
+                              valueColor: AlwaysStoppedAnimation<Color>(
+                                isDarkTheme ? Colors.white : Colors.black,
+                              ),
+                            ),
+                          )
+                        : (!_isBuySelected
+                            ? Text(
+                                _getSelectedAssetSymbol(),
+                                style: TextStyle(
+                                  fontSize: 18,
+                                  fontWeight: FontWeight.w600,
+                                  color: isDarkTheme ? Colors.white : Colors.black,
+                                ),
+                              )
+                            : SizedBox.shrink()),
                   ],
                 ),
-                const SizedBox(height: 8),
-                Row(
-                  mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                  children: [
-                    Text(
-                      'Total',
-                      style: TextStyle(
-                        fontSize: 14,
-                        fontWeight: FontWeight.w600,
-                        color: isDarkTheme ? Colors.grey[400] : Colors.grey[600],
+              ),
+            ],
+          ),
+
+          const SizedBox(height: 8),
+
+          // Amount Input
+          Row(
+            children: [
+              SizedBox(
+                width: 80,
+                child: Text(
+                  'Amount',
+                  style: TextStyle(
+                    fontSize: 14,
+                    color: isDarkTheme ? Colors.grey[400] : Colors.grey[600],
+                  ),
+                ),
+              ),
+              Expanded(
+                child: Container(
+                  decoration: BoxDecoration(
+                    color: isDarkTheme ? const Color(0xFF2d2d2d) : Colors.grey[100],
+                    borderRadius: BorderRadius.circular(8),
+                  ),
+                  child: Row(
+                    children: [
+                      Expanded(
+                        child: TextField(
+                          controller: _quantityController,
+                          keyboardType: TextInputType.number,
+                          style: TextStyle(
+                            color: isDarkTheme ? Colors.white : Colors.black,
+                            fontSize: 14,
+                          ),
+                          decoration: InputDecoration(
+                            hintText: '0',
+                            hintStyle: TextStyle(
+                              color: isDarkTheme ? Colors.grey[500] : Colors.grey[400],
+                            ),
+                            border: InputBorder.none,
+                            isDense: true,
+                            contentPadding: const EdgeInsets.symmetric(horizontal: 12, vertical: 4),
+                          ),
+                        ),
                       ),
-                    ),
-                    Text(
-                      '${_calculateTotal().toStringAsFixed(2)} \$',
-                      style: TextStyle(
-                        fontSize: 14,
-                        fontWeight: FontWeight.w600,
-                        color: isDarkTheme ? Colors.white : Colors.black,
+                      Container(
+                        padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 8),
+                        child: Row(
+                          mainAxisSize: MainAxisSize.min,
+                          children: [
+                            // Show Max button only for Sell orders (when _isBuySelected is false)
+                            if (!_isBuySelected) ...[
+                              MouseRegion(
+                                cursor: SystemMouseCursors.click, // Pointer cursor for Max button
+                                child: GestureDetector(
+                                  onTap: () {
+                                    // Set quantity to maximum available amount
+                                    setState(() {
+                                      _quantityController.text = _availableBalance;
+                                    });
+                                  },
+                                  child: Container(
+                                    child: Text(
+                                      'Max',
+                                      style: TextStyle(
+                                        color: const Color(0xFFFF4081), // Pink for sell
+                                        fontSize: 12,
+                                        fontWeight: FontWeight.w600,
+                                      ),
+                                    ),
+                                  ),
+                                ),
+                              ),
+                              const SizedBox(width: 8),
+                            ],
+                            _assets.isEmpty
+                                ? SizedBox(
+                                    width: 14,
+                                    height: 14,
+                                    child: CircularProgressIndicator(
+                                      strokeWidth: 1.5,
+                                      valueColor: AlwaysStoppedAnimation<Color>(
+                                        isDarkTheme ? Colors.white : Colors.black,
+                                      ),
+                                    ),
+                                  )
+                                : Text(
+                                    _getSelectedAssetSymbol(),
+                                    style: TextStyle(
+                                      color: isDarkTheme ? Colors.white : Colors.black,
+                                      fontSize: 14,
+                                      fontWeight: FontWeight.w500,
+                                    ),
+                                  ),
+                          ],
+                        ),
                       ),
+                    ],
+                  ),
+                ),
+              ),
+            ],
+          ),
+
+          if (_orderType == 'Limit') ...[
+            const SizedBox(height: 12),
+
+            // Price Input
+            Row(
+              children: [
+                SizedBox(
+                  width: 80,
+                  child: Text(
+                    'Price',
+                    style: TextStyle(
+                      fontSize: 14,
+                      color: isDarkTheme ? Colors.grey[400] : Colors.grey[600],
                     ),
-                  ],
+                  ),
+                ),
+                Expanded(
+                  child: Container(
+                    decoration: BoxDecoration(
+                      color: isDarkTheme ? const Color(0xFF2d2d2d) : Colors.grey[100],
+                      borderRadius: BorderRadius.circular(8),
+                    ),
+                    child: Row(
+                      children: [
+                        Expanded(
+                          child: TextField(
+                            controller: _priceController,
+                            keyboardType: TextInputType.number,
+                            style: TextStyle(
+                              color: isDarkTheme ? Colors.white : Colors.black,
+                              fontSize: 14,
+                            ),
+                            decoration: InputDecoration(
+                              hintText: '0',
+                              hintStyle: TextStyle(
+                                color: isDarkTheme ? Colors.grey[500] : Colors.grey[400],
+                              ),
+                              border: InputBorder.none,
+                              isDense: true,
+                              contentPadding: const EdgeInsets.symmetric(horizontal: 12, vertical: 4),
+                            ),
+                          ),
+                        ),
+                        Container(
+                          padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 6),
+                          child: Text(
+                            '\$',
+                            style: TextStyle(
+                              color: isDarkTheme ? Colors.white : Colors.black,
+                              fontSize: 14,
+                              fontWeight: FontWeight.w500,
+                            ),
+                          ),
+                        ),
+                      ],
+                    ),
+                  ),
                 ),
               ],
             ),
-          ),
+
+            const SizedBox(height: 12),
+
+            // Expiry Dropdown
+            Row(
+              children: [
+                SizedBox(
+                  width: 80,
+                  child: Text(
+                    'Expiry',
+                    style: TextStyle(
+                      fontSize: 14,
+                      color: isDarkTheme ? Colors.grey[400] : Colors.grey[600],
+                    ),
+                  ),
+                ),
+                Expanded(
+                  child: Container(
+                    decoration: BoxDecoration(
+                      color: isDarkTheme ? const Color(0xFF2d2d2d) : Colors.grey[100],
+                      borderRadius: BorderRadius.circular(8),
+                    ),
+                    child: Padding(
+                      padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 6),
+                      child: DropdownButtonHideUnderline(
+                        child: DropdownButton<String>(
+                          value: _expiryPeriod,
+                          isExpanded: true,
+                          isDense: true,
+                          onChanged: (String? newValue) {
+                            setState(() {
+                              _expiryPeriod = newValue!;
+                            });
+                          },
+                          dropdownColor: isDarkTheme ? const Color(0xFF1e1e1e) : Colors.white,
+                          style: TextStyle(
+                            color: isDarkTheme ? Colors.white : Colors.black,
+                            fontSize: 14,
+                          ),
+                          icon: Icon(
+                            Icons.keyboard_arrow_down,
+                            color: isDarkTheme ? Colors.grey[400] : Colors.grey[600],
+                          ),
+                          items: ['1 Day', '3 Days', '1 Week', '2 Weeks', '1 Month']
+                              .map<DropdownMenuItem<String>>((String value) {
+                            return DropdownMenuItem<String>(
+                              value: value,
+                              child: Padding(
+                                padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 2),
+                                child: Text(value),
+                              ),
+                            );
+                          }).toList(),
+                        ),
+                      ),
+                    ),
+                  ),
+                ),
+              ],
+            ),
+          ],
+
+          // Show Order Summary only for Limit orders
+          if (_orderType == 'Limit') ...[
+            const SizedBox(height: 12), // Add space between amount field and est.fee total area
+
+            // Order Summary (no border)
+            Container(
+              padding: const EdgeInsets.all(16),
+              decoration: BoxDecoration(
+                color: isDarkTheme ? const Color(0xFF3d3d3d) : Colors.grey[50],
+                borderRadius: BorderRadius.circular(12),
+                // Removed border
+              ),
+              child: Column(
+                children: [
+                  Row(
+                    mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                    children: [
+                      Text(
+                        'Est. Fee',
+                        style: TextStyle(
+                          fontSize: 14,
+                          color: isDarkTheme ? Colors.grey[400] : Colors.grey[600],
+                        ),
+                      ),
+                      _isLoadingFee
+                          ? SizedBox(
+                              width: 16,
+                              height: 16,
+                              child: CircularProgressIndicator(
+                                strokeWidth: 2,
+                                valueColor: AlwaysStoppedAnimation<Color>(
+                                  isDarkTheme ? Colors.white : Colors.black,
+                                ),
+                              ),
+                            )
+                          : Text(
+                              _estimatedFee,
+                              style: TextStyle(
+                                fontSize: 14,
+                                color: isDarkTheme ? Colors.white : Colors.black,
+                              ),
+                            ),
+                    ],
+                  ),
+                  const SizedBox(height: 8),
+                  Row(
+                    mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                    children: [
+                      Text(
+                        'Total',
+                        style: TextStyle(
+                          fontSize: 14,
+                          fontWeight: FontWeight.w600,
+                          color: isDarkTheme ? Colors.grey[400] : Colors.grey[600],
+                        ),
+                      ),
+                      Text(
+                        '${_calculateTotal().toStringAsFixed(2)} \$',
+                        style: TextStyle(
+                          fontSize: 14,
+                          fontWeight: FontWeight.w600,
+                          color: isDarkTheme ? Colors.white : Colors.black,
+                        ),
+                      ),
+                    ],
+                  ),
+                ],
+              ),
+            ),
+          ],
 
           const SizedBox(height: 16),
 
