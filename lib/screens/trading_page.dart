@@ -3505,7 +3505,7 @@ class _TradingPageState extends State<TradingPage> {
               child: Container(
                 padding: EdgeInsets.symmetric(
                   horizontal: 16,
-                  vertical: isActive ? 13.74 : 12,
+                  vertical: isActive ? 7 : 5,
                 ),
                 decoration: BoxDecoration(
                   color: isActive
@@ -3932,7 +3932,7 @@ class _TradingPageState extends State<TradingPage> {
               child: Container(
                 padding: EdgeInsets.symmetric(
                   horizontal: 16,
-                  vertical: isActive ? 13.74 : 12,
+                  vertical: isActive ? 7 : 5,
                 ),
                 decoration: BoxDecoration(
                   color: isActive
@@ -4109,7 +4109,7 @@ class _TradingPageState extends State<TradingPage> {
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
-          const SizedBox(height: 16),
+          const SizedBox(height: 2),
           // Orders table header
           Row(
             mainAxisAlignment: MainAxisAlignment.spaceBetween,
@@ -4187,7 +4187,7 @@ class _TradingPageState extends State<TradingPage> {
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
-          const SizedBox(height: 16),
+          const SizedBox(height: 2),
           // History table header (without Action column)
           Row(
             mainAxisAlignment: MainAxisAlignment.spaceBetween,

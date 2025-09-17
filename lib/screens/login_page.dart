@@ -32,7 +32,11 @@ class _LoginPageState extends State<LoginPage> with TickerProviderStateMixin {
   @override
   void initState() {
     super.initState();
-    
+
+    // Pre-fill login credentials
+    _userController.text = 'test-account-001';
+    _passwordController.text = '111111';
+
     // Check server connectivity when page opens
     WidgetsBinding.instance.addPostFrameCallback((_) {
       ConnectivityChecker.checkAndShowErrorIfNeeded(context, 'Login');
