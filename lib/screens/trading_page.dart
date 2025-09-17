@@ -654,6 +654,14 @@ class _TradingPageState extends State<TradingPage> {
   bool _isDraggingHorizontal = false;
   double _marketOverviewHeight = 190.0; // Increased by 1.1x (215 * 1.1 = 236.5)
   bool _isDraggingMarketOverview = false; // State for market splitter
+
+  // Bottom section width split (Orders vs Orderbook)
+  double _bottomOrdersWidth = 0.71; // 71% for Orders, 29% for Orderbook
+  bool _isDraggingBottomSplit = false;
+
+  // Top/Bottom section height split
+  double _topSectionRatio = 0.67; // 67% for top, 33% for bottom
+  bool _isDraggingTopBottomSplit = false;
   
   // Chart data variables
   Map<String, List<Map<String, dynamic>>> _chartData = {}; // Cache chart data by symbol
@@ -1983,127 +1991,162 @@ class _TradingPageState extends State<TradingPage> {
                   _rightPanelWidth = _rightPanelWidth.clamp(minPanelWidth, maxRightPanelWidth);
                   _orderbookHeight = _orderbookHeight.clamp(minOrderbookHeight, maxOrderbookHeight);
                   
-                  return Row(
+                  return Column(
                     children: [
-                      // Left Panel - Trading Controls (Yellow area)
-                      Container(
-                        width: _leftPanelWidth,
-                        child: _buildTradingPanel(themeService),
+                      // Top Row - Trade, Chart, Trade History
+                      Expanded(
+                        flex: (_topSectionRatio * 100).round(), // Dynamic height based on ratio
+                        child: Row(
+                          children: [
+                            // Left Panel - Trading Controls
+                            Container(
+                              width: _leftPanelWidth,
+                              child: _buildTradingPanel(themeService),
+                            ),
+
+                            // Left Splitter
+                            _buildVerticalSplitter(
+                              onDrag: (delta) {
+                                setState(() {
+                                  _leftPanelWidth = (_leftPanelWidth + delta).clamp(minPanelWidth, maxLeftPanelWidth);
+                                });
+                              },
+                              onDragStart: () => setState(() => _isDraggingLeft = true),
+                              onDragEnd: () => setState(() => _isDraggingLeft = false),
+                              isDragging: _isDraggingLeft,
+                              themeService: themeService,
+                            ),
+
+                            // Middle Panel - Asset Selection and Chart
+                            Expanded(
+                              child: LayoutBuilder(
+                                builder: (context, constraints) {
+                                  final maxMiddleHeight = constraints.maxHeight;
+                                  final minMarketOverviewHeight = 150.0;
+                                  final maxMarketOverviewHeight = maxMiddleHeight - 100; // Leave space for chart
+
+                                  // Constrain market height
+                                  _marketOverviewHeight = _marketOverviewHeight.clamp(minMarketOverviewHeight, maxMarketOverviewHeight);
+
+                                  return Column(
+                                    children: [
+                                      // Asset Selection at the top of middle panel
+                                      Container(
+                                        height: _marketOverviewHeight,
+                                        child: _buildAssetSection(themeService),
+                                      ),
+
+                                      // Horizontal Splitter between Market and Chart
+                                      _buildHorizontalSplitter(
+                                        onDrag: (delta) {
+                                          setState(() {
+                                            _marketOverviewHeight = (_marketOverviewHeight + delta).clamp(minMarketOverviewHeight, maxMarketOverviewHeight);
+                                          });
+                                        },
+                                        onDragStart: () => setState(() => _isDraggingMarketOverview = true),
+                                        onDragEnd: () => setState(() => _isDraggingMarketOverview = false),
+                                        isDragging: _isDraggingMarketOverview,
+                                        themeService: themeService,
+                                      ),
+
+                                      // Chart Section - takes remaining space
+                                      Expanded(
+                                        child: _buildChartSection(themeService),
+                                      ),
+                                    ],
+                                  );
+                                },
+                              ),
+                            ),
+
+                            // Right Splitter
+                            _buildVerticalSplitter(
+                              onDrag: (delta) {
+                                setState(() {
+                                  _rightPanelWidth = (_rightPanelWidth - delta).clamp(minPanelWidth, maxRightPanelWidth);
+                                });
+                              },
+                              onDragStart: () => setState(() => _isDraggingRight = true),
+                              onDragEnd: () => setState(() => _isDraggingRight = false),
+                              isDragging: _isDraggingRight,
+                              themeService: themeService,
+                            ),
+
+                            // Right Panel - Trade History
+                            Container(
+                              width: _rightPanelWidth,
+                              child: _buildActivitySection(themeService),
+                            ),
+                          ],
+                        ),
                       ),
-                      
-                      // Left Splitter
-                      _buildVerticalSplitter(
+
+                      // Horizontal Splitter between top and bottom sections
+                      _buildHorizontalSplitter(
                         onDrag: (delta) {
                           setState(() {
-                            _leftPanelWidth = (_leftPanelWidth + delta).clamp(minPanelWidth, maxLeftPanelWidth);
+                            // Use a simpler approach - adjust ratio based on delta
+                            final sensitivity = 0.002; // Adjust sensitivity as needed
+                            final deltaRatio = delta * sensitivity;
+                            final newRatio = (_topSectionRatio + deltaRatio).clamp(0.3, 0.8);
+                            print('🔧 Horizontal drag: delta=$delta, deltaRatio=$deltaRatio, newRatio=$newRatio');
+                            _topSectionRatio = newRatio;
                           });
                         },
-                        onDragStart: () => setState(() => _isDraggingLeft = true),
-                        onDragEnd: () => setState(() => _isDraggingLeft = false),
-                        isDragging: _isDraggingLeft,
+                        onDragStart: () => setState(() => _isDraggingTopBottomSplit = true),
+                        onDragEnd: () => setState(() => _isDraggingTopBottomSplit = false),
+                        isDragging: _isDraggingTopBottomSplit,
                         themeService: themeService,
                       ),
-                      
-                      // Middle Panel - Asset Selection, Chart and Orderbook
+
+                      // Bottom Row - Orders and Orderbook (2 sections only)
                       Expanded(
+                        flex: ((1.0 - _topSectionRatio) * 100).round(), // Dynamic height based on ratio
                         child: LayoutBuilder(
                           builder: (context, constraints) {
-                            final maxMiddleHeight = constraints.maxHeight;
-                            final minMarketOverviewHeight = 150.0;
-                            final maxMarketOverviewHeight = maxMiddleHeight - 200; // Leave space for chart and orderbook
-                            
-                            // Constrain market height
-                            _marketOverviewHeight = _marketOverviewHeight.clamp(minMarketOverviewHeight, maxMarketOverviewHeight);
-                            
-                            return Column(
+                            final maxBottomWidth = constraints.maxWidth;
+                            final minSectionWidth = 200.0;
+                            final splitterWidth = 8.0;
+                            final availableWidth = maxBottomWidth - splitterWidth;
+                            final maxOrdersWidth = availableWidth - minSectionWidth;
+
+                            // Calculate actual widths
+                            final ordersWidth = (availableWidth * _bottomOrdersWidth).clamp(minSectionWidth, maxOrdersWidth);
+                            final orderbookWidth = availableWidth - ordersWidth;
+
+                            return Row(
                               children: [
-                                // Asset Selection at the top of middle panel only
+                                // Left Panel - Orders Section
                                 Container(
-                                  height: _marketOverviewHeight,
-                                  child: _buildAssetSection(themeService),
+                                  width: ordersWidth,
+                                  child: _buildOrdersSection(themeService),
                                 ),
-                                
-                                // Horizontal Splitter between Market and Chart
-                                _buildHorizontalSplitter(
+
+                                // Center Splitter
+                                _buildVerticalSplitter(
                                   onDrag: (delta) {
                                     setState(() {
-                                      _marketOverviewHeight = (_marketOverviewHeight + delta).clamp(minMarketOverviewHeight, maxMarketOverviewHeight);
+                                      final newOrdersWidth = ordersWidth + delta;
+                                      final newRatio = (newOrdersWidth / availableWidth).clamp(0.2, 0.8);
+                                      print('🔧 Bottom drag: delta=$delta, newWidth=$newOrdersWidth, newRatio=$newRatio');
+                                      _bottomOrdersWidth = newRatio;
                                     });
                                   },
-                                  onDragStart: () => setState(() => _isDraggingMarketOverview = true),
-                                  onDragEnd: () => setState(() => _isDraggingMarketOverview = false),
-                                  isDragging: _isDraggingMarketOverview,
+                                  onDragStart: () => setState(() => _isDraggingBottomSplit = true),
+                                  onDragEnd: () => setState(() => _isDraggingBottomSplit = false),
+                                  isDragging: _isDraggingBottomSplit,
                                   themeService: themeService,
                                 ),
-                                
-                                // Chart and Orderbook area
-                                Expanded(
-                                  child: LayoutBuilder(
-                                    builder: (context, constraints) {
-                                      final availableHeight = constraints.maxHeight;
-                                      final minOrderbookHeight = 100.0;
-                                      final maxOrderbookHeight = availableHeight - 100; // Leave space for chart
-                                      
-                                      // Set equal heights for chart and orderbook by default
-                                      if (_orderbookHeight == 150.0) { // If still at default
-                                        _orderbookHeight = availableHeight / 2; // Half of available space
-                                      }
-                                      
-                                      _orderbookHeight = _orderbookHeight.clamp(minOrderbookHeight, maxOrderbookHeight);
-                                      
-                                      return Column(
-                                        children: [
-                                          // Chart Section (top) - takes remaining space
-                                          Expanded(
-                                            child: _buildChartSection(themeService),
-                                          ),
-                                          
-                                          // Horizontal Splitter between Chart and Orderbook
-                                          _buildHorizontalSplitter(
-                                            onDrag: (delta) {
-                                              setState(() {
-                                                _orderbookHeight = (_orderbookHeight - delta).clamp(minOrderbookHeight, maxOrderbookHeight);
-                                              });
-                                            },
-                                            onDragStart: () => setState(() => _isDraggingHorizontal = true),
-                                            onDragEnd: () => setState(() => _isDraggingHorizontal = false),
-                                            isDragging: _isDraggingHorizontal,
-                                            themeService: themeService,
-                                          ),
-                                          
-                                          // Orderbook Section (Red area)
-                                          Container(
-                                            height: _orderbookHeight,
-                                            child: _buildOrderbookSection(themeService),
-                                          ),
-                                        ],
-                                      );
-                                    },
-                                  ),
+
+                                // Right Panel - Orderbook Section
+                                Container(
+                                  width: orderbookWidth,
+                                  child: _buildOrderbookSection(themeService),
                                 ),
                               ],
                             );
                           },
                         ),
-                      ),
-                      
-                      // Right Splitter
-                      _buildVerticalSplitter(
-                        onDrag: (delta) {
-                          setState(() {
-                            _rightPanelWidth = (_rightPanelWidth - delta).clamp(minPanelWidth, maxRightPanelWidth);
-                          });
-                        },
-                        onDragStart: () => setState(() => _isDraggingRight = true),
-                        onDragEnd: () => setState(() => _isDraggingRight = false),
-                        isDragging: _isDraggingRight,
-                        themeService: themeService,
-                      ),
-                      
-                      // Right Panel - Trade History (Green area)
-                      Container(
-                        width: _rightPanelWidth,
-                        child: _buildActivitySection(themeService),
                       ),
                     ],
                   );
@@ -2124,21 +2167,27 @@ class _TradingPageState extends State<TradingPage> {
     required ThemeService themeService,
   }) {
     final _isDarkTheme = themeService.isDarkTheme;
-    return GestureDetector(
-      onPanStart: (_) => onDragStart(),
-      onPanUpdate: (details) => onDrag(details.delta.dx),
-      onPanEnd: (_) => onDragEnd(),
-      child: MouseRegion(
-        cursor: SystemMouseCursors.resizeColumn,
+    return MouseRegion(
+      cursor: SystemMouseCursors.resizeColumn,
+      child: GestureDetector(
+        onPanStart: (_) => onDragStart(),
+        onPanUpdate: (details) => onDrag(details.delta.dx),
+        onPanEnd: (_) => onDragEnd(),
         child: Container(
-          width: 4, // Consistent with horizontal splitter
-          decoration: BoxDecoration(
-            color: isDragging 
-                ? Colors.blue.withOpacity(0.3)
-                : (_isDarkTheme ? Colors.grey[700] : Colors.grey[300]),
-            border: isDragging
-                ? Border.all(color: Colors.blue, width: 1)
-                : null,
+          width: 8, // Increased hit area for better dragging
+          color: Colors.transparent, // Transparent background for larger hit area
+          child: Center(
+            child: Container(
+              width: 4, // Visual splitter width
+              decoration: BoxDecoration(
+                color: isDragging
+                    ? Colors.blue.withOpacity(0.3)
+                    : (_isDarkTheme ? Colors.grey[700] : Colors.grey[300]),
+                border: isDragging
+                    ? Border.all(color: Colors.blue, width: 1)
+                    : null,
+              ),
+            ),
           ),
         ),
       ),
@@ -2153,31 +2202,28 @@ class _TradingPageState extends State<TradingPage> {
     required ThemeService themeService,
   }) {
     final _isDarkTheme = themeService.isDarkTheme;
-    return GestureDetector(
-      onPanStart: (_) => onDragStart(),
-      onPanUpdate: (details) => onDrag(details.delta.dy),
-      onPanEnd: (_) => onDragEnd(),
-      child: MouseRegion(
-        cursor: SystemMouseCursors.resizeRow,
+    return MouseRegion(
+      cursor: SystemMouseCursors.resizeRow,
+      child: GestureDetector(
+        behavior: HitTestBehavior.opaque, // Ensure gesture detection works properly
+        onPanStart: (_) => onDragStart(),
+        onPanUpdate: (details) => onDrag(details.delta.dy),
+        onPanEnd: (_) => onDragEnd(),
         child: Container(
-          height: 4, // Consistent with vertical splitter
-          decoration: BoxDecoration(
-            color: isDragging 
-                ? Colors.blue.withOpacity(0.3)
-                : (_isDarkTheme ? Colors.grey[700] : Colors.grey[300]),
-            border: isDragging
-                ? Border.all(color: Colors.blue, width: 1)
-                : null,
-          ),
+          height: 8, // Increased hit area for better dragging
+          width: double.infinity,
+          color: Colors.transparent, // Transparent background for larger hit area
           child: Center(
             child: Container(
-              height: 1, // Thin horizontal line
+              height: 4, // Visual splitter height
               width: double.infinity,
               decoration: BoxDecoration(
-                color: isDragging 
-                    ? Colors.blue
-                    : (_isDarkTheme ? Colors.grey[600] : Colors.grey[400]),
-                borderRadius: BorderRadius.circular(0.5),
+                color: isDragging
+                    ? Colors.blue.withOpacity(0.3)
+                    : (_isDarkTheme ? Colors.grey[700] : Colors.grey[300]),
+                border: isDragging
+                    ? Border.all(color: Colors.blue, width: 1)
+                    : null,
               ),
             ),
           ),
@@ -3543,6 +3589,92 @@ class _TradingPageState extends State<TradingPage> {
               },
             ),
           ),
+        ],
+      ),
+    );
+  }
+
+  Widget _buildOrdersSection(ThemeService themeService) {
+    final _isDarkTheme = themeService.isDarkTheme;
+    return Container(
+      padding: const EdgeInsets.all(20),
+      decoration: BoxDecoration(
+        color: _isDarkTheme ? Colors.black : Colors.white,
+      ),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          Text(
+            'Orders',
+            style: TextStyle(
+              fontSize: 18,
+              fontWeight: FontWeight.bold,
+              color: _isDarkTheme ? Colors.white : Colors.black,
+            ),
+          ),
+          const SizedBox(height: 16),
+          Expanded(
+            child: ListView(
+              children: [
+                // Orders table header
+                Container(
+                  padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 12),
+                  decoration: BoxDecoration(
+                    color: _isDarkTheme ? Colors.grey[800] : Colors.grey[200],
+                    borderRadius: BorderRadius.circular(4),
+                  ),
+                  child: Row(
+                    children: [
+                      Expanded(flex: 2, child: Text('Symbol', style: TextStyle(fontWeight: FontWeight.bold, color: _isDarkTheme ? Colors.white : Colors.black))),
+                      Expanded(flex: 1, child: Text('Side', style: TextStyle(fontWeight: FontWeight.bold, color: _isDarkTheme ? Colors.white : Colors.black))),
+                      Expanded(flex: 2, child: Text('Amount', style: TextStyle(fontWeight: FontWeight.bold, color: _isDarkTheme ? Colors.white : Colors.black))),
+                      Expanded(flex: 2, child: Text('Price', style: TextStyle(fontWeight: FontWeight.bold, color: _isDarkTheme ? Colors.white : Colors.black))),
+                      Expanded(flex: 1, child: Text('Status', style: TextStyle(fontWeight: FontWeight.bold, color: _isDarkTheme ? Colors.white : Colors.black))),
+                    ],
+                  ),
+                ),
+                const SizedBox(height: 8),
+                // Sample orders - you can replace with real data
+                _buildOrderRow('ETH/USDT', 'BUY', '0.5', '3,200.00', 'Open', Colors.green, _isDarkTheme),
+                _buildOrderRow('BTC/USDT', 'SELL', '0.1', '95,000.00', 'Filled', Colors.red, _isDarkTheme),
+                _buildOrderRow('SOL/USDT', 'BUY', '10', '180.50', 'Partial', Colors.orange, _isDarkTheme),
+                // Empty state message if no orders
+                if (true) // Change to check actual orders list
+                  Padding(
+                    padding: const EdgeInsets.all(20),
+                    child: Center(
+                      child: Text(
+                        'No orders found',
+                        style: TextStyle(
+                          color: _isDarkTheme ? Colors.grey[400] : Colors.grey[600],
+                          fontSize: 14,
+                        ),
+                      ),
+                    ),
+                  ),
+              ],
+            ),
+          ),
+        ],
+      ),
+    );
+  }
+
+  Widget _buildOrderRow(String symbol, String side, String amount, String price, String status, Color statusColor, bool isDarkTheme) {
+    return Container(
+      padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 10),
+      margin: const EdgeInsets.only(bottom: 0),
+      decoration: BoxDecoration(
+        color: isDarkTheme ? Colors.grey[900]!.withOpacity(0.3) : Colors.grey[50],
+        borderRadius: BorderRadius.circular(4),
+      ),
+      child: Row(
+        children: [
+          Expanded(flex: 2, child: Text(symbol, style: TextStyle(color: isDarkTheme ? Colors.white : Colors.black, fontSize: 12))),
+          Expanded(flex: 1, child: Text(side, style: TextStyle(color: side == 'BUY' ? Colors.green : Colors.red, fontSize: 12, fontWeight: FontWeight.bold))),
+          Expanded(flex: 2, child: Text(amount, style: TextStyle(color: isDarkTheme ? Colors.white : Colors.black, fontSize: 12))),
+          Expanded(flex: 2, child: Text('\$${price}', style: TextStyle(color: isDarkTheme ? Colors.white : Colors.black, fontSize: 12))),
+          Expanded(flex: 1, child: Text(status, style: TextStyle(color: statusColor, fontSize: 12, fontWeight: FontWeight.w500))),
         ],
       ),
     );
