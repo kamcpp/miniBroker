@@ -671,6 +671,10 @@ class _TradingPageState extends State<TradingPage> {
   int _activityTabIndex = 0;
   final List<String> _activityTabNames = ['Orderbook', 'Trade History'];
 
+  // Orders section tabs
+  int _ordersTabIndex = 0; // 0 = Orders (default), 1 = History
+  final List<String> _ordersTabNames = ['Orders', 'History'];
+
   // Sample orders data
   final List<Map<String, dynamic>> _sampleOrders = [
     {
@@ -693,7 +697,7 @@ class _TradingPageState extends State<TradingPage> {
       "price": "0.00",
       "create_timestamp": "1726580200",
       "expire_timestamp": null,
-      "is_filled": true,
+      "is_filled": false,
       "is_cancelled": false,
       "is_expired": false,
     },
@@ -706,8 +710,48 @@ class _TradingPageState extends State<TradingPage> {
       "create_timestamp": "1726579800",
       "expire_timestamp": null,
       "is_filled": false,
-      "is_cancelled": true,
+      "is_cancelled": false,
       "is_expired": false,
+    },
+  ];
+
+  // Sample order history data (completed orders)
+  final List<Map<String, dynamic>> _sampleOrderHistory = [
+    {
+      "order_id": "ord_hist_001",
+      "side": "ORDER_SIDE__BUY",
+      "symbol": "ETH/USD",
+      "quantity": "1.0",
+      "price": "2920.00",
+      "create_timestamp": "1726570000",
+      "expire_timestamp": "1726580000",
+      "is_filled": true,
+      "is_cancelled": false,
+      "is_expired": false,
+    },
+    {
+      "order_id": "ord_hist_002",
+      "side": "ORDER_SIDE__SELL",
+      "symbol": "BTC/USD",
+      "quantity": "0.1",
+      "price": "68500.00",
+      "create_timestamp": "1726560000",
+      "expire_timestamp": null,
+      "is_filled": true,
+      "is_cancelled": false,
+      "is_expired": false,
+    },
+    {
+      "order_id": "ord_hist_003",
+      "side": "ORDER_SIDE__BUY",
+      "symbol": "SOL/USD",
+      "quantity": "50.0",
+      "price": "145.00",
+      "create_timestamp": "1726550000",
+      "expire_timestamp": "1726570000",
+      "is_filled": false,
+      "is_cancelled": false,
+      "is_expired": true,
     },
   ];
 
@@ -3835,68 +3879,105 @@ class _TradingPageState extends State<TradingPage> {
   Widget _buildOrdersSection(ThemeService themeService) {
     final _isDarkTheme = themeService.isDarkTheme;
     return Container(
-      padding: const EdgeInsets.all(20),
-      decoration: BoxDecoration(
-        color: _isDarkTheme ? Colors.black : Colors.white,
-      ),
+      color: _isDarkTheme ? Colors.black : Colors.white, // Section background follows theme
       child: Column(
-        crossAxisAlignment: CrossAxisAlignment.start,
+        crossAxisAlignment: CrossAxisAlignment.start, // Align column content to the left
         children: [
-          Text(
-            'Orders',
-            style: TextStyle(
-              fontSize: 18,
-              fontWeight: FontWeight.bold,
-              color: _isDarkTheme ? Colors.white : Colors.black,
-            ),
-          ),
-          const SizedBox(height: 16),
+          // Connected tab headers
+          _buildOrdersTabHeaders(_isDarkTheme),
+          // Connected content area with padding
           Expanded(
-            child: ListView(
-              children: [
-                // Orders table header
-                Container(
-                  padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 12),
-                  decoration: BoxDecoration(
-                    color: _isDarkTheme ? Colors.grey[800] : Colors.grey[200],
-                    borderRadius: BorderRadius.circular(4),
-                  ),
-                  child: Row(
-                    children: [
-                      Expanded(flex: 1, child: Text('Side', style: TextStyle(fontWeight: FontWeight.bold, color: _isDarkTheme ? Colors.white : Colors.black))),
-                      Expanded(flex: 2, child: Text('Pair', style: TextStyle(fontWeight: FontWeight.bold, color: _isDarkTheme ? Colors.white : Colors.black))),
-                      Expanded(flex: 2, child: Text('Quantity', style: TextStyle(fontWeight: FontWeight.bold, color: _isDarkTheme ? Colors.white : Colors.black))),
-                      Expanded(flex: 2, child: Text('Price', style: TextStyle(fontWeight: FontWeight.bold, color: _isDarkTheme ? Colors.white : Colors.black))),
-                      Expanded(flex: 2, child: Text('Creation Time', style: TextStyle(fontWeight: FontWeight.bold, color: _isDarkTheme ? Colors.white : Colors.black))),
-                      Expanded(flex: 2, child: Text('Expiration', style: TextStyle(fontWeight: FontWeight.bold, color: _isDarkTheme ? Colors.white : Colors.black))),
-                      Expanded(flex: 1, child: Text('Status', style: TextStyle(fontWeight: FontWeight.bold, color: _isDarkTheme ? Colors.white : Colors.black))),
-                      Expanded(flex: 2, child: Text('Action', style: TextStyle(fontWeight: FontWeight.bold, color: _isDarkTheme ? Colors.white : Colors.black))),
-                    ],
-                  ),
+            child: Container(
+              margin: const EdgeInsets.only(left: 8, right: 8, bottom: 8),
+              decoration: BoxDecoration(
+                color: _isDarkTheme ? Colors.grey[800] : Colors.grey[200], // Table background: dark gray / light gray
+                border: Border.all(
+                  color: _isDarkTheme ? Colors.grey[800]! : Colors.grey[200]!, // Same as selected tab background
                 ),
-                const SizedBox(height: 8),
-                // Orders from sample data
-                ..._sampleOrders.map((order) => _buildOrderRow(order, _isDarkTheme)),
-                // Empty state message if no orders
-                if (_sampleOrders.isEmpty)
-                  Padding(
-                    padding: const EdgeInsets.all(20),
-                    child: Center(
-                      child: Text(
-                        'No orders found',
-                        style: TextStyle(
-                          color: _isDarkTheme ? Colors.grey[400] : Colors.grey[600],
-                          fontSize: 14,
-                        ),
-                      ),
-                    ),
-                  ),
-              ],
+                borderRadius: const BorderRadius.only(
+                  topRight: Radius.circular(8),
+                  bottomLeft: Radius.circular(8),
+                  bottomRight: Radius.circular(8),
+                ),
+              ),
+              child: _buildOrdersTabContent(_isDarkTheme),
             ),
           ),
         ],
       ),
     );
+  }
+
+  Widget _buildOrdersTabHeaders(bool isDarkTheme) {
+    return Container(
+      margin: const EdgeInsets.only(left: 8), // Add left margin to match table
+      child: SingleChildScrollView(
+        scrollDirection: Axis.horizontal,
+        child: Row(
+          crossAxisAlignment: CrossAxisAlignment.end,
+          mainAxisAlignment: MainAxisAlignment.start, // Align tabs to the left
+          children: _ordersTabNames.asMap().entries.map((entry) {
+          final index = entry.key;
+          final tabName = entry.value;
+          final isActive = _ordersTabIndex == index;
+
+          return MouseRegion(
+            cursor: SystemMouseCursors.click,
+            child: GestureDetector(
+              onTap: () {
+                setState(() {
+                  _ordersTabIndex = index;
+                });
+              },
+              child: Container(
+                padding: EdgeInsets.symmetric(
+                  horizontal: 16,
+                  vertical: isActive ? 13.74 : 12,
+                ),
+                decoration: BoxDecoration(
+                  color: isActive
+                      ? (isDarkTheme ? Colors.grey[800] : Colors.grey[200]) // Selected tab same color as table
+                      : (isDarkTheme
+                          ? Colors.black.withOpacity(0.3)
+                          : Colors.white.withOpacity(0.2)), // Unselected tab follows theme
+                  border: isActive
+                      ? null // No border for selected tab
+                      : Border.all(
+                          color: isDarkTheme ? Colors.grey[800]! : Colors.grey[200]!, // Same as selected background
+                        ),
+                  borderRadius: const BorderRadius.only(
+                    topLeft: Radius.circular(8),
+                    topRight: Radius.circular(8),
+                  ),
+                ),
+                child: Text(
+                  tabName,
+                  style: TextStyle(
+                    color: isActive
+                        ? (isDarkTheme ? Colors.white : Colors.black)
+                        : Colors.grey[400],
+                    fontSize: 14,
+                    fontWeight: isActive ? FontWeight.w600 : FontWeight.w500,
+                  ),
+                ),
+              ),
+            ),
+          );
+        }).toList(),
+        ),
+      ),
+    );
+  }
+
+  Widget _buildOrdersTabContent(bool isDarkTheme) {
+    switch (_ordersTabIndex) {
+      case 0: // Orders (default)
+        return _buildOrdersTable(isDarkTheme);
+      case 1: // History
+        return _buildOrderHistoryTable(isDarkTheme);
+      default:
+        return _buildOrdersTable(isDarkTheme); // Default to Orders
+    }
   }
 
   Widget _buildOrderRow(Map<String, dynamic> order, bool isDarkTheme) {
@@ -3941,22 +4022,40 @@ class _TradingPageState extends State<TradingPage> {
     final sideColor = side == 'BUY' ? Colors.green : Colors.red;
 
     return Container(
-      padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 10),
-      margin: const EdgeInsets.only(bottom: 4),
-      decoration: BoxDecoration(
-        color: isDarkTheme ? Colors.grey[900]!.withOpacity(0.3) : Colors.grey[50],
-        borderRadius: BorderRadius.circular(4),
-      ),
+      margin: const EdgeInsets.only(bottom: 8),
+      padding: const EdgeInsets.symmetric(vertical: 8, horizontal: 4),
       child: Row(
+        mainAxisAlignment: MainAxisAlignment.spaceBetween,
         children: [
-          Expanded(flex: 1, child: Text(side, style: TextStyle(color: sideColor, fontSize: 12, fontWeight: FontWeight.bold))),
-          Expanded(flex: 2, child: Text(order['symbol'] ?? 'N/A', style: TextStyle(color: isDarkTheme ? Colors.white : Colors.black, fontSize: 12))),
-          Expanded(flex: 2, child: Text(order['quantity'] ?? 'N/A', style: TextStyle(color: isDarkTheme ? Colors.white : Colors.black, fontSize: 12))),
-          Expanded(flex: 2, child: Text(order['price'] == '0.00' ? 'Market' : '\$${order['price'] ?? 'N/A'}', style: TextStyle(color: isDarkTheme ? Colors.white : Colors.black, fontSize: 12))),
-          Expanded(flex: 2, child: Text(formatTimestamp(order['create_timestamp']), style: TextStyle(color: isDarkTheme ? Colors.white : Colors.black, fontSize: 11))),
-          Expanded(flex: 2, child: Text(formatTimestamp(order['expire_timestamp']), style: TextStyle(color: isDarkTheme ? Colors.white : Colors.black, fontSize: 11))),
-          Expanded(flex: 1, child: Text(status, style: TextStyle(color: statusColor, fontSize: 12, fontWeight: FontWeight.w500))),
-          Expanded(flex: 2, child: status == 'Active' ?
+          SizedBox(
+            width: 110,
+            child: Text(side, style: TextStyle(color: sideColor, fontSize: 12, fontWeight: FontWeight.bold), textAlign: TextAlign.left),
+          ),
+          SizedBox(
+            width: 140,
+            child: Text(order['symbol'] ?? 'N/A', style: TextStyle(color: isDarkTheme ? Colors.white : Colors.black, fontSize: 12), textAlign: TextAlign.center),
+          ),
+          SizedBox(
+            width: 140,
+            child: Text(order['quantity'] ?? 'N/A', style: TextStyle(color: isDarkTheme ? Colors.white : Colors.black, fontSize: 12), textAlign: TextAlign.center),
+          ),
+          SizedBox(
+            width: 140,
+            child: Text(order['price'] == '0.00' ? 'Market' : '\$${order['price'] ?? 'N/A'}', style: TextStyle(color: isDarkTheme ? Colors.white : Colors.black, fontSize: 12), textAlign: TextAlign.center),
+          ),
+          SizedBox(
+            width: 140,
+            child: Text(formatTimestamp(order['create_timestamp']), style: TextStyle(color: isDarkTheme ? Colors.white : Colors.black, fontSize: 11), textAlign: TextAlign.center),
+          ),
+          SizedBox(
+            width: 140,
+            child: Text(formatTimestamp(order['expire_timestamp']), style: TextStyle(color: isDarkTheme ? Colors.white : Colors.black, fontSize: 11), textAlign: TextAlign.center),
+          ),
+          SizedBox(
+            width: 140,
+            child: Text(status, style: TextStyle(color: statusColor, fontSize: 12, fontWeight: FontWeight.w500), textAlign: TextAlign.center),
+          ),
+          Expanded(child: status == 'Active' ?
             Row(
               mainAxisSize: MainAxisSize.min,
               children: [
@@ -3999,6 +4098,238 @@ class _TradingPageState extends State<TradingPage> {
             ) :
             Text('-', style: TextStyle(color: isDarkTheme ? Colors.grey : Colors.grey[600], fontSize: 12))
           ),
+        ],
+      ),
+    );
+  }
+
+  Widget _buildOrdersTable(bool isDarkTheme) {
+    return Container(
+      padding: const EdgeInsets.all(20),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          const SizedBox(height: 16),
+          // Orders table header
+          Row(
+            mainAxisAlignment: MainAxisAlignment.spaceBetween,
+            children: [
+              SizedBox(
+                width: 110,
+                child: Text('Side', style: TextStyle(color: Colors.grey[400], fontWeight: FontWeight.bold, fontSize: 13), textAlign: TextAlign.left),
+              ),
+              SizedBox(
+                width: 140,
+                child: Text('Pair', style: TextStyle(color: Colors.grey[400], fontWeight: FontWeight.bold, fontSize: 13), textAlign: TextAlign.center),
+              ),
+              SizedBox(
+                width: 140,
+                child: Text('Quantity', style: TextStyle(color: Colors.grey[400], fontWeight: FontWeight.bold, fontSize: 13), textAlign: TextAlign.center),
+              ),
+              SizedBox(
+                width: 140,
+                child: Text('Price', style: TextStyle(color: Colors.grey[400], fontWeight: FontWeight.bold, fontSize: 13), textAlign: TextAlign.center),
+              ),
+              SizedBox(
+                width: 140,
+                child: Text('Creation Time', style: TextStyle(color: Colors.grey[400], fontWeight: FontWeight.bold, fontSize: 13), textAlign: TextAlign.center),
+              ),
+              SizedBox(
+                width: 140,
+                child: Text('Expiration', style: TextStyle(color: Colors.grey[400], fontWeight: FontWeight.bold, fontSize: 13), textAlign: TextAlign.center),
+              ),
+              SizedBox(
+                width: 140,
+                child: Text('Status', style: TextStyle(color: Colors.grey[400], fontWeight: FontWeight.bold, fontSize: 13), textAlign: TextAlign.center),
+              ),
+              Expanded(
+                child: Text('Action', style: TextStyle(color: Colors.grey[400], fontWeight: FontWeight.bold, fontSize: 13), textAlign: TextAlign.center),
+              ),
+            ],
+          ),
+          const SizedBox(height: 2),
+          Divider(
+            color: Colors.grey,
+            thickness: 0.7,
+            height: 1,
+          ),
+          const SizedBox(height: 8),
+          Expanded(
+            child: ListView(
+              children: [
+                // Orders from sample data
+                ..._sampleOrders.map((order) => _buildOrderRow(order, isDarkTheme)),
+                // Empty state message if no orders
+                if (_sampleOrders.isEmpty)
+                  Padding(
+                    padding: const EdgeInsets.all(20),
+                    child: Center(
+                      child: Text(
+                        'No orders found',
+                        style: TextStyle(
+                          color: isDarkTheme ? Colors.grey[400] : Colors.grey[600],
+                          fontSize: 14,
+                        ),
+                      ),
+                    ),
+                  ),
+              ],
+            ),
+          ),
+        ],
+      ),
+    );
+  }
+
+  Widget _buildOrderHistoryTable(bool isDarkTheme) {
+    return Container(
+      padding: const EdgeInsets.all(20),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          const SizedBox(height: 16),
+          // History table header (without Action column)
+          Row(
+            mainAxisAlignment: MainAxisAlignment.spaceBetween,
+            children: [
+              SizedBox(
+                width: 110,
+                child: Text('Side', style: TextStyle(color: Colors.grey[400], fontWeight: FontWeight.bold, fontSize: 13), textAlign: TextAlign.left),
+              ),
+              SizedBox(
+                width: 150,
+                child: Text('Pair', style: TextStyle(color: Colors.grey[400], fontWeight: FontWeight.bold, fontSize: 13), textAlign: TextAlign.center),
+              ),
+              SizedBox(
+                width: 150,
+                child: Text('Quantity', style: TextStyle(color: Colors.grey[400], fontWeight: FontWeight.bold, fontSize: 13), textAlign: TextAlign.center),
+              ),
+              SizedBox(
+                width: 150,
+                child: Text('Price', style: TextStyle(color: Colors.grey[400], fontWeight: FontWeight.bold, fontSize: 13), textAlign: TextAlign.center),
+              ),
+              SizedBox(
+                width: 150,
+                child: Text('Creation Time', style: TextStyle(color: Colors.grey[400], fontWeight: FontWeight.bold, fontSize: 13), textAlign: TextAlign.center),
+              ),
+              SizedBox(
+                width: 150,
+                child: Text('Expiration', style: TextStyle(color: Colors.grey[400], fontWeight: FontWeight.bold, fontSize: 13), textAlign: TextAlign.center),
+              ),
+              Expanded(
+                child: Text('Status', style: TextStyle(color: Colors.grey[400], fontWeight: FontWeight.bold, fontSize: 13), textAlign: TextAlign.center),
+              ),
+            ],
+          ),
+          const SizedBox(height: 2),
+          Divider(
+            color: Colors.grey,
+            thickness: 0.7,
+            height: 1,
+          ),
+          const SizedBox(height: 8),
+          Expanded(
+            child: ListView(
+              children: [
+                // History from sample data
+                ..._sampleOrderHistory.map((order) => _buildOrderHistoryRow(order, isDarkTheme)),
+                // Empty state message if no history
+                if (_sampleOrderHistory.isEmpty)
+                  Padding(
+                    padding: const EdgeInsets.all(20),
+                    child: Center(
+                      child: Text(
+                        'No order history found',
+                        style: TextStyle(
+                          color: isDarkTheme ? Colors.grey[400] : Colors.grey[600],
+                          fontSize: 14,
+                        ),
+                      ),
+                    ),
+                  ),
+              ],
+            ),
+          ),
+        ],
+      ),
+    );
+  }
+
+  Widget _buildOrderHistoryRow(Map<String, dynamic> order, bool isDarkTheme) {
+    // Helper function to format timestamps
+    String formatTimestamp(String? timestamp) {
+      if (timestamp == null) return 'N/A';
+      try {
+        final dt = DateTime.fromMillisecondsSinceEpoch(int.parse(timestamp) * 1000);
+        return '${dt.day}/${dt.month}/${dt.year.toString().substring(2)} ${dt.hour.toString().padLeft(2, '0')}:${dt.minute.toString().padLeft(2, '0')}';
+      } catch (e) {
+        return 'N/A';
+      }
+    }
+
+    // Helper function to format side
+    String formatSide(String side) {
+      return side.replaceAll('ORDER_SIDE__', '');
+    }
+
+    // Helper function to get status
+    String getStatus(Map<String, dynamic> order) {
+      if (order['is_filled'] == true) return 'Filled';
+      if (order['is_cancelled'] == true) return 'Cancelled';
+      if (order['is_expired'] == true) return 'Expired';
+      return 'Active';
+    }
+
+    // Helper function to get status color
+    Color getStatusColor(String status) {
+      switch (status) {
+        case 'Filled': return Colors.green;
+        case 'Cancelled': return Colors.red;
+        case 'Expired': return Colors.orange;
+        case 'Active': return Colors.blue;
+        default: return isDarkTheme ? Colors.white : Colors.black;
+      }
+    }
+
+    final side = formatSide(order['side'] ?? '');
+    final status = getStatus(order);
+    final statusColor = getStatusColor(status);
+    final sideColor = side == 'BUY' ? Colors.green : Colors.red;
+
+    return Container(
+      margin: const EdgeInsets.only(bottom: 8),
+      padding: const EdgeInsets.symmetric(vertical: 8, horizontal: 4),
+      child: Row(
+        mainAxisAlignment: MainAxisAlignment.spaceBetween,
+        children: [
+          SizedBox(
+            width: 110,
+            child: Text(side, style: TextStyle(color: sideColor, fontSize: 12, fontWeight: FontWeight.bold), textAlign: TextAlign.left),
+          ),
+          SizedBox(
+            width: 150,
+            child: Text(order['symbol'] ?? 'N/A', style: TextStyle(color: isDarkTheme ? Colors.white : Colors.black, fontSize: 12), textAlign: TextAlign.center),
+          ),
+          SizedBox(
+            width: 150,
+            child: Text(order['quantity'] ?? 'N/A', style: TextStyle(color: isDarkTheme ? Colors.white : Colors.black, fontSize: 12), textAlign: TextAlign.center),
+          ),
+          SizedBox(
+            width: 150,
+            child: Text(order['price'] == '0.00' ? 'Market' : '\$${order['price'] ?? 'N/A'}', style: TextStyle(color: isDarkTheme ? Colors.white : Colors.black, fontSize: 12), textAlign: TextAlign.center),
+          ),
+          SizedBox(
+            width: 150,
+            child: Text(formatTimestamp(order['create_timestamp']), style: TextStyle(color: isDarkTheme ? Colors.white : Colors.black, fontSize: 11), textAlign: TextAlign.center),
+          ),
+          SizedBox(
+            width: 150,
+            child: Text(formatTimestamp(order['expire_timestamp']), style: TextStyle(color: isDarkTheme ? Colors.white : Colors.black, fontSize: 11), textAlign: TextAlign.center),
+          ),
+          Expanded(
+            child: Text(status, style: TextStyle(color: statusColor, fontSize: 12, fontWeight: FontWeight.w500), textAlign: TextAlign.center),
+          ),
+          // Note: No Action column for history
         ],
       ),
     );
