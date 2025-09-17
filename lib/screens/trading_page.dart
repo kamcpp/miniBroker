@@ -670,7 +670,47 @@ class _TradingPageState extends State<TradingPage> {
   // Activity section tabs
   int _activityTabIndex = 0;
   final List<String> _activityTabNames = ['Orderbook', 'Trade History'];
-  
+
+  // Sample orders data
+  final List<Map<String, dynamic>> _sampleOrders = [
+    {
+      "order_id": "ord_789abc",
+      "side": "ORDER_SIDE__BUY",
+      "symbol": "BTC/USD",
+      "quantity": "0.5",
+      "price": "67500.00",
+      "create_timestamp": "1726580536",
+      "expire_timestamp": "1727185337",
+      "is_filled": false,
+      "is_cancelled": false,
+      "is_expired": false,
+    },
+    {
+      "order_id": "ord_456def",
+      "side": "ORDER_SIDE__SELL",
+      "symbol": "ETH/USD",
+      "quantity": "2.0",
+      "price": "0.00",
+      "create_timestamp": "1726580200",
+      "expire_timestamp": null,
+      "is_filled": true,
+      "is_cancelled": false,
+      "is_expired": false,
+    },
+    {
+      "order_id": "ord_123ghi",
+      "side": "ORDER_SIDE__SELL",
+      "symbol": "BTC/USD",
+      "quantity": "0.25",
+      "price": "68000.00",
+      "create_timestamp": "1726579800",
+      "expire_timestamp": null,
+      "is_filled": false,
+      "is_cancelled": true,
+      "is_expired": false,
+    },
+  ];
+
   // Chart data variables
   Map<String, List<Map<String, dynamic>>> _chartData = {}; // Cache chart data by symbol
   bool _isLoadingChart = false;
@@ -3823,21 +3863,22 @@ class _TradingPageState extends State<TradingPage> {
                   ),
                   child: Row(
                     children: [
-                      Expanded(flex: 2, child: Text('Symbol', style: TextStyle(fontWeight: FontWeight.bold, color: _isDarkTheme ? Colors.white : Colors.black))),
                       Expanded(flex: 1, child: Text('Side', style: TextStyle(fontWeight: FontWeight.bold, color: _isDarkTheme ? Colors.white : Colors.black))),
-                      Expanded(flex: 2, child: Text('Amount', style: TextStyle(fontWeight: FontWeight.bold, color: _isDarkTheme ? Colors.white : Colors.black))),
+                      Expanded(flex: 2, child: Text('Pair', style: TextStyle(fontWeight: FontWeight.bold, color: _isDarkTheme ? Colors.white : Colors.black))),
+                      Expanded(flex: 2, child: Text('Quantity', style: TextStyle(fontWeight: FontWeight.bold, color: _isDarkTheme ? Colors.white : Colors.black))),
                       Expanded(flex: 2, child: Text('Price', style: TextStyle(fontWeight: FontWeight.bold, color: _isDarkTheme ? Colors.white : Colors.black))),
+                      Expanded(flex: 2, child: Text('Creation Time', style: TextStyle(fontWeight: FontWeight.bold, color: _isDarkTheme ? Colors.white : Colors.black))),
+                      Expanded(flex: 2, child: Text('Expiration', style: TextStyle(fontWeight: FontWeight.bold, color: _isDarkTheme ? Colors.white : Colors.black))),
                       Expanded(flex: 1, child: Text('Status', style: TextStyle(fontWeight: FontWeight.bold, color: _isDarkTheme ? Colors.white : Colors.black))),
+                      Expanded(flex: 2, child: Text('Action', style: TextStyle(fontWeight: FontWeight.bold, color: _isDarkTheme ? Colors.white : Colors.black))),
                     ],
                   ),
                 ),
                 const SizedBox(height: 8),
-                // Sample orders - you can replace with real data
-                _buildOrderRow('ETH/USDT', 'BUY', '0.5', '3,200.00', 'Open', Colors.green, _isDarkTheme),
-                _buildOrderRow('BTC/USDT', 'SELL', '0.1', '95,000.00', 'Filled', Colors.red, _isDarkTheme),
-                _buildOrderRow('SOL/USDT', 'BUY', '10', '180.50', 'Partial', Colors.orange, _isDarkTheme),
+                // Orders from sample data
+                ..._sampleOrders.map((order) => _buildOrderRow(order, _isDarkTheme)),
                 // Empty state message if no orders
-                if (true) // Change to check actual orders list
+                if (_sampleOrders.isEmpty)
                   Padding(
                     padding: const EdgeInsets.all(20),
                     child: Center(
@@ -3858,21 +3899,106 @@ class _TradingPageState extends State<TradingPage> {
     );
   }
 
-  Widget _buildOrderRow(String symbol, String side, String amount, String price, String status, Color statusColor, bool isDarkTheme) {
+  Widget _buildOrderRow(Map<String, dynamic> order, bool isDarkTheme) {
+    // Helper function to format timestamps
+    String formatTimestamp(String? timestamp) {
+      if (timestamp == null) return 'N/A';
+      try {
+        final dt = DateTime.fromMillisecondsSinceEpoch(int.parse(timestamp) * 1000);
+        return '${dt.day}/${dt.month}/${dt.year.toString().substring(2)} ${dt.hour.toString().padLeft(2, '0')}:${dt.minute.toString().padLeft(2, '0')}';
+      } catch (e) {
+        return 'N/A';
+      }
+    }
+
+    // Helper function to format side
+    String formatSide(String side) {
+      return side.replaceAll('ORDER_SIDE__', '');
+    }
+
+    // Helper function to get status
+    String getStatus(Map<String, dynamic> order) {
+      if (order['is_filled'] == true) return 'Filled';
+      if (order['is_cancelled'] == true) return 'Cancelled';
+      if (order['is_expired'] == true) return 'Expired';
+      return 'Active';
+    }
+
+    // Helper function to get status color
+    Color getStatusColor(String status) {
+      switch (status) {
+        case 'Filled': return Colors.green;
+        case 'Cancelled': return Colors.red;
+        case 'Expired': return Colors.orange;
+        case 'Active': return Colors.blue;
+        default: return isDarkTheme ? Colors.white : Colors.black;
+      }
+    }
+
+    final side = formatSide(order['side'] ?? '');
+    final status = getStatus(order);
+    final statusColor = getStatusColor(status);
+    final sideColor = side == 'BUY' ? Colors.green : Colors.red;
+
     return Container(
       padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 10),
-      margin: const EdgeInsets.only(bottom: 0),
+      margin: const EdgeInsets.only(bottom: 4),
       decoration: BoxDecoration(
         color: isDarkTheme ? Colors.grey[900]!.withOpacity(0.3) : Colors.grey[50],
         borderRadius: BorderRadius.circular(4),
       ),
       child: Row(
         children: [
-          Expanded(flex: 2, child: Text(symbol, style: TextStyle(color: isDarkTheme ? Colors.white : Colors.black, fontSize: 12))),
-          Expanded(flex: 1, child: Text(side, style: TextStyle(color: side == 'BUY' ? Colors.green : Colors.red, fontSize: 12, fontWeight: FontWeight.bold))),
-          Expanded(flex: 2, child: Text(amount, style: TextStyle(color: isDarkTheme ? Colors.white : Colors.black, fontSize: 12))),
-          Expanded(flex: 2, child: Text('\$${price}', style: TextStyle(color: isDarkTheme ? Colors.white : Colors.black, fontSize: 12))),
+          Expanded(flex: 1, child: Text(side, style: TextStyle(color: sideColor, fontSize: 12, fontWeight: FontWeight.bold))),
+          Expanded(flex: 2, child: Text(order['symbol'] ?? 'N/A', style: TextStyle(color: isDarkTheme ? Colors.white : Colors.black, fontSize: 12))),
+          Expanded(flex: 2, child: Text(order['quantity'] ?? 'N/A', style: TextStyle(color: isDarkTheme ? Colors.white : Colors.black, fontSize: 12))),
+          Expanded(flex: 2, child: Text(order['price'] == '0.00' ? 'Market' : '\$${order['price'] ?? 'N/A'}', style: TextStyle(color: isDarkTheme ? Colors.white : Colors.black, fontSize: 12))),
+          Expanded(flex: 2, child: Text(formatTimestamp(order['create_timestamp']), style: TextStyle(color: isDarkTheme ? Colors.white : Colors.black, fontSize: 11))),
+          Expanded(flex: 2, child: Text(formatTimestamp(order['expire_timestamp']), style: TextStyle(color: isDarkTheme ? Colors.white : Colors.black, fontSize: 11))),
           Expanded(flex: 1, child: Text(status, style: TextStyle(color: statusColor, fontSize: 12, fontWeight: FontWeight.w500))),
+          Expanded(flex: 2, child: status == 'Active' ?
+            Row(
+              mainAxisSize: MainAxisSize.min,
+              children: [
+                Expanded(
+                  child: InkWell(
+                    onTap: () {
+                      // TODO: Implement cancel order functionality
+                      print('Cancel order: ${order['order_id']}');
+                    },
+                    child: Container(
+                      padding: const EdgeInsets.symmetric(horizontal: 2, vertical: 2),
+                      decoration: BoxDecoration(
+                        color: Colors.red.withOpacity(0.1),
+                        borderRadius: BorderRadius.circular(3),
+                        border: Border.all(color: Colors.red, width: 0.5),
+                      ),
+                      child: Text('Cancel', style: TextStyle(color: Colors.red, fontSize: 9, fontWeight: FontWeight.bold), textAlign: TextAlign.center),
+                    ),
+                  ),
+                ),
+                const SizedBox(width: 2),
+                Expanded(
+                  child: InkWell(
+                    onTap: () {
+                      // TODO: Implement replace order functionality
+                      print('Replace order: ${order['order_id']}');
+                    },
+                    child: Container(
+                      padding: const EdgeInsets.symmetric(horizontal: 2, vertical: 2),
+                      decoration: BoxDecoration(
+                        color: Colors.blue.withOpacity(0.1),
+                        borderRadius: BorderRadius.circular(3),
+                        border: Border.all(color: Colors.blue, width: 0.5),
+                      ),
+                      child: Text('Replace', style: TextStyle(color: Colors.blue, fontSize: 9, fontWeight: FontWeight.bold), textAlign: TextAlign.center),
+                    ),
+                  ),
+                ),
+              ],
+            ) :
+            Text('-', style: TextStyle(color: isDarkTheme ? Colors.grey : Colors.grey[600], fontSize: 12))
+          ),
         ],
       ),
     );
