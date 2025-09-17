@@ -3079,7 +3079,7 @@ class _TradingPageState extends State<TradingPage> {
     return Container(
       padding: const EdgeInsets.all(20),
       decoration: BoxDecoration(
-        color: _isDarkTheme ? const Color(0xFF1e1e1e) : Colors.white,
+        color: _isDarkTheme ? Colors.black : Colors.white,
         border: Border(
           bottom: BorderSide(
             color: _isDarkTheme ? Colors.grey[700]! : Colors.grey[300]!,
@@ -3694,7 +3694,7 @@ class _TradingPageState extends State<TradingPage> {
     return Container(
       padding: const EdgeInsets.all(20),
       decoration: BoxDecoration(
-        color: _isDarkTheme ? const Color(0xFF1e1e1e) : Colors.white,
+        color: _isDarkTheme ? Colors.black : Colors.white,
         border: Border(
           top: BorderSide(
             color: _isDarkTheme ? Colors.grey[700]! : Colors.grey[300]!,
