@@ -669,7 +669,7 @@ class _TradingPageState extends State<TradingPage> {
 
   // Activity section tabs
   int _activityTabIndex = 0;
-  final List<String> _activityTabNames = ['Trade History', 'Orderbook'];
+  final List<String> _activityTabNames = ['Orderbook', 'Trade History'];
   
   // Chart data variables
   Map<String, List<Map<String, dynamic>>> _chartData = {}; // Cache chart data by symbol
@@ -3367,66 +3367,92 @@ class _TradingPageState extends State<TradingPage> {
 
   Widget _buildActivitySection(ThemeService themeService) {
     final _isDarkTheme = themeService.isDarkTheme;
-    return Column(
-      children: [
-        // Tab Headers
-        _buildActivityTabHeaders(_isDarkTheme),
-        // Tab Content
-        Expanded(
-          child: _buildActivityTabContent(_isDarkTheme),
-        ),
-      ],
+    return Container(
+      color: _isDarkTheme ? Colors.black : Colors.white, // Section background matches table background
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start, // Align column content to the left
+        children: [
+          // Connected tab headers
+          _buildActivityTabHeaders(_isDarkTheme),
+          // Connected content area with padding
+          Expanded(
+            child: Container(
+              margin: const EdgeInsets.only(left: 8, right: 8, bottom: 8), // Space between table and section edge
+              decoration: BoxDecoration(
+                color: _isDarkTheme ? Colors.grey[800] : Colors.grey[200], // Table background: dark gray / light gray
+                border: Border.all(
+                  color: _isDarkTheme ? Colors.grey[800]! : Colors.grey[200]!, // Same as selected tab background
+                ),
+                borderRadius: const BorderRadius.only(
+                  topRight: Radius.circular(8),
+                  bottomLeft: Radius.circular(8),
+                  bottomRight: Radius.circular(8),
+                ),
+              ),
+              child: _buildActivityTabContent(_isDarkTheme),
+            ),
+          ),
+        ],
+      ),
     );
   }
 
   Widget _buildActivityTabHeaders(bool isDarkTheme) {
     return Container(
-      decoration: BoxDecoration(
-        color: isDarkTheme ? Colors.black : Colors.white,
-      ),
+      margin: const EdgeInsets.only(left: 8), // Add left margin to match table
       child: SingleChildScrollView(
         scrollDirection: Axis.horizontal,
         child: Row(
+          crossAxisAlignment: CrossAxisAlignment.end,
+          mainAxisAlignment: MainAxisAlignment.start, // Align tabs to the left
           children: _activityTabNames.asMap().entries.map((entry) {
-            final index = entry.key;
-            final tabName = entry.value;
-            final isActive = _activityTabIndex == index;
+          final index = entry.key;
+          final tabName = entry.value;
+          final isActive = _activityTabIndex == index;
 
-            return MouseRegion(
-              cursor: SystemMouseCursors.click,
-              child: GestureDetector(
-                onTap: () {
-                  setState(() {
-                    _activityTabIndex = index;
-                  });
-                },
-                child: Container(
-                  padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
-                  decoration: BoxDecoration(
-                    color: isActive
-                        ? (isDarkTheme ? Colors.grey[800] : Colors.grey[200])
-                        : Colors.transparent,
-                    border: Border(
-                      bottom: BorderSide(
-                        color: isActive ? Colors.blue : Colors.transparent,
-                        width: 2,
-                      ),
-                    ),
+          return MouseRegion(
+            cursor: SystemMouseCursors.click,
+            child: GestureDetector(
+              onTap: () {
+                setState(() {
+                  _activityTabIndex = index;
+                });
+              },
+              child: Container(
+                padding: EdgeInsets.symmetric(
+                  horizontal: 16,
+                  vertical: isActive ? 13.74 : 12,
+                ),
+                decoration: BoxDecoration(
+                  color: isActive
+                      ? (isDarkTheme ? Colors.grey[800] : Colors.grey[200]) // Selected tab same color as table
+                      : (isDarkTheme
+                          ? Colors.black.withOpacity(0.3)
+                          : Colors.white.withOpacity(0.2)), // Unselected tab follows theme
+                  border: isActive
+                      ? null // No border for selected tab
+                      : Border.all(
+                          color: isDarkTheme ? Colors.grey[800]! : Colors.grey[200]!, // Same as selected background
+                        ),
+                  borderRadius: const BorderRadius.only(
+                    topLeft: Radius.circular(8),
+                    topRight: Radius.circular(8),
                   ),
-                  child: Text(
-                    tabName,
-                    style: TextStyle(
-                      fontSize: 14,
-                      fontWeight: isActive ? FontWeight.w600 : FontWeight.w500,
-                      color: isActive
-                          ? (isDarkTheme ? Colors.white : Colors.black)
-                          : (isDarkTheme ? Colors.grey[400] : Colors.grey[600]),
-                    ),
+                ),
+                child: Text(
+                  tabName,
+                  style: TextStyle(
+                    color: isActive
+                        ? (isDarkTheme ? Colors.white : Colors.black)
+                        : Colors.grey[400],
+                    fontSize: 14,
+                    fontWeight: isActive ? FontWeight.w600 : FontWeight.w500,
                   ),
                 ),
               ),
-            );
-          }).toList(),
+            ),
+          );
+        }).toList(),
         ),
       ),
     );
@@ -3434,12 +3460,12 @@ class _TradingPageState extends State<TradingPage> {
 
   Widget _buildActivityTabContent(bool isDarkTheme) {
     switch (_activityTabIndex) {
-      case 0: // Trade History
-        return _buildTradeHistoryTable(isDarkTheme);
-      case 1: // Orderbook
+      case 0: // Orderbook (default)
         return _buildOrderbookTable(isDarkTheme);
-      default:
+      case 1: // Trade History
         return _buildTradeHistoryTable(isDarkTheme);
+      default:
+        return _buildOrderbookTable(isDarkTheme); // Default to Orderbook
     }
   }
 
@@ -3447,9 +3473,6 @@ class _TradingPageState extends State<TradingPage> {
     if (_tradeHistory.isEmpty) {
       return Container(
         padding: const EdgeInsets.all(20),
-        decoration: BoxDecoration(
-          color: isDarkTheme ? Colors.black : Colors.white,
-        ),
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
@@ -3480,7 +3503,7 @@ class _TradingPageState extends State<TradingPage> {
     return Container(
       padding: const EdgeInsets.all(20),
       decoration: BoxDecoration(
-        color: isDarkTheme ? Colors.black : Colors.white,
+        color: isDarkTheme ? Colors.grey[800] : Colors.grey[200],
       ),
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
@@ -3626,9 +3649,6 @@ class _TradingPageState extends State<TradingPage> {
   Widget _buildOrderbookTable(bool isDarkTheme) {
     return Container(
       padding: const EdgeInsets.all(20),
-      decoration: BoxDecoration(
-        color: isDarkTheme ? Colors.black : Colors.white,
-      ),
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
