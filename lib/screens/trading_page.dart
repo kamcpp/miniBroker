@@ -666,6 +666,10 @@ class _TradingPageState extends State<TradingPage> {
   // Top/Bottom section height split
   double _topSectionRatio = 0.67; // 67% for top, 33% for bottom
   bool _isDraggingTopBottomSplit = false;
+
+  // Activity section tabs
+  int _activityTabIndex = 0;
+  final List<String> _activityTabNames = ['Trade History', 'Orderbook'];
   
   // Chart data variables
   Map<String, List<Map<String, dynamic>>> _chartData = {}; // Cache chart data by symbol
@@ -2108,54 +2112,10 @@ class _TradingPageState extends State<TradingPage> {
                         themeService: themeService,
                       ),
 
-                      // Bottom Row - Orders and Orderbook (2 sections only)
+                      // Bottom Row - Orders Section Only
                       Expanded(
                         flex: ((1.0 - _topSectionRatio) * 100).round(), // Dynamic height based on ratio
-                        child: LayoutBuilder(
-                          builder: (context, constraints) {
-                            final maxBottomWidth = constraints.maxWidth;
-                            final minSectionWidth = 200.0;
-                            final splitterWidth = 8.0;
-                            final availableWidth = maxBottomWidth - splitterWidth;
-                            final maxOrdersWidth = availableWidth - minSectionWidth;
-
-                            // Calculate actual widths
-                            final ordersWidth = (availableWidth * _bottomOrdersWidth).clamp(minSectionWidth, maxOrdersWidth);
-                            final orderbookWidth = availableWidth - ordersWidth;
-
-                            return Row(
-                              children: [
-                                // Left Panel - Orders Section
-                                Container(
-                                  width: ordersWidth,
-                                  child: _buildOrdersSection(themeService),
-                                ),
-
-                                // Center Splitter
-                                _buildVerticalSplitter(
-                                  onDrag: (delta) {
-                                    setState(() {
-                                      final newOrdersWidth = ordersWidth + delta;
-                                      final newRatio = (newOrdersWidth / availableWidth).clamp(0.2, 0.8);
-                                      print('🔧 Bottom drag: delta=$delta, newWidth=$newOrdersWidth, newRatio=$newRatio');
-                                      _bottomOrdersWidth = newRatio;
-                                    });
-                                  },
-                                  onDragStart: () => setState(() => _isDraggingBottomSplit = true),
-                                  onDragEnd: () => setState(() => _isDraggingBottomSplit = false),
-                                  isDragging: _isDraggingBottomSplit,
-                                  themeService: themeService,
-                                ),
-
-                                // Right Panel - Orderbook Section
-                                Container(
-                                  width: orderbookWidth,
-                                  child: _buildOrderbookSection(themeService),
-                                ),
-                              ],
-                            );
-                          },
-                        ),
+                        child: _buildOrdersSection(themeService),
                       ),
                     ],
                   );
@@ -3407,23 +3367,92 @@ class _TradingPageState extends State<TradingPage> {
 
   Widget _buildActivitySection(ThemeService themeService) {
     final _isDarkTheme = themeService.isDarkTheme;
+    return Column(
+      children: [
+        // Tab Headers
+        _buildActivityTabHeaders(_isDarkTheme),
+        // Tab Content
+        Expanded(
+          child: _buildActivityTabContent(_isDarkTheme),
+        ),
+      ],
+    );
+  }
+
+  Widget _buildActivityTabHeaders(bool isDarkTheme) {
+    return Container(
+      decoration: BoxDecoration(
+        color: isDarkTheme ? Colors.black : Colors.white,
+      ),
+      child: SingleChildScrollView(
+        scrollDirection: Axis.horizontal,
+        child: Row(
+          children: _activityTabNames.asMap().entries.map((entry) {
+            final index = entry.key;
+            final tabName = entry.value;
+            final isActive = _activityTabIndex == index;
+
+            return MouseRegion(
+              cursor: SystemMouseCursors.click,
+              child: GestureDetector(
+                onTap: () {
+                  setState(() {
+                    _activityTabIndex = index;
+                  });
+                },
+                child: Container(
+                  padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
+                  decoration: BoxDecoration(
+                    color: isActive
+                        ? (isDarkTheme ? Colors.grey[800] : Colors.grey[200])
+                        : Colors.transparent,
+                    border: Border(
+                      bottom: BorderSide(
+                        color: isActive ? Colors.blue : Colors.transparent,
+                        width: 2,
+                      ),
+                    ),
+                  ),
+                  child: Text(
+                    tabName,
+                    style: TextStyle(
+                      fontSize: 14,
+                      fontWeight: isActive ? FontWeight.w600 : FontWeight.w500,
+                      color: isActive
+                          ? (isDarkTheme ? Colors.white : Colors.black)
+                          : (isDarkTheme ? Colors.grey[400] : Colors.grey[600]),
+                    ),
+                  ),
+                ),
+              ),
+            );
+          }).toList(),
+        ),
+      ),
+    );
+  }
+
+  Widget _buildActivityTabContent(bool isDarkTheme) {
+    switch (_activityTabIndex) {
+      case 0: // Trade History
+        return _buildTradeHistoryTable(isDarkTheme);
+      case 1: // Orderbook
+        return _buildOrderbookTable(isDarkTheme);
+      default:
+        return _buildTradeHistoryTable(isDarkTheme);
+    }
+  }
+
+  Widget _buildTradeHistoryTable(bool isDarkTheme) {
     if (_tradeHistory.isEmpty) {
       return Container(
         padding: const EdgeInsets.all(20),
         decoration: BoxDecoration(
-          color: _isDarkTheme ? Colors.black : Colors.white,
+          color: isDarkTheme ? Colors.black : Colors.white,
         ),
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
-            Text(
-              'Trade History',
-              style: TextStyle(
-                fontSize: 18,
-                fontWeight: FontWeight.bold,
-                color: _isDarkTheme ? Colors.white : Colors.black,
-              ),
-            ),
             const SizedBox(height: 16),
             Row(
               mainAxisAlignment: MainAxisAlignment.spaceBetween,
@@ -3451,20 +3480,11 @@ class _TradingPageState extends State<TradingPage> {
     return Container(
       padding: const EdgeInsets.all(20),
       decoration: BoxDecoration(
-        color: _isDarkTheme ? Colors.black : Colors.white,
-        // Removed left border since we have a splitter now
+        color: isDarkTheme ? Colors.black : Colors.white,
       ),
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
-          Text(
-            'Trade History',
-            style: TextStyle(
-              fontSize: 18,
-              fontWeight: FontWeight.bold,
-              color: _isDarkTheme ? Colors.white : Colors.black,
-            ),
-          ),
           const SizedBox(height: 16),
           Padding(
             padding: const EdgeInsets.symmetric(vertical: 4, horizontal: 4),
@@ -3540,16 +3560,16 @@ class _TradingPageState extends State<TradingPage> {
                             child: Text(
                               'Load More',
                               style: TextStyle(
-                                color: _isDarkTheme ? Colors.blue[300] : Colors.blue,
+                                color: isDarkTheme ? Colors.blue[300] : Colors.blue,
                                 fontSize: 14,
                               ),
                             ),
                           ),
                   );
                 }
-                
+
                 final trade = _tradeHistory[index];
-                Color priceColor = trade['priceColor'] ?? (_isDarkTheme ? Colors.white : Colors.black);
+                Color priceColor = trade['priceColor'] ?? (isDarkTheme ? Colors.white : Colors.black);
                 return Container(
                   margin: const EdgeInsets.only(bottom: 8),
                   padding: const EdgeInsets.symmetric(vertical: 8, horizontal: 4),
@@ -3576,7 +3596,7 @@ class _TradingPageState extends State<TradingPage> {
                         child: Text(
                           trade['quantity'].toString(),
                           style: TextStyle(
-                            color: _isDarkTheme ? Colors.white : Colors.black,
+                            color: isDarkTheme ? Colors.white : Colors.black,
                             fontSize: 15,
                           ),
                           textAlign: TextAlign.center,
@@ -3600,6 +3620,155 @@ class _TradingPageState extends State<TradingPage> {
           ),
         ],
       ),
+    );
+  }
+
+  Widget _buildOrderbookTable(bool isDarkTheme) {
+    return Container(
+      padding: const EdgeInsets.all(20),
+      decoration: BoxDecoration(
+        color: isDarkTheme ? Colors.black : Colors.white,
+      ),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          const SizedBox(height: 16),
+          // Orderbook headers
+          Row(
+            children: [
+              Expanded(
+                child: Text(
+                  'Price',
+                  style: TextStyle(
+                    color: Colors.grey[400],
+                    fontWeight: FontWeight.bold,
+                    fontSize: 13,
+                  ),
+                  textAlign: TextAlign.left,
+                ),
+              ),
+              Expanded(
+                child: Text(
+                  'Quantity',
+                  style: TextStyle(
+                    color: Colors.grey[400],
+                    fontWeight: FontWeight.bold,
+                    fontSize: 13,
+                  ),
+                  textAlign: TextAlign.center,
+                ),
+              ),
+              Expanded(
+                child: Text(
+                  'Total',
+                  style: TextStyle(
+                    color: Colors.grey[400],
+                    fontWeight: FontWeight.bold,
+                    fontSize: 13,
+                  ),
+                  textAlign: TextAlign.right,
+                ),
+              ),
+            ],
+          ),
+          const SizedBox(height: 8),
+          Divider(color: Colors.grey, thickness: 0.7, height: 1),
+          const SizedBox(height: 8),
+          Expanded(
+            child: Column(
+              children: [
+                // Sell orders (top half)
+                Expanded(
+                  child: _buildOrderbookSide(isDarkTheme, 'sell'),
+                ),
+                // Spread section
+                Container(
+                  height: 30,
+                  margin: const EdgeInsets.symmetric(vertical: 8),
+                  decoration: BoxDecoration(
+                    color: isDarkTheme ? Colors.grey[800] : Colors.grey[200],
+                    borderRadius: BorderRadius.circular(4),
+                  ),
+                  child: Center(
+                    child: Text(
+                      'Spread: 0.05',
+                      style: TextStyle(
+                        color: isDarkTheme ? Colors.white : Colors.black,
+                        fontSize: 12,
+                        fontWeight: FontWeight.w500,
+                      ),
+                    ),
+                  ),
+                ),
+                // Buy orders (bottom half)
+                Expanded(
+                  child: _buildOrderbookSide(isDarkTheme, 'buy'),
+                ),
+              ],
+            ),
+          ),
+        ],
+      ),
+    );
+  }
+
+  Widget _buildOrderbookSide(bool isDarkTheme, String side) {
+    // Sample orderbook data - replace with real data
+    final sampleOrders = List.generate(10, (index) {
+      final price = side == 'sell' ? 100.0 + index : 100.0 - index;
+      final quantity = (index + 1) * 10.0;
+      return {
+        'price': price.toStringAsFixed(2),
+        'quantity': quantity.toStringAsFixed(0),
+        'total': (price * quantity).toStringAsFixed(2),
+      };
+    });
+
+    return ListView.builder(
+      itemCount: sampleOrders.length,
+      itemBuilder: (context, index) {
+        final order = sampleOrders[index];
+        final color = side == 'sell' ? Colors.red[300] : Colors.green[300];
+
+        return Container(
+          padding: const EdgeInsets.symmetric(vertical: 2, horizontal: 4),
+          child: Row(
+            children: [
+              Expanded(
+                child: Text(
+                  order['price']!,
+                  style: TextStyle(
+                    color: color,
+                    fontSize: 13,
+                    fontWeight: FontWeight.w500,
+                  ),
+                  textAlign: TextAlign.left,
+                ),
+              ),
+              Expanded(
+                child: Text(
+                  order['quantity']!,
+                  style: TextStyle(
+                    color: isDarkTheme ? Colors.white : Colors.black,
+                    fontSize: 13,
+                  ),
+                  textAlign: TextAlign.center,
+                ),
+              ),
+              Expanded(
+                child: Text(
+                  order['total']!,
+                  style: TextStyle(
+                    color: isDarkTheme ? Colors.grey[300] : Colors.grey[600],
+                    fontSize: 13,
+                  ),
+                  textAlign: TextAlign.right,
+                ),
+              ),
+            ],
+          ),
+        );
+      },
     );
   }
 
