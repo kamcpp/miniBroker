@@ -398,9 +398,7 @@ class _BalancePageState extends State<BalancePage> {
                               ),
                             ),
                             const SizedBox(height: 20),
-                            Expanded(
-                              child: _buildBalanceContent(themeService, _isDarkTheme),
-                            ),
+                            _buildBalanceContent(themeService, _isDarkTheme),
                           ],
                         ),
                       ),
@@ -843,6 +841,7 @@ class _BalancePageState extends State<BalancePage> {
   Widget _buildBalanceContent(ThemeService themeService, bool isDarkTheme) {
     return Container(
       padding: const EdgeInsets.all(20),
+      height:220,
       decoration: BoxDecoration(
         color: isDarkTheme ? const Color(0xFF404040) : Colors.grey[50],
         borderRadius: BorderRadius.circular(8),

@@ -411,6 +411,10 @@ class _TradingPageState extends State<TradingPage> {
           _assets.addAll(processedAssets);
           if (_selectedSymbol.isEmpty && _assets.isNotEmpty) {
             _selectedSymbol = _assets.first['symbol'];
+            // Load chart immediately when symbol is first set
+            WidgetsBinding.instance.addPostFrameCallback((_) {
+              _fetchChartData(_selectedSymbol);
+            });
           }
           _isLoadingMarketInstruments = false;
         });
@@ -723,9 +727,10 @@ class _TradingPageState extends State<TradingPage> {
     // Fetch supported currencies for the dropdown
     _fetchSupportedCurrencies();
     
-      // Fetch trade history and orderbook for default symbol when page is shown and assets are loaded
+      // Fetch trade history, orderbook, and chart for default symbol when page is shown and assets are loaded
       WidgetsBinding.instance.addPostFrameCallback((_) {
         if (_selectedSymbol.isNotEmpty) {
+          _fetchChartData(_selectedSymbol);
           _resetAndFetchTradeHistory(_selectedSymbol);
           _fetchOrderbookData(_selectedSymbol);
         }
@@ -1179,6 +1184,10 @@ class _TradingPageState extends State<TradingPage> {
           
           if (_selectedSymbol.isEmpty) {
             _selectedSymbol = _assets.first['symbol'];
+            // Load chart immediately when symbol is first set
+            WidgetsBinding.instance.addPostFrameCallback((_) {
+              _fetchChartData(_selectedSymbol);
+            });
           }
         }
       });
