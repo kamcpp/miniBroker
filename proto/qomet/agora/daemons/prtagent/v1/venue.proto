@@ -15,40 +15,41 @@ option csharp_namespace  = "Qomet.Agora.Daemons.ParticipantAgent.API.V1";
 import "common.proto";
 import "fin_common.proto";
 
-service MarketService {
-  rpc GetMarketList(GetMarketListRequest) returns (GetMarketListResponse);
-  rpc GetMarketListAsync(GetMarketListRequest) returns (ExecutionAsyncResponse);
+service VenueService {
+  rpc GetVenueList(GetVenueListRequest) returns (GetVenueListResponse);
+  rpc GetVenueListAsync(GetVenueListRequest) returns (ExecutionAsyncResponse);
 
-  rpc GetMarketCalendar(GetMarketCalendarRequest) returns (GetMarketCalendarResponse);
-  rpc GetMarketCalendarAsync(GetMarketCalendarRequest) returns (ExecutionAsyncResponse);
+  rpc GetVenueCalendar(GetVenueCalendarRequest) returns (GetVenueCalendarResponse);
+  rpc GetVenueCalendarAsync(GetVenueCalendarRequest) returns (ExecutionAsyncResponse);
 }
 
-message GetMarketListRequest {
+message GetVenueListRequest {
   string proposed_execution_id = 1;           // OPTIONAL: Client-proposed execution ID for tracking
   PaginationParams pagination = 2;            // OPTIONAL: Pagination parameters
   string market_id_or_symbol_regex = 3;       // OPTIONAL: Filter by market ID or symbol regex
+  string venue_id_or_symbol_regex = 4;        // OPTIONAL: Filter by venue ID or symbol regex
 
   map<string, string> aux_data = 105;         // OPTIONAL: Additional request data
 }
 
-message GetMarketListResponse {
+message GetVenueListResponse {
   string ref_execution_id = 1;                // REQUIRED: Reference to the execution ID
-  PaginationInfo pagination_info = 2;         // OPTIONAL: Pagination information (required if paginated)
-  repeated Market markets = 3;                // REQUIRED: List of markets (can be empty)
+  PaginationInfo pagination = 2;              // OPTIONAL: Pagination information (required if paginated)
+  repeated Venue venues = 3;                  // REQUIRED: List of venues (can be empty)
 
   map<string, string> metadata = 105;         // OPTIONAL: Response metadata
 }
 
-message GetMarketCalendarRequest {
+message GetVenueCalendarRequest {
   string proposed_execution_id = 1;           // OPTIONAL: Client-proposed execution ID for tracking
-  string market_id = 2;                       // REQUIRED: Market ID to get calendar for
+  string venue_iid = 2;                       // REQUIRED: Venue internal ID to get calendar for
 
   map<string, string> aux_data = 105;         // OPTIONAL: Additional request data
 }
 
-message GetMarketCalendarResponse {
+message GetVenueCalendarResponse {
   string ref_execution_id = 1;                // REQUIRED: Reference to the execution ID
-  MarketCalendar calendar = 2;                // REQUIRED: Market calendar information
+  VenueCalendar calendar = 2;                 // REQUIRED: Venue calendar information
 
   map<string, string> metadata = 105;         // OPTIONAL: Response metadata
 }

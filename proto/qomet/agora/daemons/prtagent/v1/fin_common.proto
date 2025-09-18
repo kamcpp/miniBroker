@@ -1,0 +1,769 @@
+syntax = "proto3";
+
+// Field Numbering Convention:
+// 1-100: Core business fields
+// 101-104: Display metadata (display_name, description, labels, tags)
+// 105: Request aux_data / Response metadata
+// 106-999: Reserved for future use
+// 1000+: Extension/OTHER enum values
+
+package qomet.agora.daemons.prtagent.v1;
+
+option go_package = "pkg/daemons/prtagent/api/v1/grpc;prtagentapiv1";
+option csharp_namespace  = "Qomet.Agora.Daemons.ParticipantAgent.API.V1";
+
+import "common.proto";
+
+enum AccountTypeEnum {
+  ACCOUNT_TYPE_ENUM__UNKNOWN = 0;
+
+  ACCOUNT_TYPE_ENUM__CASH = 1;
+  ACCOUNT_TYPE_ENUM__MARGIN = 2;
+  ACCOUNT_TYPE_ENUM__CUSTODY = 3;
+  ACCOUNT_TYPE_ENUM__SETTLEMENT = 4;
+  ACCOUNT_TYPE_ENUM__TREASURY = 5;
+
+  ACCOUNT_TYPE_ENUM__OTHER = 1000;
+}
+
+enum AccountStructureEnum {
+  ACCOUNT_STRUCTURE_ENUM__UNKNOWN = 0;
+
+  ACCOUNT_STRUCTURE_ENUM__SINGLE = 1;
+  ACCOUNT_STRUCTURE_ENUM__MASTER = 2;
+  ACCOUNT_STRUCTURE_ENUM__SUB = 3;
+
+  ACCOUNT_STRUCTURE_ENUM__OTHER = 1000;
+}
+
+enum AccountStatusEnum {
+  ACCOUNT_STATUS_ENUM__UNKNOWN = 0;
+
+  ACCOUNT_STATUS_ENUM__ACTIVE = 1;
+  ACCOUNT_STATUS_ENUM__INACTIVE = 2;
+  ACCOUNT_STATUS_ENUM__FROZEN = 3;
+  ACCOUNT_STATUS_ENUM__BLOCKED = 4;
+  ACCOUNT_STATUS_ENUM__CLOSED = 5;
+
+  ACCOUNT_STATUS_ENUM__OTHER = 1000;
+}
+
+enum AccountClassEnum {
+  ACCOUNT_CLASS_ENUM__UNKNOWN = 0;
+
+  ACCOUNT_CLASS_ENUM__CLIENT = 1;
+  ACCOUNT_CLASS_ENUM__HOUSE = 2;
+  ACCOUNT_CLASS_ENUM__PROPRIETARY = 3;
+
+  ACCOUNT_CLASS_ENUM__OTHER = 1000;
+}
+
+enum AccountNature {
+  ACCOUNT_NATURE__UNKNOWN = 0;
+
+  ACCOUNT_NATURE__INDIVIDUAL = 1;
+  ACCOUNT_NATURE__JOINT = 2;
+  ACCOUNT_NATURE__CORPORATE = 3;
+  ACCOUNT_NATURE__TRUST = 4;
+  ACCOUNT_NATURE__FUND = 5;
+
+  ACCOUNT_NATURE__OTHER = 1000;
+}
+
+message Account {
+  string iid = 1;                             // REQUIRED: Internal identifier
+  string external_id = 2;                     // OPTIONAL: External identifier
+
+  string participant_id = 3;                  // REQUIRED: Associated participant ID
+  AccountTypeEnum account_type = 4;           // REQUIRED: Type of account
+  AccountStructureEnum account_structure = 5; // REQUIRED: Account structure
+  string parent_account_iid = 6;              // OPTIONAL: Parent account (for sub-accounts)
+  repeated string sub_account_iids = 7;       // OPTIONAL: List of sub-account IDs
+  AccountStatusEnum account_status = 8;       // REQUIRED: Current account status
+  AccountClassEnum account_class = 9;         // REQUIRED: Account classification
+  AccountNature account_nature = 10;          // REQUIRED: Nature of account holder
+
+  map<string, string> display_names = 101;    // OPTIONAL: Display names for localization
+  map<string, string> descriptions = 102;     // OPTIONAL: Descriptions for localization
+  map<string, string> labels = 103;           // OPTIONAL: Key-value labels
+  repeated string tags = 104;                 // OPTIONAL: Tags for categorization
+  map<string, string> metadata = 105;         // OPTIONAL: Additional metadata
+}
+
+message Holdings {
+  oneof asset_id {                            // REQUIRED: Must specify one asset type
+    string instrument_iid = 1;                // Instrument internal ID
+    string currency_code = 2;                 // ISO 4217 currency code
+  }
+  string total_units = 3;                     // REQUIRED: Total units held
+  map<string, string> stash_units = 4;        // OPTIONAL: Units by stash (stash-name -> units)
+}
+
+message Portfolio {
+  string account_iid = 1;                     // REQUIRED: Associated account ID
+  DateTime generated_at_dt = 2;               // REQUIRED: Portfolio generation timestamp
+  map<string, Holdings> holdings = 3;         // REQUIRED: Holdings by asset (can be empty)
+
+  map<string, string> metadata = 105;         // OPTIONAL: Additional metadata
+}
+
+enum FinEntityTypeEnum {
+  FIN_ENTITY_TYPE_ENUM__UNKNOWN = 0;
+
+  FIN_ENTITY_TYPE_ENUM__PARTICIPANT = 1;
+  FIN_ENTITY_TYPE_ENUM__INSTRUMENT = 2;
+  FIN_ENTITY_TYPE_ENUM__MARKET = 3;
+  FIN_ENTITY_TYPE_ENUM__VENUE = 4;
+
+  FIN_ENTITY_TYPE_ENUM__OTHER = 1000;
+}
+
+message FinIdentifier {
+  FinEntityTypeEnum fin_entity_type = 1;      // REQUIRED: Type of financial entity
+  string scheme = 2;                          // REQUIRED: Identification scheme
+  string standard_or_format = 3;              // OPTIONAL: Standard or format used
+  repeated StringValue ids = 4;               // REQUIRED: List of identifiers
+
+  bool is_primary = 5;                        // OPTIONAL: Whether this is primary identifier (default: false)
+
+  map<string, string> display_names = 101;    // OPTIONAL: Display names for localization
+  map<string, string> descriptions = 102;     // OPTIONAL: Descriptions for localization
+  map<string, string> labels = 103;           // OPTIONAL: Key-value labels
+  repeated string tags = 104;                 // OPTIONAL: Tags for categorization
+  map<string, string> metadata = 105;         // OPTIONAL: Additional metadata
+}
+
+enum AssetClassEnum {
+  ASSET_CLASS_ENUM__UNKNOWN = 0;
+  
+  ASSET_CLASS_ENUM__COMPANY = 1;
+  ASSET_CLASS_ENUM__GOVERMENTAL = 2;
+  ASSET_CLASS_ENUM__CURRENCY = 3;
+  ASSET_CLASS_ENUM__COMMODITY = 4;
+  ASSET_CLASS_ENUM__PRECIOUS_METALS = 5;
+  ASSET_CLASS_ENUM__INDUSTRIAL_METALS = 6;
+  ASSET_CLASS_ENUM__RWA = 7;
+  ASSET_CLASS_ENUM__STABLECOIN = 9;
+  ASSET_CLASS_ENUM__NFT = 10;
+  ASSET_CLASS_ENUM__REAL_ESTATE = 11;
+  ASSET_CLASS_ENUM__FUND = 12;
+  ASSET_CLASS_ENUM__INDEX = 13;
+  ASSET_CLASS_ENUM__CREDIT = 14;
+  ASSET_CLASS_ENUM__DIGITAL = 15;
+  ASSET_CLASS_ENUM__LEDGER_NATIVE_COIN = 16;
+
+  ASSET_CLASS_ENUM__OTHER = 1000; 
+}
+
+message FinAssetClass {
+  string schema = 1;                            // REQUIRED: Classification schema name
+  repeated AssetClassEnum classes = 2;          // REQUIRED: List of asset classes (can be empty)
+
+  map<string, string> display_names = 101;     // OPTIONAL: Display names for localization
+  map<string, string> descriptions = 102;      // OPTIONAL: Descriptions for localization
+  map<string, string> labels = 103;            // OPTIONAL: Key-value labels
+  repeated string tags = 104;                  // OPTIONAL: Tags for categorization
+  map<string, string> metadata = 105;          // OPTIONAL: Additional metadata
+}
+
+message Asset {
+  string iid = 1;                               // REQUIRED: Internal asset identifier
+
+  repeated FinIdentifier identifiers = 2;       // OPTIONAL: List of asset identifiers
+  repeated FinAssetClass classes = 3;           // OPTIONAL: List of asset classifications
+
+  map<string, string> display_names = 101;     // OPTIONAL: Display names for localization
+  map<string, string> descriptions = 102;      // OPTIONAL: Descriptions for localization
+  map<string, string> labels = 103;            // OPTIONAL: Key-value labels
+  repeated string tags = 104;                  // OPTIONAL: Tags for categorization
+  map<string, string> metadata = 105;          // OPTIONAL: Additional metadata
+}
+
+message Participant {
+  string iid = 1;                               // REQUIRED: Internal participant identifier
+
+  repeated FinIdentifier identifiers = 2;       // OPTIONAL: List of participant identifiers
+
+  map<string, string> display_names = 101;     // OPTIONAL: Display names for localization
+  map<string, string> descriptions = 102;      // OPTIONAL: Descriptions for localization
+  map<string, string> labels = 103;            // OPTIONAL: Key-value labels
+  repeated string tags = 104;                  // OPTIONAL: Tags for categorization
+  map<string, string> metadata = 105;          // OPTIONAL: Additional metadata
+}
+
+enum ParticipantAssetRelationEnum {
+  PARTICIPANT_ASSET_RELATION_ENUM__UNKNOWN = 0;
+
+  PARTICIPANT_ASSET_RELATION_ENUM__ISSUER = 1;
+  PARTICIPANT_ASSET_RELATION_ENUM__OWNER = 2;
+  PARTICIPANT_ASSET_RELATION_ENUM__SPONSOR = 3;
+  PARTICIPANT_ASSET_RELATION_ENUM__REGULATOR = 4;
+  PARTICIPANT_ASSET_RELATION_ENUM__SUPERVISOR = 5;
+  PARTICIPANT_ASSET_RELATION_ENUM__GOVERNOR = 6;
+
+  PARTICIPANT_ASSET_RELATION_ENUM__OTHER = 1000;
+}
+
+message ParticipantAssetRelation {
+  string iid = 1;                               // REQUIRED: Internal relation identifier
+
+  string asset_iid = 2;                         // REQUIRED: Asset internal identifier
+  string participant_iid = 3;                   // REQUIRED: Participant internal identifier
+
+  ParticipantAssetRelationEnum relation = 4;    // REQUIRED: Type of relation
+
+  DateTime effective_from_dt = 5;               // OPTIONAL: Relation effective start date
+  DateTime effective_to_dt = 6;                 // OPTIONAL: Relation effective end date
+  string weight = 7;                            // OPTIONAL: Relation weight (e.g. percentage of ownership)
+
+  map<string, string> display_names = 101;     // OPTIONAL: Display names for localization
+  map<string, string> descriptions = 102;      // OPTIONAL: Descriptions for localization
+  map<string, string> labels = 103;            // OPTIONAL: Key-value labels
+  repeated string tags = 104;                  // OPTIONAL: Tags for categorization
+  map<string, string> metadata = 105;          // OPTIONAL: Additional metadata
+}
+
+enum MarketStatus {
+  MARKET_STATUS__UNKNOWN = 0;
+
+  MARKET_STATUS__OPENING_AUCTION = 1;
+  MARKET_STATUS__PRE_OPEN = 2;
+  MARKET_STATUS__OPEN = 3;
+  MARKET_STATUS__PARTIALLY_OPEN = 4;
+  MARKET_STATUS__REPORTING = 5;
+  MARKET_STATUS__CLOSING_AUCTION = 6;
+  MARKET_STATUS__CLOSED = 7;
+  MARKET_STATUS__CLOSED_ON_PUBLIC_HOLIDAY = 8;
+  MARKET_STATUS__SUSPENDED = 9;
+  MARKET_STATUS__MAINTENANCE = 10;
+  
+  MARKET_STATUS__UNAVAILABLE = 100;
+}
+
+message Market {
+  string iid = 1;                               // REQUIRED: Internal market identifier
+
+  repeated FinIdentifier identifiers = 2;       // OPTIONAL: List of market identifiers
+
+  string dominant_currency = 3;                 // OPTIONAL: ISO 4217 currency code
+  string country_code = 4;                      // OPTIONAL: ISO 3166-1 alpha-2
+  string city_code = 5;                         // OPTIONAL: UN/LOCODE
+  string website_url = 6;                       // OPTIONAL: Market website URL
+  string timezone = 7;                          // OPTIONAL: ISO 8601 time zone
+  Duration trading_hours = 8;                   // OPTIONAL: Daily trading hours
+  repeated string trading_days = 9;             // OPTIONAL: Trading days (1=Monday, 2=Tuesday, ..., 7=Sunday)
+  MarketStatus status = 10;                     // REQUIRED: Current market status
+
+  map<string, string> display_names = 101;     // OPTIONAL: Display names for localization
+  map<string, string> descriptions = 102;      // OPTIONAL: Descriptions for localization
+  map<string, string> labels = 103;            // OPTIONAL: Key-value labels
+  repeated string tags = 104;                  // OPTIONAL: Tags for categorization
+  map<string, string> metadata = 105;          // OPTIONAL: Additional metadata
+}
+
+message MarketDuration {
+  Duration duration = 1;                        // REQUIRED: Time duration period
+  MarketStatus status = 2;                      // REQUIRED: Market status during this period
+  repeated string comments = 3;                 // OPTIONAL: Additional comments
+
+  map<string, string> metadata = 105;           // OPTIONAL: Additional metadata
+}
+
+message MarketCalendar {
+  string market_iid = 1;                        // REQUIRED: Market internal identifier
+  Time daily_open = 2;                          // OPTIONAL: Default daily opening time
+  Time daily_close = 3;                         // OPTIONAL: Default daily closing time
+  repeated Duration calendar = 4;               // OPTIONAL: Calendar schedule entries
+}
+
+enum VenueTypeEnum {
+  VENUE_TYPE_ENUM__UNKNOWN = 0;
+
+  VENUE_TYPE_ENUM__EXCHANGE = 1;
+
+  VENUE_TYPE_ENUM__OTHER = 1000;
+}
+
+enum VenueStatus {
+  VENUE_STATUS__UNKNOWN = 0;
+
+  VENUE_STATUS__OPENING_AUCTION = 1;
+  VENUE_STATUS__PRE_OPEN = 2;
+  VENUE_STATUS__OPEN = 3;
+  VENUE_STATUS__PARTIALLY_OPEN = 4;
+  VENUE_STATUS__REPORTING = 5;
+  VENUE_STATUS__CLOSING_AUCTION = 6;
+  VENUE_STATUS__CLOSED = 7;
+  VENUE_STATUS__CLOSED_ON_PUBLIC_HOLIDAY = 8;
+  VENUE_STATUS__SUSPENDED = 9;
+  VENUE_STATUS__MAINTENANCE = 10;
+
+  VENUE_STATUS__UNAVAILABLE = 100;
+}
+
+message Venue {
+  string iid = 1;                               // REQUIRED: Internal venue identifier
+
+  repeated FinIdentifier identifiers = 2;       // OPTIONAL: List of venue identifiers
+
+  oneof market {                                // OPTIONAL: Associated market
+    string market_iid = 3;                      // Market internal identifier
+    Market market_obj = 4;                      // Market object
+  }
+
+  string dominant_currency = 5;                 // OPTIONAL: ISO 4217 currency code
+
+  VenueTypeEnum venue_type = 6;                 // REQUIRED: Type of venue
+
+  DateTime established_dt = 7;                  // OPTIONAL: Venue establishment date
+  string country_code = 8;                      // OPTIONAL: ISO 3166-1 alpha-2
+  string city_code = 9;                         // OPTIONAL: UN/LOCODE
+  string website_url = 10;                      // OPTIONAL: Venue website URL
+  string timezone = 11;                         // OPTIONAL: ISO 8601 time zone
+  Duration trading_hours = 12;                  // OPTIONAL: Daily trading hours
+  repeated string trading_days = 13;            // OPTIONAL: Trading days (1=Monday, 2=Tuesday, ..., 7=Sunday)
+  VenueStatus status = 14;                      // REQUIRED: Current venue status
+
+  repeated OneOfIdOrParticipant settlement_depositories = 15; // OPTIONAL: CSDs
+  repeated OneOfIdOrParticipant clearing_houses = 16;         // OPTIONAL: Clearing houses
+  repeated OneOfIdOrParticipant regulators = 17;              // OPTIONAL: Regulators
+
+  map<string, string> display_names = 101;     // OPTIONAL: Display names for localization
+  map<string, string> descriptions = 102;      // OPTIONAL: Descriptions for localization
+  map<string, string> labels = 103;            // OPTIONAL: Key-value labels
+  repeated string tags = 104;                  // OPTIONAL: Tags for categorization
+  map<string, string> metadata = 105;          // OPTIONAL: Additional metadata
+}
+
+enum InstrumentClassEnum {
+  INSTRUMENT_CLASS_ENUM__UNKNOWN = 0;
+
+  INSTRUMENT_CLASS_ENUM__EQUITY_SHARE = 1;
+  INSTRUMENT_CLASS_ENUM__TOKENIZED_SECURITY = 2;
+  INSTRUMENT_CLASS_ENUM__FUND_UNIT = 3;
+  INSTRUMENT_CLASS_ENUM__ETF_SHARE = 4;
+  INSTRUMENT_CLASS_ENUM__BOND = 5;
+  INSTRUMENT_CLASS_ENUM__EQUITY_DERIVATIVE = 6;
+  INSTRUMENT_CLASS_ENUM__INDEX_DERIVATIVE = 7;
+  INSTRUMENT_CLASS_ENUM__FX = 8;
+  INSTRUMENT_CLASS_ENUM__WARRANT = 9;
+  INSTRUMENT_CLASS_ENUM__CFD = 10;
+  INSTRUMENT_CLASS_ENUM__OPTION = 11;
+  INSTRUMENT_CLASS_ENUM__FUTURE = 12;
+
+  INSTRUMENT_CLASS_ENUM__OTHER = 1000;
+}
+
+message FinInstrumentClass {
+  string schema = 1;
+  repeated InstrumentClassEnum classes = 2;
+
+  map<string, string> display_names = 101;
+  map<string, string> descriptions = 102;
+  map<string, string> labels = 103;
+  repeated string tags = 104;
+  map<string, string> metadata = 105;
+}
+
+enum InstrumentCfiC1ClassEnum {
+  INSTRUMENT_CFI_C1_CLASS_ENUM__UNKNOWN = 0;
+
+  INSTRUMENT_CFI_C1_CLASS_ENUM__EQUITY__E = 2;
+  INSTRUMENT_CFI_C1_CLASS_ENUM__DEBT__D = 1;
+  INSTRUMENT_CFI_C1_CLASS_ENUM__COLLECTIVE_INVESTMENT_VEHICLE__C = 6;
+  INSTRUMENT_CFI_C1_CLASS_ENUM__RIGHTS_WARRANT__R = 4;
+  INSTRUMENT_CFI_C1_CLASS_ENUM__OPTION__O = 3;
+  INSTRUMENT_CFI_C1_CLASS_ENUM__FUTURE__F = 5;
+  INSTRUMENT_CFI_C1_CLASS_ENUM__SWAPS__S = 7;
+  INSTRUMENT_CFI_C1_CLASS_ENUM__HEDGE_OTHER__H = 8;
+
+  INSTRUMENT_CFI_C1_CLASS_ENUM__OTHER = 1000;
+}
+
+enum InstrumentCfiC2ClassEnum {
+  INSTRUMENT_CFI_C2_CLASS_ENUM__UNKNOWN = 0;
+
+  // Equity (E) C2 codes
+  INSTRUMENT_CFI_C2_CLASS_ENUM__COMMON_ORDINARY_SHARES__ES = 1;
+  INSTRUMENT_CFI_C2_CLASS_ENUM__PREFERRED_PREFERENCE_SHARES__EP = 2;
+  INSTRUMENT_CFI_C2_CLASS_ENUM__COMMON_CONDITIONAL_ENTITLEMENT__EC = 3;
+  INSTRUMENT_CFI_C2_CLASS_ENUM__PREFERRED_CONDITIONAL_ENTITLEMENT__EF = 4;
+  INSTRUMENT_CFI_C2_CLASS_ENUM__PREFERRED_SHARES__ER = 5;
+  INSTRUMENT_CFI_C2_CLASS_ENUM__UNITS_UNCLASSIFIED__EU = 6;
+  INSTRUMENT_CFI_C2_CLASS_ENUM__OTHERS_MISCELLANEOUS__EM = 7;
+
+  // Debt (D) C2 codes  
+  INSTRUMENT_CFI_C2_CLASS_ENUM__BONDS__DB = 8;
+  INSTRUMENT_CFI_C2_CLASS_ENUM__CONVERTIBLE_BONDS__DC = 9;
+  INSTRUMENT_CFI_C2_CLASS_ENUM__BONDS_WITH_WARRANTS_ATTACHED__DW = 10;
+  INSTRUMENT_CFI_C2_CLASS_ENUM__MEDIUM_TERM_NOTES__DT = 11;
+  INSTRUMENT_CFI_C2_CLASS_ENUM__MONEY_MARKETS__DY = 12;
+  INSTRUMENT_CFI_C2_CLASS_ENUM__MUNICIPAL_BONDS__DN = 13;
+  INSTRUMENT_CFI_C2_CLASS_ENUM__DEPOSITS__DD = 14;
+  INSTRUMENT_CFI_C2_CLASS_ENUM__OTHERS_DEBT__DM = 15;
+
+  // Rights (R) C2 codes
+  INSTRUMENT_CFI_C2_CLASS_ENUM__ALLOTMENT_RIGHTS__RA = 16;
+  INSTRUMENT_CFI_C2_CLASS_ENUM__SUBSCRIPTION_RIGHTS__RS = 17;
+  INSTRUMENT_CFI_C2_CLASS_ENUM__PURCHASE_RIGHTS__RP = 18;
+  INSTRUMENT_CFI_C2_CLASS_ENUM__WARRANT_RIGHTS__RW = 19;
+  INSTRUMENT_CFI_C2_CLASS_ENUM__OTHERS_RIGHTS__RM = 20;
+
+  // Options (O) C2 codes
+  INSTRUMENT_CFI_C2_CLASS_ENUM__CALL_OPTIONS__OC = 21;
+  INSTRUMENT_CFI_C2_CLASS_ENUM__PUT_OPTIONS__OP = 22;
+  INSTRUMENT_CFI_C2_CLASS_ENUM__OTHERS_OPTIONS__OM = 23;
+
+  // Futures (F) C2 codes
+  INSTRUMENT_CFI_C2_CLASS_ENUM__FINANCIAL_FUTURES__FF = 24;
+  INSTRUMENT_CFI_C2_CLASS_ENUM__COMMODITY_FUTURES__FC = 25;
+  INSTRUMENT_CFI_C2_CLASS_ENUM__OTHERS_FUTURES__FM = 26;
+
+  // Collective Investment Vehicles (C) C2 codes
+  INSTRUMENT_CFI_C2_CLASS_ENUM__STANDARD_OPEN_END__CO = 27;
+  INSTRUMENT_CFI_C2_CLASS_ENUM__STANDARD_CLOSED_END__CC = 28;
+  INSTRUMENT_CFI_C2_CLASS_ENUM__NON_STANDARD__CN = 29;
+  INSTRUMENT_CFI_C2_CLASS_ENUM__OTHERS_COLLECTIVE__CM = 30;
+
+  // Swaps (S) C2 codes
+  INSTRUMENT_CFI_C2_CLASS_ENUM__CREDIT_DEFAULT_SWAPS__SC = 31;
+  INSTRUMENT_CFI_C2_CLASS_ENUM__INTEREST_RATE_SWAPS__SI = 32;
+  INSTRUMENT_CFI_C2_CLASS_ENUM__CURRENCY_SWAPS__SR = 33;
+  INSTRUMENT_CFI_C2_CLASS_ENUM__COMMODITY_SWAPS__SO = 34;
+  INSTRUMENT_CFI_C2_CLASS_ENUM__EQUITY_SWAPS__SE = 35;
+  INSTRUMENT_CFI_C2_CLASS_ENUM__TOTAL_RETURN_SWAPS__ST = 36;
+  INSTRUMENT_CFI_C2_CLASS_ENUM__OTHERS_SWAPS__SM = 37;
+
+  // Non-listed and complex listed (H) C2 codes
+  INSTRUMENT_CFI_C2_CLASS_ENUM__NON_LISTED__HN = 38;
+  INSTRUMENT_CFI_C2_CLASS_ENUM__COMPLEX_LISTED__HC = 39;
+  INSTRUMENT_CFI_C2_CLASS_ENUM__OTHERS_HEDGE__HM = 40;
+
+  INSTRUMENT_CFI_C2_CLASS_ENUM__OTHER = 1000;
+}
+
+message OneOfIdOrParticipant {
+  oneof participant {
+    string iid = 1;
+    Participant obj = 2;
+  }
+}
+
+message Instrument {
+  string iid = 1;                               // REQUIRED: Internal instrument identifier
+
+  repeated FinIdentifier identifiers = 2;       // OPTIONAL: List of instrument identifiers
+  InstrumentCfiC1ClassEnum cfi_c1_class = 3;    // OPTIONAL: CFI C1 classification
+  InstrumentCfiC2ClassEnum cfi_c2_class = 4;    // OPTIONAL: CFI C2 classification
+  repeated FinInstrumentClass classes = 5;      // OPTIONAL: List of instrument classifications
+
+  DateTime maturity_dt = 6;                     // OPTIONAL: Instrument maturity date
+
+  oneof asset {                                 // OPTIONAL: Underlying asset
+    string asset_iid = 7;                       // Asset internal identifier
+    Asset asset_obj = 8;                        // Asset object
+  }
+
+  DateTime issue_dt = 9;                        // OPTIONAL: Issue date
+  repeated OneOfIdOrParticipant issuers = 10;   // OPTIONAL: List of issuers
+  string issue_country_code = 11;               // OPTIONAL: ISO 3166-1 alpha-2
+  string issue_currency = 12;                   // OPTIONAL: ISO 4217 currency code
+  string issue_initial_units = 13;              // OPTIONAL: Number of shares issued
+  string issue_divisibility = 14;               // OPTIONAL: Unit divisibility
+  string issue_initial_authorized_units = 15;   // OPTIONAL: Number of shares authorized
+
+  map<string, string> display_names = 101;     // OPTIONAL: Display names for localization
+  map<string, string> descriptions = 102;      // OPTIONAL: Descriptions for localization
+  map<string, string> labels = 103;            // OPTIONAL: Key-value labels
+  repeated string tags = 104;                  // OPTIONAL: Tags for categorization
+  map<string, string> metadata = 105;          // OPTIONAL: Additional metadata
+}
+
+enum InstrumentListingStatusEnum {
+  INSTRUMENT_LISTING_STATUS_ENUM__UNKNOWN = 0;
+
+  INSTRUMENT_LISTING_STATUS_ENUM__WHEN_ISSUED = 1;
+  INSTRUMENT_LISTING_STATUS_ENUM__PRE_LISTING = 2;
+  INSTRUMENT_LISTING_STATUS_ENUM__LISTED = 3; // active and tradable
+  INSTRUMENT_LISTING_STATUS_ENUM__SUSPENDED = 4; // temporarily not tradable
+  INSTRUMENT_LISTING_STATUS_ENUM__HALTED = 5; // temporarily not tradable
+  INSTRUMENT_LISTING_STATUS_ENUM__MATURED = 6;
+  INSTRUMENT_LISTING_STATUS_ENUM__EXPIRED = 7;
+  INSTRUMENT_LISTING_STATUS_ENUM__MERGED = 8;
+  INSTRUMENT_LISTING_STATUS_ENUM__DELISTED = 9; // permanently not tradable
+  INSTRUMENT_LISTING_STATUS_ENUM__LIQUIDATED = 10; // permanently not tradable
+  INSTRUMENT_LISTING_STATUS_ENUM__TEST = 11;
+
+  INSTRUMENT_LISTING_STATUS_ENUM__OTHER = 1000;
+}
+
+message InstrumentListing {
+  string iid = 1;                               // REQUIRED: Internal listing identifier
+
+  repeated FinIdentifier local_identifiers = 2; // OPTIONAL: Local venue identifiers
+
+  oneof instrument {                            // REQUIRED: Associated instrument
+    string instrument_iid = 4;                  // Instrument internal identifier
+    Instrument instrument_obj = 5;              // Instrument object
+  }
+
+  oneof venue {                                 // REQUIRED: Associated venue
+    string venue_iid = 6;                       // Venue internal identifier
+    Venue venue_obj = 7;                        // Venue object
+  }
+
+  DateTime listing_dt = 8;                      // OPTIONAL: Listing date
+  DateTime effective_from_dt = 9;               // OPTIONAL: Effective from date
+  DateTime effective_to_dt = 10;                // OPTIONAL: Effective to date
+
+  InstrumentListingStatusEnum status = 11;      // REQUIRED: Current listing status
+
+  string lot_size = 12;                         // OPTIONAL: Minimum trading lot size
+  string tick_size = 13;                        // OPTIONAL: Minimum price increment
+  string currency = 14;                         // OPTIONAL: ISO 4217 currency code
+
+  map<string, string> display_names = 101;     // OPTIONAL: Display names for localization
+  map<string, string> descriptions = 102;      // OPTIONAL: Descriptions for localization
+  map<string, string> labels = 103;            // OPTIONAL: Key-value labels
+  repeated string tags = 104;                  // OPTIONAL: Tags for categorization
+  map<string, string> metadata = 105;          // OPTIONAL: Additional metadata
+}
+
+message VenueDuration {
+  Duration duration = 1;                        // REQUIRED: Time duration period
+  VenueStatus status = 2;                       // REQUIRED: Venue status during this period
+  string metadata = 3;                          // OPTIONAL: Additional metadata
+  repeated string comments = 4;                 // OPTIONAL: Additional comments
+}
+
+message VenueCalendar {
+  string venue_iid = 1;                         // REQUIRED: Venue internal identifier
+  Time daily_open = 2;                          // OPTIONAL: Default daily opening time
+  Time daily_close = 3;                         // OPTIONAL: Default daily closing time
+  repeated VenueDuration calendar = 4;          // OPTIONAL: Calendar schedule entries
+}
+
+enum ConfirmationStatus {
+  CONFIRMATION_STATUS__UNKNOWN = 0;
+  CONFIRMATION_STATUS__CONFIRMED = 1;
+  CONFIRMATION_STATUS__PENDING = 2;
+  CONFIRMATION_STATUS__DECLINED = 3;
+}
+
+enum OrderSide {
+  option allow_alias = true;
+  ORDER_SIDE__UNKNOWN = 0;
+  ORDER_SIDE__BUY = 1;
+  ORDER_SIDE__BID = 1;
+  ORDER_SIDE__CALL = 1;
+  ORDER_SIDE__SELL = 2;
+  ORDER_SIDE__ASK = 2;
+  ORDER_SIDE__PUT = 2;
+  ORDER_SIDE__BOTH = 3;
+  ORDER_SIDE__NO_SIDE = 4;
+}
+
+message Order {
+  string order_id = 1;                          // REQUIRED: Unique order identifier
+  string order_hash = 2;                        // OPTIONAL: Order content hash
+  string participant_iid = 3;                   // REQUIRED: Participant internal identifier
+  string participant_order_id = 4;              // REQUIRED: Participant's order identifier
+  string participant_account_iid = 5;           // REQUIRED: Participant account identifier
+  string investor_account_iid = 6;              // OPTIONAL: Investor account identifier
+  string executor_account_iid = 7;              // OPTIONAL: Executor account identifier
+
+  // Order details
+  string order_type = 8;                        // REQUIRED: Order type (LIMIT, MARKET)
+  OrderSide side = 9;                           // REQUIRED: Order side
+  string symbol = 10;                           // REQUIRED: Trading symbol
+  string currency = 11;                         // REQUIRED: Currency code
+  string quantity = 12;                         // REQUIRED: Order quantity
+  string remaining_quantity = 13;               // OPTIONAL: Remaining quantity
+  string price = 14;                            // OPTIONAL: Order price (required for LIMIT)
+  string volume = 15;                           // OPTIONAL: Order volume
+  string remaining_volume = 16;                 // OPTIONAL: Remaining volume
+  string slippage = 17;                         // OPTIONAL: Acceptable slippage
+
+  // Time fields
+  string time_in_force = 18;                    // OPTIONAL: Time in force
+  string create_timestamp = 19;                 // REQUIRED: Order creation timestamp
+  string effective_timestamp = 20;              // OPTIONAL: Effective timestamp
+  string expire_timestamp = 21;                 // OPTIONAL: Expiration timestamp
+
+  // Status flags
+  bool is_offer = 22;                           // OPTIONAL: Whether this is an offer
+  bool is_directly_fillable = 23;               // OPTIONAL: Whether directly fillable
+  bool is_bid = 24;                             // OPTIONAL: Whether this is a bid
+  bool is_filled = 25;                          // OPTIONAL: Whether order is filled
+  bool is_cancelled = 26;                       // OPTIONAL: Whether order is cancelled
+  bool is_expired = 27;                         // OPTIONAL: Whether order is expired
+
+  // Additional data
+  string creator_address = 28;                  // OPTIONAL: Creator blockchain address
+  string trezor_stash_id = 29;                  // OPTIONAL: Trezor stash identifier
+  string offer_ids = 30;                        // OPTIONAL: Related offer identifiers
+  string parent_direct_order_id = 31;           // OPTIONAL: Parent order identifier
+  string alarm_abi = 32;                        // OPTIONAL: Alarm ABI specification
+  string alarm_data = 33;                       // OPTIONAL: Alarm data
+  string data = 34;                             // OPTIONAL: Additional order data
+  string data_encoding = 35;                    // OPTIONAL: Data encoding format
+  string participant_data = 36;                 // OPTIONAL: Participant-specific data
+}
+
+message Trade {
+  string trade_id = 1;                          // REQUIRED: Unique trade identifier
+  string trade_hash = 2;                        // OPTIONAL: Trade content hash
+  string timestamp = 3;                         // REQUIRED: Trade execution timestamp
+  string creator_address = 4;                   // OPTIONAL: Creator blockchain address
+  string trade_type = 5;                        // OPTIONAL: Type of trade
+  bool is_buy = 6;                              // REQUIRED: Whether this is a buy trade
+
+  // Order references
+  string bid_order_id = 7;                      // REQUIRED: Bid order identifier
+  string ask_order_id = 8;                      // REQUIRED: Ask order identifier
+
+  // Trade details
+  string quantity = 9;                          // REQUIRED: Trade quantity
+  string price = 10;                            // REQUIRED: Trade execution price
+  string volume = 11;                           // REQUIRED: Trade volume
+
+  // Fees
+  string bid_fee = 12;                          // OPTIONAL: Fee paid by bid side
+  string ask_fee = 13;                          // OPTIONAL: Fee paid by ask side
+
+  // Additional data
+  string data_abi = 14;                         // OPTIONAL: Data ABI specification
+  string data = 15;                             // OPTIONAL: Additional trade data
+}
+
+message Settlement {
+  string settlement_id = 1;                     // REQUIRED: Unique settlement identifier
+  string settlement_hash = 2;                   // OPTIONAL: Settlement content hash
+  string timestamp = 3;                         // REQUIRED: Settlement timestamp
+
+  // Trade reference
+  string trade_id = 4;                          // REQUIRED: Related trade identifier
+  string trade_hash = 5;                        // OPTIONAL: Related trade hash
+
+  // Settlement status
+  ConfirmationStatus confirmation_status = 6;   // REQUIRED: Current confirmation status
+  string settlement_type = 7;                   // OPTIONAL: Type of settlement
+
+  // Parties involved
+  string buyer_account = 8;                     // REQUIRED: Buyer account identifier
+  string seller_account = 9;                    // REQUIRED: Seller account identifier
+
+  // Settlement details
+  string asset_transferred = 10;                // REQUIRED: Asset being transferred
+  string amount_transferred = 11;               // REQUIRED: Amount transferred
+  string currency_transferred = 12;             // OPTIONAL: Currency transferred
+  string currency_amount = 13;                  // OPTIONAL: Currency amount
+
+  // Settlement location
+  string ledger_id = 14;                        // OPTIONAL: Ledger identifier
+  string vault_address = 15;                    // OPTIONAL: Vault address
+  string reserve_id = 16;                       // OPTIONAL: Reserve identifier
+
+  // Additional data
+  string failure_reason = 17;                   // OPTIONAL: Failure reason (if failed)
+  string data = 18;                             // OPTIONAL: Additional settlement data
+}
+
+message OrderEvent {
+  string order_event_id = 1;                    // REQUIRED: Unique event identifier
+  string order_event_hash = 2;                  // OPTIONAL: Event content hash
+  string order_event_timestamp = 3;             // REQUIRED: Event timestamp
+  string order_event_type = 4;                  // REQUIRED: Type of order event
+  string order_event_version = 5;               // OPTIONAL: Event schema version
+
+  // Order reference
+  Order order = 6;                              // REQUIRED: Primary order for this event
+  Order other_order = 7;                        // OPTIONAL: Secondary order (for matching events)
+
+  // Trade reference (if applicable)
+  Trade trade = 8;                              // OPTIONAL: Related trade (if event involves trade)
+
+  // Chain and indexing information
+  string chain_id = 9;                          // OPTIONAL: Blockchain chain identifier
+  string chain_name = 10;                       // OPTIONAL: Blockchain chain name
+  string engine_address = 11;                   // OPTIONAL: Trading engine address
+  string index_timestamp = 12;                  // OPTIONAL: Index timestamp
+  string index_block_timestamp = 13;            // OPTIONAL: Block timestamp
+  string index_block_number = 14;               // OPTIONAL: Block number
+  string index_tx_hash = 15;                    // OPTIONAL: Transaction hash
+  int64 index_tx_log_idx = 16;                  // OPTIONAL: Transaction log index
+
+  // Pair information
+  string pair_id = 17;                          // OPTIONAL: Trading pair identifier
+  string pair_base_token_symbol = 18;           // OPTIONAL: Base token symbol
+  string pair_quote_token_symbol = 19;          // OPTIONAL: Quote token symbol
+
+  // Command information (for audit)
+  string command_id = 20;                       // OPTIONAL: Command identifier
+  string command_request_id = 21;               // OPTIONAL: Command request identifier
+  string command_timestamp = 22;                // OPTIONAL: Command timestamp
+  string command_origin = 23;                   // OPTIONAL: Command origin
+  string command_participant_id = 24;           // OPTIONAL: Command participant identifier
+  string command_operation = 25;                // OPTIONAL: Command operation
+
+  // Additional event data
+  string order_event_data = 26;                 // OPTIONAL: Additional event data
+}
+
+enum TransactionTypeEnum {
+  TRANSACTION_TYPE_ENUM__UNKNOWN = 0;
+
+  TRANSACTION_TYPE_ENUM__DEPOSIT_CASH = 1;
+  TRANSACTION_TYPE_ENUM__DEPOSIT_ASSET = 2;
+  TRANSACTION_TYPE_ENUM__WITHDRAW_CASH = 3;
+  TRANSACTION_TYPE_ENUM__WITHDRAW_ASSET = 4;
+  TRANSACTION_TYPE_ENUM__TRADE_BUY = 5;
+  TRANSACTION_TYPE_ENUM__TRADE_SELL = 6;
+  TRANSACTION_TYPE_ENUM__FEE = 7;
+  TRANSACTION_TYPE_ENUM__SETTLEMENT = 8;
+  TRANSACTION_TYPE_ENUM__TRANSFER_IN = 9;
+  TRANSACTION_TYPE_ENUM__TRANSFER_OUT = 10;
+
+  TRANSACTION_TYPE_ENUM__OTHER = 1000;
+}
+
+// Transaction message reflects Activity structure with from/to accounts and stashes
+// This structure mirrors the Activity model from pkg/chain/trezor/activity.go
+message Transaction {
+  // Core identifiers
+  string transaction_id = 1;                    // REQUIRED: Unique transaction identifier
+  string transaction_hash = 2;                  // OPTIONAL: Transaction content hash
+  Time timestamp = 3;                           // REQUIRED: Transaction timestamp
+
+  // Transaction type and operation
+  TransactionTypeEnum type = 4;                 // REQUIRED: Transaction type
+  string operation = 5;                         // OPTIONAL: Specific operation code
+
+  // Account information (reflecting Activity structure)
+  string account_iid = 6;                       // REQUIRED: Primary account for this transaction
+  string from_account_iid = 7;                  // OPTIONAL: Source account
+  string to_account_iid = 8;                    // OPTIONAL: Destination account
+
+  // Reserve IDs (from Activity model)
+  string from_reserve_id = 9;                   // OPTIONAL: Source reserve identifier
+  string to_reserve_id = 10;                    // OPTIONAL: Destination reserve identifier
+
+  // Stash information (critical for the Activity model)
+  string from_stash = 11;                       // OPTIONAL: Source stash
+  string to_stash = 12;                         // OPTIONAL: Destination stash
+
+  // Asset and amount
+  string asset_iid = 13;                        // REQUIRED: Asset being transferred
+  string amount = 14;                           // REQUIRED: Transaction amount
+
+  // Reference information
+  string reference_id = 15;                     // OPTIONAL: Reference ID (order_id, trade_id, settlement_id, etc.)
+  string reference_type = 16;                   // OPTIONAL: Reference type ("order", "trade", "settlement", etc.)
+
+  // Additional fields
+  map<string, string> display_names = 101;     // OPTIONAL: Display names for localization
+  map<string, string> descriptions = 102;      // OPTIONAL: Descriptions for localization
+  map<string, string> labels = 103;            // OPTIONAL: Key-value labels
+  repeated string tags = 104;                  // OPTIONAL: Tags for categorization
+  map<string, string> metadata = 105;          // OPTIONAL: Additional metadata
+}

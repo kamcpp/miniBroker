@@ -1,239 +1,121 @@
 syntax = "proto3";
 
+// Field Numbering Convention:
+// 1-100: Core business fields
+// 101-104: Display metadata (display_name, description, labels, tags)
+// 105: Request aux_data / Response metadata
+// 106-999: Reserved for future use
+// 1000+: Extension/OTHER enum values
+
 package qomet.agora.daemons.prtagent.v1;
 
-option go_package = "pkg/daemons/prtagent/api/v1;prtagentapiv1";
+option go_package = "pkg/daemons/prtagent/api/v1/grpc;prtagentapiv1";
 option csharp_namespace  = "Qomet.Agora.Daemons.ParticipantAgent.API.V1";
 
-import "qomet/agora/daemons/prtagent/v1/common.proto";
+import "common.proto";
+import "fin_common.proto";
+import "filter.proto";
 
 service InstrumentService {
-  rpc GetInstrumentsInfo(GetInstrumentsInfoRequest) returns (GetInstrumentsInfoResponse);
-  rpc GetLatestQuote(GetLatestQuoteRequest) returns (InstrumentQuoteResponse);
-  rpc FetchLiveQuote(FetchLiveQuoteRequest) returns (stream InstrumentQuoteResponse);
-  rpc GetHistoricalQuote(GetHistoricalQuoteRequest) returns (GetHistoricalQuoteResponse);
-  rpc FetchLiveOhlcData(FetchLiveOhlcDataRequest) returns (stream OhlcDataResponse);
-  rpc GetHistoricalOhlcData(GetHistoricalOhlcDataRequest) returns (GetHistoricalOhlcDataResponse);
+  rpc GetInstrumentList(GetInstrumentListRequest) returns (GetInstrumentListResponse);
+  rpc GetInstrumentListAsync(GetInstrumentListRequest) returns (ExecutionAsyncResponse);
+
+  rpc GetInstrumentInfoBatch(GetInstrumentInfoBatchRequest) returns (GetInstrumentInfoBatchResponse);
+  rpc GetInstrumentInfoBatchAsync(GetInstrumentInfoBatchRequest) returns (ExecutionAsyncResponse);
+
   rpc GetInstrumentOrders(GetInstrumentOrdersRequest) returns (GetInstrumentOrdersResponse);
+  rpc GetInstrumentOrdersAsync(GetInstrumentOrdersRequest) returns (ExecutionAsyncResponse);
+
   rpc GetInstrumentTrades(GetInstrumentTradesRequest) returns (GetInstrumentTradesResponse);
+  rpc GetInstrumentTradesAsync(GetInstrumentTradesRequest) returns (ExecutionAsyncResponse);
+
   rpc GetInstrumentSettlements(GetInstrumentSettlementsRequest) returns (GetInstrumentSettlementsResponse);
-  rpc GetOrderbook(GetOrderbookRequest) returns (GetOrderbookResponse);
+  rpc GetInstrumentSettlementsAsync(GetInstrumentSettlementsRequest) returns (ExecutionAsyncResponse);
 }
 
-message InstrumentQuote {
-  Instrument instrument = 1;
-  string amount = 2;
+message GetInstrumentListRequest {
+  string proposed_execution_id = 1;           // OPTIONAL: Client-proposed execution ID for tracking
+  PaginationParams pagination = 2;            // OPTIONAL: Pagination parameters
+  string market_id_or_symbol_regex = 3;       // OPTIONAL: Filter by market ID or symbol regex
+  string venue_id_or_symbol_regex = 4;        // OPTIONAL: Filter by venue ID or symbol regex
+  string instrument_id_or_symbol_regex = 5;   // OPTIONAL: Filter by instrument ID or symbol regex
+  repeated InstrumentListingStatusEnum listing_types = 6; // OPTIONAL: Filter by listing status types
+
+  map<string, string> aux_data = 105;         // OPTIONAL: Additional request data
 }
 
-message InstrumentQuoteResponse {
-  string ref_request_id = 1;
-  string metadata = 2;
-  InstrumentQuote quote = 3;
+message GetInstrumentListResponse {
+  string ref_execution_id = 1;                // REQUIRED: Reference to the execution ID
+  PaginationInfo pagination_info = 2;         // OPTIONAL: Pagination information (required if paginated)
+  repeated Instrument instruments = 3;         // REQUIRED: List of instruments (can be empty)
+
+  map<string, string> metadata = 105;         // OPTIONAL: Response metadata
 }
 
-message OhlcData {
-  Instrument instrument = 3;
-  Duration duration = 4;
-  string open = 5;
-  string high = 6;
-  string low = 7;
-  string close = 8;
-  string volume = 9;
+message GetInstrumentInfoBatchRequest {
+  string proposed_execution_id = 1;           // OPTIONAL: Client-proposed execution ID for tracking
+  PaginationParams pagination = 2;            // OPTIONAL: Pagination parameters
+  repeated string instrument_id_and_symbol_regexes = 3; // REQUIRED: Instrument ID and symbol regexes to retrieve
+  repeated InstrumentListingStatusEnum listing_types = 4; // OPTIONAL: Filter by listing status types
+
+  map<string, string> aux_data = 105;         // OPTIONAL: Additional request data
 }
 
-message OhlcDataResponse {
-  string ref_request_id = 1;
-  string metadata = 2;
-  OhlcData ohlc_data = 3;
-}
+message GetInstrumentInfoBatchResponse {
+  string ref_execution_id = 1;                // REQUIRED: Reference to the execution ID
+  PaginationInfo pagination_info = 3;         // OPTIONAL: Pagination information (required if paginated)
+  repeated Instrument instruments = 4;         // REQUIRED: List of instrument details (can be empty)
 
-message GetInstrumentsInfoRequest {
-  string ref_request_id = 1;
-  PaginationParams pagination = 2;
-  repeated string instrument_id_and_symbol_regexes = 3;
-  repeated InstrumentListingStatusType listing_types = 4;
-  string metadata = 5;
-}
-
-message GetInstrumentsInfoResponse {
-  string ref_request_id = 1;
-  string metadata = 2;
-  PaginationInfo pagination_info = 3;
-  repeated Instrument instruments = 4;
-}
-
-message GetLatestQuoteRequest {
-  string ref_request_id = 1;
-  repeated string instrument_id_and_symbol_regexes = 2;
-  string metadata = 3;
-}
-
-message LiveQuoteFetchParams {
-  uint32 update_interval_ms = 1;  // Minimum interval between updates
-  uint32 max_duration_ms = 2;     // Maximum stream duration
-  bool include_depth = 3;         // Include orderbook depth
-  uint32 depth_levels = 4;        // Number of depth levels (if include_depth)
-  bool include_trades = 5;        // Include recent trades
-}
-
-message FetchLiveQuoteRequest {
-  string ref_request_id = 1;
-  repeated string instrument_id_and_symbol_regexes = 2;
-  LiveQuoteFetchParams fetch_params = 3;
-  string metadata = 4;
-}
-
-message GetHistoricalQuoteRequest {
-  string ref_request_id = 1;
-  PaginationParams pagination = 2;
-  repeated string instrument_id_and_symbol_regexes = 3;
-  optional Duration duration = 4;
-  string metadata = 5;
-}
-
-message GetHistoricalQuoteResponse {
-  string ref_request_id = 1;
-  string metadata = 2;
-  PaginationInfo pagination_info = 3;
-  repeated InstrumentQuote quotes = 4;
-}
-
-message LiveOhlcDataFetchParams {
-  uint32 update_interval_ms = 1;
-  uint32 max_duration_ms = 2;
-  string period = 3;  // "1m", "5m", "15m", "1h", "1d"
-  bool include_volume = 4;
-  bool include_indicators = 5;  // RSI, MA, etc.
-}
-
-message FetchLiveOhlcDataRequest {
-  string ref_request_id = 1;
-  repeated string instrument_id_and_symbol_regexes = 2;
-  LiveOhlcDataFetchParams fetch_params = 3;
-  string metadata = 4;
-}
-
-message GetHistoricalOhlcDataRequest {
-  string ref_request_id = 1;
-  PaginationParams pagination = 2;
-  repeated string instrument_id_and_symbol_regexes = 3;
-  optional Duration duration = 4;
-  string metadata = 5;
-}
-
-message GetHistoricalOhlcDataResponse {
-  string ref_request_id = 1;
-  string metadata = 2;
-  PaginationInfo pagination_info = 3;
-  repeated OhlcData ohlc_datas = 4;
-}
-
-message OrderQueryFilter {
-  Time from_time = 1;
-  Time to_time = 2;
-  OrderSide side = 3;  // Optional: filter by order side (not repeated)
-  repeated string order_types = 4;  // "LIMIT", "MARKET", etc.
-  string price_min = 5;
-  string price_max = 6;
-  string quantity_min = 7;
-  string quantity_max = 8;
-  repeated bool status_filters = 9;  // [is_filled, is_cancelled, is_expired]
-  string creator_address = 10;
+  map<string, string> metadata = 105;         // OPTIONAL: Response metadata
 }
 
 message GetInstrumentOrdersRequest {
-  string ref_request_id = 1;
-  PaginationParams pagination = 2;
-  repeated string instrument_id_and_symbol_regexes = 3;
-  OrderQueryFilter order_query_filter = 4;
-  string metadata = 5;
+  string proposed_execution_id = 1;           // OPTIONAL: Client-proposed execution ID for tracking
+  PaginationParams pagination = 2;            // OPTIONAL: Pagination parameters
+  repeated string instrument_id_and_symbol_regexes = 3; // REQUIRED: Instrument ID and symbol regexes
+  OrderQueryFilter order_query_filter = 4;    // OPTIONAL: Additional order filters
+
+  map<string, string> aux_data = 105;         // OPTIONAL: Additional request data
 }
 
 message GetInstrumentOrdersResponse {
-  string ref_request_id = 1;
-  string metadata = 2;
-  PaginationInfo pagination_info = 3;
-  repeated Order orders = 4;
-}
+  string ref_execution_id = 1;                // REQUIRED: Reference to the execution ID
+  PaginationInfo pagination_info = 2;         // OPTIONAL: Pagination information (required if paginated)
+  repeated Order orders = 3;                  // REQUIRED: List of orders (can be empty)
 
-message TradeQueryFilter {
-  Time from_time = 1;
-  Time to_time = 2;
-  string price_min = 3;
-  string price_max = 4;
-  string volume_min = 5;
-  string volume_max = 6;
-  repeated string trade_types = 7;
-  OrderSide side = 8;  // Not repeated
+  map<string, string> metadata = 105;         // OPTIONAL: Response metadata
 }
 
 message GetInstrumentTradesRequest {
-  string ref_request_id = 1;
-  PaginationParams pagination = 2;
-  repeated string instrument_id_and_symbol_regexes = 3;
-  TradeQueryFilter trade_query_filter = 4;
-  string metadata = 5;
+  string proposed_execution_id = 1;           // OPTIONAL: Client-proposed execution ID for tracking
+  PaginationParams pagination = 2;            // OPTIONAL: Pagination parameters
+  repeated string instrument_id_and_symbol_regexes = 3; // REQUIRED: Instrument ID and symbol regexes
+  TradeQueryFilter trade_query_filter = 4;    // OPTIONAL: Additional trade filters
+
+  map<string, string> aux_data = 105;         // OPTIONAL: Additional request data
 }
 
 message GetInstrumentTradesResponse {
-  string ref_request_id = 1;
-  string metadata = 2;
-  PaginationInfo pagination_info = 3;
-  repeated Trade trades = 4;
-}
+  string ref_execution_id = 1;                // REQUIRED: Reference to the execution ID
+  PaginationInfo pagination_info = 2;         // OPTIONAL: Pagination information (required if paginated)
+  repeated Trade trades = 3;                  // REQUIRED: List of trades (can be empty)
 
-message SettlementQueryFilter {
-  Time from_time = 1;
-  Time to_time = 2;
-  ConfirmationStatus status = 3;
-  repeated string settlement_types = 4;
-  repeated string asset_id_or_name_regexes = 5;
-  string amount_min = 6;
-  string amount_max = 7;
+  map<string, string> metadata = 105;         // OPTIONAL: Response metadata
 }
 
 message GetInstrumentSettlementsRequest {
-  string ref_request_id = 1;
-  PaginationParams pagination = 2;
-  repeated string instrument_id_and_symbol_regexes = 3;
-  SettlementQueryFilter settlement_query_filter = 4;
-  string metadata = 5;
+  string proposed_execution_id = 1;           // OPTIONAL: Client-proposed execution ID for tracking
+  PaginationParams pagination = 2;            // OPTIONAL: Pagination parameters
+  repeated string instrument_id_and_symbol_regexes = 3; // REQUIRED: Instrument ID and symbol regexes
+  SettlementQueryFilter settlement_query_filter = 4; // OPTIONAL: Additional settlement filters
+
+  map<string, string> aux_data = 105;         // OPTIONAL: Additional request data
 }
 
 message GetInstrumentSettlementsResponse {
-  string ref_request_id = 1;
-  string metadata = 2;
-  PaginationInfo pagination_info = 3;
-  repeated Settlement settlements = 4;
-}
+  string ref_execution_id = 1;                // REQUIRED: Reference to the execution ID
+  PaginationInfo pagination_info = 2;         // OPTIONAL: Pagination information (required if paginated)
+  repeated Settlement settlements = 3;         // REQUIRED: List of settlements (can be empty)
 
-message OrderbookQueryFilter {
-  bool aggregated = 1;
-  OrderSide side = 2;
-  uint32 depth = 3;        // Number of price levels to return
-  string price_min = 4;    // Minimum price filter
-  string price_max = 5;    // Maximum price filter
-  bool include_my_orders = 6;  // Include caller's orders
-  string group_by_price_increment = 7;  // Price grouping for aggregation
-}
-
-message GetOrderbookRequest {
-  string ref_request_id = 1;
-  PaginationParams pagination = 2;
-  string instrument_id = 3;
-  OrderbookQueryFilter orderbook_query_filter = 4;
-  string metadata = 5;
-}
-
-message OrderList {
-  PaginationInfo pagination_info = 1;
-  repeated Order orders = 2;
-}
-
-message GetOrderbookResponse {
-  string ref_request_id = 1;
-  string metadata = 2;
-  Instrument instrument = 3;
-  OrderList buy_list = 4;
-  OrderList sell_list = 5;
+  map<string, string> metadata = 105;         // OPTIONAL: Response metadata
 }

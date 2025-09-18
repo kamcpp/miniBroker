@@ -38,7 +38,7 @@ echo -e "${GREEN}Compiling proto files...${NC}"
 
 # Generate Dart files from proto files
 protoc \
-    --proto_path="$PROTO_DIR" \
+    --proto_path="$PROTO_DIR/qomet/agora/daemons/prtagent/v1" \
     --dart_out=grpc:"$OUTPUT_DIR" \
     "$PROTO_DIR/qomet/agora/daemons/prtagent/v1/"*.proto
 

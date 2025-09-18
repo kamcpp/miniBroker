@@ -1,109 +1,51 @@
 syntax = "proto3";
 
+// Field Numbering Convention:
+// 1-100: Core business fields
+// 101-104: Display metadata (display_name, description, labels, tags)
+// 105: Request aux_data / Response metadata
+// 106-999: Reserved for future use
+// 1000+: Extension/OTHER enum values
+
 package qomet.agora.daemons.prtagent.v1;
 
-option go_package = "pkg/daemons/prtagent/api/v1;prtagentapiv1";
+option go_package = "pkg/daemons/prtagent/api/v1/grpc;prtagentapiv1";
 option csharp_namespace  = "Qomet.Agora.Daemons.ParticipantAgent.API.V1";
 
-import "qomet/agora/daemons/prtagent/v1/common.proto";
+import "common.proto";
+import "fin_common.proto";
+import "event.proto";
 
 service AgentService {
   rpc Ping(PingRequest) returns (PingResponse);
-  rpc GetParticipantInfo(GetParticipantInfoRequest) returns (GetParticipantInfoResponse);
-  rpc GetSupportedCurrencies(GetSupportedCurrenciesRequest) returns (GetSupportedCurrenciesResponse);
-  rpc GetParticipantOrders(GetParticipantOrdersRequest) returns (GetParticipantOrdersResponse);
-  rpc GetParticipantTrades(GetParticipantTradesRequest) returns (GetParticipantTradesResponse);
-  rpc GetParticipantSettlements(GetParticipantSettlementsRequest) returns (GetParticipantSettlementsResponse);
-  rpc SubscribeToAgentEvents(EventSubscriptionParams) returns (stream Event);
+  rpc GetSupportedCurrencies(GetSupportedCurrenciesRequest) 
+    returns (GetSupportedCurrenciesResponse);
+  rpc GetSupportedCurrenciesAsync(GetSupportedCurrenciesRequest) 
+    returns (ExecutionAsyncResponse);
+  rpc SubscribeToEvents(EventSubscriptionParams) returns (stream Event);
 }
 
 message PingRequest {
-  string ref_request_id = 1;
-  string string_to_be_ponged = 2;
+  string proposed_execution_id = 1;  // OPTIONAL: Client-proposed execution ID for tracking
+  string string_to_be_ponged = 2;    // REQUIRED: Test string to be echoed back
 }
 
 message PingResponse {
-  string ref_request_id = 1;
-  string pong_string = 2;
-}
-
-message GetParticipantInfoRequest {
-  string ref_request_id = 1;
-}
-
-message GetParticipantInfoResponse {
-  string ref_request_id = 1;
-  string identifier = 2;
+  string ref_execution_id = 1;       // REQUIRED: Reference to the execution ID
+  string pong_string = 2;             // REQUIRED: Echoed string from request
 }
 
 message GetSupportedCurrenciesRequest {
-  string ref_request_id = 1;
-  PaginationParams pagination = 2;
+  string proposed_execution_id = 1;  // OPTIONAL: Client-proposed execution ID for tracking
+  PaginationParams pagination = 2;   // OPTIONAL: Pagination parameters
+
+  map<string, string> aux_data = 105; // OPTIONAL: Additional request data
 }
 
 message GetSupportedCurrenciesResponse {
-  string ref_request_id = 1;
-  PaginationInfo pagination_info = 2;
-  repeated Asset currencies = 3;
-}
+  string ref_execution_id = 1;       // REQUIRED: Reference to the execution ID
+  PaginationInfo pagination_info = 2; // OPTIONAL: Pagination information (required if paginated)
+  repeated Asset currencies = 3;      // REQUIRED: List of supported currencies (can be empty)
 
-message GetParticipantOrdersRequest {
-  string ref_request_id = 1;
-  PaginationParams pagination = 2;
-  // Optional filters
-  repeated string account_id_or_name_regexes = 3;  // Filter by specific accounts
-  repeated string market_id_or_name_regexes = 4;
-  Time from_time = 5;
-  Time to_time = 6;
-  OrderSide side = 7;  // Optional: filter by order side (not repeated)
-  repeated bool status_filters = 8;  // [is_filled, is_cancelled, is_expired]
-  repeated string instrument_id_or_symbol_regexes = 9;
-}
-
-message GetParticipantOrdersResponse {
-  string ref_request_id = 1;
-  PaginationInfo pagination_info = 2;
-  repeated Order orders = 3;
-  map<string, string> account_summaries = 4;  // account_id -> summary stats
-  Time created_at = 5;
-}
-
-message GetParticipantTradesRequest {
-  string ref_request_id = 1;
-  PaginationParams pagination = 2;
-  // Optional filters
-  repeated string account_id_or_name_regexes = 3;
-  repeated string market_id_or_name_regexes = 4;
-  Time from_time = 5;
-  Time to_time = 6;
-  OrderSide side = 7;  // Not repeated
-  repeated string instrument_id_or_symbol_regexes = 8;
-}
-
-message GetParticipantTradesResponse {
-  string ref_request_id = 1;
-  PaginationInfo pagination_info = 2;
-  repeated Trade trades = 3;
-  map<string, string> account_summaries = 4;  // account_id -> trade volume summary
-  Time created_at = 5;
-}
-
-message GetParticipantSettlementsRequest {
-  string ref_request_id = 1;
-  PaginationParams pagination = 2;
-  // Optional filters
-  repeated string account_id_or_name_regexes = 3;
-  repeated string market_id_or_name_regexes = 4;
-  Time from_time = 5;
-  Time to_time = 6;
-  ConfirmationStatus status = 7;
-  repeated string asset_id_or_name_regexes = 8;
-}
-
-message GetParticipantSettlementsResponse {
-  string ref_request_id = 1;
-  PaginationInfo pagination_info = 2;
-  repeated Settlement settlements = 3;
-  map<string, string> account_summaries = 4;  // account_id -> settlement summary
-  Time created_at = 5;
+  map<string, string> metadata = 105; // OPTIONAL: Response metadata
 }

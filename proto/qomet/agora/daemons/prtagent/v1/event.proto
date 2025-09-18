@@ -1,0 +1,151 @@
+syntax = "proto3";
+
+// Field Numbering Convention:
+// 1-100: Core business fields
+// 101-104: Display metadata (display_name, description, labels, tags)
+// 105: Request aux_data / Response metadata
+// 106-999: Reserved for future use
+// 1000+: Extension/OTHER enum values
+
+package qomet.agora.daemons.prtagent.v1;
+
+option go_package = "pkg/daemons/prtagent/api/v1/grpc;prtagentapiv1";
+option csharp_namespace  = "Qomet.Agora.Daemons.ParticipantAgent.API.V1";
+
+import "common.proto";
+import "account.proto";
+// import "agent.proto";
+import "instrument.proto";
+import "market.proto";
+import "participant.proto";
+import "trading.proto";
+import "venue.proto";
+
+enum EventTypeEnum {
+  EVENT_TYPE_ENUM__UNKNOWN = 0;
+
+  EVENT_TYPE_ENUM__NEWS = 1;
+  EVENT_TYPE_ENUM__ANNOUNCEMENT = 2;
+
+  EVENT_TYPE_ENUM__MARKET_UPDATE = 3;
+
+  EVENT_TYPE_ENUM__TRADE_EXECUTION = 4;
+
+  EVENT_TYPE_ENUM__ORDER_PLACED = 5;
+  EVENT_TYPE_ENUM__ORDER_CANCELLED = 6;
+  EVENT_TYPE_ENUM__ORDER_FILLED = 7;
+  EVENT_TYPE_ENUM__ORDER_EXPIRED = 8;
+
+  EVENT_TYPE_ENUM__PRICE_UPDATE = 9;
+  EVENT_TYPE_ENUM__REGULATORY = 10;
+  EVENT_TYPE_ENUM__SYSTEM = 11;
+
+  EVENT_TYPE_ENUM__EXECUTION_UPDATE = 12;
+  EVENT_TYPE_ENUM__EXECUTION_RESPONSE = 13;
+
+  EVENT_TYPE_ENUM__OTHER = 1000;
+}
+
+message EventSubscriptionParams {
+  string proposed_subscription_id = 1;        // OPTIONAL: Client-proposed subscription ID
+  repeated string topics = 2;                 // OPTIONAL: Specific topics to subscribe to
+  repeated EventTypeEnum subscribed_event_types = 3; // OPTIONAL: Event types to receive
+
+  map<string, string> aux_data = 105;         // OPTIONAL: Additional subscription data
+}
+
+message BlobEvent {
+  Blob data = 1;                              // REQUIRED: The blob data payload
+}
+
+enum ExecutionUpdateEventTypeEnum {
+  EXECUTION_UPDATE_EVENT_TYPE_ENUM__UNKNOWN = 0;
+
+  EXECUTION_UPDATE_EVENT_TYPE_ENUM__NEW_EXECUTION_FLOW = 1;
+  EXECUTION_UPDATE_EVENT_TYPE_ENUM__FLOW_PROGRESS_REPORT = 2;
+  EXECUTION_UPDATE_EVENT_TYPE_ENUM__EXECUTION_COMPLETED = 3;
+
+  EXECUTION_UPDATE_EVENT_TYPE_ENUM__OTHER = 1000;
+}
+
+message ExecutionUpdateEvent {
+  string ref_execution_id = 1;               // REQUIRED: Reference to the execution ID
+  ExecutionUpdateEventTypeEnum event_type = 2; // REQUIRED: Type of execution update
+
+  string flow_instance_id = 3;               // OPTIONAL: Flow instance identifier
+  string flow_execution_id = 4;              // OPTIONAL: Flow execution identifier
+  string total_nr_of_steps = 5;              // OPTIONAL: Total number of steps
+  string current_step_nr = 6;                // OPTIONAL: Current step number
+  string step_description = 7;               // OPTIONAL: Description of current step
+  string progress_percentage = 8;            // OPTIONAL: Progress percentage (0 to 100)
+  string msg = 9;                            // OPTIONAL: Status message
+
+  map<string, string> labels = 103;          // OPTIONAL: Key-value labels
+  repeated string tags = 104;                // OPTIONAL: Tags for categorization
+  map<string, string> metadata = 105;        // OPTIONAL: Additional metadata
+}
+
+message ExecutionResponseEvent {
+  string ref_execution_id = 1;               // REQUIRED: Reference to the execution ID
+
+  oneof response {                           // REQUIRED: Must contain one response type
+    // account responses
+    GetAccountListResponse get_account_list = 201;
+    GetAccountInfoBatchResponse get_account_info_batch = 202;
+    GetAccountInstrumentHoldingsResponse get_account_instrument_holdings = 203;
+    GetAccountCashHoldingsResponse get_account_cash_holdings = 204;
+    GetAccountOrdersResponse get_account_orders = 205;
+    GetAccountTradesResponse get_account_trades = 206;
+    GetAccountSettlementsResponse get_account_settlements = 207;
+    GetAccountTransactionsResponse get_account_transactions = 208;
+    // instrument responses
+    GetInstrumentListResponse get_instrument_list = 301;
+    GetInstrumentInfoBatchResponse get_instrument_info_batch = 302;
+    GetInstrumentOrdersResponse get_instrument_orders = 303;
+    GetInstrumentTradesResponse get_instrument_trades = 304;
+    GetInstrumentSettlementsResponse get_instrument_settlements = 305;
+    // market responses
+    GetMarketListResponse get_market_list = 401;
+    GetMarketCalendarResponse get_market_calendar = 402;
+    // venue responses
+    GetVenueListResponse get_venue_list = 501;
+    GetVenueCalendarResponse get_venue_calendar = 503;
+    // TODO: Determine if GetVenueInstrumentListingListResponse should be included
+    // GetVenueInstrumentListingListResponse get_venue_instrument_listing_list = 504;
+    // trading responses
+    GetOrderFeesResponse get_order_fees = 601;
+    // participant responses
+    GetParticipantInfoResponse get_participant_info = 701;
+    GetParticipantOrdersResponse get_participant_orders = 702;
+    GetParticipantTradesResponse get_participant_trades = 703;
+    GetParticipantSettlementsResponse get_participant_settlements = 704;
+    // agent responses
+    // TODO: Determine if GetSupportedCurrenciesResponse should be included
+    // GetSupportedCurrenciesResponse get_supported_currencies = 801;
+  }
+
+  map<string, string> labels = 103;          // OPTIONAL: Key-value labels
+  repeated string tags = 104;                // OPTIONAL: Tags for categorization
+  map<string, string> metadata = 105;        // OPTIONAL: Additional metadata
+}
+
+message Event {
+  string id = 1;                             // REQUIRED: Unique event identifier
+  string hash = 2;                           // OPTIONAL: Event content hash
+  string ref_subscription_id = 3;            // REQUIRED: Reference to subscription ID
+  string topic = 4;                          // REQUIRED: Event topic
+  DateTime generated_at_dt = 5;              // REQUIRED: Event generation timestamp
+
+  EventTypeEnum type = 6;                    // REQUIRED: Event type
+  oneof carrying_object {                    // REQUIRED: Must contain one event payload
+    BlobEvent blob = 7;
+    ExecutionUpdateEvent execution_update = 8;
+    ExecutionResponseEvent execution_response = 9;
+  }
+
+  map<string, string> display_names = 101;   // OPTIONAL: Display names for localization
+  map<string, string> descriptions = 102;    // OPTIONAL: Descriptions for localization
+  map<string, string> labels = 103;          // OPTIONAL: Key-value labels
+  repeated string tags = 104;                // OPTIONAL: Tags for categorization
+  map<string, string> metadata = 105;        // OPTIONAL: Additional metadata
+}

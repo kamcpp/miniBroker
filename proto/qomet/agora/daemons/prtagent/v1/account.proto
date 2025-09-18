@@ -1,267 +1,288 @@
 syntax = "proto3";
 
+// Field Numbering Convention:
+// 1-100: Core business fields
+// 101-104: Display metadata (display_name, description, labels, tags)
+// 105: Request aux_data / Response metadata
+// 106-999: Reserved for future use
+// 1000+: Extension/OTHER enum values
+
 package qomet.agora.daemons.prtagent.v1;
 
-option go_package = "pkg/daemons/prtagent/api/v1;prtagentapiv1";
+option go_package = "pkg/daemons/prtagent/api/v1/grpc;prtagentapiv1";
 option csharp_namespace  = "Qomet.Agora.Daemons.ParticipantAgent.API.V1";
 
-import "qomet/agora/daemons/prtagent/v1/common.proto";
+import "common.proto";
+import "fin_common.proto";
+import "filter.proto";
 
 service AccountService {
-  rpc GetAccountInfo(GetAccountInfoRequest) returns (GetAccountInfoResponse);
   rpc GetAccountList(GetAccountListRequest) returns (GetAccountListResponse);
-  rpc NewAccount(NewAccountRequest) returns (NewAccountResponse);
-  rpc EnableMarketForAccount(EnableMarketForAccountRequest) returns (EnableMarketForAccountResponse);
-  rpc GetAccountMarketPortfolio(GetAccountMarketPortfolioRequest) returns (GetAccountMarketPortfolioResponse);
+  rpc GetAccountListAsync(GetAccountListRequest) returns (ExecutionAsyncResponse);
+
+  rpc GetAccountInfoBatch(GetAccountInfoBatchRequest) returns (GetAccountInfoBatchResponse);
+  rpc GetAccountInfoBatchAsync(GetAccountInfoBatchRequest) returns (ExecutionAsyncResponse);
+  
+  rpc NewAccount(NewAccountRequest) returns (ExecutionAsyncResponse);
+  rpc ActivateVenueForAccount(ActivateVenueForAccountRequest) returns (ExecutionAsyncResponse);
+
+  rpc DepositCash(DepositCashRequest) returns (ExecutionAsyncResponse);
+  rpc DepositInstrument(DepositInstrumentRequest) returns (ExecutionAsyncResponse);
+  rpc WithdrawCash(WithdrawCashRequest) returns (ExecutionAsyncResponse);
+  rpc WithdrawInstrument(WithdrawInstrumentRequest) returns (ExecutionAsyncResponse);
+
+  rpc GetAccountInstrumentHoldings(GetAccountInstrumentHoldingsRequest) returns (GetAccountInstrumentHoldingsResponse);
+  rpc GetAccountInstrumentHoldingsAsync(GetAccountInstrumentHoldingsRequest) returns (ExecutionAsyncResponse);
+
   rpc GetAccountCashHoldings(GetAccountCashHoldingsRequest) returns (GetAccountCashHoldingsResponse);
-  rpc DepositCash(DepositCashRequest) returns (DepositCashResponse);
-  rpc DepositAsset(DepositAssetRequest) returns (DepositAssetResponse);
-  rpc WithdrawCash(WithdrawCashRequest) returns (WithdrawCashResponse);
+  rpc GetAccountCashHoldingsAsync(GetAccountCashHoldingsRequest) returns (ExecutionAsyncResponse);
+
   rpc GetAccountOrders(GetAccountOrdersRequest) returns (GetAccountOrdersResponse);
+  rpc GetAccountOrdersAsync(GetAccountOrdersRequest) returns (ExecutionAsyncResponse);
+
   rpc GetAccountTrades(GetAccountTradesRequest) returns (GetAccountTradesResponse);
+  rpc GetAccountTradesAsync(GetAccountTradesRequest) returns (ExecutionAsyncResponse);
+
   rpc GetAccountSettlements(GetAccountSettlementsRequest) returns (GetAccountSettlementsResponse);
+  rpc GetAccountSettlementsAsync(GetAccountSettlementsRequest) returns (ExecutionAsyncResponse);
+
   rpc GetAccountTransactions(GetAccountTransactionsRequest) returns (GetAccountTransactionsResponse);
-}
-
-message Account {
-  string id = 1;
-  string external_id = 2;
-  string metadata = 3;
-}
-
-message NewAccountRequest {
-  string ref_request_id = 1;
-  string external_account_id = 2;
-  string aux_data = 3;
-}
-
-message NewAccountResponse {
-  string ref_request_id = 1;
-  string new_account_id = 2;
-}
-
-message GetAccountInfoRequest {
-  string ref_request_id = 1;
-  string account_id = 2;
-}
-
-message GetAccountInfoResponse {
-  string ref_request_id = 1;
-  Account account = 2;
+  rpc GetAccountTransactionsAsync(GetAccountTransactionsRequest) returns (ExecutionAsyncResponse);
 }
 
 message GetAccountListRequest {
-  string ref_request_id = 1;
-  PaginationParams pagination = 2;
+  string proposed_execution_id = 1;               // OPTIONAL: Client-proposed execution ID for tracking
+  PaginationParams pagination = 2;                // OPTIONAL: Pagination parameters
+  string account_iid_or_external_id_regex = 3;    // OPTIONAL: Filter by account ID regex
+
+  map<string, string> aux_data = 105;             // OPTIONAL: Additional request data
 }
 
 message GetAccountListResponse {
-  string ref_request_id = 1;
-  PaginationInfo pagination_info = 2;
-  repeated Account accounts = 3;
+  string ref_execution_id = 1;                    // REQUIRED: Reference to the execution ID
+  PaginationInfo pagination_info = 2;             // OPTIONAL: Pagination information (required if paginated)
+  repeated Account accounts = 3;                  // REQUIRED: List of accounts (can be empty)
+
+  map<string, string> metadata = 105;             // OPTIONAL: Response metadata
 }
 
-message EnableMarketForAccountRequest {
-  string ref_request_id = 1;
-  string account_id = 2;
-  string market_id = 3;
-  string aux_data = 4;
+message GetAccountInfoBatchRequest {
+  string proposed_execution_id = 1;               // OPTIONAL: Client-proposed execution ID for tracking
+  repeated string account_iids = 2;               // REQUIRED: List of account IIDs to retrieve
+
+  map<string, string> aux_data = 105;             // OPTIONAL: Additional request data
 }
 
-message EnableMarketForAccountResponse {
-  string ref_request_id = 1;
+message GetAccountInfoBatchResponse {
+  string ref_execution_id = 1;                    // REQUIRED: Reference to the execution ID
+  repeated Account accounts = 2;                  // REQUIRED: List of account details (can be empty)
+
+  map<string, string> metadata = 105;             // OPTIONAL: Response metadata
 }
 
-message AssetHoldings {
-  // asset-id > balance
-  map<string, int64> balances = 1;
+message NewAccountRequest {
+  string proposed_execution_id = 1;               // OPTIONAL: Client-proposed execution ID for tracking
+  string external_account_id = 2;                 // REQUIRED: External account identifier
+
+  map<string, string> aux_data = 105;             // OPTIONAL: Additional request data
 }
 
-message GetAccountMarketPortfolioRequest {
-  string ref_request_id = 1;
-  string account_id = 2;
-  string market_id = 3;
-  repeated string asset_ids = 4;
+message NewAccountResponse {
+  string ref_execution_id = 1;                    // REQUIRED: Reference to the execution ID
+
+  string agent_account_id = 2;                    // REQUIRED: Created agent account ID
+  DateTime activation_dt = 3;                     // REQUIRED: Account activation timestamp
+
+  map<string, string> metadata = 105;             // OPTIONAL: Response metadata
 }
 
-message GetAccountMarketPortfolioResponse {
-  string ref_request_id = 1;
-  Time created_at = 2;
-  AssetHoldings portfolio = 3;
+message ActivateVenueForAccountRequest {
+  string proposed_execution_id = 1;               // OPTIONAL: Client-proposed execution ID for tracking
+  string account_iid = 2;                         // REQUIRED: Account internal ID
+  string venue_iid = 3;                           // REQUIRED: Venue internal ID to activate
+
+  map<string, string> aux_data = 105;             // OPTIONAL: Additional request data
+}
+
+message ActivateVenueForAccountResponse {
+  string ref_execution_id = 1;                    // REQUIRED: Reference to the execution ID
+
+  DateTime activation_dt = 2;                     // REQUIRED: Venue activation timestamp
+
+  map<string, string> metadata = 105;             // OPTIONAL: Response metadata
+}
+
+message GetAccountInstrumentHoldingsRequest {
+  string proposed_execution_id = 1;               // OPTIONAL: Client-proposed execution ID for tracking
+  string account_iid = 2;                         // REQUIRED: Account internal ID
+  string venue_iid = 3;                           // OPTIONAL: Venue internal ID (filter by venue)
+  repeated string instrument_iids = 4;            // OPTIONAL: Specific instrument IIDs to retrieve
+
+  map<string, string> aux_data = 105;             // OPTIONAL: Additional request data
+}
+
+message GetAccountInstrumentHoldingsResponse {
+  string ref_execution_id = 1;                    // REQUIRED: Reference to the execution ID
+  Portfolio portfolio = 2;                        // REQUIRED: Portfolio with instrument holdings
+
+  map<string, string> metadata = 105;             // OPTIONAL: Response metadata
 }
 
 message GetAccountCashHoldingsRequest {
-  string ref_request_id = 1;
-  string account_id = 2;
-  repeated string cash_asset_ids = 3;
+  string proposed_execution_id = 1;               // OPTIONAL: Client-proposed execution ID for tracking
+  string account_iid = 2;                         // REQUIRED: Account internal ID
+  repeated string currency_codes = 3;             // OPTIONAL: Specific currency codes to retrieve
+
+  map<string, string> aux_data = 105;             // OPTIONAL: Additional request data
 }
 
 message GetAccountCashHoldingsResponse {
-  string ref_request_id = 1;
-  Time created_at = 2;
-  AssetHoldings cash_holdings = 3;
+  string ref_execution_id = 1;                    // REQUIRED: Reference to the execution ID
+  Portfolio cash_portfolio = 2;                   // REQUIRED: Portfolio with cash holdings
+
+  map<string, string> metadata = 105;             // OPTIONAL: Response metadata
 }
 
 message DepositCashRequest {
-  string ref_request_id = 1;
-  string account_id = 2;
-  string currency_asset_id = 3;
-  string amount = 4;
-  string aux_data = 5;
+  string proposed_execution_id = 1;               // OPTIONAL: Client-proposed execution ID for tracking
+  string account_iid = 2;                         // REQUIRED: Account internal ID
+  string currency_code = 3;                       // REQUIRED: Currency code (e.g., "USD", "EUR")
+  string amount = 4;                              // REQUIRED: Amount to deposit
+
+  map<string, string> aux_data = 105;             // OPTIONAL: Additional request data
 }
 
 message DepositCashResponse {
-  string ref_request_id = 1;
+  string ref_execution_id = 1;                    // REQUIRED: Reference to the execution ID
+
+  map<string, string> metadata = 105;             // OPTIONAL: Response metadata
 }
 
-message DepositAssetRequest {
-  string ref_request_id = 1;
-  string account_id = 2;
-  string asset_id = 3;
-  int64 amount = 4;
-  string aux_data = 5;
+message DepositInstrumentRequest {
+  string proposed_execution_id = 1;               // OPTIONAL: Client-proposed execution ID for tracking
+  string account_iid = 2;                         // REQUIRED: Account internal ID
+  string instrument_iid = 3;                      // REQUIRED: Instrument internal ID
+  string units = 4;                               // REQUIRED: Number of units to deposit
+
+  map<string, string> aux_data = 105;             // OPTIONAL: Additional request data
 }
 
-message DepositAssetResponse {
-  string ref_request_id = 1;
+message DepositInstrumentResponse {
+  string ref_execution_id = 1;                    // REQUIRED: Reference to the execution ID
+
+  map<string, string> metadata = 105;             // OPTIONAL: Response metadata
 }
 
 message WithdrawCashRequest {
-  string ref_request_id = 1;
-  string account_id = 2;
-  string currency_asset_id = 3;
-  int64 amount = 4;
-  string aux_data = 5;
+  string proposed_execution_id = 1;               // OPTIONAL: Client-proposed execution ID for tracking
+  string account_iid = 2;                         // REQUIRED: Account internal ID
+  string currency_code = 3;                       // REQUIRED: Currency code (e.g., "USD", "EUR")
+  string amount = 4;                              // REQUIRED: Amount to withdraw
+
+  map<string, string> aux_data = 105;             // OPTIONAL: Additional request data
 }
 
 message WithdrawCashResponse {
-  string ref_request_id = 1;
+  string ref_execution_id = 1;                    // REQUIRED: Reference to the execution ID
+
+  map<string, string> metadata = 105;             // OPTIONAL: Response metadata
 }
 
-enum TransactionType {
-  TRANSACTION_TYPE__UNKNOWN = 0;
-  TRANSACTION_TYPE__DEPOSIT_CASH = 1;
-  TRANSACTION_TYPE__DEPOSIT_ASSET = 2;
-  TRANSACTION_TYPE__WITHDRAW_CASH = 3;
-  TRANSACTION_TYPE__WITHDRAW_ASSET = 4;
-  TRANSACTION_TYPE__TRADE_BUY = 5;
-  TRANSACTION_TYPE__TRADE_SELL = 6;
-  TRANSACTION_TYPE__FEE = 7;
-  TRANSACTION_TYPE__SETTLEMENT = 8;
-  TRANSACTION_TYPE__TRANSFER_IN = 9;
-  TRANSACTION_TYPE__TRANSFER_OUT = 10;
+message WithdrawInstrumentRequest {
+  string proposed_execution_id = 1;               // OPTIONAL: Client-proposed execution ID for tracking
+  string account_iid = 2;                         // REQUIRED: Account internal ID
+  string instrument_iid = 3;                      // REQUIRED: Instrument internal ID
+  string units = 4;                               // REQUIRED: Number of units to withdraw
+
+  map<string, string> aux_data = 105;             // OPTIONAL: Additional request data
 }
 
-// Transaction message reflects Activity structure with from/to accounts and stashes
-// This structure mirrors the Activity model from pkg/chain/trezor/activity.go
-message Transaction {
-  // Core identifiers
-  string transaction_id = 1;
-  string transaction_hash = 2;
-  Time timestamp = 3;
-  
-  // Transaction type and operation
-  TransactionType type = 4;
-  string operation = 5;  // Specific operation code
-  
-  // Account information (reflecting Activity structure)
-  string account_id = 6;  // Primary account for this transaction
-  string from_account = 7;  // Source account
-  string to_account = 8;  // Destination account
-  
-  // Reserve IDs (from Activity model)
-  string from_reserve_id = 9;
-  string to_reserve_id = 10;
-  
-  // Stash information (critical for the Activity model)
-  string from_stash = 11;  // Source stash
-  string to_stash = 12;  // Destination stash
-  
-  // Asset and amount
-  string asset_id = 13;  // Asset being transferred
-  string amount = 14;
-  
-  // Reference information
-  string reference_id = 15;  // Could be order_id, trade_id, settlement_id, etc.
-  string reference_type = 16;  // "order", "trade", "settlement", etc.
-  
-  // Additional fields
-  string description = 17;
-  string metadata = 18;
+message WithdrawInstrumentResponse {
+  string ref_execution_id = 1;                    // REQUIRED: Reference to the execution ID
+
+  map<string, string> metadata = 105;             // OPTIONAL: Response metadata
 }
 
 message GetAccountOrdersRequest {
-  string ref_request_id = 1;
-  string account_id = 2;
-  repeated string market_id_or_name_regexes = 3;  // Optional: filter by market
-  PaginationParams pagination = 4;
-  // Optional filters
-  Time from_time = 5;
-  Time to_time = 6;
-  OrderSide side = 7;  // Optional: filter by order side (not repeated)
-  repeated bool status_filters = 8;  // Optional: [is_filled, is_cancelled, is_expired]
-  repeated string instrument_id_or_symbol_regexes = 9;  // Optional: filter by instrument
+  string proposed_execution_id = 1;               // OPTIONAL: Client-proposed execution ID for tracking
+  string account_iid = 2;                         // REQUIRED: Account internal ID
+  repeated string venue_id_or_symbol_regexes = 3; // OPTIONAL: Filter by venue ID or symbol regex
+  PaginationParams pagination = 4;                // OPTIONAL: Pagination parameters
+  OrderQueryFilter order_query_filter = 5;        // OPTIONAL: Additional order filters
+
+  map<string, string> aux_data = 105;             // OPTIONAL: Additional request data
 }
 
 message GetAccountOrdersResponse {
-  string ref_request_id = 1;
-  PaginationInfo pagination_info = 2;
-  repeated Order orders = 3;
-  Time created_at = 4;
+  string ref_execution_id = 1;                    // REQUIRED: Reference to the execution ID
+  PaginationInfo pagination_info = 2;             // OPTIONAL: Pagination information (required if paginated)
+  DateTime generated_at_dt = 3;                   // REQUIRED: Response generation timestamp
+  repeated Order orders = 4;                      // REQUIRED: List of orders (can be empty)
+
+  map<string, string> metadata = 105;             // OPTIONAL: Response metadata
 }
 
 message GetAccountTradesRequest {
-  string ref_request_id = 1;
-  string account_id = 2;
-  repeated string market_id_or_name_regexes = 3;  // Optional: filter by market
-  PaginationParams pagination = 4;
-  // Optional filters
-  Time from_time = 5;
-  Time to_time = 6;
-  repeated string instrument_id_or_symbol_regexes = 7;  // Optional: filter by instrument
-  OrderSide side = 8;  // Optional: filter by trade side (not repeated)
+  string proposed_execution_id = 1;               // OPTIONAL: Client-proposed execution ID for tracking
+  string account_iid = 2;                         // REQUIRED: Account internal ID
+  repeated string market_id_or_name_regexes = 3;  // OPTIONAL: Filter by market ID or name regex
+  PaginationParams pagination = 4;                // OPTIONAL: Pagination parameters
+  DateTime from_dt = 5;                           // OPTIONAL: Start of time range
+  DateTime to_dt = 6;                             // OPTIONAL: End of time range
+  repeated string instrument_id_or_symbol_regexes = 7; // OPTIONAL: Filter by instrument ID or symbol regex
+  OrderSide side = 8;                             // OPTIONAL: Filter by order side
+
+  map<string, string> aux_data = 105;             // OPTIONAL: Additional request data
 }
 
 message GetAccountTradesResponse {
-  string ref_request_id = 1;
-  PaginationInfo pagination_info = 2;
-  repeated Trade trades = 3;
-  Time created_at = 4;
+  string ref_execution_id = 1;                    // REQUIRED: Reference to the execution ID
+  PaginationInfo pagination_info = 2;             // OPTIONAL: Pagination information (required if paginated)
+  DateTime generated_at_dt = 3;                   // REQUIRED: Response generation timestamp
+  repeated Trade trades = 4;                      // REQUIRED: List of trades (can be empty)
+
+  map<string, string> metadata = 105;             // OPTIONAL: Response metadata
 }
 
 message GetAccountSettlementsRequest {
-  string ref_request_id = 1;
-  string account_id = 2;
-  repeated string market_id_or_name_regexes = 3;  // Optional: filter by market
-  PaginationParams pagination = 4;
-  // Optional filters
-  Time from_time = 5;
-  Time to_time = 6;
-  ConfirmationStatus status = 7;  // Optional: filter by settlement status
-  repeated string asset_id_or_name_regexes = 8;  // Optional: filter by asset
+  string proposed_execution_id = 1;               // OPTIONAL: Client-proposed execution ID for tracking
+  string account_iid = 2;                         // REQUIRED: Account internal ID
+  repeated string market_id_or_name_regexes = 3;  // OPTIONAL: Filter by market ID or name regex
+  PaginationParams pagination = 4;                // OPTIONAL: Pagination parameters
+  DateTime from_dt = 5;                           // OPTIONAL: Start of time range
+  DateTime to_dt = 6;                             // OPTIONAL: End of time range
+  ConfirmationStatus status = 7;                  // OPTIONAL: Filter by confirmation status
+  repeated string asset_id_or_name_regexes = 8;   // OPTIONAL: Filter by asset ID or name regex
+
+  map<string, string> aux_data = 105;             // OPTIONAL: Additional request data
 }
 
 message GetAccountSettlementsResponse {
-  string ref_request_id = 1;
-  PaginationInfo pagination_info = 2;
-  repeated Settlement settlements = 3;
-  Time created_at = 4;
+  string ref_execution_id = 1;                    // REQUIRED: Reference to the execution ID
+  PaginationInfo pagination_info = 2;             // OPTIONAL: Pagination information (required if paginated)
+  DateTime generated_at_dt = 3;                   // REQUIRED: Response generation timestamp
+  repeated Settlement settlements = 4;             // REQUIRED: List of settlements (can be empty)
+
+  map<string, string> metadata = 105;             // OPTIONAL: Response metadata
 }
 
 message GetAccountTransactionsRequest {
-  string ref_request_id = 1;
-  string account_id = 2;
-  PaginationParams pagination = 3;
-  // Optional filters
-  Time from_time = 4;
-  Time to_time = 5;
-  repeated TransactionType transaction_types = 6;  // Optional: filter by type
-  repeated string asset_id_or_name_regexes = 7;  // Optional: filter by asset
+  string proposed_execution_id = 1;               // OPTIONAL: Client-proposed execution ID for tracking
+  string account_iid = 2;                         // REQUIRED: Account internal ID
+  PaginationParams pagination = 3;                // OPTIONAL: Pagination parameters
+  DateTime from_dt = 4;                           // OPTIONAL: Start of time range
+  DateTime to_dt = 5;                             // OPTIONAL: End of time range
+  repeated TransactionTypeEnum transaction_types = 6; // OPTIONAL: Filter by transaction types
+  repeated string asset_id_or_name_regexes = 7;   // OPTIONAL: Filter by asset ID or name regex
+
+  map<string, string> aux_data = 105;             // OPTIONAL: Additional request data
 }
 
 message GetAccountTransactionsResponse {
-  string ref_request_id = 1;
-  PaginationInfo pagination_info = 2;
-  repeated Transaction transactions = 3;
-  Time created_at = 4;
+  string ref_execution_id = 1;                    // REQUIRED: Reference to the execution ID
+  PaginationInfo pagination_info = 2;             // OPTIONAL: Pagination information (required if paginated)
+  DateTime generated_at_dt = 3;                   // REQUIRED: Response generation timestamp
+  repeated Transaction transactions = 4;           // REQUIRED: List of transactions (can be empty)
+
+  map<string, string> metadata = 105;             // OPTIONAL: Response metadata
 }
