@@ -1412,8 +1412,8 @@ class GrpcurlHelper {
   /// Get Market Instrument List using grpcurl
   static Future<Map<String, dynamic>> getMarketInstrumentList({
     required String marketId,
-    int pageNumber = 1,
-    int pageSize = 10,
+    int pageNumber = 0,
+    int pageSize = 0,
   }) async {
     final responseData = <String, dynamic>{
       'success': false,
@@ -1489,8 +1489,8 @@ class GrpcurlHelper {
   /// Make a real GetMarketSupportedCurrencies call using grpcurl
   static Future<Map<String, dynamic>> getMarketSupportedCurrencies({
     required String marketId,
-    int pageNumber = 1,
-    int pageSize = 100,
+    int pageNumber = 0,
+    int pageSize = 0,
   }) async {
     Map<String, dynamic> responseData = {
       'success': false,
@@ -1567,8 +1567,8 @@ class GrpcurlHelper {
 
   /// Make a real GetSupportedCurrencies call using grpcurl
   static Future<Map<String, dynamic>> getSupportedCurrencies({
-    int pageNumber = 1,
-    int pageSize = 100,
+    int pageNumber = 0,
+    int pageSize = 0,
   }) async {
     Map<String, dynamic> responseData = {
       'success': false,

@@ -1020,8 +1020,8 @@ class RealGrpcClient {
   /// Real GetMarketInstrumentList call to MarketService.GetMarketInstrumentList using grpcurl
   Future<Map<String, dynamic>> getMarketInstrumentList({
     required String marketId,
-    int pageNumber = 1,
-    int pageSize = 10,
+    int pageNumber = 0,
+    int pageSize = 0,
     Duration? timeout,
   }) async {
     if (!_isConnected) {
@@ -1070,8 +1070,8 @@ class RealGrpcClient {
 
   /// Get supported currencies using the real gRPC server
   Future<Map<String, dynamic>> getSupportedCurrencies({
-    int pageNumber = 1,
-    int pageSize = 100,
+    int pageNumber = 0,
+    int pageSize = 0,
   }) async {
     try {
       print('🏦 Getting supported currencies...');
@@ -1110,8 +1110,8 @@ class RealGrpcClient {
   /// Get market supported currencies using the real gRPC server
   Future<Map<String, dynamic>> getMarketSupportedCurrencies({
     required String marketId,
-    int pageNumber = 1,
-    int pageSize = 100,
+    int pageNumber = 0,
+    int pageSize = 0,
   }) async {
     try {
       print('🏦 Getting market supported currencies for market: $marketId');
