@@ -132,8 +132,8 @@ class SimpleGrpcClient {
 
   /// Get Account List from the gRPC server
   Future<Map<String, dynamic>> getAccountList({
-    int pageNumber = 1,
-    int pageSize = 10,
+    int pageNumber = 0,
+    int pageSize = 0,
     String? accountIdRegex,
   }) async {
     if (!_isConnected) {

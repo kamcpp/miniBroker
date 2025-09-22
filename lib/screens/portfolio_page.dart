@@ -48,8 +48,8 @@ class _PortfolioPageState extends State<PortfolioPage> {
     try {
       // Fetch account list with comprehensive crash protection
       final accountListResponse = await realGrpcClient.getAccountList(
-        pageNumber: 1,
-        pageSize: 10,
+        pageNumber: 0,
+        pageSize: 0,
         accountIdRegex: null, // Can be modified to filter accounts
       ).timeout(
         const Duration(seconds: 10),

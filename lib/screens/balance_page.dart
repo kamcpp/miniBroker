@@ -198,8 +198,8 @@ class _BalancePageState extends State<BalancePage> {
   Future<void> _fetchAccountList() async {
     try {
       final accountListResponse = await realGrpcClient.getAccountList(
-        pageNumber: 1,
-        pageSize: 10,
+        pageNumber: 0,
+        pageSize: 0,
         accountIdRegex: null,
       ).timeout(
         const Duration(seconds: 10),

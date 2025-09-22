@@ -341,9 +341,10 @@ class RealGrpcClient {
 
   /// Real GetAccountList call to AccountService.GetAccountList using grpcurl
   Future<Map<String, dynamic>> getAccountList({
-    int pageNumber = 1,
-    int pageSize = 10,
+    int pageNumber = 0,
+    int pageSize = 0,
     String? accountIdRegex,
+    Map<String, String>? auxData,
     Duration? timeout,
   }) async {
     // Always test connectivity first to prevent crashes
@@ -354,7 +355,16 @@ class RealGrpcClient {
       _isConnected = false; // Update connection state
       return {
         'input': {
-          'ref_request_id': 'get_account_list_${DateTime.now().millisecondsSinceEpoch}',
+          'proposed_execution_id': 'get_account_list_${DateTime.now().millisecondsSinceEpoch}',
+          'pagination': {
+            'page_nr': pageNumber,
+            'page_size': pageSize,
+            'page_token': '',
+          },
+          if (accountIdRegex != null && accountIdRegex.isNotEmpty)
+            'account_iid_or_external_id_regex': accountIdRegex,
+          if (auxData != null && auxData.isNotEmpty)
+            'aux_data': auxData,
         },
         'output': {
           'error': 'Server not reachable',
@@ -376,13 +386,27 @@ class RealGrpcClient {
       print('🔄 GetAccountList button clicked - attempting real server connection');
       
       // Try to call the real server with grpcurl, with comprehensive crash protection
-      final response = await GrpcurlHelper.getAccountList().timeout(
+      final response = await GrpcurlHelper.getAccountList(
+        pageNumber: pageNumber,
+        pageSize: pageSize,
+        accountIdRegex: accountIdRegex,
+        auxData: auxData,
+      ).timeout(
         const Duration(seconds: 5),
         onTimeout: () {
           print('⏰ GetAccountList request timed out');
           return {
             'input': {
-              'ref_request_id': 'get_account_list_${DateTime.now().millisecondsSinceEpoch}',
+              'proposed_execution_id': 'get_account_list_${DateTime.now().millisecondsSinceEpoch}',
+              'pagination': {
+                'page_nr': pageNumber,
+                'page_size': pageSize,
+                'page_token': '',
+              },
+              if (accountIdRegex != null && accountIdRegex.isNotEmpty)
+                'account_iid_or_external_id_regex': accountIdRegex,
+              if (auxData != null && auxData.isNotEmpty)
+                'aux_data': auxData,
             },
             'output': {
               'error': 'Request timed out',
@@ -397,7 +421,16 @@ class RealGrpcClient {
         print('❌ GetAccountList error caught: $error');
         return {
           'input': {
-            'ref_request_id': 'get_account_list_${DateTime.now().millisecondsSinceEpoch}',
+            'proposed_execution_id': 'get_account_list_${DateTime.now().millisecondsSinceEpoch}',
+            'pagination': {
+              'page_nr': pageNumber,
+              'page_size': pageSize,
+              'page_token': '',
+            },
+            if (accountIdRegex != null && accountIdRegex.isNotEmpty)
+              'account_iid_or_external_id_regex': accountIdRegex,
+            if (auxData != null && auxData.isNotEmpty)
+              'aux_data': auxData,
           },
           'output': {
             'error': 'GetAccountList execution failed',

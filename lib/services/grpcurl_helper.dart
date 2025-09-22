@@ -509,13 +509,27 @@ class GrpcurlHelper {
   }
 
   /// Make a real GetAccountList call using grpcurl
-  static Future<Map<String, dynamic>> getAccountList() async {
+  static Future<Map<String, dynamic>> getAccountList({
+    int pageNumber = 0,
+    int pageSize = 0,
+    String? accountIdRegex,
+    Map<String, String>? auxData,
+  }) async {
     // Prevent concurrent account list calls to avoid crashes
     if (_isAccountListInProgress) {
       print('⚠️ GetAccountList already in progress, returning cached response');
       return {
         'input': {
-          'ref_request_id': 'get_account_list_${DateTime.now().millisecondsSinceEpoch}',
+          'proposed_execution_id': 'get_account_list_${DateTime.now().millisecondsSinceEpoch}',
+          'pagination': {
+            'page_nr': pageNumber,
+            'page_size': pageSize,
+            'page_token': '',
+          },
+          if (accountIdRegex != null && accountIdRegex.isNotEmpty)
+            'account_iid_or_external_id_regex': accountIdRegex,
+          if (auxData != null && auxData.isNotEmpty)
+            'aux_data': auxData,
         },
         'output': {
           'error': 'Operation already in progress',
@@ -529,13 +543,27 @@ class GrpcurlHelper {
 
     _isAccountListInProgress = true;
     try {
-      return await _getAccountListInternal();
+      return await _getAccountListInternal(
+        pageNumber: pageNumber,
+        pageSize: pageSize,
+        accountIdRegex: accountIdRegex,
+        auxData: auxData,
+      );
     } catch (error, stack) {
       print('❌ CRITICAL: Unhandled exception in getAccountList: $error');
       print('❌ CRITICAL: Stack: $stack');
       return {
         'input': {
-          'ref_request_id': 'get_account_list_${DateTime.now().millisecondsSinceEpoch}',
+          'proposed_execution_id': 'get_account_list_${DateTime.now().millisecondsSinceEpoch}',
+          'pagination': {
+            'page_nr': pageNumber,
+            'page_size': pageSize,
+            'page_token': '',
+          },
+          if (accountIdRegex != null && accountIdRegex.isNotEmpty)
+            'account_iid_or_external_id_regex': accountIdRegex,
+          if (auxData != null && auxData.isNotEmpty)
+            'aux_data': auxData,
         },
         'output': {
           'error': 'Critical unhandled exception in getAccountList',
@@ -552,11 +580,26 @@ class GrpcurlHelper {
   }
 
   /// Internal getAccountList implementation
-  static Future<Map<String, dynamic>> _getAccountListInternal() async {
+  static Future<Map<String, dynamic>> _getAccountListInternal({
+    int pageNumber = 0,
+    int pageSize = 0,
+    String? accountIdRegex,
+    Map<String, String>? auxData,
+  }) async {
     final requestId = 'get_account_list_${DateTime.now().millisecondsSinceEpoch}';
     
+    // Build the proper request structure according to the proto definition
     final request = {
-      'ref_request_id': requestId,
+      'proposed_execution_id': requestId,
+      'pagination': {
+        'page_nr': pageNumber,
+        'page_size': pageSize,
+        'page_token': '', // Empty for now, can be used for token-based pagination
+      },
+      if (accountIdRegex != null && accountIdRegex.isNotEmpty)
+        'account_iid_or_external_id_regex': accountIdRegex,
+      if (auxData != null && auxData.isNotEmpty)
+        'aux_data': auxData,
     };
 
     try {
