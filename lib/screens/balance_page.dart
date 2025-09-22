@@ -269,10 +269,11 @@ class _BalancePageState extends State<BalancePage> {
 
         if (cashHoldingsResponse['success'] == true) {
           final output = cashHoldingsResponse['output'] as Map<String, dynamic>;
-          final cashHoldings = output['cashHoldings'] as Map<String, dynamic>? ?? {};
-          final balances = cashHoldings['balances'] as Map<String, dynamic>? ?? {};
+          final cashPortfolio = output['cashPortfolio'] as Map<String, dynamic>? ?? {};
+          final holdings = cashPortfolio['holdings'] as Map<String, dynamic>? ?? {};
           final assetId = _selectedCurrency['asset_id'] ?? '';
-          final assetBalance = balances[assetId]?.toString() ?? '0';
+          final assetHolding = holdings[assetId] as Map<String, dynamic>? ?? {};
+          final assetBalance = assetHolding['totalUnits']?.toString() ?? '0';
 
           setState(() {
             _buyingPower = assetBalance;

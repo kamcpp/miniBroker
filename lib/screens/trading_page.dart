@@ -212,39 +212,58 @@ class _TradingPageState extends State<TradingPage> {
         
         for (final currency in currencies) {
           if (currency is Map<String, dynamic>) {
+            // Handle new response structure (from fallback data)
+            final currencyCode = currency['code'] as String? ?? '';
+            final currencySymbol = currency['symbol'] as String? ?? '';
+            final displayNames = currency['displayNames'] as Map<String, dynamic>? ?? {};
+            final currencyName = displayNames['en'] as String? ?? currency['name'] as String? ?? currencyCode;
+
+            if (currencyCode.isNotEmpty) {
+              final currencyMap = {
+                'code': currencyCode,
+                'symbol': currencySymbol.isNotEmpty ? currencySymbol : currencyCode,
+                'display': currencyName.isNotEmpty ? '$currencyName ($currencyCode)' : currencyCode,
+                'asset_id': currencyCode, // For compatibility with existing code
+              };
+              currencyData.add(currencyMap);
+              continue;
+            }
+
+            // Fallback: Handle old zonedSymbols structure if new structure not available
             final zonedSymbols = currency['zonedSymbols'] as List<dynamic>? ?? [];
             for (final zonedSymbol in zonedSymbols) {
               if (zonedSymbol is Map<String, dynamic>) {
                 final symbols = zonedSymbol['symbols'] as List<dynamic>? ?? [];
-                
+
                 // Extract currency name and symbol
-                String? currencyCode;
-                String? currencySymbol;
-                
+                String? fallbackCode;
+                String? fallbackSymbol;
+
                 for (final symbol in symbols) {
                   if (symbol is Map<String, dynamic>) {
                     final value = symbol['value'] as String?;
                     if (value != null && value.isNotEmpty) {
                       // First symbol is typically the currency code (USD)
-                      if (currencyCode == null) {
-                        currencyCode = value;
-                      } 
+                      if (fallbackCode == null) {
+                        fallbackCode = value;
+                      }
                       // Second symbol is typically the currency symbol ($)
-                      else if (currencySymbol == null) {
-                        currencySymbol = value;
+                      else if (fallbackSymbol == null) {
+                        fallbackSymbol = value;
                       }
                     }
                   }
                 }
-                
+
                 // Add currency data if we have at least the code
-                if (currencyCode != null) {
+                if (fallbackCode != null) {
                   final currencyMap = {
-                    'code': currencyCode,
-                    'symbol': currencySymbol ?? currencyCode, // fallback to code if no symbol
-                    'display': currencySymbol != null && currencySymbol != currencyCode 
-                        ? '$currencyCode($currencySymbol)'
-                        : currencyCode,
+                    'code': fallbackCode,
+                    'symbol': fallbackSymbol ?? fallbackCode, // fallback to code if no symbol
+                    'display': fallbackSymbol != null && fallbackSymbol != fallbackCode
+                        ? '$fallbackCode($fallbackSymbol)'
+                        : fallbackCode,
+                    'asset_id': fallbackCode,
                   };
                   currencyData.add(currencyMap);
                 }
@@ -300,19 +319,31 @@ class _TradingPageState extends State<TradingPage> {
         
         for (final market in markets) {
           if (market is Map<String, dynamic>) {
+            // Extract market ID from identifiers structure
             final identifiers = market['identifiers'] as List<dynamic>? ?? [];
-            final names = market['names'] as List<dynamic>? ?? [];
-            final description = market['description'] as String?;
-            
-            // Use the first identifier and name if available
-            final marketId = identifiers.isNotEmpty ? identifiers[0].toString() : null;
-            final marketName = names.isNotEmpty ? names[0].toString() : null;
-            
+            final displayNames = market['displayNames'] as Map<String, dynamic>? ?? {};
+
+            String? marketId;
+            String? marketName;
+
+            // Extract market ID from the complex identifier structure
+            if (identifiers.isNotEmpty) {
+              final identifier = identifiers[0] as Map<String, dynamic>? ?? {};
+              final ids = identifier['ids'] as List<dynamic>? ?? [];
+              if (ids.isNotEmpty) {
+                final idObj = ids[0] as Map<String, dynamic>? ?? {};
+                marketId = idObj['value'] as String?;
+              }
+            }
+
+            // Use display name in English, or fall back to market ID
+            marketName = displayNames['en'] as String? ?? marketId;
+
             if (marketId != null && marketId.isNotEmpty) {
               final marketMap = {
                 'id': marketId,
                 'name': marketName ?? marketId,
-                'description': description ?? '',
+                'description': marketName ?? marketId,
                 'display': marketName ?? marketId, // Show the name in dropdown
               };
               marketData.add(marketMap);
@@ -373,33 +404,43 @@ class _TradingPageState extends State<TradingPage> {
         
         for (final instrument in instruments) {
           if (instrument is Map<String, dynamic>) {
-            // Extract symbol from zonedSymbols structure
+            // Extract symbol from identifiers structure
             String symbol = '';
-            final zonedSymbols = instrument['zonedSymbols'] as List<dynamic>? ?? [];
-            if (zonedSymbols.isNotEmpty) {
-              final firstZonedSymbol = zonedSymbols[0] as Map<String, dynamic>? ?? {};
-              final symbols = firstZonedSymbol['symbols'] as List<dynamic>? ?? [];
-              if (symbols.isNotEmpty) {
-                final firstSymbol = symbols[0] as Map<String, dynamic>? ?? {};
-                symbol = firstSymbol['value']?.toString() ?? '';
+            String description = '';
+
+            final identifiers = instrument['identifiers'] as List<dynamic>? ?? [];
+            final displayNames = instrument['displayNames'] as Map<String, dynamic>? ?? {};
+
+            // Extract symbol from the complex identifier structure
+            if (identifiers.isNotEmpty) {
+              final identifier = identifiers[0] as Map<String, dynamic>? ?? {};
+              final ids = identifier['ids'] as List<dynamic>? ?? [];
+              if (ids.isNotEmpty) {
+                final idObj = ids[0] as Map<String, dynamic>? ?? {};
+                symbol = idObj['value'] as String? ?? '';
               }
             }
-            
-            final description = instrument['description']?.toString() ?? symbol;
-            final exchangePairId = instrument['exchangePairId']?.toString() ?? '';
-            
+
+            // Use display name in English, or fall back to symbol
+            description = displayNames['en'] as String? ?? symbol;
+
+            final iid = instrument['iid']?.toString() ?? '';
+            final issueCurrency = instrument['issueCurrency']?.toString() ?? '';
+
             if (symbol.isNotEmpty) {
               final assetMap = {
                 'symbol': symbol,
                 'description': description,
-                'exchangePairId': exchangePairId,
+                'exchangePairId': iid,
                 'price': '0.00',
                 'change': '0.00',
                 'changePercent': '0.00%',
                 'coverAddress': 'https://picsum.photos/112/120?random=${processedAssets.length}',
                 'last': 0.0,
-                'orderbook': instrument['orderbook']?.toString() ?? '',
-                'quoteTokenDecimal': instrument['quoteTokenDecimal'] ?? 0,
+                'orderbook': '',
+                'quoteTokenDecimal': 8, // Default decimal places
+                'issueCurrency': issueCurrency,
+                'iid': iid,
               };
               processedAssets.add(assetMap);
             }
@@ -988,9 +1029,10 @@ class _TradingPageState extends State<TradingPage> {
         if (cashHoldingsResponse['success'] == true) {
           // Extract USD balance from the response
           final output = cashHoldingsResponse['output'] as Map<String, dynamic>;
-          final cashHoldings = output['cashHoldings'] as Map<String, dynamic>? ?? {};
-          final balances = cashHoldings['balances'] as Map<String, dynamic>? ?? {};
-          final usdBalance = balances['USD']?.toString() ?? '0';
+          final cashPortfolio = output['cashPortfolio'] as Map<String, dynamic>? ?? {};
+          final holdings = cashPortfolio['holdings'] as Map<String, dynamic>? ?? {};
+          final usdHolding = holdings['USD'] as Map<String, dynamic>? ?? {};
+          final usdBalance = usdHolding['totalUnits']?.toString() ?? '0';
           
           setState(() {
             _buyingPower = usdBalance;

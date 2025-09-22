@@ -123,7 +123,7 @@ class RealGrpcClient {
       _isConnected = false; // Update connection state
       return {
         'input': {
-          'ref_request_id': 'ping_${DateTime.now().millisecondsSinceEpoch}',
+          'proposed_execution_id': 'ping_${DateTime.now().millisecondsSinceEpoch}',
           'string_to_be_ponged': stringToBePonged,
         },
         'output': {
@@ -154,7 +154,7 @@ class RealGrpcClient {
           print('⏰ Ping request timed out');
           return {
             'input': {
-              'ref_request_id': 'ping_${DateTime.now().millisecondsSinceEpoch}',
+              'proposed_execution_id': 'ping_${DateTime.now().millisecondsSinceEpoch}',
               'string_to_be_ponged': stringToBePonged,
             },
             'output': {
@@ -170,7 +170,7 @@ class RealGrpcClient {
         print('❌ Ping error caught: $error');
         return {
           'input': {
-            'ref_request_id': 'ping_${DateTime.now().millisecondsSinceEpoch}',
+            'proposed_execution_id': 'ping_${DateTime.now().millisecondsSinceEpoch}',
             'string_to_be_ponged': stringToBePonged,
           },
           'output': {
@@ -207,7 +207,7 @@ class RealGrpcClient {
       // Return error response instead of throwing exception to prevent app crash
       return {
         'input': {
-          'ref_request_id': 'ping_${DateTime.now().millisecondsSinceEpoch}',
+          'proposed_execution_id': 'ping_${DateTime.now().millisecondsSinceEpoch}',
           'string_to_be_ponged': stringToBePonged,
         },
         'output': {
@@ -236,7 +236,7 @@ class RealGrpcClient {
       _isConnected = false; // Update connection state
       return {
         'input': {
-          'ref_request_id': 'new_account_${DateTime.now().millisecondsSinceEpoch}',
+          'proposed_execution_id': 'new_account_${DateTime.now().millisecondsSinceEpoch}',
           'external_account_id': externalAccountId,
           'aux_data': auxData ?? '',
         },
@@ -261,7 +261,7 @@ class RealGrpcClient {
       
       final requestId = 'new_account_${DateTime.now().millisecondsSinceEpoch}';
       final request = {
-        'ref_request_id': requestId,
+        'proposed_execution_id': requestId,
         'external_account_id': externalAccountId,
         'aux_data': auxData ?? 'Created from Flutter signup',
       };
@@ -323,7 +323,7 @@ class RealGrpcClient {
       // Return error response instead of throwing exception to prevent app crash
       return {
         'input': {
-          'ref_request_id': 'new_account_${DateTime.now().millisecondsSinceEpoch}',
+          'proposed_execution_id': 'new_account_${DateTime.now().millisecondsSinceEpoch}',
           'external_account_id': externalAccountId,
           'aux_data': auxData ?? '',
         },
@@ -466,7 +466,7 @@ class RealGrpcClient {
       // Return error response instead of throwing exception to prevent app crash
       return {
         'input': {
-          'ref_request_id': 'get_account_list_${DateTime.now().millisecondsSinceEpoch}',
+          'proposed_execution_id': 'get_account_list_${DateTime.now().millisecondsSinceEpoch}',
         },
         'output': {
           'error': 'Critical GetAccountList error',
@@ -480,7 +480,7 @@ class RealGrpcClient {
     }
   }
 
-  /// Real GetAccountMarketPortfolio call to AccountService.GetAccountMarketPortfolio using grpcurl
+  /// Real GetAccountInstrumentHoldings call to AccountService.GetAccountInstrumentHoldings using grpcurl
   Future<Map<String, dynamic>> getAccountMarketPortfolio({
     required String accountId,
     String? marketId,
@@ -488,17 +488,15 @@ class RealGrpcClient {
     Duration? timeout,
   }) async {
     // Always test connectivity first to prevent crashes
-    print('🔍 Testing server connectivity before GetAccountMarketPortfolio...');
+    print('🔍 Testing server connectivity before GetAccountInstrumentHoldings...');
     final isServerReachable = await testServerConnectivity();
     
     if (!isServerReachable) {
       _isConnected = false; // Update connection state
       return {
         'input': {
-          'ref_request_id': 'get_account_market_portfolio_${DateTime.now().millisecondsSinceEpoch}',
-          'account_id': accountId,
-          'market_id': marketId ?? '',
-          'asset_ids': assetIds ?? ['ETH', 'OXC', 'XRP'],
+          'proposed_execution_id': 'get_account_instrument_holdings_${DateTime.now().millisecondsSinceEpoch}',
+          'account_iid': accountId,
         },
         'output': {
           'error': 'Server not reachable',
@@ -517,27 +515,23 @@ class RealGrpcClient {
     }
 
     try {
-      print('📊 GetAccountMarketPortfolio called - attempting to get portfolio for account $accountId');
+      print('📊 GetAccountInstrumentHoldings called - attempting to get instrument holdings for account $accountId');
       
       // Try to call the real server with grpcurl, with comprehensive crash protection
       final response = await GrpcurlHelper.getAccountMarketPortfolio(
         accountId: accountId,
-        marketId: marketId,
-        assetIds: assetIds,
       ).timeout(
         const Duration(seconds: 10),
         onTimeout: () {
-          print('⏰ GetAccountMarketPortfolio request timed out');
+          print('⏰ GetAccountInstrumentHoldings request timed out');
           return {
             'input': {
-              'ref_request_id': 'get_account_market_portfolio_${DateTime.now().millisecondsSinceEpoch}',
-              'account_id': accountId,
-              'market_id': marketId ?? '',
-              'asset_ids': assetIds ?? ['ETH', 'OXC', 'XRP'],
+              'proposed_execution_id': 'get_account_instrument_holdings_${DateTime.now().millisecondsSinceEpoch}',
+              'account_iid': accountId,
             },
             'output': {
               'error': 'Request timed out',
-              'message': 'The account market portfolio request timed out after 10 seconds. Check if server is running properly.',
+              'message': 'The account instrument holdings request timed out after 10 seconds. Check if server is running properly.',
             },
             'requestTime': _toUnixTimestamp(DateTime.now()).toString(),
             'serverType': 'timeout',
@@ -545,17 +539,15 @@ class RealGrpcClient {
           };
         },
       ).catchError((error) {
-        print('❌ GetAccountMarketPortfolio error caught: $error');
+        print('❌ GetAccountInstrumentHoldings error caught: $error');
         return {
           'input': {
-            'ref_request_id': 'get_account_market_portfolio_${DateTime.now().millisecondsSinceEpoch}',
-            'account_id': accountId,
-            'market_id': marketId ?? '',
-            'asset_ids': assetIds ?? ['ETH', 'OXC', 'XRP'],
+            'proposed_execution_id': 'get_account_instrument_holdings_${DateTime.now().millisecondsSinceEpoch}',
+            'account_iid': accountId,
           },
           'output': {
-            'error': 'GetAccountMarketPortfolio execution failed',
-            'message': 'Failed to execute GetAccountMarketPortfolio: ${error.toString()}',
+            'error': 'GetAccountInstrumentHoldings execution failed',
+            'message': 'Failed to execute GetAccountInstrumentHoldings: ${error.toString()}',
           },
           'requestTime': _toUnixTimestamp(DateTime.now()).toString(),
           'serverType': 'execution-error',
@@ -563,8 +555,8 @@ class RealGrpcClient {
         };
       });
 
-      print('📬 Real Server GetAccountMarketPortfolio Response: ${response['output']}');
-      print('✅ Real GetAccountMarketPortfolio completed');
+      print('📬 Real Server GetAccountInstrumentHoldings Response: ${response['output']}');
+      print('✅ Real GetAccountInstrumentHoldings completed');
 
       // Update connection state based on response
       if (response['success'] == true) {
@@ -577,7 +569,7 @@ class RealGrpcClient {
 
       return response;
     } catch (e, stackTrace) {
-      print('❌ Critical error in GetAccountMarketPortfolio: $e');
+      print('❌ Critical error in GetAccountInstrumentHoldings: $e');
       print('❌ Stack trace: $stackTrace');
       
       // Test connectivity to update state
@@ -587,14 +579,12 @@ class RealGrpcClient {
       // Return error response instead of throwing exception to prevent app crash
       return {
         'input': {
-          'ref_request_id': 'get_account_market_portfolio_${DateTime.now().millisecondsSinceEpoch}',
-          'account_id': accountId,
-          'market_id': marketId ?? '',
-          'asset_ids': assetIds ?? ['ETH', 'OXC', 'XRP'],
+          'proposed_execution_id': 'get_account_instrument_holdings_${DateTime.now().millisecondsSinceEpoch}',
+          'account_iid': accountId,
         },
         'output': {
-          'error': 'Critical GetAccountMarketPortfolio error',
-          'message': 'A critical error occurred during GetAccountMarketPortfolio: ${e.toString()}',
+          'error': 'Critical GetAccountInstrumentHoldings error',
+          'message': 'A critical error occurred during GetAccountInstrumentHoldings: ${e.toString()}',
           'details': stackTrace.toString(),
         },
         'requestTime': _toUnixTimestamp(DateTime.now()).toString(),
@@ -618,9 +608,9 @@ class RealGrpcClient {
       _isConnected = false; // Update connection state
       return {
         'input': {
-          'ref_request_id': 'get_account_cash_holdings_${DateTime.now().millisecondsSinceEpoch}',
-          'account_id': accountId,
-          'cash_asset_ids': cashAssetIds ?? ['USD'],
+          'proposed_execution_id': 'get_account_cash_holdings_${DateTime.now().millisecondsSinceEpoch}',
+          'account_iid': accountId,
+          'currency_codes': cashAssetIds ?? ['USD'],
         },
         'output': {
           'error': 'Server not reachable',
@@ -651,9 +641,9 @@ class RealGrpcClient {
           print('⏰ GetAccountCashHoldings request timed out');
           return {
             'input': {
-              'ref_request_id': 'get_account_cash_holdings_${DateTime.now().millisecondsSinceEpoch}',
-              'account_id': accountId,
-              'cash_asset_ids': cashAssetIds ?? ['USD'],
+              'proposed_execution_id': 'get_account_cash_holdings_${DateTime.now().millisecondsSinceEpoch}',
+              'account_iid': accountId,
+              'currency_codes': cashAssetIds ?? ['USD'],
             },
             'output': {
               'error': 'Request timed out',
@@ -668,9 +658,9 @@ class RealGrpcClient {
         print('❌ GetAccountCashHoldings error caught: $error');
         return {
           'input': {
-            'ref_request_id': 'get_account_cash_holdings_${DateTime.now().millisecondsSinceEpoch}',
-            'account_id': accountId,
-            'cash_asset_ids': cashAssetIds ?? ['USD'],
+            'proposed_execution_id': 'get_account_cash_holdings_${DateTime.now().millisecondsSinceEpoch}',
+            'account_iid': accountId,
+            'currency_codes': cashAssetIds ?? ['USD'],
           },
           'output': {
             'error': 'GetAccountCashHoldings execution failed',
@@ -706,9 +696,9 @@ class RealGrpcClient {
       // Return error response instead of throwing exception to prevent app crash
       return {
         'input': {
-          'ref_request_id': 'get_account_cash_holdings_${DateTime.now().millisecondsSinceEpoch}',
-          'account_id': accountId,
-          'cash_asset_ids': cashAssetIds ?? ['USD'],
+          'proposed_execution_id': 'get_account_cash_holdings_${DateTime.now().millisecondsSinceEpoch}',
+          'account_iid': accountId,
+          'currency_codes': cashAssetIds ?? ['USD'],
         },
         'output': {
           'error': 'Critical GetAccountCashHoldings error',
@@ -736,7 +726,7 @@ class RealGrpcClient {
       
       final response = {
         'input': {
-          'ref_request_id': generateRequestId(prefix: 'get_participant_info'),
+          'proposed_execution_id': generateRequestId(prefix: 'get_participant_info'),
         },
         'output': {
           'identifier': 'real_server_connection_${DateTime.now().millisecondsSinceEpoch}',
@@ -819,7 +809,7 @@ class RealGrpcClient {
   }) async {
     if (!_isConnected) {
       return {
-        'input': {'account_id': accountId},
+        'input': {'account_iid': accountId},
         'output': {'error': 'Not connected to server'},
         'requestTime': _toUnixTimestamp(DateTime.now()).toString(),
         'serverType': 'disconnected',
@@ -845,7 +835,7 @@ class RealGrpcClient {
       ]).catchError((error) {
         print('❌ GetAccountOrders execution error: $error');
         return {
-          'input': {'account_id': accountId},
+          'input': {'account_iid': accountId},
           'output': {
             'error': 'GetAccountOrders execution error',
             'message': error.toString(),
@@ -879,7 +869,7 @@ class RealGrpcClient {
       
       // Return error response instead of throwing exception to prevent app crash
       return {
-        'input': {'account_id': accountId},
+        'input': {'account_iid': accountId},
         'output': {
           'error': 'Critical GetAccountOrders error',
           'message': 'A critical error occurred during GetAccountOrders: ${e.toString()}',
@@ -904,7 +894,7 @@ class RealGrpcClient {
   }) async {
     if (!_isConnected) {
       return {
-        'input': {'account_id': accountId},
+        'input': {'account_iid': accountId},
         'output': {'error': 'Not connected to server'},
         'requestTime': _toUnixTimestamp(DateTime.now()).toString(),
         'serverType': 'disconnected',
@@ -929,7 +919,7 @@ class RealGrpcClient {
       ]).catchError((error) {
         print('❌ GetAccountTrades execution error: $error');
         return {
-          'input': {'account_id': accountId},
+          'input': {'account_iid': accountId},
           'output': {
             'error': 'GetAccountTrades execution error',
             'message': error.toString(),
@@ -963,7 +953,7 @@ class RealGrpcClient {
       
       // Return error response instead of throwing exception to prevent app crash
       return {
-        'input': {'account_id': accountId},
+        'input': {'account_iid': accountId},
         'output': {
           'error': 'Critical GetAccountTrades error',
           'message': 'A critical error occurred during GetAccountTrades: ${e.toString()}',
@@ -992,7 +982,7 @@ class RealGrpcClient {
       print('📋 Getting market list from real server...');
 
       final inputParams = {
-        'ref_request_id': 'get_markets_${DateTime.now().millisecondsSinceEpoch}',
+        'proposed_execution_id': 'get_markets_${DateTime.now().millisecondsSinceEpoch}',
       };
 
       final result = await GrpcurlHelper.getMarketList();
@@ -1038,7 +1028,7 @@ class RealGrpcClient {
       print('📋 Getting market instrument list for market: $marketId from real server...');
 
       final inputParams = {
-        'ref_request_id': 'get_market_instrument_list_${DateTime.now().millisecondsSinceEpoch}',
+        'proposed_execution_id': 'get_instrument_list_${DateTime.now().millisecondsSinceEpoch}',
         'market_id': marketId,
       };
 
@@ -1176,7 +1166,7 @@ class RealGrpcClient {
       print('📤 GetOrderFees OUTPUT: ${result.toString()}');
       return {
         'input': {
-          'account_id': accountId,
+          'account_iid': accountId,
           'fee_payer_account_id': feePayerAccountId,
           'instrument_id': instrumentId,
           'order_type': orderType,
@@ -1194,7 +1184,7 @@ class RealGrpcClient {
       print('❌ Critical error in getOrderFees: $e');
       return {
         'input': {
-          'account_id': accountId,
+          'account_iid': accountId,
           'fee_payer_account_id': feePayerAccountId,
           'instrument_id': instrumentId,
           'order_type': orderType,
@@ -1251,7 +1241,7 @@ class RealGrpcClient {
       print('❌ Critical error in createOrder: $e');
       return {
         'request': {
-          'account_id': accountId,
+          'account_iid': accountId,
           'fee_payer_account_id': feePayerAccountId,
           'instrument_id': instrumentId,
           'order_type': orderType,

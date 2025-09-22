@@ -143,7 +143,7 @@ class GrpcurlHelper {
       print('⚠️ Ping already in progress, returning cached response');
       return {
         'input': {
-          'ref_request_id': 'ping_${DateTime.now().millisecondsSinceEpoch}',
+          'proposed_execution_id': 'ping_${DateTime.now().millisecondsSinceEpoch}',
           'string_to_be_ponged': stringToBePonged,
         },
         'output': {
@@ -164,7 +164,7 @@ class GrpcurlHelper {
       print('❌ CRITICAL: Stack: $stack');
       return {
         'input': {
-          'ref_request_id': 'ping_${DateTime.now().millisecondsSinceEpoch}',
+          'proposed_execution_id': 'ping_${DateTime.now().millisecondsSinceEpoch}',
           'string_to_be_ponged': stringToBePonged,
         },
         'output': {
@@ -188,7 +188,7 @@ class GrpcurlHelper {
     final requestId = 'ping_${DateTime.now().millisecondsSinceEpoch}';
     
     final request = {
-      'ref_request_id': requestId,
+      'proposed_execution_id': requestId,
       'string_to_be_ponged': stringToBePonged,
     };
 
@@ -328,7 +328,7 @@ class GrpcurlHelper {
       print('⚠️ NewAccount blocked - another account operation in progress');
       return {
         'input': {
-          'ref_request_id': 'new_account_${DateTime.now().millisecondsSinceEpoch}',
+          'proposed_execution_id': 'new_account_${DateTime.now().millisecondsSinceEpoch}',
           'external_account_id': externalAccountId,
         },
         'output': {
@@ -352,7 +352,7 @@ class GrpcurlHelper {
       print('❌ CRITICAL: Stack: $stack');
       return {
         'input': {
-          'ref_request_id': 'new_account_${DateTime.now().millisecondsSinceEpoch}',
+          'proposed_execution_id': 'new_account_${DateTime.now().millisecondsSinceEpoch}',
           'external_account_id': externalAccountId,
         },
         'output': {
@@ -377,7 +377,7 @@ class GrpcurlHelper {
     final requestId = 'new_account_${DateTime.now().millisecondsSinceEpoch}';
     
     final request = {
-      'ref_request_id': requestId,
+      'proposed_execution_id': requestId,
       'external_account_id': externalAccountId,
       'aux_data': auxData ?? 'Created from Flutter signup',
     };
@@ -728,34 +728,32 @@ class GrpcurlHelper {
     }
   }
 
-  /// Make a real GetAccountMarketPortfolio call using grpcurl
+  /// Make a real GetAccountInstrumentHoldings call using grpcurl
   static Future<Map<String, dynamic>> getAccountMarketPortfolio({
     required String accountId,
     String? marketId,
     List<String>? assetIds,
   }) async {
-    final requestId = 'get_account_market_portfolio_${DateTime.now().millisecondsSinceEpoch}';
-    
+    final requestId = 'get_account_instrument_holdings_${DateTime.now().millisecondsSinceEpoch}';
+
     final request = {
-      'ref_request_id': requestId,
-      'account_id': accountId,
-      'market_id': marketId ?? '',
-      'asset_ids': assetIds ?? ['ETH', 'OXC', 'XRP'],
+      'proposed_execution_id': requestId,
+      'account_iid': accountId,
     };
 
     try {
       // Find the working grpcurl path with aggressive timeout to prevent hanging
-      print('🔍 Looking for grpcurl executable for GetAccountMarketPortfolio...');
+      print('🔍 Looking for grpcurl executable for GetAccountInstrumentHoldings...');
       final grpcurlPath = await _findGrpcurlPath().timeout(
         const Duration(milliseconds: 500),
         onTimeout: () {
-          print('⏰ grpcurl path finder timed out for GetAccountMarketPortfolio');
+          print('⏰ grpcurl path finder timed out for GetAccountInstrumentHoldings');
           return null;
         },
       );
       
       if (grpcurlPath == null) {
-        print('❌ No grpcurl path found for GetAccountMarketPortfolio');
+        print('❌ No grpcurl path found for GetAccountInstrumentHoldings');
         return {
           'input': request,
           'output': {
@@ -769,28 +767,28 @@ class GrpcurlHelper {
         };
       }
 
-      print('🔄 Making real grpcurl call to AccountService.GetAccountMarketPortfolio using $grpcurlPath');
+      print('🔄 Making real grpcurl call to AccountService.GetAccountInstrumentHoldings using $grpcurlPath');
       print('📨 Request: $request');
 
       ProcessResult? result;
       try {
         result = await Process.run(
           grpcurlPath,
-          ['-plaintext', '-d', jsonEncode(request), '$_host:$_port', 'qomet.agora.daemons.prtagent.v1.AccountService.GetAccountMarketPortfolio'],
+          ['-plaintext', '-d', jsonEncode(request), '$_host:$_port', 'qomet.agora.daemons.prtagent.v1.AccountService.GetAccountInstrumentHoldings'],
         ).timeout(
           const Duration(seconds: 5),
           onTimeout: () {
-            print('⏰ grpcurl GetAccountMarketPortfolio Process.run timed out after 5 seconds');
-            throw TimeoutException('grpcurl getAccountMarketPortfolio timed out', const Duration(seconds: 5));
+            print('⏰ grpcurl GetAccountInstrumentHoldings Process.run timed out after 5 seconds');
+            throw TimeoutException('grpcurl getAccountInstrumentHoldings timed out', const Duration(seconds: 5));
           },
         );
       } on TimeoutException catch (e) {
-        print('⏰ GetAccountMarketPortfolio timeout: ${e.message}');
+        print('⏰ GetAccountInstrumentHoldings timeout: ${e.message}');
         return {
           'input': request,
           'output': {
             'error': 'Request timed out',
-            'message': 'The account market portfolio request timed out after 5 seconds. Check if server is running on localhost:50051.',
+            'message': 'The account instrument holdings request timed out after 5 seconds. Check if server is running on localhost:50051.',
           },
           'requestTime': _toUnixTimestamp(DateTime.now()).toString(),
           'serverType': 'timeout',
@@ -798,7 +796,7 @@ class GrpcurlHelper {
         };
       } catch (e) {
         // Catch ANY other exception that might occur in sandboxed environment
-        print('❌ Process.run failed for getAccountMarketPortfolio in sandboxed app: ${e.runtimeType}: ${e.toString()}');
+        print('❌ Process.run failed for getAccountInstrumentHoldings in sandboxed app: ${e.runtimeType}: ${e.toString()}');
         return {
           'input': request,
           'output': {
@@ -877,9 +875,9 @@ class GrpcurlHelper {
     final requestId = 'get_account_cash_holdings_${DateTime.now().millisecondsSinceEpoch}';
     
     final request = {
-      'ref_request_id': requestId,
-      'account_id': accountId,
-      'cash_asset_ids': cashAssetIds ?? ['USD'],
+      'proposed_execution_id': requestId,
+      'account_iid': accountId,
+      'currency_codes': cashAssetIds ?? ['USD'],
     };
 
     try {
@@ -1074,13 +1072,13 @@ class GrpcurlHelper {
 
       // Prepare request payload with all optional parameters
       final requestPayload = <String, dynamic>{
-        'ref_request_id': refRequestId,
-        'account_id': accountId,
+        'proposed_execution_id': refRequestId,
+        'account_iid': accountId,
       };
 
       // Add optional parameters if provided
       if (marketIdOrNameRegexes != null && marketIdOrNameRegexes.isNotEmpty) {
-        requestPayload['market_id_or_name_regexes'] = marketIdOrNameRegexes;
+        requestPayload['venue_id_or_symbol_regexes'] = marketIdOrNameRegexes;
       }
       
       if (pagination != null) {
@@ -1223,13 +1221,13 @@ class GrpcurlHelper {
 
       // Prepare request payload with all optional parameters
       final requestPayload = <String, dynamic>{
-        'ref_request_id': refRequestId,
-        'account_id': accountId,
+        'proposed_execution_id': refRequestId,
+        'account_iid': accountId,
       };
 
       // Add optional parameters if provided
       if (marketIdOrNameRegexes != null && marketIdOrNameRegexes.isNotEmpty) {
-        requestPayload['market_id_or_name_regexes'] = marketIdOrNameRegexes;
+        requestPayload['venue_id_or_symbol_regexes'] = marketIdOrNameRegexes;
       }
       
       if (pagination != null) {
@@ -1368,7 +1366,12 @@ class GrpcurlHelper {
       }
 
       final inputParams = {
-        'ref_request_id': 'get_markets_${DateTime.now().millisecondsSinceEpoch}',
+        'proposed_execution_id': 'get_markets_${DateTime.now().millisecondsSinceEpoch}',
+        'pagination': {
+          'page_nr': 0,
+          'page_size': 0,
+          'page_token': '',
+        },
       };
 
       final result = await Process.run(
@@ -1440,12 +1443,13 @@ class GrpcurlHelper {
       }
 
       final inputParams = {
-        'ref_request_id': 'get_market_instrument_list_${DateTime.now().millisecondsSinceEpoch}',
+        'proposed_execution_id': 'get_instrument_list_${DateTime.now().millisecondsSinceEpoch}',
         'pagination': {
           'page_nr': pageNumber,
           'page_size': pageSize,
+          'page_token': '',
         },
-        'market_id': marketId,
+        'market_id_or_symbol_regex': marketId,
       };
 
       final result = await Process.run(
@@ -1454,7 +1458,7 @@ class GrpcurlHelper {
           '-plaintext',
           '-d', jsonEncode(inputParams),
           '$_host:$_port',
-          'qomet.agora.daemons.prtagent.v1.MarketService/GetMarketInstrumentList'
+          'qomet.agora.daemons.prtagent.v1.InstrumentService/GetInstrumentList'
         ],
         environment: {'PATH': '/usr/local/bin:/opt/homebrew/bin:${Platform.environment['PATH']}'},
       ).timeout(const Duration(seconds: 10));
@@ -1516,33 +1520,34 @@ class GrpcurlHelper {
       }
 
       final request = {
-        'ref_request_id': 'get_market_supported_currencies_${DateTime.now().millisecondsSinceEpoch}',
+        'proposed_execution_id': 'get_supported_currencies_${DateTime.now().millisecondsSinceEpoch}',
         'pagination': {
           'page_nr': pageNumber,
           'page_size': pageSize,
+          'page_token': '',
         },
-        'market_id': marketId,
+        // Removed aux_data completely to avoid server marshaling issues
       };
 
-      print('🔄 Making real grpcurl call to MarketService.GetMarketSupportedCurrencies using $grpcurlPath');
+      print('🔄 Making real grpcurl call to AgentService.GetSupportedCurrencies using $grpcurlPath');
       print('📨 Request: $request');
 
       final result = await Process.run(
         grpcurlPath,
-        ['-plaintext', '-d', jsonEncode(request), '$_host:$_port', 'qomet.agora.daemons.prtagent.v1.MarketService.GetMarketSupportedCurrencies'],
+        ['-plaintext', '-d', jsonEncode(request), '$_host:$_port', 'qomet.agora.daemons.prtagent.v1.AgentService.GetSupportedCurrencies'],
       ).timeout(const Duration(seconds: 10));
 
-      print('📤 GetMarketSupportedCurrencies gRPC exit code: ${result.exitCode}');
-      print('📤 GetMarketSupportedCurrencies gRPC stdout: ${result.stdout}');
+      print('📤 GetSupportedCurrencies gRPC exit code: ${result.exitCode}');
+      print('📤 GetSupportedCurrencies gRPC stdout: ${result.stdout}');
       if (result.stderr.isNotEmpty) {
-        print('📤 GetMarketSupportedCurrencies gRPC stderr: ${result.stderr}');
+        print('📤 GetSupportedCurrencies gRPC stderr: ${result.stderr}');
       }
 
       if (result.exitCode == 0 && result.stdout.isNotEmpty) {
         final responseJson = jsonDecode(result.stdout);
         responseData['success'] = true;
         responseData['output'] = responseJson;
-        print('✅ GetMarketSupportedCurrencies successful');
+        print('✅ GetSupportedCurrencies successful');
       } else {
         responseData['output'] = {
           'error': 'gRPC call failed',
@@ -1550,12 +1555,14 @@ class GrpcurlHelper {
           'stdout': result.stdout.toString(),
           'exit_code': result.exitCode,
         };
-        print('❌ GetMarketSupportedCurrencies failed: ${result.stderr}');
+        print('❌ GetSupportedCurrencies failed: ${result.stderr}');
+        print('📤 GetSupportedCurrencies Error Details: Exit Code ${result.exitCode}');
+        print('📤 GetSupportedCurrencies stdout: ${result.stdout}');
       }
 
       return responseData;
     } catch (e) {
-      print('❌ GetMarketSupportedCurrencies exception: $e');
+      print('❌ GetSupportedCurrencies exception: $e');
       return {
         'success': false,
         'output': {'error': 'Exception occurred', 'details': e.toString()},
@@ -1586,14 +1593,18 @@ class GrpcurlHelper {
       }
 
       final inputParams = {
-        'ref_request_id': 'get_supported_currencies_${DateTime.now().millisecondsSinceEpoch}',
+        'proposed_execution_id': 'get_supported_currencies_${DateTime.now().millisecondsSinceEpoch}',
         'pagination': {
           'page_nr': pageNumber,
           'page_size': pageSize,
+          'page_token': '',
         },
+        // Removed aux_data completely to avoid server marshaling issues
       };
 
       print('📨 GetSupportedCurrencies Request: $inputParams');
+      print('🔗 Calling: qomet.agora.daemons.prtagent.v1.AgentService/GetSupportedCurrencies');
+      print('🌐 Server: $_host:$_port');
 
       final result = await Process.run(
         grpcurlPath,
@@ -1620,6 +1631,8 @@ class GrpcurlHelper {
           'exit_code': result.exitCode,
         };
         print('❌ GetSupportedCurrencies failed: ${result.stderr}');
+        print('📤 GetSupportedCurrencies Error Details: Exit Code ${result.exitCode}');
+        print('📤 GetSupportedCurrencies stdout: ${result.stdout}');
       }
 
       return responseData;
@@ -1661,8 +1674,8 @@ class GrpcurlHelper {
       }
 
       final inputParams = {
-        'ref_request_id': 'get_order_fees_${DateTime.now().millisecondsSinceEpoch}',
-        'account_id': accountId,
+        'proposed_execution_id': 'get_order_fees_${DateTime.now().millisecondsSinceEpoch}',
+        'account_iid': accountId,
         'fee_payer_account_id': feePayerAccountId,
         'instrument_id': instrumentId,
         'order_type': orderType,
@@ -1747,8 +1760,8 @@ class GrpcurlHelper {
 
       // Build the JSON request
       final Map<String, dynamic> request = {
-        'ref_request_id': 'create_order_${DateTime.now().millisecondsSinceEpoch}',
-        'account_id': accountId,
+        'proposed_execution_id': 'create_order_${DateTime.now().millisecondsSinceEpoch}',
+        'account_iid': accountId,
         'fee_payer_account_id': feePayerAccountId,
         'instrument_id': instrumentId,
         'order_type': orderType,

@@ -119,12 +119,10 @@ class _PortfolioPageState extends State<PortfolioPage> {
       // Fetch portfolio data with comprehensive crash protection
       final portfolioResponse = await realGrpcClient.getAccountMarketPortfolio(
         accountId: accountId,
-        marketId: '',
-        assetIds: [],
       ).timeout(
         const Duration(seconds: 15),
         onTimeout: () => {
-          'input': {'ref_request_id': 'timeout'},
+          'input': {'proposed_execution_id': 'timeout'},
           'output': {'error': 'Request timed out', 'message': 'Portfolio request timed out after 15 seconds'},
           'requestTime': (DateTime.now().millisecondsSinceEpoch ~/ 1000).toString(),
           'serverType': 'timeout',
@@ -806,11 +804,11 @@ class _PortfolioPageState extends State<PortfolioPage> {
     // Display real portfolio data
     final portfolioOutput = _portfolioData!['output'] as Map<String, dynamic>;
     
-    // Extract portfolio balances from the proto response structure
+    // Extract portfolio holdings from the proto response structure
     final portfolio = portfolioOutput['portfolio'] as Map<String, dynamic>? ?? {};
-    final balances = portfolio['balances'] as Map<String, dynamic>? ?? {};
-    
-    if (balances.isEmpty) {
+    final holdings = portfolio['holdings'] as Map<String, dynamic>? ?? {};
+
+    if (holdings.isEmpty) {
       return Center(
         child: Column(
           mainAxisAlignment: MainAxisAlignment.center,
@@ -842,14 +840,15 @@ class _PortfolioPageState extends State<PortfolioPage> {
       );
     }
 
-    final assetList = balances.entries.toList();
-    
+    final assetList = holdings.entries.toList();
+
     return ListView.builder(
       itemCount: assetList.length,
       itemBuilder: (context, index) {
         final entry = assetList[index];
         final assetId = entry.key;
-        final balance = entry.value?.toString() ?? '0';
+        final holdingData = entry.value as Map<String, dynamic>? ?? {};
+        final balance = holdingData['totalUnits']?.toString() ?? '0';
         
         return Padding(
           padding: EdgeInsets.only(bottom: index < assetList.length - 1 ? 16 : 0),
