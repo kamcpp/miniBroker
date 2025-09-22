@@ -615,8 +615,8 @@ class _TradingPageState extends State<TradingPage> {
   bool _isLoadingSupportedCurrencies = false;
   
   // Trade history pagination
-  int _currentTradeHistoryPage = 1;
-  int _tradeHistoryPageSize = 10;
+  int _currentTradeHistoryPage = 0;
+  int _tradeHistoryPageSize = 0;
   bool _hasMoreTradeHistory = true;
   bool _isLoadingTradeHistory = false;
   final TextEditingController _quantityController = TextEditingController();
@@ -849,8 +849,8 @@ class _TradingPageState extends State<TradingPage> {
     
     for (int i = 0; i < accounts.length; i++) {
       final accountMap = accounts[i] as Map<String, dynamic>;
-      final externalId = accountMap['external_id'] ?? accountMap['externalId'] ?? '';
-      final accountId = accountMap['id'] ?? '';
+      final externalId = accountMap['external_id'] ?? accountMap['externalId'] ?? accountMap['externalAccountId'] ?? '';
+      final accountId = accountMap['id'] ?? accountMap['iid'] ?? '';
       print('   [$i] ID: "$accountId", ExternalID: "$externalId"');
       
       // Try exact match first (case-sensitive)
@@ -863,8 +863,8 @@ class _TradingPageState extends State<TradingPage> {
     // If no exact match, try case-insensitive
     for (final account in accounts) {
       final accountMap = account as Map<String, dynamic>;
-      final externalId = accountMap['external_id'] ?? accountMap['externalId'] ?? '';
-      final accountId = accountMap['id'] ?? '';
+      final externalId = accountMap['external_id'] ?? accountMap['externalId'] ?? accountMap['externalAccountId'] ?? '';
+      final accountId = accountMap['id'] ?? accountMap['iid'] ?? '';
       
       if (externalId.toLowerCase() == username.toLowerCase()) {
         print('✅ Found case-insensitive match for user "$username": ID="$accountId", ExternalID="$externalId"');
@@ -875,8 +875,8 @@ class _TradingPageState extends State<TradingPage> {
     // If still no match, try contains
     for (final account in accounts) {
       final accountMap = account as Map<String, dynamic>;
-      final externalId = accountMap['external_id'] ?? accountMap['externalId'] ?? '';
-      final accountId = accountMap['id'] ?? '';
+      final externalId = accountMap['external_id'] ?? accountMap['externalId'] ?? accountMap['externalAccountId'] ?? '';
+      final accountId = accountMap['id'] ?? accountMap['iid'] ?? '';
       
       if (externalId.toLowerCase().contains(username.toLowerCase()) || 
           accountId.toLowerCase().contains(username.toLowerCase())) {

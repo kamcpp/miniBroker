@@ -225,8 +225,8 @@ class _BalancePageState extends State<BalancePage> {
   String? _findUserAccount(List<dynamic> accounts, String username) {
     for (final account in accounts) {
       final accountMap = account as Map<String, dynamic>;
-      final externalId = accountMap['external_id'] ?? accountMap['externalId'] ?? '';
-      final accountId = accountMap['id'] ?? '';
+      final externalId = accountMap['external_id'] ?? accountMap['externalId'] ?? accountMap['externalAccountId'] ?? '';
+      final accountId = accountMap['id'] ?? accountMap['iid'] ?? '';
 
       if (externalId.toLowerCase().contains(username.toLowerCase()) ||
           externalId == username ||

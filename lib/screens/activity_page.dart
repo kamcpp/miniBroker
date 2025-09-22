@@ -243,8 +243,8 @@ class _ActivityPageState extends State<ActivityPage> {
     
     for (int i = 0; i < accounts.length; i++) {
       final accountMap = accounts[i] as Map<String, dynamic>;
-      final externalId = accountMap['external_id'] ?? accountMap['externalId'] ?? '';
-      final accountId = accountMap['id'] ?? '';
+      final externalId = accountMap['external_id'] ?? accountMap['externalId'] ?? accountMap['externalAccountId'] ?? '';
+      final accountId = accountMap['id'] ?? accountMap['iid'] ?? '';
       print('   [$i] ID: "$accountId", ExternalID: "$externalId"');
       
       // Try exact match first (case-sensitive)
@@ -257,8 +257,8 @@ class _ActivityPageState extends State<ActivityPage> {
     // If no exact match, try case-insensitive
     for (final account in accounts) {
       final accountMap = account as Map<String, dynamic>;
-      final externalId = accountMap['external_id'] ?? accountMap['externalId'] ?? '';
-      final accountId = accountMap['id'] ?? '';
+      final externalId = accountMap['external_id'] ?? accountMap['externalId'] ?? accountMap['externalAccountId'] ?? '';
+      final accountId = accountMap['id'] ?? accountMap['iid'] ?? '';
       
       if (externalId.toLowerCase() == username.toLowerCase()) {
         print('✅ Found case-insensitive match for user "$username": ID="$accountId", ExternalID="$externalId"');
@@ -269,8 +269,8 @@ class _ActivityPageState extends State<ActivityPage> {
     // If still no match, try contains
     for (final account in accounts) {
       final accountMap = account as Map<String, dynamic>;
-      final externalId = accountMap['external_id'] ?? accountMap['externalId'] ?? '';
-      final accountId = accountMap['id'] ?? '';
+      final externalId = accountMap['external_id'] ?? accountMap['externalId'] ?? accountMap['externalAccountId'] ?? '';
+      final accountId = accountMap['id'] ?? accountMap['iid'] ?? '';
       
       if (externalId.toLowerCase().contains(username.toLowerCase()) || 
           accountId.toLowerCase().contains(username.toLowerCase())) {
