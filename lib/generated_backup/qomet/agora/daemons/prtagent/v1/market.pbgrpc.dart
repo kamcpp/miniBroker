@@ -130,22 +130,22 @@ class MarketServiceClient extends $grpc.Client {
       $0.GetMarketInstrumentListResponse.fromBuffer);
   static final _$getOrderFees =
       $grpc.ClientMethod<$0.GetOrderFeesRequest, $0.GetOrderFeesResponse>(
-          '/qomet.agora.daemons.prtagent.v1.MarketService/GetOrderFees',
+          '/qomet.agora.daemons.prtagent.v1.TradingService/GetOrderFees',
           ($0.GetOrderFeesRequest value) => value.writeToBuffer(),
           $0.GetOrderFeesResponse.fromBuffer);
   static final _$createOrder =
       $grpc.ClientMethod<$0.CreateOrderRequest, $0.CreateOrderResponse>(
-          '/qomet.agora.daemons.prtagent.v1.MarketService/CreateOrder',
+          '/qomet.agora.daemons.prtagent.v1.TradingService/CreateOrder',
           ($0.CreateOrderRequest value) => value.writeToBuffer(),
           $0.CreateOrderResponse.fromBuffer);
   static final _$replaceOrder =
       $grpc.ClientMethod<$0.ReplaceOrderRequest, $0.ReplaceOrderResponse>(
-          '/qomet.agora.daemons.prtagent.v1.MarketService/ReplaceOrder',
+          '/qomet.agora.daemons.prtagent.v1.TradingService/ReplaceOrder',
           ($0.ReplaceOrderRequest value) => value.writeToBuffer(),
           $0.ReplaceOrderResponse.fromBuffer);
   static final _$cancelOrder =
       $grpc.ClientMethod<$0.CancelOrderRequest, $0.CancelOrderResponse>(
-          '/qomet.agora.daemons.prtagent.v1.MarketService/CancelOrder',
+          '/qomet.agora.daemons.prtagent.v1.TradingService/CancelOrder',
           ($0.CancelOrderRequest value) => value.writeToBuffer(),
           $0.CancelOrderResponse.fromBuffer);
 }

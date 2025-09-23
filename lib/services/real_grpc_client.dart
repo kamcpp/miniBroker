@@ -1157,8 +1157,8 @@ class RealGrpcClient {
       return {
         'input': {
           'account_iid': accountId,
-          'fee_payer_account_id': feePayerAccountId,
-          'instrument_id': instrumentId,
+          'fee_payer_account_iid': feePayerAccountId,
+          'instrument_listing_iid': instrumentId,
           'order_type': orderType,
           'side': side,
           'quantity': quantity,
@@ -1175,8 +1175,8 @@ class RealGrpcClient {
       return {
         'input': {
           'account_iid': accountId,
-          'fee_payer_account_id': feePayerAccountId,
-          'instrument_id': instrumentId,
+          'fee_payer_account_iid': feePayerAccountId,
+          'instrument_listing_iid': instrumentId,
           'order_type': orderType,
           'side': side,
           'quantity': quantity,

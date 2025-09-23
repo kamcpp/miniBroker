@@ -1700,8 +1700,8 @@ class GrpcurlHelper {
       final inputParams = {
         'proposed_execution_id': 'get_order_fees_${DateTime.now().millisecondsSinceEpoch}',
         'account_iid': accountId,
-        'fee_payer_account_id': feePayerAccountId,
-        'instrument_id': instrumentId,
+        'fee_payer_account_iid': feePayerAccountId,
+        'instrument_listing_iid': instrumentId,
         'order_type': orderType,
         'side': side == "BUY" ? "ORDER_SIDE__BUY" : "ORDER_SIDE__SELL",
         'quantity': quantity,
@@ -1721,7 +1721,7 @@ class GrpcurlHelper {
           '-plaintext',
           '-d', jsonEncode(inputParams),
           '$_host:$_port',
-          'qomet.agora.daemons.prtagent.v1.MarketService/GetOrderFees'
+          'qomet.agora.daemons.prtagent.v1.TradingService/GetOrderFees'
         ],
         environment: {'PATH': '/usr/local/bin:/opt/homebrew/bin:${Platform.environment['PATH']}'},
       ).timeout(const Duration(seconds: 10));
@@ -1786,8 +1786,8 @@ class GrpcurlHelper {
       final Map<String, dynamic> request = {
         'proposed_execution_id': 'create_order_${DateTime.now().millisecondsSinceEpoch}',
         'account_iid': accountId,
-        'fee_payer_account_id': feePayerAccountId,
-        'instrument_id': instrumentId,
+        'fee_payer_account_iid': feePayerAccountId,
+        'instrument_listing_iid': instrumentId,
         'order_type': orderType,
         'side': orderSideValue,
         'quantity': quantity,
