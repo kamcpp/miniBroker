@@ -3079,7 +3079,9 @@ class _TradingPageState extends State<TradingPage> {
                                         style: TextStyle(
                                           fontSize: 14,
                                           fontWeight: FontWeight.bold,
-                                          color: _isDarkTheme ? Colors.white : Colors.black,
+                                          color: isSelected
+                                              ? (_isDarkTheme ? Colors.white : Colors.black)
+                                              : Colors.grey,
                                         ),
                                         maxLines: 1,
                                         overflow: TextOverflow.ellipsis,
