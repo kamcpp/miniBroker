@@ -610,7 +610,7 @@ class RealGrpcClient {
         'input': {
           'proposed_execution_id': 'get_account_cash_holdings_${DateTime.now().millisecondsSinceEpoch}',
           'account_iid': accountId,
-          'currency_codes': cashAssetIds ?? ['USD'],
+          'currency_codes': cashAssetIds ?? [],
         },
         'output': {
           'error': 'Server not reachable',
@@ -643,7 +643,7 @@ class RealGrpcClient {
             'input': {
               'proposed_execution_id': 'get_account_cash_holdings_${DateTime.now().millisecondsSinceEpoch}',
               'account_iid': accountId,
-              'currency_codes': cashAssetIds ?? ['USD'],
+              'currency_codes': cashAssetIds ?? [],
             },
             'output': {
               'error': 'Request timed out',
@@ -660,7 +660,7 @@ class RealGrpcClient {
           'input': {
             'proposed_execution_id': 'get_account_cash_holdings_${DateTime.now().millisecondsSinceEpoch}',
             'account_iid': accountId,
-            'currency_codes': cashAssetIds ?? ['USD'],
+            'currency_codes': cashAssetIds ?? [],
           },
           'output': {
             'error': 'GetAccountCashHoldings execution failed',
@@ -698,7 +698,7 @@ class RealGrpcClient {
         'input': {
           'proposed_execution_id': 'get_account_cash_holdings_${DateTime.now().millisecondsSinceEpoch}',
           'account_iid': accountId,
-          'currency_codes': cashAssetIds ?? ['USD'],
+          'currency_codes': cashAssetIds ?? [],
         },
         'output': {
           'error': 'Critical GetAccountCashHoldings error',

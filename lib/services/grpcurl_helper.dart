@@ -877,7 +877,7 @@ class GrpcurlHelper {
     final request = {
       'proposed_execution_id': requestId,
       'account_iid': accountId,
-      'currency_codes': cashAssetIds ?? ['USD'],
+      'currency_codes': cashAssetIds ?? [],
     };
 
     try {
@@ -1529,12 +1529,12 @@ class GrpcurlHelper {
         // Removed aux_data completely to avoid server marshaling issues
       };
 
-      print('🔄 Making real grpcurl call to AgentService.GetSupportedCurrencies using $grpcurlPath');
+      print('🔄 Making real grpcurl call to AgentService/GetSupportedCurrencies using $grpcurlPath');
       print('📨 Request: $request');
 
       final result = await Process.run(
         grpcurlPath,
-        ['-plaintext', '-d', jsonEncode(request), '$_host:$_port', 'qomet.agora.daemons.prtagent.v1.AgentService.GetSupportedCurrencies'],
+        ['-plaintext', '-d', jsonEncode(request), '$_host:$_port', 'qomet.agora.daemons.prtagent.v1.AgentService/GetSupportedCurrencies'],
       ).timeout(const Duration(seconds: 10));
 
       print('📤 GetSupportedCurrencies gRPC exit code: ${result.exitCode}');
@@ -1595,8 +1595,8 @@ class GrpcurlHelper {
       final inputParams = {
         'proposed_execution_id': 'get_supported_currencies_${DateTime.now().millisecondsSinceEpoch}',
         'pagination': {
-          'page_nr': pageNumber,
-          'page_size': pageSize,
+          'page_nr': '1',
+          'page_size': '2',
           'page_token': '',
         },
         // Removed aux_data completely to avoid server marshaling issues
@@ -1605,6 +1605,7 @@ class GrpcurlHelper {
       print('📨 GetSupportedCurrencies Request: $inputParams');
       print('🔗 Calling: qomet.agora.daemons.prtagent.v1.AgentService/GetSupportedCurrencies');
       print('🌐 Server: $_host:$_port');
+      print('🔧 Full grpcurl command: $grpcurlPath -plaintext -d \'${jsonEncode(inputParams)}\' $_host:$_port qomet.agora.daemons.prtagent.v1.AgentService/GetSupportedCurrencies');
 
       final result = await Process.run(
         grpcurlPath,
@@ -1633,6 +1634,8 @@ class GrpcurlHelper {
         print('❌ GetSupportedCurrencies failed: ${result.stderr}');
         print('📤 GetSupportedCurrencies Error Details: Exit Code ${result.exitCode}');
         print('📤 GetSupportedCurrencies stdout: ${result.stdout}');
+        print('📤 GetSupportedCurrencies REQUEST SENT: ${jsonEncode(inputParams)}');
+        print('📤 GetSupportedCurrencies FULL RESPONSE: stdout="${result.stdout}" stderr="${result.stderr}" exitCode=${result.exitCode}');
       }
 
       return responseData;
