@@ -202,7 +202,16 @@ class _TradingPageState extends State<TradingPage> {
 
     try {
       print('🏦 Fetching supported currencies...');
-      final result = await realGrpcClient.getSupportedCurrencies();
+      final result = await realGrpcClient.getSupportedCurrencies().timeout(
+        const Duration(seconds: 10),
+        onTimeout: () {
+          print('⏰ GetSupportedCurrencies timed out after 10 seconds');
+          return {
+            'success': false,
+            'output': {'error': 'Request timed out after 10 seconds'},
+          };
+        },
+      );
       
       if (result['success'] == true && result['output'] != null) {
         final output = result['output'] as Map<String, dynamic>;
@@ -309,7 +318,16 @@ class _TradingPageState extends State<TradingPage> {
 
     try {
       print('🏪 Fetching market list...');
-      final result = await realGrpcClient.getMarketList();
+      final result = await realGrpcClient.getMarketList().timeout(
+        const Duration(seconds: 10),
+        onTimeout: () {
+          print('⏰ GetMarketList timed out after 10 seconds');
+          return {
+            'success': false,
+            'output': {'error': 'Request timed out after 10 seconds'},
+          };
+        },
+      );
       
       if (result['success'] == true && result['output'] != null) {
         final output = result['output'] as Map<String, dynamic>;
@@ -394,6 +412,15 @@ class _TradingPageState extends State<TradingPage> {
         marketId: marketId,
         pageNumber: 1,
         pageSize: 100, // Get more instruments
+      ).timeout(
+        const Duration(seconds: 10),
+        onTimeout: () {
+          print('⏰ GetMarketInstrumentList timed out after 10 seconds');
+          return {
+            'success': false,
+            'output': {'error': 'Request timed out after 10 seconds'},
+          };
+        },
       );
       
       if (result['success'] == true && result['output'] != null) {
@@ -959,7 +986,16 @@ class _TradingPageState extends State<TradingPage> {
       print('🔍 First time lookup for user: $currentUsername');
 
       // Get account list to find the user's account ID
-      final accountListResponse = await realGrpcClient.getAccountList();
+      final accountListResponse = await realGrpcClient.getAccountList().timeout(
+        const Duration(seconds: 10),
+        onTimeout: () {
+          print('⏰ GetAccountList timed out after 10 seconds');
+          return {
+            'success': false,
+            'output': {'error': 'Request timed out after 10 seconds'},
+          };
+        },
+      );
       
       String? accountId;
       if (accountListResponse['success'] == true) {
@@ -1009,7 +1045,7 @@ class _TradingPageState extends State<TradingPage> {
       // Fetch cash holdings with comprehensive crash protection
       final cashHoldingsResponse = await realGrpcClient.getAccountCashHoldings(
         accountId: accountId,
-        cashAssetIds: ['USD'],
+        cashAssetIds: [],
       ).timeout(
         const Duration(seconds: 15),
         onTimeout: () => {

@@ -16,7 +16,8 @@ class GrpcurlHelper {
   // Prevent concurrent operations to avoid race conditions and crashes
   static bool _isPingInProgress = false;
   static bool _isAccountListInProgress = false;
-  
+  static bool _isFindingGrpcurlPath = false;
+
   // Try common grpcurl installation paths - absolute paths first for sandbox compatibility
   static const List<String> _grpcurlPaths = [
     '/usr/local/bin/grpcurl', // Most common location - try first
@@ -47,17 +48,34 @@ class GrpcurlHelper {
   /// Find the working grpcurl executable path (cached for performance) 
   /// Enhanced for macOS sandbox compatibility with smart server detection
   static Future<String?> _findGrpcurlPath() async {
-    print('🔍 Searching for grpcurl in sandbox-compatible paths...');
-    
-    // Smart approach: First check if server is reachable
-    // Only bypass grpcurl if server is NOT reachable (to prevent crashes)
-    final serverReachable = await _isServerReachable();
-    if (!serverReachable) {
-      print('⚠️ Server not reachable - skipping grpcurl search to prevent crashes');
-      return null;
+    // Return cached path if available
+    if (_cachedGrpcurlPath != null) {
+      print('✅ Using cached grpcurl path: $_cachedGrpcurlPath');
+      return _cachedGrpcurlPath;
     }
-    
-    print('✅ Server is reachable - proceeding with grpcurl search');
+
+    // Prevent concurrent searches
+    if (_isFindingGrpcurlPath) {
+      print('⏳ Grpcurl path search already in progress, waiting...');
+      // Wait a bit and check again
+      await Future.delayed(const Duration(milliseconds: 500));
+      return _cachedGrpcurlPath;
+    }
+
+    _isFindingGrpcurlPath = true;
+
+    try {
+      print('🔍 Searching for grpcurl in sandbox-compatible paths...');
+
+      // Smart approach: First check if server is reachable
+      // Only bypass grpcurl if server is NOT reachable (to prevent crashes)
+      final serverReachable = await _isServerReachable();
+      if (!serverReachable) {
+        print('⚠️ Server not reachable - skipping grpcurl search to prevent crashes');
+        return null;
+      }
+
+      print('✅ Server is reachable - proceeding with grpcurl search');
     
     for (final path in _grpcurlPaths) {
       try {
@@ -115,6 +133,9 @@ class GrpcurlHelper {
     print('❌ No working grpcurl found in any of the paths: $_grpcurlPaths');
     print('💡 This might be due to macOS app sandbox restrictions');
     return null;
+    } finally {
+      _isFindingGrpcurlPath = false;
+    }
   }
 
   /// Test if grpcurl is available and server is reachable
@@ -1595,8 +1616,8 @@ class GrpcurlHelper {
       final inputParams = {
         'proposed_execution_id': 'get_supported_currencies_${DateTime.now().millisecondsSinceEpoch}',
         'pagination': {
-          'page_nr': '1',
-          'page_size': '2',
+          'page_nr': pageNumber,
+          'page_size': pageSize,
           'page_token': '',
         },
         // Removed aux_data completely to avoid server marshaling issues
