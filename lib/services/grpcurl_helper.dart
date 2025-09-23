@@ -1769,6 +1769,32 @@ class GrpcurlHelper {
     String? auxData,
   }) async {
     try {
+      // Find the working grpcurl path
+      print('🔍 Looking for grpcurl executable for CreateOrderAsync...');
+      final grpcurlPath = await _findGrpcurlPath().timeout(
+        const Duration(milliseconds: 500),
+        onTimeout: () {
+          print('⏰ grpcurl path finder timed out for CreateOrderAsync');
+          return null;
+        },
+      );
+
+      if (grpcurlPath == null) {
+        print('❌ grpcurl not found for CreateOrderAsync');
+        return {
+          'input': null,
+          'output': {
+            'error': 'grpcurl executable not found',
+            'message': 'Unable to locate grpcurl in standard paths',
+          },
+          'requestTime': _toUnixTimestamp(DateTime.now()).toString(),
+          'serverType': 'grpcurl-not-found',
+          'success': false,
+        };
+      }
+
+      print('✅ Using grpcurl path: $grpcurlPath');
+
       // Convert order side to the required enum value
       String orderSideValue;
       switch (side.toUpperCase()) {
@@ -1793,7 +1819,7 @@ class GrpcurlHelper {
         'quantity': quantity,
         'price': price,
         'time_in_force': timeInForce,
-        'participant_order_id': participantOrderId,
+        'participant_order_iid': participantOrderId,
       };
 
       // Add optional fields
@@ -1812,27 +1838,27 @@ class GrpcurlHelper {
       }
 
       final jsonRequest = json.encode(request);
-      print('🚀 CreateOrder Request: $jsonRequest');
+      print('🚀 CreateOrderAsync Request: $jsonRequest');
 
       final result = await Process.run(
-        'grpcurl',
+        grpcurlPath,
         [
           '-plaintext',
           '-d',
           jsonRequest,
           '$_host:$_port',
-          'qomet.agora.daemons.prtagent.v1.MarketService/CreateOrder',
+          'qomet.agora.daemons.prtagent.v1.TradingService/CreateOrderAsync',
         ],
       );
 
-      print('📬 CreateOrder Response (stdout): ${result.stdout}');
-      print('📬 CreateOrder Response (stderr): ${result.stderr}');
-      print('📬 CreateOrder Exit code: ${result.exitCode}');
+      print('📬 CreateOrderAsync Response (stdout): ${result.stdout}');
+      print('📬 CreateOrderAsync Response (stderr): ${result.stderr}');
+      print('📬 CreateOrderAsync Exit code: ${result.exitCode}');
 
       if (result.exitCode == 0 && result.stdout.toString().trim().isNotEmpty) {
         try {
           final Map<String, dynamic> output = json.decode(result.stdout);
-          print('📬 CreateOrder Response: $output');
+          print('📬 CreateOrderAsync Response: $output');
           return {
             'success': true,
             'output': output,
@@ -1840,7 +1866,7 @@ class GrpcurlHelper {
             'serverType': 'grpcurl',
           };
         } catch (e) {
-          print('❌ Error parsing CreateOrder JSON response: $e');
+          print('❌ Error parsing CreateOrderAsync JSON response: $e');
           print('❌ Raw response: ${result.stdout}');
           return {
             'success': false,
@@ -1854,7 +1880,7 @@ class GrpcurlHelper {
           };
         }
       } else {
-        print('❌ CreateOrder grpcurl command failed');
+        print('❌ CreateOrderAsync grpcurl command failed');
         print('❌ Exit code: ${result.exitCode}');
         print('❌ Stderr: ${result.stderr}');
         return {

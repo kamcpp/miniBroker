@@ -135,17 +135,17 @@ class MarketServiceClient extends $grpc.Client {
           $0.GetOrderFeesResponse.fromBuffer);
   static final _$createOrder =
       $grpc.ClientMethod<$0.CreateOrderRequest, $0.CreateOrderResponse>(
-          '/qomet.agora.daemons.prtagent.v1.TradingService/CreateOrder',
+          '/qomet.agora.daemons.prtagent.v1.TradingService/CreateOrderAsync',
           ($0.CreateOrderRequest value) => value.writeToBuffer(),
           $0.CreateOrderResponse.fromBuffer);
   static final _$replaceOrder =
       $grpc.ClientMethod<$0.ReplaceOrderRequest, $0.ReplaceOrderResponse>(
-          '/qomet.agora.daemons.prtagent.v1.TradingService/ReplaceOrder',
+          '/qomet.agora.daemons.prtagent.v1.TradingService/ReplaceOrderAsync',
           ($0.ReplaceOrderRequest value) => value.writeToBuffer(),
           $0.ReplaceOrderResponse.fromBuffer);
   static final _$cancelOrder =
       $grpc.ClientMethod<$0.CancelOrderRequest, $0.CancelOrderResponse>(
-          '/qomet.agora.daemons.prtagent.v1.TradingService/CancelOrder',
+          '/qomet.agora.daemons.prtagent.v1.TradingService/CancelOrderAsync',
           ($0.CancelOrderRequest value) => value.writeToBuffer(),
           $0.CancelOrderResponse.fromBuffer);
 }

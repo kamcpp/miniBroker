@@ -1232,14 +1232,14 @@ class RealGrpcClient {
       return {
         'request': {
           'account_iid': accountId,
-          'fee_payer_account_id': feePayerAccountId,
-          'instrument_id': instrumentId,
+          'fee_payer_account_iid': feePayerAccountId,
+          'instrument_listing_iid': instrumentId,
           'order_type': orderType,
           'side': side,
           'quantity': quantity,
           'price': price,
           'time_in_force': timeInForce,
-          'participant_order_id': participantOrderId,
+          'participant_order_iid': participantOrderId,
         },
         'output': {'error': 'Critical error: $e'},
         'requestTime': _toUnixTimestamp(DateTime.now()).toString(),

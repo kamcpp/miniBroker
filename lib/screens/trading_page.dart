@@ -2839,8 +2839,8 @@ class _TradingPageState extends State<TradingPage> {
     }
     
     // Extract the base symbol from the trading pair
-    // For example: "BTC-USD" -> "BTC", "ETH-USD" -> "ETH"
-    final parts = _selectedSymbol.split('-');
+    // For example: "ETH/USD" -> "ETH", "BTC/USD" -> "BTC"
+    final parts = _selectedSymbol.split('/');
     return parts.isNotEmpty ? parts[0] : '';
   }
 
@@ -4717,49 +4717,69 @@ class _TradingPageState extends State<TradingPage> {
   }
 
   void _placeOrder() async {
-    if (_quantityController.text.isEmpty) {
-      ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(
-          content: Text('Please enter a quantity'),
-          backgroundColor: Colors.red,
-        ),
-      );
-      return;
-    }
-
-    if (_orderType == 'Limit' && _priceController.text.isEmpty) {
-      ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(
-          content: Text('Please enter a price for limit order'),
-          backgroundColor: Colors.red,
-        ),
-      );
-      return;
-    }
-
-    if (_cachedAccountId == null || _cachedAccountId!.isEmpty) {
-      ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(
-          content: Text('Account ID not available'),
-          backgroundColor: Colors.red,
-        ),
-      );
-      return;
-    }
-
-    if (_selectedSymbol.isEmpty) {
-      ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(
-          content: Text('No instrument selected'),
-          backgroundColor: Colors.red,
-        ),
-      );
-      return;
-    }
-
     try {
-      // Extract instrument ID from symbol (e.g., "BTC-USD" -> "BTC")
-      final instrumentId = _selectedSymbol.split('-').first;
+      print('🎯 _placeOrder() called');
+
+      // Check if the widget is still mounted
+      if (!mounted) {
+        print('❌ Widget is not mounted, aborting order placement');
+        return;
+      }
+
+      // Check if controllers are initialized
+      if (_quantityController == null || _priceController == null) {
+        print('❌ Controllers not initialized');
+        return;
+      }
+
+      // Log current state for debugging
+      print('📊 Current state: _isBuySelected=$_isBuySelected, _orderType=$_orderType, _selectedSymbol=$_selectedSymbol');
+      print('📊 Account: _cachedAccountId=$_cachedAccountId');
+      print('📊 Controllers: quantity="${_quantityController.text}", price="${_priceController.text}"');
+
+      if (_quantityController.text.isEmpty) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          const SnackBar(
+            content: Text('Please enter a quantity'),
+            backgroundColor: Colors.red,
+          ),
+        );
+        return;
+      }
+
+      if (_orderType == 'Limit' && _priceController.text.isEmpty) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          const SnackBar(
+            content: Text('Please enter a price for limit order'),
+            backgroundColor: Colors.red,
+          ),
+        );
+        return;
+      }
+
+      if (_cachedAccountId == null || _cachedAccountId!.isEmpty) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          const SnackBar(
+            content: Text('Account ID not available'),
+            backgroundColor: Colors.red,
+          ),
+        );
+        return;
+      }
+
+      if (_selectedSymbol.isEmpty) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          const SnackBar(
+            content: Text('No instrument selected'),
+            backgroundColor: Colors.red,
+          ),
+        );
+        return;
+      }
+
+      // Use the full symbol as instrument listing ID (e.g., "ETH/USD")
+      final instrumentId = _selectedSymbol;
+      print('🏷️ Using instrumentId: $instrumentId');
 
       // Generate unique participant order ID
       final participantOrderId = 'order_${DateTime.now().millisecondsSinceEpoch}';
@@ -4769,6 +4789,8 @@ class _TradingPageState extends State<TradingPage> {
 
       // Set price (0 for market orders)
       final price = _orderType == 'Market' ? '0' : _priceController.text;
+
+      print('📝 Order details: side=$side, type=${_orderType.toUpperCase()}, quantity=${_quantityController.text.trim()}, price=$price');
 
       // Show loading indicator
       ScaffoldMessenger.of(context).showSnackBar(
@@ -4809,14 +4831,22 @@ class _TradingPageState extends State<TradingPage> {
       ScaffoldMessenger.of(context).hideCurrentSnackBar();
 
       if (result['success'] == true) {
-        // Success
+        // Success - handle ExecutionAsyncResponse structure
         final output = result['output'] as Map<String, dynamic>?;
-        final proposedOrderId = output?['proposedOrderId'] ?? 'Unknown';
+
+        // For async responses, extract order ID from different possible fields
+        final orderId = output?['id'] ??
+                       output?['refExecutionId'] ??
+                       output?['asyncResponseData']?['order_id'] ??
+                       output?['metadata']?['order_id'] ??
+                       'Unknown';
+
+        print('📋 CreateOrderAsync response: $output');
 
         ScaffoldMessenger.of(context).showSnackBar(
           SnackBar(
             content: Text(
-              '$side order placed successfully!\nOrder ID: $proposedOrderId',
+              '$side order submitted successfully!\nExecution ID: $orderId',
             ),
             backgroundColor: Colors.green,
             duration: Duration(seconds: 5),
@@ -4847,6 +4877,22 @@ class _TradingPageState extends State<TradingPage> {
       ScaffoldMessenger.of(context).showSnackBar(
         SnackBar(
           content: Text('Order failed: $e'),
+          backgroundColor: Colors.red,
+          duration: Duration(seconds: 7),
+        ),
+      );
+    } catch (e, stackTrace) {
+      // Global catch block to prevent app crashes
+      print('❌ Critical error in _placeOrder: $e');
+      print('Stack trace: $stackTrace');
+
+      // Hide any loading indicators
+      ScaffoldMessenger.of(context).hideCurrentSnackBar();
+
+      // Show error to user
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(
+          content: Text('An unexpected error occurred: $e'),
           backgroundColor: Colors.red,
           duration: Duration(seconds: 7),
         ),
