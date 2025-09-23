@@ -1,6 +1,6 @@
 // This is a generated file - do not edit.
 //
-// Generated from agent.proto.
+// Generated from trading.proto.
 
 // @dart = 3.3
 

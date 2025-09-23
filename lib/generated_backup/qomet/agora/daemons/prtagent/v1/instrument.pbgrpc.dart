@@ -1,6 +1,6 @@
 // This is a generated file - do not edit.
 //
-// Generated from qomet/agora/daemons/prtagent/v1/instrument.proto.
+// Generated from instrument.proto.
 
 // @dart = 3.3
 
@@ -16,6 +16,7 @@ import 'dart:core' as $core;
 import 'package:grpc/service_api.dart' as $grpc;
 import 'package:protobuf/protobuf.dart' as $pb;
 
+import 'common.pb.dart' as $1;
 import 'instrument.pb.dart' as $0;
 
 export 'instrument.pb.dart';
@@ -32,50 +33,36 @@ class InstrumentServiceClient extends $grpc.Client {
 
   InstrumentServiceClient(super.channel, {super.options, super.interceptors});
 
-  $grpc.ResponseFuture<$0.GetInstrumentsInfoResponse> getInstrumentsInfo(
-    $0.GetInstrumentsInfoRequest request, {
+  $grpc.ResponseFuture<$0.GetInstrumentListResponse> getInstrumentList(
+    $0.GetInstrumentListRequest request, {
     $grpc.CallOptions? options,
   }) {
-    return $createUnaryCall(_$getInstrumentsInfo, request, options: options);
+    return $createUnaryCall(_$getInstrumentList, request, options: options);
   }
 
-  $grpc.ResponseFuture<$0.InstrumentQuoteResponse> getLatestQuote(
-    $0.GetLatestQuoteRequest request, {
+  $grpc.ResponseFuture<$1.ExecutionAsyncResponse> getInstrumentListAsync(
+    $0.GetInstrumentListRequest request, {
     $grpc.CallOptions? options,
   }) {
-    return $createUnaryCall(_$getLatestQuote, request, options: options);
-  }
-
-  $grpc.ResponseStream<$0.InstrumentQuoteResponse> fetchLiveQuote(
-    $0.FetchLiveQuoteRequest request, {
-    $grpc.CallOptions? options,
-  }) {
-    return $createStreamingCall(
-        _$fetchLiveQuote, $async.Stream.fromIterable([request]),
+    return $createUnaryCall(_$getInstrumentListAsync, request,
         options: options);
   }
 
-  $grpc.ResponseFuture<$0.GetHistoricalQuoteResponse> getHistoricalQuote(
-    $0.GetHistoricalQuoteRequest request, {
+  $grpc.ResponseFuture<$0.GetInstrumentInfoBatchResponse>
+      getInstrumentInfoBatch(
+    $0.GetInstrumentInfoBatchRequest request, {
     $grpc.CallOptions? options,
   }) {
-    return $createUnaryCall(_$getHistoricalQuote, request, options: options);
-  }
-
-  $grpc.ResponseStream<$0.OhlcDataResponse> fetchLiveOhlcData(
-    $0.FetchLiveOhlcDataRequest request, {
-    $grpc.CallOptions? options,
-  }) {
-    return $createStreamingCall(
-        _$fetchLiveOhlcData, $async.Stream.fromIterable([request]),
+    return $createUnaryCall(_$getInstrumentInfoBatch, request,
         options: options);
   }
 
-  $grpc.ResponseFuture<$0.GetHistoricalOhlcDataResponse> getHistoricalOhlcData(
-    $0.GetHistoricalOhlcDataRequest request, {
+  $grpc.ResponseFuture<$1.ExecutionAsyncResponse> getInstrumentInfoBatchAsync(
+    $0.GetInstrumentInfoBatchRequest request, {
     $grpc.CallOptions? options,
   }) {
-    return $createUnaryCall(_$getHistoricalOhlcData, request, options: options);
+    return $createUnaryCall(_$getInstrumentInfoBatchAsync, request,
+        options: options);
   }
 
   $grpc.ResponseFuture<$0.GetInstrumentOrdersResponse> getInstrumentOrders(
@@ -85,11 +72,27 @@ class InstrumentServiceClient extends $grpc.Client {
     return $createUnaryCall(_$getInstrumentOrders, request, options: options);
   }
 
+  $grpc.ResponseFuture<$1.ExecutionAsyncResponse> getInstrumentOrdersAsync(
+    $0.GetInstrumentOrdersRequest request, {
+    $grpc.CallOptions? options,
+  }) {
+    return $createUnaryCall(_$getInstrumentOrdersAsync, request,
+        options: options);
+  }
+
   $grpc.ResponseFuture<$0.GetInstrumentTradesResponse> getInstrumentTrades(
     $0.GetInstrumentTradesRequest request, {
     $grpc.CallOptions? options,
   }) {
     return $createUnaryCall(_$getInstrumentTrades, request, options: options);
+  }
+
+  $grpc.ResponseFuture<$1.ExecutionAsyncResponse> getInstrumentTradesAsync(
+    $0.GetInstrumentTradesRequest request, {
+    $grpc.CallOptions? options,
+  }) {
+    return $createUnaryCall(_$getInstrumentTradesAsync, request,
+        options: options);
   }
 
   $grpc.ResponseFuture<$0.GetInstrumentSettlementsResponse>
@@ -101,66 +104,67 @@ class InstrumentServiceClient extends $grpc.Client {
         options: options);
   }
 
-  $grpc.ResponseFuture<$0.GetOrderbookResponse> getOrderbook(
-    $0.GetOrderbookRequest request, {
+  $grpc.ResponseFuture<$1.ExecutionAsyncResponse> getInstrumentSettlementsAsync(
+    $0.GetInstrumentSettlementsRequest request, {
     $grpc.CallOptions? options,
   }) {
-    return $createUnaryCall(_$getOrderbook, request, options: options);
+    return $createUnaryCall(_$getInstrumentSettlementsAsync, request,
+        options: options);
   }
 
   // method descriptors
 
-  static final _$getInstrumentsInfo = $grpc.ClientMethod<
-          $0.GetInstrumentsInfoRequest, $0.GetInstrumentsInfoResponse>(
-      '/qomet.agora.daemons.prtagent.v1.InstrumentService/GetInstrumentsInfo',
-      ($0.GetInstrumentsInfoRequest value) => value.writeToBuffer(),
-      $0.GetInstrumentsInfoResponse.fromBuffer);
-  static final _$getLatestQuote =
-      $grpc.ClientMethod<$0.GetLatestQuoteRequest, $0.InstrumentQuoteResponse>(
-          '/qomet.agora.daemons.prtagent.v1.InstrumentService/GetLatestQuote',
-          ($0.GetLatestQuoteRequest value) => value.writeToBuffer(),
-          $0.InstrumentQuoteResponse.fromBuffer);
-  static final _$fetchLiveQuote =
-      $grpc.ClientMethod<$0.FetchLiveQuoteRequest, $0.InstrumentQuoteResponse>(
-          '/qomet.agora.daemons.prtagent.v1.InstrumentService/FetchLiveQuote',
-          ($0.FetchLiveQuoteRequest value) => value.writeToBuffer(),
-          $0.InstrumentQuoteResponse.fromBuffer);
-  static final _$getHistoricalQuote = $grpc.ClientMethod<
-          $0.GetHistoricalQuoteRequest, $0.GetHistoricalQuoteResponse>(
-      '/qomet.agora.daemons.prtagent.v1.InstrumentService/GetHistoricalQuote',
-      ($0.GetHistoricalQuoteRequest value) => value.writeToBuffer(),
-      $0.GetHistoricalQuoteResponse.fromBuffer);
-  static final _$fetchLiveOhlcData = $grpc.ClientMethod<
-          $0.FetchLiveOhlcDataRequest, $0.OhlcDataResponse>(
-      '/qomet.agora.daemons.prtagent.v1.InstrumentService/FetchLiveOhlcData',
-      ($0.FetchLiveOhlcDataRequest value) => value.writeToBuffer(),
-      $0.OhlcDataResponse.fromBuffer);
-  static final _$getHistoricalOhlcData = $grpc.ClientMethod<
-          $0.GetHistoricalOhlcDataRequest, $0.GetHistoricalOhlcDataResponse>(
-      '/qomet.agora.daemons.prtagent.v1.InstrumentService/GetHistoricalOhlcData',
-      ($0.GetHistoricalOhlcDataRequest value) => value.writeToBuffer(),
-      $0.GetHistoricalOhlcDataResponse.fromBuffer);
+  static final _$getInstrumentList = $grpc.ClientMethod<
+          $0.GetInstrumentListRequest, $0.GetInstrumentListResponse>(
+      '/qomet.agora.daemons.prtagent.v1.InstrumentService/GetInstrumentList',
+      ($0.GetInstrumentListRequest value) => value.writeToBuffer(),
+      $0.GetInstrumentListResponse.fromBuffer);
+  static final _$getInstrumentListAsync = $grpc.ClientMethod<
+          $0.GetInstrumentListRequest, $1.ExecutionAsyncResponse>(
+      '/qomet.agora.daemons.prtagent.v1.InstrumentService/GetInstrumentListAsync',
+      ($0.GetInstrumentListRequest value) => value.writeToBuffer(),
+      $1.ExecutionAsyncResponse.fromBuffer);
+  static final _$getInstrumentInfoBatch = $grpc.ClientMethod<
+          $0.GetInstrumentInfoBatchRequest, $0.GetInstrumentInfoBatchResponse>(
+      '/qomet.agora.daemons.prtagent.v1.InstrumentService/GetInstrumentInfoBatch',
+      ($0.GetInstrumentInfoBatchRequest value) => value.writeToBuffer(),
+      $0.GetInstrumentInfoBatchResponse.fromBuffer);
+  static final _$getInstrumentInfoBatchAsync = $grpc.ClientMethod<
+          $0.GetInstrumentInfoBatchRequest, $1.ExecutionAsyncResponse>(
+      '/qomet.agora.daemons.prtagent.v1.InstrumentService/GetInstrumentInfoBatchAsync',
+      ($0.GetInstrumentInfoBatchRequest value) => value.writeToBuffer(),
+      $1.ExecutionAsyncResponse.fromBuffer);
   static final _$getInstrumentOrders = $grpc.ClientMethod<
           $0.GetInstrumentOrdersRequest, $0.GetInstrumentOrdersResponse>(
       '/qomet.agora.daemons.prtagent.v1.InstrumentService/GetInstrumentOrders',
       ($0.GetInstrumentOrdersRequest value) => value.writeToBuffer(),
       $0.GetInstrumentOrdersResponse.fromBuffer);
+  static final _$getInstrumentOrdersAsync = $grpc.ClientMethod<
+          $0.GetInstrumentOrdersRequest, $1.ExecutionAsyncResponse>(
+      '/qomet.agora.daemons.prtagent.v1.InstrumentService/GetInstrumentOrdersAsync',
+      ($0.GetInstrumentOrdersRequest value) => value.writeToBuffer(),
+      $1.ExecutionAsyncResponse.fromBuffer);
   static final _$getInstrumentTrades = $grpc.ClientMethod<
           $0.GetInstrumentTradesRequest, $0.GetInstrumentTradesResponse>(
       '/qomet.agora.daemons.prtagent.v1.InstrumentService/GetInstrumentTrades',
       ($0.GetInstrumentTradesRequest value) => value.writeToBuffer(),
       $0.GetInstrumentTradesResponse.fromBuffer);
+  static final _$getInstrumentTradesAsync = $grpc.ClientMethod<
+          $0.GetInstrumentTradesRequest, $1.ExecutionAsyncResponse>(
+      '/qomet.agora.daemons.prtagent.v1.InstrumentService/GetInstrumentTradesAsync',
+      ($0.GetInstrumentTradesRequest value) => value.writeToBuffer(),
+      $1.ExecutionAsyncResponse.fromBuffer);
   static final _$getInstrumentSettlements = $grpc.ClientMethod<
           $0.GetInstrumentSettlementsRequest,
           $0.GetInstrumentSettlementsResponse>(
       '/qomet.agora.daemons.prtagent.v1.InstrumentService/GetInstrumentSettlements',
       ($0.GetInstrumentSettlementsRequest value) => value.writeToBuffer(),
       $0.GetInstrumentSettlementsResponse.fromBuffer);
-  static final _$getOrderbook =
-      $grpc.ClientMethod<$0.GetOrderbookRequest, $0.GetOrderbookResponse>(
-          '/qomet.agora.daemons.prtagent.v1.InstrumentService/GetOrderbook',
-          ($0.GetOrderbookRequest value) => value.writeToBuffer(),
-          $0.GetOrderbookResponse.fromBuffer);
+  static final _$getInstrumentSettlementsAsync = $grpc.ClientMethod<
+          $0.GetInstrumentSettlementsRequest, $1.ExecutionAsyncResponse>(
+      '/qomet.agora.daemons.prtagent.v1.InstrumentService/GetInstrumentSettlementsAsync',
+      ($0.GetInstrumentSettlementsRequest value) => value.writeToBuffer(),
+      $1.ExecutionAsyncResponse.fromBuffer);
 }
 
 @$pb.GrpcServiceName('qomet.agora.daemons.prtagent.v1.InstrumentService')
@@ -168,60 +172,42 @@ abstract class InstrumentServiceBase extends $grpc.Service {
   $core.String get $name => 'qomet.agora.daemons.prtagent.v1.InstrumentService';
 
   InstrumentServiceBase() {
-    $addMethod($grpc.ServiceMethod<$0.GetInstrumentsInfoRequest,
-            $0.GetInstrumentsInfoResponse>(
-        'GetInstrumentsInfo',
-        getInstrumentsInfo_Pre,
+    $addMethod($grpc.ServiceMethod<$0.GetInstrumentListRequest,
+            $0.GetInstrumentListResponse>(
+        'GetInstrumentList',
+        getInstrumentList_Pre,
         false,
         false,
         ($core.List<$core.int> value) =>
-            $0.GetInstrumentsInfoRequest.fromBuffer(value),
-        ($0.GetInstrumentsInfoResponse value) => value.writeToBuffer()));
-    $addMethod($grpc.ServiceMethod<$0.GetLatestQuoteRequest,
-            $0.InstrumentQuoteResponse>(
-        'GetLatestQuote',
-        getLatestQuote_Pre,
+            $0.GetInstrumentListRequest.fromBuffer(value),
+        ($0.GetInstrumentListResponse value) => value.writeToBuffer()));
+    $addMethod($grpc.ServiceMethod<$0.GetInstrumentListRequest,
+            $1.ExecutionAsyncResponse>(
+        'GetInstrumentListAsync',
+        getInstrumentListAsync_Pre,
         false,
         false,
         ($core.List<$core.int> value) =>
-            $0.GetLatestQuoteRequest.fromBuffer(value),
-        ($0.InstrumentQuoteResponse value) => value.writeToBuffer()));
-    $addMethod($grpc.ServiceMethod<$0.FetchLiveQuoteRequest,
-            $0.InstrumentQuoteResponse>(
-        'FetchLiveQuote',
-        fetchLiveQuote_Pre,
-        false,
-        true,
-        ($core.List<$core.int> value) =>
-            $0.FetchLiveQuoteRequest.fromBuffer(value),
-        ($0.InstrumentQuoteResponse value) => value.writeToBuffer()));
-    $addMethod($grpc.ServiceMethod<$0.GetHistoricalQuoteRequest,
-            $0.GetHistoricalQuoteResponse>(
-        'GetHistoricalQuote',
-        getHistoricalQuote_Pre,
+            $0.GetInstrumentListRequest.fromBuffer(value),
+        ($1.ExecutionAsyncResponse value) => value.writeToBuffer()));
+    $addMethod($grpc.ServiceMethod<$0.GetInstrumentInfoBatchRequest,
+            $0.GetInstrumentInfoBatchResponse>(
+        'GetInstrumentInfoBatch',
+        getInstrumentInfoBatch_Pre,
         false,
         false,
         ($core.List<$core.int> value) =>
-            $0.GetHistoricalQuoteRequest.fromBuffer(value),
-        ($0.GetHistoricalQuoteResponse value) => value.writeToBuffer()));
-    $addMethod(
-        $grpc.ServiceMethod<$0.FetchLiveOhlcDataRequest, $0.OhlcDataResponse>(
-            'FetchLiveOhlcData',
-            fetchLiveOhlcData_Pre,
-            false,
-            true,
-            ($core.List<$core.int> value) =>
-                $0.FetchLiveOhlcDataRequest.fromBuffer(value),
-            ($0.OhlcDataResponse value) => value.writeToBuffer()));
-    $addMethod($grpc.ServiceMethod<$0.GetHistoricalOhlcDataRequest,
-            $0.GetHistoricalOhlcDataResponse>(
-        'GetHistoricalOhlcData',
-        getHistoricalOhlcData_Pre,
+            $0.GetInstrumentInfoBatchRequest.fromBuffer(value),
+        ($0.GetInstrumentInfoBatchResponse value) => value.writeToBuffer()));
+    $addMethod($grpc.ServiceMethod<$0.GetInstrumentInfoBatchRequest,
+            $1.ExecutionAsyncResponse>(
+        'GetInstrumentInfoBatchAsync',
+        getInstrumentInfoBatchAsync_Pre,
         false,
         false,
         ($core.List<$core.int> value) =>
-            $0.GetHistoricalOhlcDataRequest.fromBuffer(value),
-        ($0.GetHistoricalOhlcDataResponse value) => value.writeToBuffer()));
+            $0.GetInstrumentInfoBatchRequest.fromBuffer(value),
+        ($1.ExecutionAsyncResponse value) => value.writeToBuffer()));
     $addMethod($grpc.ServiceMethod<$0.GetInstrumentOrdersRequest,
             $0.GetInstrumentOrdersResponse>(
         'GetInstrumentOrders',
@@ -231,6 +217,15 @@ abstract class InstrumentServiceBase extends $grpc.Service {
         ($core.List<$core.int> value) =>
             $0.GetInstrumentOrdersRequest.fromBuffer(value),
         ($0.GetInstrumentOrdersResponse value) => value.writeToBuffer()));
+    $addMethod($grpc.ServiceMethod<$0.GetInstrumentOrdersRequest,
+            $1.ExecutionAsyncResponse>(
+        'GetInstrumentOrdersAsync',
+        getInstrumentOrdersAsync_Pre,
+        false,
+        false,
+        ($core.List<$core.int> value) =>
+            $0.GetInstrumentOrdersRequest.fromBuffer(value),
+        ($1.ExecutionAsyncResponse value) => value.writeToBuffer()));
     $addMethod($grpc.ServiceMethod<$0.GetInstrumentTradesRequest,
             $0.GetInstrumentTradesResponse>(
         'GetInstrumentTrades',
@@ -240,6 +235,15 @@ abstract class InstrumentServiceBase extends $grpc.Service {
         ($core.List<$core.int> value) =>
             $0.GetInstrumentTradesRequest.fromBuffer(value),
         ($0.GetInstrumentTradesResponse value) => value.writeToBuffer()));
+    $addMethod($grpc.ServiceMethod<$0.GetInstrumentTradesRequest,
+            $1.ExecutionAsyncResponse>(
+        'GetInstrumentTradesAsync',
+        getInstrumentTradesAsync_Pre,
+        false,
+        false,
+        ($core.List<$core.int> value) =>
+            $0.GetInstrumentTradesRequest.fromBuffer(value),
+        ($1.ExecutionAsyncResponse value) => value.writeToBuffer()));
     $addMethod($grpc.ServiceMethod<$0.GetInstrumentSettlementsRequest,
             $0.GetInstrumentSettlementsResponse>(
         'GetInstrumentSettlements',
@@ -249,70 +253,52 @@ abstract class InstrumentServiceBase extends $grpc.Service {
         ($core.List<$core.int> value) =>
             $0.GetInstrumentSettlementsRequest.fromBuffer(value),
         ($0.GetInstrumentSettlementsResponse value) => value.writeToBuffer()));
-    $addMethod(
-        $grpc.ServiceMethod<$0.GetOrderbookRequest, $0.GetOrderbookResponse>(
-            'GetOrderbook',
-            getOrderbook_Pre,
-            false,
-            false,
-            ($core.List<$core.int> value) =>
-                $0.GetOrderbookRequest.fromBuffer(value),
-            ($0.GetOrderbookResponse value) => value.writeToBuffer()));
+    $addMethod($grpc.ServiceMethod<$0.GetInstrumentSettlementsRequest,
+            $1.ExecutionAsyncResponse>(
+        'GetInstrumentSettlementsAsync',
+        getInstrumentSettlementsAsync_Pre,
+        false,
+        false,
+        ($core.List<$core.int> value) =>
+            $0.GetInstrumentSettlementsRequest.fromBuffer(value),
+        ($1.ExecutionAsyncResponse value) => value.writeToBuffer()));
   }
 
-  $async.Future<$0.GetInstrumentsInfoResponse> getInstrumentsInfo_Pre(
+  $async.Future<$0.GetInstrumentListResponse> getInstrumentList_Pre(
       $grpc.ServiceCall $call,
-      $async.Future<$0.GetInstrumentsInfoRequest> $request) async {
-    return getInstrumentsInfo($call, await $request);
+      $async.Future<$0.GetInstrumentListRequest> $request) async {
+    return getInstrumentList($call, await $request);
   }
 
-  $async.Future<$0.GetInstrumentsInfoResponse> getInstrumentsInfo(
-      $grpc.ServiceCall call, $0.GetInstrumentsInfoRequest request);
+  $async.Future<$0.GetInstrumentListResponse> getInstrumentList(
+      $grpc.ServiceCall call, $0.GetInstrumentListRequest request);
 
-  $async.Future<$0.InstrumentQuoteResponse> getLatestQuote_Pre(
+  $async.Future<$1.ExecutionAsyncResponse> getInstrumentListAsync_Pre(
       $grpc.ServiceCall $call,
-      $async.Future<$0.GetLatestQuoteRequest> $request) async {
-    return getLatestQuote($call, await $request);
+      $async.Future<$0.GetInstrumentListRequest> $request) async {
+    return getInstrumentListAsync($call, await $request);
   }
 
-  $async.Future<$0.InstrumentQuoteResponse> getLatestQuote(
-      $grpc.ServiceCall call, $0.GetLatestQuoteRequest request);
+  $async.Future<$1.ExecutionAsyncResponse> getInstrumentListAsync(
+      $grpc.ServiceCall call, $0.GetInstrumentListRequest request);
 
-  $async.Stream<$0.InstrumentQuoteResponse> fetchLiveQuote_Pre(
+  $async.Future<$0.GetInstrumentInfoBatchResponse> getInstrumentInfoBatch_Pre(
       $grpc.ServiceCall $call,
-      $async.Future<$0.FetchLiveQuoteRequest> $request) async* {
-    yield* fetchLiveQuote($call, await $request);
+      $async.Future<$0.GetInstrumentInfoBatchRequest> $request) async {
+    return getInstrumentInfoBatch($call, await $request);
   }
 
-  $async.Stream<$0.InstrumentQuoteResponse> fetchLiveQuote(
-      $grpc.ServiceCall call, $0.FetchLiveQuoteRequest request);
+  $async.Future<$0.GetInstrumentInfoBatchResponse> getInstrumentInfoBatch(
+      $grpc.ServiceCall call, $0.GetInstrumentInfoBatchRequest request);
 
-  $async.Future<$0.GetHistoricalQuoteResponse> getHistoricalQuote_Pre(
+  $async.Future<$1.ExecutionAsyncResponse> getInstrumentInfoBatchAsync_Pre(
       $grpc.ServiceCall $call,
-      $async.Future<$0.GetHistoricalQuoteRequest> $request) async {
-    return getHistoricalQuote($call, await $request);
+      $async.Future<$0.GetInstrumentInfoBatchRequest> $request) async {
+    return getInstrumentInfoBatchAsync($call, await $request);
   }
 
-  $async.Future<$0.GetHistoricalQuoteResponse> getHistoricalQuote(
-      $grpc.ServiceCall call, $0.GetHistoricalQuoteRequest request);
-
-  $async.Stream<$0.OhlcDataResponse> fetchLiveOhlcData_Pre(
-      $grpc.ServiceCall $call,
-      $async.Future<$0.FetchLiveOhlcDataRequest> $request) async* {
-    yield* fetchLiveOhlcData($call, await $request);
-  }
-
-  $async.Stream<$0.OhlcDataResponse> fetchLiveOhlcData(
-      $grpc.ServiceCall call, $0.FetchLiveOhlcDataRequest request);
-
-  $async.Future<$0.GetHistoricalOhlcDataResponse> getHistoricalOhlcData_Pre(
-      $grpc.ServiceCall $call,
-      $async.Future<$0.GetHistoricalOhlcDataRequest> $request) async {
-    return getHistoricalOhlcData($call, await $request);
-  }
-
-  $async.Future<$0.GetHistoricalOhlcDataResponse> getHistoricalOhlcData(
-      $grpc.ServiceCall call, $0.GetHistoricalOhlcDataRequest request);
+  $async.Future<$1.ExecutionAsyncResponse> getInstrumentInfoBatchAsync(
+      $grpc.ServiceCall call, $0.GetInstrumentInfoBatchRequest request);
 
   $async.Future<$0.GetInstrumentOrdersResponse> getInstrumentOrders_Pre(
       $grpc.ServiceCall $call,
@@ -321,6 +307,15 @@ abstract class InstrumentServiceBase extends $grpc.Service {
   }
 
   $async.Future<$0.GetInstrumentOrdersResponse> getInstrumentOrders(
+      $grpc.ServiceCall call, $0.GetInstrumentOrdersRequest request);
+
+  $async.Future<$1.ExecutionAsyncResponse> getInstrumentOrdersAsync_Pre(
+      $grpc.ServiceCall $call,
+      $async.Future<$0.GetInstrumentOrdersRequest> $request) async {
+    return getInstrumentOrdersAsync($call, await $request);
+  }
+
+  $async.Future<$1.ExecutionAsyncResponse> getInstrumentOrdersAsync(
       $grpc.ServiceCall call, $0.GetInstrumentOrdersRequest request);
 
   $async.Future<$0.GetInstrumentTradesResponse> getInstrumentTrades_Pre(
@@ -332,6 +327,15 @@ abstract class InstrumentServiceBase extends $grpc.Service {
   $async.Future<$0.GetInstrumentTradesResponse> getInstrumentTrades(
       $grpc.ServiceCall call, $0.GetInstrumentTradesRequest request);
 
+  $async.Future<$1.ExecutionAsyncResponse> getInstrumentTradesAsync_Pre(
+      $grpc.ServiceCall $call,
+      $async.Future<$0.GetInstrumentTradesRequest> $request) async {
+    return getInstrumentTradesAsync($call, await $request);
+  }
+
+  $async.Future<$1.ExecutionAsyncResponse> getInstrumentTradesAsync(
+      $grpc.ServiceCall call, $0.GetInstrumentTradesRequest request);
+
   $async.Future<$0.GetInstrumentSettlementsResponse>
       getInstrumentSettlements_Pre($grpc.ServiceCall $call,
           $async.Future<$0.GetInstrumentSettlementsRequest> $request) async {
@@ -341,12 +345,12 @@ abstract class InstrumentServiceBase extends $grpc.Service {
   $async.Future<$0.GetInstrumentSettlementsResponse> getInstrumentSettlements(
       $grpc.ServiceCall call, $0.GetInstrumentSettlementsRequest request);
 
-  $async.Future<$0.GetOrderbookResponse> getOrderbook_Pre(
+  $async.Future<$1.ExecutionAsyncResponse> getInstrumentSettlementsAsync_Pre(
       $grpc.ServiceCall $call,
-      $async.Future<$0.GetOrderbookRequest> $request) async {
-    return getOrderbook($call, await $request);
+      $async.Future<$0.GetInstrumentSettlementsRequest> $request) async {
+    return getInstrumentSettlementsAsync($call, await $request);
   }
 
-  $async.Future<$0.GetOrderbookResponse> getOrderbook(
-      $grpc.ServiceCall call, $0.GetOrderbookRequest request);
+  $async.Future<$1.ExecutionAsyncResponse> getInstrumentSettlementsAsync(
+      $grpc.ServiceCall call, $0.GetInstrumentSettlementsRequest request);
 }

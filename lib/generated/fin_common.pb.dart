@@ -25,15 +25,10 @@ export 'fin_common.pbenum.dart';
 class Account extends $pb.GeneratedMessage {
   factory Account({
     $core.String? iid,
-    $core.String? externalId,
-    $core.String? participantId,
+    $core.Iterable<FinIdentifier>? identifiers,
+    $core.String? externalAccountId,
     AccountTypeEnum? accountType,
-    AccountStructureEnum? accountStructure,
-    $core.String? parentAccountIid,
-    $core.Iterable<$core.String>? subAccountIids,
     AccountStatusEnum? accountStatus,
-    AccountClassEnum? accountClass,
-    AccountNature? accountNature,
     $core.Iterable<$core.MapEntry<$core.String, $core.String>>? displayNames,
     $core.Iterable<$core.MapEntry<$core.String, $core.String>>? descriptions,
     $core.Iterable<$core.MapEntry<$core.String, $core.String>>? labels,
@@ -42,15 +37,10 @@ class Account extends $pb.GeneratedMessage {
   }) {
     final result = create();
     if (iid != null) result.iid = iid;
-    if (externalId != null) result.externalId = externalId;
-    if (participantId != null) result.participantId = participantId;
+    if (identifiers != null) result.identifiers.addAll(identifiers);
+    if (externalAccountId != null) result.externalAccountId = externalAccountId;
     if (accountType != null) result.accountType = accountType;
-    if (accountStructure != null) result.accountStructure = accountStructure;
-    if (parentAccountIid != null) result.parentAccountIid = parentAccountIid;
-    if (subAccountIids != null) result.subAccountIids.addAll(subAccountIids);
     if (accountStatus != null) result.accountStatus = accountStatus;
-    if (accountClass != null) result.accountClass = accountClass;
-    if (accountNature != null) result.accountNature = accountNature;
     if (displayNames != null) result.displayNames.addEntries(displayNames);
     if (descriptions != null) result.descriptions.addEntries(descriptions);
     if (labels != null) result.labels.addEntries(labels);
@@ -74,35 +64,20 @@ class Account extends $pb.GeneratedMessage {
           _omitMessageNames ? '' : 'qomet.agora.daemons.prtagent.v1'),
       createEmptyInstance: create)
     ..aOS(1, _omitFieldNames ? '' : 'iid')
-    ..aOS(2, _omitFieldNames ? '' : 'externalId')
-    ..aOS(3, _omitFieldNames ? '' : 'participantId')
+    ..pc<FinIdentifier>(
+        2, _omitFieldNames ? '' : 'identifiers', $pb.PbFieldType.PM,
+        subBuilder: FinIdentifier.create)
+    ..aOS(3, _omitFieldNames ? '' : 'externalAccountId')
     ..e<AccountTypeEnum>(
         4, _omitFieldNames ? '' : 'accountType', $pb.PbFieldType.OE,
         defaultOrMaker: AccountTypeEnum.ACCOUNT_TYPE_ENUM__UNKNOWN,
         valueOf: AccountTypeEnum.valueOf,
         enumValues: AccountTypeEnum.values)
-    ..e<AccountStructureEnum>(
-        5, _omitFieldNames ? '' : 'accountStructure', $pb.PbFieldType.OE,
-        defaultOrMaker: AccountStructureEnum.ACCOUNT_STRUCTURE_ENUM__UNKNOWN,
-        valueOf: AccountStructureEnum.valueOf,
-        enumValues: AccountStructureEnum.values)
-    ..aOS(6, _omitFieldNames ? '' : 'parentAccountIid')
-    ..pPS(7, _omitFieldNames ? '' : 'subAccountIids')
     ..e<AccountStatusEnum>(
         8, _omitFieldNames ? '' : 'accountStatus', $pb.PbFieldType.OE,
         defaultOrMaker: AccountStatusEnum.ACCOUNT_STATUS_ENUM__UNKNOWN,
         valueOf: AccountStatusEnum.valueOf,
         enumValues: AccountStatusEnum.values)
-    ..e<AccountClassEnum>(
-        9, _omitFieldNames ? '' : 'accountClass', $pb.PbFieldType.OE,
-        defaultOrMaker: AccountClassEnum.ACCOUNT_CLASS_ENUM__UNKNOWN,
-        valueOf: AccountClassEnum.valueOf,
-        enumValues: AccountClassEnum.values)
-    ..e<AccountNature>(
-        10, _omitFieldNames ? '' : 'accountNature', $pb.PbFieldType.OE,
-        defaultOrMaker: AccountNature.ACCOUNT_NATURE__UNKNOWN,
-        valueOf: AccountNature.valueOf,
-        enumValues: AccountNature.values)
     ..m<$core.String, $core.String>(101, _omitFieldNames ? '' : 'displayNames',
         entryClassName: 'Account.DisplayNamesEntry',
         keyFieldType: $pb.PbFieldType.OS,
@@ -155,22 +130,16 @@ class Account extends $pb.GeneratedMessage {
   void clearIid() => $_clearField(1);
 
   @$pb.TagNumber(2)
-  $core.String get externalId => $_getSZ(1);
-  @$pb.TagNumber(2)
-  set externalId($core.String value) => $_setString(1, value);
-  @$pb.TagNumber(2)
-  $core.bool hasExternalId() => $_has(1);
-  @$pb.TagNumber(2)
-  void clearExternalId() => $_clearField(2);
+  $pb.PbList<FinIdentifier> get identifiers => $_getList(1);
 
   @$pb.TagNumber(3)
-  $core.String get participantId => $_getSZ(2);
+  $core.String get externalAccountId => $_getSZ(2);
   @$pb.TagNumber(3)
-  set participantId($core.String value) => $_setString(2, value);
+  set externalAccountId($core.String value) => $_setString(2, value);
   @$pb.TagNumber(3)
-  $core.bool hasParticipantId() => $_has(2);
+  $core.bool hasExternalAccountId() => $_has(2);
   @$pb.TagNumber(3)
-  void clearParticipantId() => $_clearField(3);
+  void clearExternalAccountId() => $_clearField(3);
 
   @$pb.TagNumber(4)
   AccountTypeEnum get accountType => $_getN(3);
@@ -181,260 +150,206 @@ class Account extends $pb.GeneratedMessage {
   @$pb.TagNumber(4)
   void clearAccountType() => $_clearField(4);
 
-  @$pb.TagNumber(5)
-  AccountStructureEnum get accountStructure => $_getN(4);
-  @$pb.TagNumber(5)
-  set accountStructure(AccountStructureEnum value) => $_setField(5, value);
-  @$pb.TagNumber(5)
-  $core.bool hasAccountStructure() => $_has(4);
-  @$pb.TagNumber(5)
-  void clearAccountStructure() => $_clearField(5);
-
-  @$pb.TagNumber(6)
-  $core.String get parentAccountIid => $_getSZ(5);
-  @$pb.TagNumber(6)
-  set parentAccountIid($core.String value) => $_setString(5, value);
-  @$pb.TagNumber(6)
-  $core.bool hasParentAccountIid() => $_has(5);
-  @$pb.TagNumber(6)
-  void clearParentAccountIid() => $_clearField(6);
-
-  @$pb.TagNumber(7)
-  $pb.PbList<$core.String> get subAccountIids => $_getList(6);
-
   @$pb.TagNumber(8)
-  AccountStatusEnum get accountStatus => $_getN(7);
+  AccountStatusEnum get accountStatus => $_getN(4);
   @$pb.TagNumber(8)
   set accountStatus(AccountStatusEnum value) => $_setField(8, value);
   @$pb.TagNumber(8)
-  $core.bool hasAccountStatus() => $_has(7);
+  $core.bool hasAccountStatus() => $_has(4);
   @$pb.TagNumber(8)
   void clearAccountStatus() => $_clearField(8);
 
-  @$pb.TagNumber(9)
-  AccountClassEnum get accountClass => $_getN(8);
-  @$pb.TagNumber(9)
-  set accountClass(AccountClassEnum value) => $_setField(9, value);
-  @$pb.TagNumber(9)
-  $core.bool hasAccountClass() => $_has(8);
-  @$pb.TagNumber(9)
-  void clearAccountClass() => $_clearField(9);
-
-  @$pb.TagNumber(10)
-  AccountNature get accountNature => $_getN(9);
-  @$pb.TagNumber(10)
-  set accountNature(AccountNature value) => $_setField(10, value);
-  @$pb.TagNumber(10)
-  $core.bool hasAccountNature() => $_has(9);
-  @$pb.TagNumber(10)
-  void clearAccountNature() => $_clearField(10);
-
   @$pb.TagNumber(101)
-  $pb.PbMap<$core.String, $core.String> get displayNames => $_getMap(10);
+  $pb.PbMap<$core.String, $core.String> get displayNames => $_getMap(5);
 
   @$pb.TagNumber(102)
-  $pb.PbMap<$core.String, $core.String> get descriptions => $_getMap(11);
+  $pb.PbMap<$core.String, $core.String> get descriptions => $_getMap(6);
 
   @$pb.TagNumber(103)
-  $pb.PbMap<$core.String, $core.String> get labels => $_getMap(12);
+  $pb.PbMap<$core.String, $core.String> get labels => $_getMap(7);
 
   @$pb.TagNumber(104)
-  $pb.PbList<$core.String> get tags => $_getList(13);
+  $pb.PbList<$core.String> get tags => $_getList(8);
 
   @$pb.TagNumber(105)
-  $pb.PbMap<$core.String, $core.String> get metadata => $_getMap(14);
+  $pb.PbMap<$core.String, $core.String> get metadata => $_getMap(9);
 }
 
-enum Holdings_AssetId { instrumentIid, currencyCode, notSet }
-
-class Holdings extends $pb.GeneratedMessage {
-  factory Holdings({
-    $core.String? instrumentIid,
-    $core.String? currencyCode,
-    $core.String? totalUnits,
-    $core.Iterable<$core.MapEntry<$core.String, $core.String>>? stashUnits,
-  }) {
-    final result = create();
-    if (instrumentIid != null) result.instrumentIid = instrumentIid;
-    if (currencyCode != null) result.currencyCode = currencyCode;
-    if (totalUnits != null) result.totalUnits = totalUnits;
-    if (stashUnits != null) result.stashUnits.addEntries(stashUnits);
-    return result;
-  }
-
-  Holdings._();
-
-  factory Holdings.fromBuffer($core.List<$core.int> data,
-          [$pb.ExtensionRegistry registry = $pb.ExtensionRegistry.EMPTY]) =>
-      create()..mergeFromBuffer(data, registry);
-  factory Holdings.fromJson($core.String json,
-          [$pb.ExtensionRegistry registry = $pb.ExtensionRegistry.EMPTY]) =>
-      create()..mergeFromJson(json, registry);
-
-  static const $core.Map<$core.int, Holdings_AssetId> _Holdings_AssetIdByTag = {
-    1: Holdings_AssetId.instrumentIid,
-    2: Holdings_AssetId.currencyCode,
-    0: Holdings_AssetId.notSet
-  };
-  static final $pb.BuilderInfo _i = $pb.BuilderInfo(
-      _omitMessageNames ? '' : 'Holdings',
-      package: const $pb.PackageName(
-          _omitMessageNames ? '' : 'qomet.agora.daemons.prtagent.v1'),
-      createEmptyInstance: create)
-    ..oo(0, [1, 2])
-    ..aOS(1, _omitFieldNames ? '' : 'instrumentIid')
-    ..aOS(2, _omitFieldNames ? '' : 'currencyCode')
-    ..aOS(3, _omitFieldNames ? '' : 'totalUnits')
-    ..m<$core.String, $core.String>(4, _omitFieldNames ? '' : 'stashUnits',
-        entryClassName: 'Holdings.StashUnitsEntry',
-        keyFieldType: $pb.PbFieldType.OS,
-        valueFieldType: $pb.PbFieldType.OS,
-        packageName: const $pb.PackageName('qomet.agora.daemons.prtagent.v1'))
-    ..hasRequiredFields = false;
-
-  @$core.Deprecated('See https://github.com/google/protobuf.dart/issues/998.')
-  Holdings clone() => Holdings()..mergeFromMessage(this);
-  @$core.Deprecated('See https://github.com/google/protobuf.dart/issues/998.')
-  Holdings copyWith(void Function(Holdings) updates) =>
-      super.copyWith((message) => updates(message as Holdings)) as Holdings;
-
-  @$core.override
-  $pb.BuilderInfo get info_ => _i;
-
-  @$core.pragma('dart2js:noInline')
-  static Holdings create() => Holdings._();
-  @$core.override
-  Holdings createEmptyInstance() => create();
-  static $pb.PbList<Holdings> createRepeated() => $pb.PbList<Holdings>();
-  @$core.pragma('dart2js:noInline')
-  static Holdings getDefault() =>
-      _defaultInstance ??= $pb.GeneratedMessage.$_defaultFor<Holdings>(create);
-  static Holdings? _defaultInstance;
-
-  Holdings_AssetId whichAssetId() => _Holdings_AssetIdByTag[$_whichOneof(0)]!;
-  void clearAssetId() => $_clearField($_whichOneof(0));
-
-  @$pb.TagNumber(1)
-  $core.String get instrumentIid => $_getSZ(0);
-  @$pb.TagNumber(1)
-  set instrumentIid($core.String value) => $_setString(0, value);
-  @$pb.TagNumber(1)
-  $core.bool hasInstrumentIid() => $_has(0);
-  @$pb.TagNumber(1)
-  void clearInstrumentIid() => $_clearField(1);
-
-  @$pb.TagNumber(2)
-  $core.String get currencyCode => $_getSZ(1);
-  @$pb.TagNumber(2)
-  set currencyCode($core.String value) => $_setString(1, value);
-  @$pb.TagNumber(2)
-  $core.bool hasCurrencyCode() => $_has(1);
-  @$pb.TagNumber(2)
-  void clearCurrencyCode() => $_clearField(2);
-
-  @$pb.TagNumber(3)
-  $core.String get totalUnits => $_getSZ(2);
-  @$pb.TagNumber(3)
-  set totalUnits($core.String value) => $_setString(2, value);
-  @$pb.TagNumber(3)
-  $core.bool hasTotalUnits() => $_has(2);
-  @$pb.TagNumber(3)
-  void clearTotalUnits() => $_clearField(3);
-
-  @$pb.TagNumber(4)
-  $pb.PbMap<$core.String, $core.String> get stashUnits => $_getMap(3);
-}
-
-class Portfolio extends $pb.GeneratedMessage {
-  factory Portfolio({
-    $core.String? accountIid,
-    $0.DateTime? generatedAtDt,
-    $core.Iterable<$core.MapEntry<$core.String, Holdings>>? holdings,
+class AccountToAccountRelation extends $pb.GeneratedMessage {
+  factory AccountToAccountRelation({
+    $core.String? iid,
+    $core.String? fromAccountIid,
+    $core.String? toAccountIid,
+    AccountToAccountRelationTypeEnum? relationType,
+    $0.DateTime? effectiveFromDt,
+    $0.DateTime? effectiveToDt,
+    $core.Iterable<$core.MapEntry<$core.String, $core.String>>? displayNames,
+    $core.Iterable<$core.MapEntry<$core.String, $core.String>>? descriptions,
+    $core.Iterable<$core.MapEntry<$core.String, $core.String>>? labels,
+    $core.Iterable<$core.String>? tags,
     $core.Iterable<$core.MapEntry<$core.String, $core.String>>? metadata,
   }) {
     final result = create();
-    if (accountIid != null) result.accountIid = accountIid;
-    if (generatedAtDt != null) result.generatedAtDt = generatedAtDt;
-    if (holdings != null) result.holdings.addEntries(holdings);
+    if (iid != null) result.iid = iid;
+    if (fromAccountIid != null) result.fromAccountIid = fromAccountIid;
+    if (toAccountIid != null) result.toAccountIid = toAccountIid;
+    if (relationType != null) result.relationType = relationType;
+    if (effectiveFromDt != null) result.effectiveFromDt = effectiveFromDt;
+    if (effectiveToDt != null) result.effectiveToDt = effectiveToDt;
+    if (displayNames != null) result.displayNames.addEntries(displayNames);
+    if (descriptions != null) result.descriptions.addEntries(descriptions);
+    if (labels != null) result.labels.addEntries(labels);
+    if (tags != null) result.tags.addAll(tags);
     if (metadata != null) result.metadata.addEntries(metadata);
     return result;
   }
 
-  Portfolio._();
+  AccountToAccountRelation._();
 
-  factory Portfolio.fromBuffer($core.List<$core.int> data,
+  factory AccountToAccountRelation.fromBuffer($core.List<$core.int> data,
           [$pb.ExtensionRegistry registry = $pb.ExtensionRegistry.EMPTY]) =>
       create()..mergeFromBuffer(data, registry);
-  factory Portfolio.fromJson($core.String json,
+  factory AccountToAccountRelation.fromJson($core.String json,
           [$pb.ExtensionRegistry registry = $pb.ExtensionRegistry.EMPTY]) =>
       create()..mergeFromJson(json, registry);
 
   static final $pb.BuilderInfo _i = $pb.BuilderInfo(
-      _omitMessageNames ? '' : 'Portfolio',
+      _omitMessageNames ? '' : 'AccountToAccountRelation',
       package: const $pb.PackageName(
           _omitMessageNames ? '' : 'qomet.agora.daemons.prtagent.v1'),
       createEmptyInstance: create)
-    ..aOS(1, _omitFieldNames ? '' : 'accountIid')
-    ..aOM<$0.DateTime>(2, _omitFieldNames ? '' : 'generatedAtDt',
+    ..aOS(1, _omitFieldNames ? '' : 'iid')
+    ..aOS(2, _omitFieldNames ? '' : 'fromAccountIid')
+    ..aOS(3, _omitFieldNames ? '' : 'toAccountIid')
+    ..e<AccountToAccountRelationTypeEnum>(
+        4, _omitFieldNames ? '' : 'relationType', $pb.PbFieldType.OE,
+        defaultOrMaker: AccountToAccountRelationTypeEnum
+            .ACCOUNT_TO_ACCOUNT_RELATION_TYPE_ENUM__UNKNOWN,
+        valueOf: AccountToAccountRelationTypeEnum.valueOf,
+        enumValues: AccountToAccountRelationTypeEnum.values)
+    ..aOM<$0.DateTime>(5, _omitFieldNames ? '' : 'effectiveFromDt',
         subBuilder: $0.DateTime.create)
-    ..m<$core.String, Holdings>(3, _omitFieldNames ? '' : 'holdings',
-        entryClassName: 'Portfolio.HoldingsEntry',
+    ..aOM<$0.DateTime>(6, _omitFieldNames ? '' : 'effectiveToDt',
+        subBuilder: $0.DateTime.create)
+    ..m<$core.String, $core.String>(101, _omitFieldNames ? '' : 'displayNames',
+        entryClassName: 'AccountToAccountRelation.DisplayNamesEntry',
         keyFieldType: $pb.PbFieldType.OS,
-        valueFieldType: $pb.PbFieldType.OM,
-        valueCreator: Holdings.create,
-        valueDefaultOrMaker: Holdings.getDefault,
+        valueFieldType: $pb.PbFieldType.OS,
         packageName: const $pb.PackageName('qomet.agora.daemons.prtagent.v1'))
+    ..m<$core.String, $core.String>(102, _omitFieldNames ? '' : 'descriptions',
+        entryClassName: 'AccountToAccountRelation.DescriptionsEntry',
+        keyFieldType: $pb.PbFieldType.OS,
+        valueFieldType: $pb.PbFieldType.OS,
+        packageName: const $pb.PackageName('qomet.agora.daemons.prtagent.v1'))
+    ..m<$core.String, $core.String>(103, _omitFieldNames ? '' : 'labels',
+        entryClassName: 'AccountToAccountRelation.LabelsEntry',
+        keyFieldType: $pb.PbFieldType.OS,
+        valueFieldType: $pb.PbFieldType.OS,
+        packageName: const $pb.PackageName('qomet.agora.daemons.prtagent.v1'))
+    ..pPS(104, _omitFieldNames ? '' : 'tags')
     ..m<$core.String, $core.String>(105, _omitFieldNames ? '' : 'metadata',
-        entryClassName: 'Portfolio.MetadataEntry',
+        entryClassName: 'AccountToAccountRelation.MetadataEntry',
         keyFieldType: $pb.PbFieldType.OS,
         valueFieldType: $pb.PbFieldType.OS,
         packageName: const $pb.PackageName('qomet.agora.daemons.prtagent.v1'))
     ..hasRequiredFields = false;
 
   @$core.Deprecated('See https://github.com/google/protobuf.dart/issues/998.')
-  Portfolio clone() => Portfolio()..mergeFromMessage(this);
+  AccountToAccountRelation clone() =>
+      AccountToAccountRelation()..mergeFromMessage(this);
   @$core.Deprecated('See https://github.com/google/protobuf.dart/issues/998.')
-  Portfolio copyWith(void Function(Portfolio) updates) =>
-      super.copyWith((message) => updates(message as Portfolio)) as Portfolio;
+  AccountToAccountRelation copyWith(
+          void Function(AccountToAccountRelation) updates) =>
+      super.copyWith((message) => updates(message as AccountToAccountRelation))
+          as AccountToAccountRelation;
 
   @$core.override
   $pb.BuilderInfo get info_ => _i;
 
   @$core.pragma('dart2js:noInline')
-  static Portfolio create() => Portfolio._();
+  static AccountToAccountRelation create() => AccountToAccountRelation._();
   @$core.override
-  Portfolio createEmptyInstance() => create();
-  static $pb.PbList<Portfolio> createRepeated() => $pb.PbList<Portfolio>();
+  AccountToAccountRelation createEmptyInstance() => create();
+  static $pb.PbList<AccountToAccountRelation> createRepeated() =>
+      $pb.PbList<AccountToAccountRelation>();
   @$core.pragma('dart2js:noInline')
-  static Portfolio getDefault() =>
-      _defaultInstance ??= $pb.GeneratedMessage.$_defaultFor<Portfolio>(create);
-  static Portfolio? _defaultInstance;
+  static AccountToAccountRelation getDefault() => _defaultInstance ??=
+      $pb.GeneratedMessage.$_defaultFor<AccountToAccountRelation>(create);
+  static AccountToAccountRelation? _defaultInstance;
 
   @$pb.TagNumber(1)
-  $core.String get accountIid => $_getSZ(0);
+  $core.String get iid => $_getSZ(0);
   @$pb.TagNumber(1)
-  set accountIid($core.String value) => $_setString(0, value);
+  set iid($core.String value) => $_setString(0, value);
   @$pb.TagNumber(1)
-  $core.bool hasAccountIid() => $_has(0);
+  $core.bool hasIid() => $_has(0);
   @$pb.TagNumber(1)
-  void clearAccountIid() => $_clearField(1);
+  void clearIid() => $_clearField(1);
 
   @$pb.TagNumber(2)
-  $0.DateTime get generatedAtDt => $_getN(1);
+  $core.String get fromAccountIid => $_getSZ(1);
   @$pb.TagNumber(2)
-  set generatedAtDt($0.DateTime value) => $_setField(2, value);
+  set fromAccountIid($core.String value) => $_setString(1, value);
   @$pb.TagNumber(2)
-  $core.bool hasGeneratedAtDt() => $_has(1);
+  $core.bool hasFromAccountIid() => $_has(1);
   @$pb.TagNumber(2)
-  void clearGeneratedAtDt() => $_clearField(2);
-  @$pb.TagNumber(2)
-  $0.DateTime ensureGeneratedAtDt() => $_ensure(1);
+  void clearFromAccountIid() => $_clearField(2);
 
   @$pb.TagNumber(3)
-  $pb.PbMap<$core.String, Holdings> get holdings => $_getMap(2);
+  $core.String get toAccountIid => $_getSZ(2);
+  @$pb.TagNumber(3)
+  set toAccountIid($core.String value) => $_setString(2, value);
+  @$pb.TagNumber(3)
+  $core.bool hasToAccountIid() => $_has(2);
+  @$pb.TagNumber(3)
+  void clearToAccountIid() => $_clearField(3);
+
+  @$pb.TagNumber(4)
+  AccountToAccountRelationTypeEnum get relationType => $_getN(3);
+  @$pb.TagNumber(4)
+  set relationType(AccountToAccountRelationTypeEnum value) =>
+      $_setField(4, value);
+  @$pb.TagNumber(4)
+  $core.bool hasRelationType() => $_has(3);
+  @$pb.TagNumber(4)
+  void clearRelationType() => $_clearField(4);
+
+  @$pb.TagNumber(5)
+  $0.DateTime get effectiveFromDt => $_getN(4);
+  @$pb.TagNumber(5)
+  set effectiveFromDt($0.DateTime value) => $_setField(5, value);
+  @$pb.TagNumber(5)
+  $core.bool hasEffectiveFromDt() => $_has(4);
+  @$pb.TagNumber(5)
+  void clearEffectiveFromDt() => $_clearField(5);
+  @$pb.TagNumber(5)
+  $0.DateTime ensureEffectiveFromDt() => $_ensure(4);
+
+  @$pb.TagNumber(6)
+  $0.DateTime get effectiveToDt => $_getN(5);
+  @$pb.TagNumber(6)
+  set effectiveToDt($0.DateTime value) => $_setField(6, value);
+  @$pb.TagNumber(6)
+  $core.bool hasEffectiveToDt() => $_has(5);
+  @$pb.TagNumber(6)
+  void clearEffectiveToDt() => $_clearField(6);
+  @$pb.TagNumber(6)
+  $0.DateTime ensureEffectiveToDt() => $_ensure(5);
+
+  @$pb.TagNumber(101)
+  $pb.PbMap<$core.String, $core.String> get displayNames => $_getMap(6);
+
+  @$pb.TagNumber(102)
+  $pb.PbMap<$core.String, $core.String> get descriptions => $_getMap(7);
+
+  @$pb.TagNumber(103)
+  $pb.PbMap<$core.String, $core.String> get labels => $_getMap(8);
+
+  @$pb.TagNumber(104)
+  $pb.PbList<$core.String> get tags => $_getList(9);
 
   @$pb.TagNumber(105)
-  $pb.PbMap<$core.String, $core.String> get metadata => $_getMap(3);
+  $pb.PbMap<$core.String, $core.String> get metadata => $_getMap(10);
 }
 
 class FinIdentifier extends $pb.GeneratedMessage {
@@ -820,6 +735,7 @@ class Participant extends $pb.GeneratedMessage {
   factory Participant({
     $core.String? iid,
     $core.Iterable<FinIdentifier>? identifiers,
+    $core.Iterable<ParticipantTypeEnum>? types,
     $core.Iterable<$core.MapEntry<$core.String, $core.String>>? displayNames,
     $core.Iterable<$core.MapEntry<$core.String, $core.String>>? descriptions,
     $core.Iterable<$core.MapEntry<$core.String, $core.String>>? labels,
@@ -829,6 +745,7 @@ class Participant extends $pb.GeneratedMessage {
     final result = create();
     if (iid != null) result.iid = iid;
     if (identifiers != null) result.identifiers.addAll(identifiers);
+    if (types != null) result.types.addAll(types);
     if (displayNames != null) result.displayNames.addEntries(displayNames);
     if (descriptions != null) result.descriptions.addEntries(descriptions);
     if (labels != null) result.labels.addEntries(labels);
@@ -855,6 +772,11 @@ class Participant extends $pb.GeneratedMessage {
     ..pc<FinIdentifier>(
         2, _omitFieldNames ? '' : 'identifiers', $pb.PbFieldType.PM,
         subBuilder: FinIdentifier.create)
+    ..pc<ParticipantTypeEnum>(
+        3, _omitFieldNames ? '' : 'types', $pb.PbFieldType.KE,
+        valueOf: ParticipantTypeEnum.valueOf,
+        enumValues: ParticipantTypeEnum.values,
+        defaultEnumValue: ParticipantTypeEnum.PARTICIPANT_TYPE_ENUM__UNKNOWN)
     ..m<$core.String, $core.String>(101, _omitFieldNames ? '' : 'displayNames',
         entryClassName: 'Participant.DisplayNamesEntry',
         keyFieldType: $pb.PbFieldType.OS,
@@ -910,28 +832,31 @@ class Participant extends $pb.GeneratedMessage {
   @$pb.TagNumber(2)
   $pb.PbList<FinIdentifier> get identifiers => $_getList(1);
 
+  @$pb.TagNumber(3)
+  $pb.PbList<ParticipantTypeEnum> get types => $_getList(2);
+
   @$pb.TagNumber(101)
-  $pb.PbMap<$core.String, $core.String> get displayNames => $_getMap(2);
+  $pb.PbMap<$core.String, $core.String> get displayNames => $_getMap(3);
 
   @$pb.TagNumber(102)
-  $pb.PbMap<$core.String, $core.String> get descriptions => $_getMap(3);
+  $pb.PbMap<$core.String, $core.String> get descriptions => $_getMap(4);
 
   @$pb.TagNumber(103)
-  $pb.PbMap<$core.String, $core.String> get labels => $_getMap(4);
+  $pb.PbMap<$core.String, $core.String> get labels => $_getMap(5);
 
   @$pb.TagNumber(104)
-  $pb.PbList<$core.String> get tags => $_getList(5);
+  $pb.PbList<$core.String> get tags => $_getList(6);
 
   @$pb.TagNumber(105)
-  $pb.PbMap<$core.String, $core.String> get metadata => $_getMap(6);
+  $pb.PbMap<$core.String, $core.String> get metadata => $_getMap(7);
 }
 
-class ParticipantAssetRelation extends $pb.GeneratedMessage {
-  factory ParticipantAssetRelation({
+class ParticipantToAssetRelation extends $pb.GeneratedMessage {
+  factory ParticipantToAssetRelation({
     $core.String? iid,
-    $core.String? assetIid,
     $core.String? participantIid,
-    ParticipantAssetRelationEnum? relation,
+    $core.String? assetIid,
+    $core.Iterable<ParticipantToAssetRelationEnum>? relations,
     $0.DateTime? effectiveFromDt,
     $0.DateTime? effectiveToDt,
     $core.String? weight,
@@ -943,9 +868,9 @@ class ParticipantAssetRelation extends $pb.GeneratedMessage {
   }) {
     final result = create();
     if (iid != null) result.iid = iid;
-    if (assetIid != null) result.assetIid = assetIid;
     if (participantIid != null) result.participantIid = participantIid;
-    if (relation != null) result.relation = relation;
+    if (assetIid != null) result.assetIid = assetIid;
+    if (relations != null) result.relations.addAll(relations);
     if (effectiveFromDt != null) result.effectiveFromDt = effectiveFromDt;
     if (effectiveToDt != null) result.effectiveToDt = effectiveToDt;
     if (weight != null) result.weight = weight;
@@ -957,79 +882,80 @@ class ParticipantAssetRelation extends $pb.GeneratedMessage {
     return result;
   }
 
-  ParticipantAssetRelation._();
+  ParticipantToAssetRelation._();
 
-  factory ParticipantAssetRelation.fromBuffer($core.List<$core.int> data,
+  factory ParticipantToAssetRelation.fromBuffer($core.List<$core.int> data,
           [$pb.ExtensionRegistry registry = $pb.ExtensionRegistry.EMPTY]) =>
       create()..mergeFromBuffer(data, registry);
-  factory ParticipantAssetRelation.fromJson($core.String json,
+  factory ParticipantToAssetRelation.fromJson($core.String json,
           [$pb.ExtensionRegistry registry = $pb.ExtensionRegistry.EMPTY]) =>
       create()..mergeFromJson(json, registry);
 
   static final $pb.BuilderInfo _i = $pb.BuilderInfo(
-      _omitMessageNames ? '' : 'ParticipantAssetRelation',
+      _omitMessageNames ? '' : 'ParticipantToAssetRelation',
       package: const $pb.PackageName(
           _omitMessageNames ? '' : 'qomet.agora.daemons.prtagent.v1'),
       createEmptyInstance: create)
     ..aOS(1, _omitFieldNames ? '' : 'iid')
-    ..aOS(2, _omitFieldNames ? '' : 'assetIid')
-    ..aOS(3, _omitFieldNames ? '' : 'participantIid')
-    ..e<ParticipantAssetRelationEnum>(
-        4, _omitFieldNames ? '' : 'relation', $pb.PbFieldType.OE,
-        defaultOrMaker: ParticipantAssetRelationEnum
-            .PARTICIPANT_ASSET_RELATION_ENUM__UNKNOWN,
-        valueOf: ParticipantAssetRelationEnum.valueOf,
-        enumValues: ParticipantAssetRelationEnum.values)
+    ..aOS(2, _omitFieldNames ? '' : 'participantIid')
+    ..aOS(3, _omitFieldNames ? '' : 'assetIid')
+    ..pc<ParticipantToAssetRelationEnum>(
+        4, _omitFieldNames ? '' : 'relations', $pb.PbFieldType.KE,
+        valueOf: ParticipantToAssetRelationEnum.valueOf,
+        enumValues: ParticipantToAssetRelationEnum.values,
+        defaultEnumValue: ParticipantToAssetRelationEnum
+            .PARTICIPANT_TO_ASSET_RELATION_ENUM__UNKNOWN)
     ..aOM<$0.DateTime>(5, _omitFieldNames ? '' : 'effectiveFromDt',
         subBuilder: $0.DateTime.create)
     ..aOM<$0.DateTime>(6, _omitFieldNames ? '' : 'effectiveToDt',
         subBuilder: $0.DateTime.create)
     ..aOS(7, _omitFieldNames ? '' : 'weight')
     ..m<$core.String, $core.String>(101, _omitFieldNames ? '' : 'displayNames',
-        entryClassName: 'ParticipantAssetRelation.DisplayNamesEntry',
+        entryClassName: 'ParticipantToAssetRelation.DisplayNamesEntry',
         keyFieldType: $pb.PbFieldType.OS,
         valueFieldType: $pb.PbFieldType.OS,
         packageName: const $pb.PackageName('qomet.agora.daemons.prtagent.v1'))
     ..m<$core.String, $core.String>(102, _omitFieldNames ? '' : 'descriptions',
-        entryClassName: 'ParticipantAssetRelation.DescriptionsEntry',
+        entryClassName: 'ParticipantToAssetRelation.DescriptionsEntry',
         keyFieldType: $pb.PbFieldType.OS,
         valueFieldType: $pb.PbFieldType.OS,
         packageName: const $pb.PackageName('qomet.agora.daemons.prtagent.v1'))
     ..m<$core.String, $core.String>(103, _omitFieldNames ? '' : 'labels',
-        entryClassName: 'ParticipantAssetRelation.LabelsEntry',
+        entryClassName: 'ParticipantToAssetRelation.LabelsEntry',
         keyFieldType: $pb.PbFieldType.OS,
         valueFieldType: $pb.PbFieldType.OS,
         packageName: const $pb.PackageName('qomet.agora.daemons.prtagent.v1'))
     ..pPS(104, _omitFieldNames ? '' : 'tags')
     ..m<$core.String, $core.String>(105, _omitFieldNames ? '' : 'metadata',
-        entryClassName: 'ParticipantAssetRelation.MetadataEntry',
+        entryClassName: 'ParticipantToAssetRelation.MetadataEntry',
         keyFieldType: $pb.PbFieldType.OS,
         valueFieldType: $pb.PbFieldType.OS,
         packageName: const $pb.PackageName('qomet.agora.daemons.prtagent.v1'))
     ..hasRequiredFields = false;
 
   @$core.Deprecated('See https://github.com/google/protobuf.dart/issues/998.')
-  ParticipantAssetRelation clone() =>
-      ParticipantAssetRelation()..mergeFromMessage(this);
+  ParticipantToAssetRelation clone() =>
+      ParticipantToAssetRelation()..mergeFromMessage(this);
   @$core.Deprecated('See https://github.com/google/protobuf.dart/issues/998.')
-  ParticipantAssetRelation copyWith(
-          void Function(ParticipantAssetRelation) updates) =>
-      super.copyWith((message) => updates(message as ParticipantAssetRelation))
-          as ParticipantAssetRelation;
+  ParticipantToAssetRelation copyWith(
+          void Function(ParticipantToAssetRelation) updates) =>
+      super.copyWith(
+              (message) => updates(message as ParticipantToAssetRelation))
+          as ParticipantToAssetRelation;
 
   @$core.override
   $pb.BuilderInfo get info_ => _i;
 
   @$core.pragma('dart2js:noInline')
-  static ParticipantAssetRelation create() => ParticipantAssetRelation._();
+  static ParticipantToAssetRelation create() => ParticipantToAssetRelation._();
   @$core.override
-  ParticipantAssetRelation createEmptyInstance() => create();
-  static $pb.PbList<ParticipantAssetRelation> createRepeated() =>
-      $pb.PbList<ParticipantAssetRelation>();
+  ParticipantToAssetRelation createEmptyInstance() => create();
+  static $pb.PbList<ParticipantToAssetRelation> createRepeated() =>
+      $pb.PbList<ParticipantToAssetRelation>();
   @$core.pragma('dart2js:noInline')
-  static ParticipantAssetRelation getDefault() => _defaultInstance ??=
-      $pb.GeneratedMessage.$_defaultFor<ParticipantAssetRelation>(create);
-  static ParticipantAssetRelation? _defaultInstance;
+  static ParticipantToAssetRelation getDefault() => _defaultInstance ??=
+      $pb.GeneratedMessage.$_defaultFor<ParticipantToAssetRelation>(create);
+  static ParticipantToAssetRelation? _defaultInstance;
 
   @$pb.TagNumber(1)
   $core.String get iid => $_getSZ(0);
@@ -1041,31 +967,25 @@ class ParticipantAssetRelation extends $pb.GeneratedMessage {
   void clearIid() => $_clearField(1);
 
   @$pb.TagNumber(2)
-  $core.String get assetIid => $_getSZ(1);
+  $core.String get participantIid => $_getSZ(1);
   @$pb.TagNumber(2)
-  set assetIid($core.String value) => $_setString(1, value);
+  set participantIid($core.String value) => $_setString(1, value);
   @$pb.TagNumber(2)
-  $core.bool hasAssetIid() => $_has(1);
+  $core.bool hasParticipantIid() => $_has(1);
   @$pb.TagNumber(2)
-  void clearAssetIid() => $_clearField(2);
+  void clearParticipantIid() => $_clearField(2);
 
   @$pb.TagNumber(3)
-  $core.String get participantIid => $_getSZ(2);
+  $core.String get assetIid => $_getSZ(2);
   @$pb.TagNumber(3)
-  set participantIid($core.String value) => $_setString(2, value);
+  set assetIid($core.String value) => $_setString(2, value);
   @$pb.TagNumber(3)
-  $core.bool hasParticipantIid() => $_has(2);
+  $core.bool hasAssetIid() => $_has(2);
   @$pb.TagNumber(3)
-  void clearParticipantIid() => $_clearField(3);
+  void clearAssetIid() => $_clearField(3);
 
   @$pb.TagNumber(4)
-  ParticipantAssetRelationEnum get relation => $_getN(3);
-  @$pb.TagNumber(4)
-  set relation(ParticipantAssetRelationEnum value) => $_setField(4, value);
-  @$pb.TagNumber(4)
-  $core.bool hasRelation() => $_has(3);
-  @$pb.TagNumber(4)
-  void clearRelation() => $_clearField(4);
+  $pb.PbList<ParticipantToAssetRelationEnum> get relations => $_getList(3);
 
   @$pb.TagNumber(5)
   $0.DateTime get effectiveFromDt => $_getN(4);
@@ -1112,6 +1032,847 @@ class ParticipantAssetRelation extends $pb.GeneratedMessage {
 
   @$pb.TagNumber(105)
   $pb.PbMap<$core.String, $core.String> get metadata => $_getMap(11);
+}
+
+class FinInstrumentClass extends $pb.GeneratedMessage {
+  factory FinInstrumentClass({
+    $core.String? schema,
+    $core.Iterable<InstrumentClassEnum>? classes,
+    $core.Iterable<$core.MapEntry<$core.String, $core.String>>? displayNames,
+    $core.Iterable<$core.MapEntry<$core.String, $core.String>>? descriptions,
+    $core.Iterable<$core.MapEntry<$core.String, $core.String>>? labels,
+    $core.Iterable<$core.String>? tags,
+    $core.Iterable<$core.MapEntry<$core.String, $core.String>>? metadata,
+  }) {
+    final result = create();
+    if (schema != null) result.schema = schema;
+    if (classes != null) result.classes.addAll(classes);
+    if (displayNames != null) result.displayNames.addEntries(displayNames);
+    if (descriptions != null) result.descriptions.addEntries(descriptions);
+    if (labels != null) result.labels.addEntries(labels);
+    if (tags != null) result.tags.addAll(tags);
+    if (metadata != null) result.metadata.addEntries(metadata);
+    return result;
+  }
+
+  FinInstrumentClass._();
+
+  factory FinInstrumentClass.fromBuffer($core.List<$core.int> data,
+          [$pb.ExtensionRegistry registry = $pb.ExtensionRegistry.EMPTY]) =>
+      create()..mergeFromBuffer(data, registry);
+  factory FinInstrumentClass.fromJson($core.String json,
+          [$pb.ExtensionRegistry registry = $pb.ExtensionRegistry.EMPTY]) =>
+      create()..mergeFromJson(json, registry);
+
+  static final $pb.BuilderInfo _i = $pb.BuilderInfo(
+      _omitMessageNames ? '' : 'FinInstrumentClass',
+      package: const $pb.PackageName(
+          _omitMessageNames ? '' : 'qomet.agora.daemons.prtagent.v1'),
+      createEmptyInstance: create)
+    ..aOS(1, _omitFieldNames ? '' : 'schema')
+    ..pc<InstrumentClassEnum>(
+        2, _omitFieldNames ? '' : 'classes', $pb.PbFieldType.KE,
+        valueOf: InstrumentClassEnum.valueOf,
+        enumValues: InstrumentClassEnum.values,
+        defaultEnumValue: InstrumentClassEnum.INSTRUMENT_CLASS_ENUM__UNKNOWN)
+    ..m<$core.String, $core.String>(101, _omitFieldNames ? '' : 'displayNames',
+        entryClassName: 'FinInstrumentClass.DisplayNamesEntry',
+        keyFieldType: $pb.PbFieldType.OS,
+        valueFieldType: $pb.PbFieldType.OS,
+        packageName: const $pb.PackageName('qomet.agora.daemons.prtagent.v1'))
+    ..m<$core.String, $core.String>(102, _omitFieldNames ? '' : 'descriptions',
+        entryClassName: 'FinInstrumentClass.DescriptionsEntry',
+        keyFieldType: $pb.PbFieldType.OS,
+        valueFieldType: $pb.PbFieldType.OS,
+        packageName: const $pb.PackageName('qomet.agora.daemons.prtagent.v1'))
+    ..m<$core.String, $core.String>(103, _omitFieldNames ? '' : 'labels',
+        entryClassName: 'FinInstrumentClass.LabelsEntry',
+        keyFieldType: $pb.PbFieldType.OS,
+        valueFieldType: $pb.PbFieldType.OS,
+        packageName: const $pb.PackageName('qomet.agora.daemons.prtagent.v1'))
+    ..pPS(104, _omitFieldNames ? '' : 'tags')
+    ..m<$core.String, $core.String>(105, _omitFieldNames ? '' : 'metadata',
+        entryClassName: 'FinInstrumentClass.MetadataEntry',
+        keyFieldType: $pb.PbFieldType.OS,
+        valueFieldType: $pb.PbFieldType.OS,
+        packageName: const $pb.PackageName('qomet.agora.daemons.prtagent.v1'))
+    ..hasRequiredFields = false;
+
+  @$core.Deprecated('See https://github.com/google/protobuf.dart/issues/998.')
+  FinInstrumentClass clone() => FinInstrumentClass()..mergeFromMessage(this);
+  @$core.Deprecated('See https://github.com/google/protobuf.dart/issues/998.')
+  FinInstrumentClass copyWith(void Function(FinInstrumentClass) updates) =>
+      super.copyWith((message) => updates(message as FinInstrumentClass))
+          as FinInstrumentClass;
+
+  @$core.override
+  $pb.BuilderInfo get info_ => _i;
+
+  @$core.pragma('dart2js:noInline')
+  static FinInstrumentClass create() => FinInstrumentClass._();
+  @$core.override
+  FinInstrumentClass createEmptyInstance() => create();
+  static $pb.PbList<FinInstrumentClass> createRepeated() =>
+      $pb.PbList<FinInstrumentClass>();
+  @$core.pragma('dart2js:noInline')
+  static FinInstrumentClass getDefault() => _defaultInstance ??=
+      $pb.GeneratedMessage.$_defaultFor<FinInstrumentClass>(create);
+  static FinInstrumentClass? _defaultInstance;
+
+  @$pb.TagNumber(1)
+  $core.String get schema => $_getSZ(0);
+  @$pb.TagNumber(1)
+  set schema($core.String value) => $_setString(0, value);
+  @$pb.TagNumber(1)
+  $core.bool hasSchema() => $_has(0);
+  @$pb.TagNumber(1)
+  void clearSchema() => $_clearField(1);
+
+  @$pb.TagNumber(2)
+  $pb.PbList<InstrumentClassEnum> get classes => $_getList(1);
+
+  @$pb.TagNumber(101)
+  $pb.PbMap<$core.String, $core.String> get displayNames => $_getMap(2);
+
+  @$pb.TagNumber(102)
+  $pb.PbMap<$core.String, $core.String> get descriptions => $_getMap(3);
+
+  @$pb.TagNumber(103)
+  $pb.PbMap<$core.String, $core.String> get labels => $_getMap(4);
+
+  @$pb.TagNumber(104)
+  $pb.PbList<$core.String> get tags => $_getList(5);
+
+  @$pb.TagNumber(105)
+  $pb.PbMap<$core.String, $core.String> get metadata => $_getMap(6);
+}
+
+enum OneOfIdOrParticipant_Participant { iid, obj, notSet }
+
+class OneOfIdOrParticipant extends $pb.GeneratedMessage {
+  factory OneOfIdOrParticipant({
+    $core.String? iid,
+    Participant? obj,
+  }) {
+    final result = create();
+    if (iid != null) result.iid = iid;
+    if (obj != null) result.obj = obj;
+    return result;
+  }
+
+  OneOfIdOrParticipant._();
+
+  factory OneOfIdOrParticipant.fromBuffer($core.List<$core.int> data,
+          [$pb.ExtensionRegistry registry = $pb.ExtensionRegistry.EMPTY]) =>
+      create()..mergeFromBuffer(data, registry);
+  factory OneOfIdOrParticipant.fromJson($core.String json,
+          [$pb.ExtensionRegistry registry = $pb.ExtensionRegistry.EMPTY]) =>
+      create()..mergeFromJson(json, registry);
+
+  static const $core.Map<$core.int, OneOfIdOrParticipant_Participant>
+      _OneOfIdOrParticipant_ParticipantByTag = {
+    1: OneOfIdOrParticipant_Participant.iid,
+    2: OneOfIdOrParticipant_Participant.obj,
+    0: OneOfIdOrParticipant_Participant.notSet
+  };
+  static final $pb.BuilderInfo _i = $pb.BuilderInfo(
+      _omitMessageNames ? '' : 'OneOfIdOrParticipant',
+      package: const $pb.PackageName(
+          _omitMessageNames ? '' : 'qomet.agora.daemons.prtagent.v1'),
+      createEmptyInstance: create)
+    ..oo(0, [1, 2])
+    ..aOS(1, _omitFieldNames ? '' : 'iid')
+    ..aOM<Participant>(2, _omitFieldNames ? '' : 'obj',
+        subBuilder: Participant.create)
+    ..hasRequiredFields = false;
+
+  @$core.Deprecated('See https://github.com/google/protobuf.dart/issues/998.')
+  OneOfIdOrParticipant clone() =>
+      OneOfIdOrParticipant()..mergeFromMessage(this);
+  @$core.Deprecated('See https://github.com/google/protobuf.dart/issues/998.')
+  OneOfIdOrParticipant copyWith(void Function(OneOfIdOrParticipant) updates) =>
+      super.copyWith((message) => updates(message as OneOfIdOrParticipant))
+          as OneOfIdOrParticipant;
+
+  @$core.override
+  $pb.BuilderInfo get info_ => _i;
+
+  @$core.pragma('dart2js:noInline')
+  static OneOfIdOrParticipant create() => OneOfIdOrParticipant._();
+  @$core.override
+  OneOfIdOrParticipant createEmptyInstance() => create();
+  static $pb.PbList<OneOfIdOrParticipant> createRepeated() =>
+      $pb.PbList<OneOfIdOrParticipant>();
+  @$core.pragma('dart2js:noInline')
+  static OneOfIdOrParticipant getDefault() => _defaultInstance ??=
+      $pb.GeneratedMessage.$_defaultFor<OneOfIdOrParticipant>(create);
+  static OneOfIdOrParticipant? _defaultInstance;
+
+  OneOfIdOrParticipant_Participant whichParticipant() =>
+      _OneOfIdOrParticipant_ParticipantByTag[$_whichOneof(0)]!;
+  void clearParticipant() => $_clearField($_whichOneof(0));
+
+  @$pb.TagNumber(1)
+  $core.String get iid => $_getSZ(0);
+  @$pb.TagNumber(1)
+  set iid($core.String value) => $_setString(0, value);
+  @$pb.TagNumber(1)
+  $core.bool hasIid() => $_has(0);
+  @$pb.TagNumber(1)
+  void clearIid() => $_clearField(1);
+
+  @$pb.TagNumber(2)
+  Participant get obj => $_getN(1);
+  @$pb.TagNumber(2)
+  set obj(Participant value) => $_setField(2, value);
+  @$pb.TagNumber(2)
+  $core.bool hasObj() => $_has(1);
+  @$pb.TagNumber(2)
+  void clearObj() => $_clearField(2);
+  @$pb.TagNumber(2)
+  Participant ensureObj() => $_ensure(1);
+}
+
+enum Instrument_Asset { assetIid, assetObj, notSet }
+
+class Instrument extends $pb.GeneratedMessage {
+  factory Instrument({
+    $core.String? iid,
+    $core.Iterable<FinIdentifier>? identifiers,
+    $core.String? cfiCode,
+    $core.Iterable<FinInstrumentClass>? classes,
+    $0.DateTime? maturityDt,
+    $core.String? assetIid,
+    Asset? assetObj,
+    $0.DateTime? issueDt,
+    $core.Iterable<OneOfIdOrParticipant>? issuers,
+    $core.String? issueCountryCode,
+    $core.String? issueCurrency,
+    $core.String? issueInitialUnits,
+    $core.String? issueDivisibility,
+    $core.String? issueInitialAuthorizedUnits,
+    $core.Iterable<$core.MapEntry<$core.String, $core.String>>? displayNames,
+    $core.Iterable<$core.MapEntry<$core.String, $core.String>>? descriptions,
+    $core.Iterable<$core.MapEntry<$core.String, $core.String>>? labels,
+    $core.Iterable<$core.String>? tags,
+    $core.Iterable<$core.MapEntry<$core.String, $core.String>>? metadata,
+  }) {
+    final result = create();
+    if (iid != null) result.iid = iid;
+    if (identifiers != null) result.identifiers.addAll(identifiers);
+    if (cfiCode != null) result.cfiCode = cfiCode;
+    if (classes != null) result.classes.addAll(classes);
+    if (maturityDt != null) result.maturityDt = maturityDt;
+    if (assetIid != null) result.assetIid = assetIid;
+    if (assetObj != null) result.assetObj = assetObj;
+    if (issueDt != null) result.issueDt = issueDt;
+    if (issuers != null) result.issuers.addAll(issuers);
+    if (issueCountryCode != null) result.issueCountryCode = issueCountryCode;
+    if (issueCurrency != null) result.issueCurrency = issueCurrency;
+    if (issueInitialUnits != null) result.issueInitialUnits = issueInitialUnits;
+    if (issueDivisibility != null) result.issueDivisibility = issueDivisibility;
+    if (issueInitialAuthorizedUnits != null)
+      result.issueInitialAuthorizedUnits = issueInitialAuthorizedUnits;
+    if (displayNames != null) result.displayNames.addEntries(displayNames);
+    if (descriptions != null) result.descriptions.addEntries(descriptions);
+    if (labels != null) result.labels.addEntries(labels);
+    if (tags != null) result.tags.addAll(tags);
+    if (metadata != null) result.metadata.addEntries(metadata);
+    return result;
+  }
+
+  Instrument._();
+
+  factory Instrument.fromBuffer($core.List<$core.int> data,
+          [$pb.ExtensionRegistry registry = $pb.ExtensionRegistry.EMPTY]) =>
+      create()..mergeFromBuffer(data, registry);
+  factory Instrument.fromJson($core.String json,
+          [$pb.ExtensionRegistry registry = $pb.ExtensionRegistry.EMPTY]) =>
+      create()..mergeFromJson(json, registry);
+
+  static const $core.Map<$core.int, Instrument_Asset> _Instrument_AssetByTag = {
+    6: Instrument_Asset.assetIid,
+    7: Instrument_Asset.assetObj,
+    0: Instrument_Asset.notSet
+  };
+  static final $pb.BuilderInfo _i = $pb.BuilderInfo(
+      _omitMessageNames ? '' : 'Instrument',
+      package: const $pb.PackageName(
+          _omitMessageNames ? '' : 'qomet.agora.daemons.prtagent.v1'),
+      createEmptyInstance: create)
+    ..oo(0, [6, 7])
+    ..aOS(1, _omitFieldNames ? '' : 'iid')
+    ..pc<FinIdentifier>(
+        2, _omitFieldNames ? '' : 'identifiers', $pb.PbFieldType.PM,
+        subBuilder: FinIdentifier.create)
+    ..aOS(3, _omitFieldNames ? '' : 'cfiCode')
+    ..pc<FinInstrumentClass>(
+        4, _omitFieldNames ? '' : 'classes', $pb.PbFieldType.PM,
+        subBuilder: FinInstrumentClass.create)
+    ..aOM<$0.DateTime>(5, _omitFieldNames ? '' : 'maturityDt',
+        subBuilder: $0.DateTime.create)
+    ..aOS(6, _omitFieldNames ? '' : 'assetIid')
+    ..aOM<Asset>(7, _omitFieldNames ? '' : 'assetObj', subBuilder: Asset.create)
+    ..aOM<$0.DateTime>(8, _omitFieldNames ? '' : 'issueDt',
+        subBuilder: $0.DateTime.create)
+    ..pc<OneOfIdOrParticipant>(
+        9, _omitFieldNames ? '' : 'issuers', $pb.PbFieldType.PM,
+        subBuilder: OneOfIdOrParticipant.create)
+    ..aOS(10, _omitFieldNames ? '' : 'issueCountryCode')
+    ..aOS(11, _omitFieldNames ? '' : 'issueCurrency')
+    ..aOS(12, _omitFieldNames ? '' : 'issueInitialUnits')
+    ..aOS(13, _omitFieldNames ? '' : 'issueDivisibility')
+    ..aOS(14, _omitFieldNames ? '' : 'issueInitialAuthorizedUnits')
+    ..m<$core.String, $core.String>(101, _omitFieldNames ? '' : 'displayNames',
+        entryClassName: 'Instrument.DisplayNamesEntry',
+        keyFieldType: $pb.PbFieldType.OS,
+        valueFieldType: $pb.PbFieldType.OS,
+        packageName: const $pb.PackageName('qomet.agora.daemons.prtagent.v1'))
+    ..m<$core.String, $core.String>(102, _omitFieldNames ? '' : 'descriptions',
+        entryClassName: 'Instrument.DescriptionsEntry',
+        keyFieldType: $pb.PbFieldType.OS,
+        valueFieldType: $pb.PbFieldType.OS,
+        packageName: const $pb.PackageName('qomet.agora.daemons.prtagent.v1'))
+    ..m<$core.String, $core.String>(103, _omitFieldNames ? '' : 'labels',
+        entryClassName: 'Instrument.LabelsEntry',
+        keyFieldType: $pb.PbFieldType.OS,
+        valueFieldType: $pb.PbFieldType.OS,
+        packageName: const $pb.PackageName('qomet.agora.daemons.prtagent.v1'))
+    ..pPS(104, _omitFieldNames ? '' : 'tags')
+    ..m<$core.String, $core.String>(105, _omitFieldNames ? '' : 'metadata',
+        entryClassName: 'Instrument.MetadataEntry',
+        keyFieldType: $pb.PbFieldType.OS,
+        valueFieldType: $pb.PbFieldType.OS,
+        packageName: const $pb.PackageName('qomet.agora.daemons.prtagent.v1'))
+    ..hasRequiredFields = false;
+
+  @$core.Deprecated('See https://github.com/google/protobuf.dart/issues/998.')
+  Instrument clone() => Instrument()..mergeFromMessage(this);
+  @$core.Deprecated('See https://github.com/google/protobuf.dart/issues/998.')
+  Instrument copyWith(void Function(Instrument) updates) =>
+      super.copyWith((message) => updates(message as Instrument)) as Instrument;
+
+  @$core.override
+  $pb.BuilderInfo get info_ => _i;
+
+  @$core.pragma('dart2js:noInline')
+  static Instrument create() => Instrument._();
+  @$core.override
+  Instrument createEmptyInstance() => create();
+  static $pb.PbList<Instrument> createRepeated() => $pb.PbList<Instrument>();
+  @$core.pragma('dart2js:noInline')
+  static Instrument getDefault() => _defaultInstance ??=
+      $pb.GeneratedMessage.$_defaultFor<Instrument>(create);
+  static Instrument? _defaultInstance;
+
+  Instrument_Asset whichAsset() => _Instrument_AssetByTag[$_whichOneof(0)]!;
+  void clearAsset() => $_clearField($_whichOneof(0));
+
+  @$pb.TagNumber(1)
+  $core.String get iid => $_getSZ(0);
+  @$pb.TagNumber(1)
+  set iid($core.String value) => $_setString(0, value);
+  @$pb.TagNumber(1)
+  $core.bool hasIid() => $_has(0);
+  @$pb.TagNumber(1)
+  void clearIid() => $_clearField(1);
+
+  @$pb.TagNumber(2)
+  $pb.PbList<FinIdentifier> get identifiers => $_getList(1);
+
+  @$pb.TagNumber(3)
+  $core.String get cfiCode => $_getSZ(2);
+  @$pb.TagNumber(3)
+  set cfiCode($core.String value) => $_setString(2, value);
+  @$pb.TagNumber(3)
+  $core.bool hasCfiCode() => $_has(2);
+  @$pb.TagNumber(3)
+  void clearCfiCode() => $_clearField(3);
+
+  @$pb.TagNumber(4)
+  $pb.PbList<FinInstrumentClass> get classes => $_getList(3);
+
+  @$pb.TagNumber(5)
+  $0.DateTime get maturityDt => $_getN(4);
+  @$pb.TagNumber(5)
+  set maturityDt($0.DateTime value) => $_setField(5, value);
+  @$pb.TagNumber(5)
+  $core.bool hasMaturityDt() => $_has(4);
+  @$pb.TagNumber(5)
+  void clearMaturityDt() => $_clearField(5);
+  @$pb.TagNumber(5)
+  $0.DateTime ensureMaturityDt() => $_ensure(4);
+
+  @$pb.TagNumber(6)
+  $core.String get assetIid => $_getSZ(5);
+  @$pb.TagNumber(6)
+  set assetIid($core.String value) => $_setString(5, value);
+  @$pb.TagNumber(6)
+  $core.bool hasAssetIid() => $_has(5);
+  @$pb.TagNumber(6)
+  void clearAssetIid() => $_clearField(6);
+
+  @$pb.TagNumber(7)
+  Asset get assetObj => $_getN(6);
+  @$pb.TagNumber(7)
+  set assetObj(Asset value) => $_setField(7, value);
+  @$pb.TagNumber(7)
+  $core.bool hasAssetObj() => $_has(6);
+  @$pb.TagNumber(7)
+  void clearAssetObj() => $_clearField(7);
+  @$pb.TagNumber(7)
+  Asset ensureAssetObj() => $_ensure(6);
+
+  @$pb.TagNumber(8)
+  $0.DateTime get issueDt => $_getN(7);
+  @$pb.TagNumber(8)
+  set issueDt($0.DateTime value) => $_setField(8, value);
+  @$pb.TagNumber(8)
+  $core.bool hasIssueDt() => $_has(7);
+  @$pb.TagNumber(8)
+  void clearIssueDt() => $_clearField(8);
+  @$pb.TagNumber(8)
+  $0.DateTime ensureIssueDt() => $_ensure(7);
+
+  @$pb.TagNumber(9)
+  $pb.PbList<OneOfIdOrParticipant> get issuers => $_getList(8);
+
+  @$pb.TagNumber(10)
+  $core.String get issueCountryCode => $_getSZ(9);
+  @$pb.TagNumber(10)
+  set issueCountryCode($core.String value) => $_setString(9, value);
+  @$pb.TagNumber(10)
+  $core.bool hasIssueCountryCode() => $_has(9);
+  @$pb.TagNumber(10)
+  void clearIssueCountryCode() => $_clearField(10);
+
+  @$pb.TagNumber(11)
+  $core.String get issueCurrency => $_getSZ(10);
+  @$pb.TagNumber(11)
+  set issueCurrency($core.String value) => $_setString(10, value);
+  @$pb.TagNumber(11)
+  $core.bool hasIssueCurrency() => $_has(10);
+  @$pb.TagNumber(11)
+  void clearIssueCurrency() => $_clearField(11);
+
+  @$pb.TagNumber(12)
+  $core.String get issueInitialUnits => $_getSZ(11);
+  @$pb.TagNumber(12)
+  set issueInitialUnits($core.String value) => $_setString(11, value);
+  @$pb.TagNumber(12)
+  $core.bool hasIssueInitialUnits() => $_has(11);
+  @$pb.TagNumber(12)
+  void clearIssueInitialUnits() => $_clearField(12);
+
+  @$pb.TagNumber(13)
+  $core.String get issueDivisibility => $_getSZ(12);
+  @$pb.TagNumber(13)
+  set issueDivisibility($core.String value) => $_setString(12, value);
+  @$pb.TagNumber(13)
+  $core.bool hasIssueDivisibility() => $_has(12);
+  @$pb.TagNumber(13)
+  void clearIssueDivisibility() => $_clearField(13);
+
+  @$pb.TagNumber(14)
+  $core.String get issueInitialAuthorizedUnits => $_getSZ(13);
+  @$pb.TagNumber(14)
+  set issueInitialAuthorizedUnits($core.String value) => $_setString(13, value);
+  @$pb.TagNumber(14)
+  $core.bool hasIssueInitialAuthorizedUnits() => $_has(13);
+  @$pb.TagNumber(14)
+  void clearIssueInitialAuthorizedUnits() => $_clearField(14);
+
+  @$pb.TagNumber(101)
+  $pb.PbMap<$core.String, $core.String> get displayNames => $_getMap(14);
+
+  @$pb.TagNumber(102)
+  $pb.PbMap<$core.String, $core.String> get descriptions => $_getMap(15);
+
+  @$pb.TagNumber(103)
+  $pb.PbMap<$core.String, $core.String> get labels => $_getMap(16);
+
+  @$pb.TagNumber(104)
+  $pb.PbList<$core.String> get tags => $_getList(17);
+
+  @$pb.TagNumber(105)
+  $pb.PbMap<$core.String, $core.String> get metadata => $_getMap(18);
+}
+
+class ParticipantToInstrumentRelation extends $pb.GeneratedMessage {
+  factory ParticipantToInstrumentRelation({
+    $core.String? iid,
+    $core.String? participantIid,
+    $core.String? instrumentIid,
+    $core.Iterable<ParticipantToInstrumentRelationEnum>? relations,
+    $0.DateTime? effectiveFromDt,
+    $0.DateTime? effectiveToDt,
+    $core.String? weight,
+    $core.Iterable<$core.MapEntry<$core.String, $core.String>>? displayNames,
+    $core.Iterable<$core.MapEntry<$core.String, $core.String>>? descriptions,
+    $core.Iterable<$core.MapEntry<$core.String, $core.String>>? labels,
+    $core.Iterable<$core.String>? tags,
+    $core.Iterable<$core.MapEntry<$core.String, $core.String>>? metadata,
+  }) {
+    final result = create();
+    if (iid != null) result.iid = iid;
+    if (participantIid != null) result.participantIid = participantIid;
+    if (instrumentIid != null) result.instrumentIid = instrumentIid;
+    if (relations != null) result.relations.addAll(relations);
+    if (effectiveFromDt != null) result.effectiveFromDt = effectiveFromDt;
+    if (effectiveToDt != null) result.effectiveToDt = effectiveToDt;
+    if (weight != null) result.weight = weight;
+    if (displayNames != null) result.displayNames.addEntries(displayNames);
+    if (descriptions != null) result.descriptions.addEntries(descriptions);
+    if (labels != null) result.labels.addEntries(labels);
+    if (tags != null) result.tags.addAll(tags);
+    if (metadata != null) result.metadata.addEntries(metadata);
+    return result;
+  }
+
+  ParticipantToInstrumentRelation._();
+
+  factory ParticipantToInstrumentRelation.fromBuffer($core.List<$core.int> data,
+          [$pb.ExtensionRegistry registry = $pb.ExtensionRegistry.EMPTY]) =>
+      create()..mergeFromBuffer(data, registry);
+  factory ParticipantToInstrumentRelation.fromJson($core.String json,
+          [$pb.ExtensionRegistry registry = $pb.ExtensionRegistry.EMPTY]) =>
+      create()..mergeFromJson(json, registry);
+
+  static final $pb.BuilderInfo _i = $pb.BuilderInfo(
+      _omitMessageNames ? '' : 'ParticipantToInstrumentRelation',
+      package: const $pb.PackageName(
+          _omitMessageNames ? '' : 'qomet.agora.daemons.prtagent.v1'),
+      createEmptyInstance: create)
+    ..aOS(1, _omitFieldNames ? '' : 'iid')
+    ..aOS(2, _omitFieldNames ? '' : 'participantIid')
+    ..aOS(3, _omitFieldNames ? '' : 'instrumentIid')
+    ..pc<ParticipantToInstrumentRelationEnum>(
+        4, _omitFieldNames ? '' : 'relations', $pb.PbFieldType.KE,
+        valueOf: ParticipantToInstrumentRelationEnum.valueOf,
+        enumValues: ParticipantToInstrumentRelationEnum.values,
+        defaultEnumValue: ParticipantToInstrumentRelationEnum
+            .PARTICIPANT_TO_INSTRUMENT_RELATION_ENUM__UNKNOWN)
+    ..aOM<$0.DateTime>(5, _omitFieldNames ? '' : 'effectiveFromDt',
+        subBuilder: $0.DateTime.create)
+    ..aOM<$0.DateTime>(6, _omitFieldNames ? '' : 'effectiveToDt',
+        subBuilder: $0.DateTime.create)
+    ..aOS(7, _omitFieldNames ? '' : 'weight')
+    ..m<$core.String, $core.String>(101, _omitFieldNames ? '' : 'displayNames',
+        entryClassName: 'ParticipantToInstrumentRelation.DisplayNamesEntry',
+        keyFieldType: $pb.PbFieldType.OS,
+        valueFieldType: $pb.PbFieldType.OS,
+        packageName: const $pb.PackageName('qomet.agora.daemons.prtagent.v1'))
+    ..m<$core.String, $core.String>(102, _omitFieldNames ? '' : 'descriptions',
+        entryClassName: 'ParticipantToInstrumentRelation.DescriptionsEntry',
+        keyFieldType: $pb.PbFieldType.OS,
+        valueFieldType: $pb.PbFieldType.OS,
+        packageName: const $pb.PackageName('qomet.agora.daemons.prtagent.v1'))
+    ..m<$core.String, $core.String>(103, _omitFieldNames ? '' : 'labels',
+        entryClassName: 'ParticipantToInstrumentRelation.LabelsEntry',
+        keyFieldType: $pb.PbFieldType.OS,
+        valueFieldType: $pb.PbFieldType.OS,
+        packageName: const $pb.PackageName('qomet.agora.daemons.prtagent.v1'))
+    ..pPS(104, _omitFieldNames ? '' : 'tags')
+    ..m<$core.String, $core.String>(105, _omitFieldNames ? '' : 'metadata',
+        entryClassName: 'ParticipantToInstrumentRelation.MetadataEntry',
+        keyFieldType: $pb.PbFieldType.OS,
+        valueFieldType: $pb.PbFieldType.OS,
+        packageName: const $pb.PackageName('qomet.agora.daemons.prtagent.v1'))
+    ..hasRequiredFields = false;
+
+  @$core.Deprecated('See https://github.com/google/protobuf.dart/issues/998.')
+  ParticipantToInstrumentRelation clone() =>
+      ParticipantToInstrumentRelation()..mergeFromMessage(this);
+  @$core.Deprecated('See https://github.com/google/protobuf.dart/issues/998.')
+  ParticipantToInstrumentRelation copyWith(
+          void Function(ParticipantToInstrumentRelation) updates) =>
+      super.copyWith(
+              (message) => updates(message as ParticipantToInstrumentRelation))
+          as ParticipantToInstrumentRelation;
+
+  @$core.override
+  $pb.BuilderInfo get info_ => _i;
+
+  @$core.pragma('dart2js:noInline')
+  static ParticipantToInstrumentRelation create() =>
+      ParticipantToInstrumentRelation._();
+  @$core.override
+  ParticipantToInstrumentRelation createEmptyInstance() => create();
+  static $pb.PbList<ParticipantToInstrumentRelation> createRepeated() =>
+      $pb.PbList<ParticipantToInstrumentRelation>();
+  @$core.pragma('dart2js:noInline')
+  static ParticipantToInstrumentRelation getDefault() => _defaultInstance ??=
+      $pb.GeneratedMessage.$_defaultFor<ParticipantToInstrumentRelation>(
+          create);
+  static ParticipantToInstrumentRelation? _defaultInstance;
+
+  @$pb.TagNumber(1)
+  $core.String get iid => $_getSZ(0);
+  @$pb.TagNumber(1)
+  set iid($core.String value) => $_setString(0, value);
+  @$pb.TagNumber(1)
+  $core.bool hasIid() => $_has(0);
+  @$pb.TagNumber(1)
+  void clearIid() => $_clearField(1);
+
+  @$pb.TagNumber(2)
+  $core.String get participantIid => $_getSZ(1);
+  @$pb.TagNumber(2)
+  set participantIid($core.String value) => $_setString(1, value);
+  @$pb.TagNumber(2)
+  $core.bool hasParticipantIid() => $_has(1);
+  @$pb.TagNumber(2)
+  void clearParticipantIid() => $_clearField(2);
+
+  @$pb.TagNumber(3)
+  $core.String get instrumentIid => $_getSZ(2);
+  @$pb.TagNumber(3)
+  set instrumentIid($core.String value) => $_setString(2, value);
+  @$pb.TagNumber(3)
+  $core.bool hasInstrumentIid() => $_has(2);
+  @$pb.TagNumber(3)
+  void clearInstrumentIid() => $_clearField(3);
+
+  @$pb.TagNumber(4)
+  $pb.PbList<ParticipantToInstrumentRelationEnum> get relations => $_getList(3);
+
+  @$pb.TagNumber(5)
+  $0.DateTime get effectiveFromDt => $_getN(4);
+  @$pb.TagNumber(5)
+  set effectiveFromDt($0.DateTime value) => $_setField(5, value);
+  @$pb.TagNumber(5)
+  $core.bool hasEffectiveFromDt() => $_has(4);
+  @$pb.TagNumber(5)
+  void clearEffectiveFromDt() => $_clearField(5);
+  @$pb.TagNumber(5)
+  $0.DateTime ensureEffectiveFromDt() => $_ensure(4);
+
+  @$pb.TagNumber(6)
+  $0.DateTime get effectiveToDt => $_getN(5);
+  @$pb.TagNumber(6)
+  set effectiveToDt($0.DateTime value) => $_setField(6, value);
+  @$pb.TagNumber(6)
+  $core.bool hasEffectiveToDt() => $_has(5);
+  @$pb.TagNumber(6)
+  void clearEffectiveToDt() => $_clearField(6);
+  @$pb.TagNumber(6)
+  $0.DateTime ensureEffectiveToDt() => $_ensure(5);
+
+  @$pb.TagNumber(7)
+  $core.String get weight => $_getSZ(6);
+  @$pb.TagNumber(7)
+  set weight($core.String value) => $_setString(6, value);
+  @$pb.TagNumber(7)
+  $core.bool hasWeight() => $_has(6);
+  @$pb.TagNumber(7)
+  void clearWeight() => $_clearField(7);
+
+  @$pb.TagNumber(101)
+  $pb.PbMap<$core.String, $core.String> get displayNames => $_getMap(7);
+
+  @$pb.TagNumber(102)
+  $pb.PbMap<$core.String, $core.String> get descriptions => $_getMap(8);
+
+  @$pb.TagNumber(103)
+  $pb.PbMap<$core.String, $core.String> get labels => $_getMap(9);
+
+  @$pb.TagNumber(104)
+  $pb.PbList<$core.String> get tags => $_getList(10);
+
+  @$pb.TagNumber(105)
+  $pb.PbMap<$core.String, $core.String> get metadata => $_getMap(11);
+}
+
+enum Holdings_AssetId { instrumentIid, currencyCode, notSet }
+
+class Holdings extends $pb.GeneratedMessage {
+  factory Holdings({
+    $core.String? instrumentIid,
+    $core.String? currencyCode,
+    $core.String? totalUnits,
+    $core.Iterable<$core.MapEntry<$core.String, $core.String>>? stashUnits,
+  }) {
+    final result = create();
+    if (instrumentIid != null) result.instrumentIid = instrumentIid;
+    if (currencyCode != null) result.currencyCode = currencyCode;
+    if (totalUnits != null) result.totalUnits = totalUnits;
+    if (stashUnits != null) result.stashUnits.addEntries(stashUnits);
+    return result;
+  }
+
+  Holdings._();
+
+  factory Holdings.fromBuffer($core.List<$core.int> data,
+          [$pb.ExtensionRegistry registry = $pb.ExtensionRegistry.EMPTY]) =>
+      create()..mergeFromBuffer(data, registry);
+  factory Holdings.fromJson($core.String json,
+          [$pb.ExtensionRegistry registry = $pb.ExtensionRegistry.EMPTY]) =>
+      create()..mergeFromJson(json, registry);
+
+  static const $core.Map<$core.int, Holdings_AssetId> _Holdings_AssetIdByTag = {
+    1: Holdings_AssetId.instrumentIid,
+    2: Holdings_AssetId.currencyCode,
+    0: Holdings_AssetId.notSet
+  };
+  static final $pb.BuilderInfo _i = $pb.BuilderInfo(
+      _omitMessageNames ? '' : 'Holdings',
+      package: const $pb.PackageName(
+          _omitMessageNames ? '' : 'qomet.agora.daemons.prtagent.v1'),
+      createEmptyInstance: create)
+    ..oo(0, [1, 2])
+    ..aOS(1, _omitFieldNames ? '' : 'instrumentIid')
+    ..aOS(2, _omitFieldNames ? '' : 'currencyCode')
+    ..aOS(3, _omitFieldNames ? '' : 'totalUnits')
+    ..m<$core.String, $core.String>(4, _omitFieldNames ? '' : 'stashUnits',
+        entryClassName: 'Holdings.StashUnitsEntry',
+        keyFieldType: $pb.PbFieldType.OS,
+        valueFieldType: $pb.PbFieldType.OS,
+        packageName: const $pb.PackageName('qomet.agora.daemons.prtagent.v1'))
+    ..hasRequiredFields = false;
+
+  @$core.Deprecated('See https://github.com/google/protobuf.dart/issues/998.')
+  Holdings clone() => Holdings()..mergeFromMessage(this);
+  @$core.Deprecated('See https://github.com/google/protobuf.dart/issues/998.')
+  Holdings copyWith(void Function(Holdings) updates) =>
+      super.copyWith((message) => updates(message as Holdings)) as Holdings;
+
+  @$core.override
+  $pb.BuilderInfo get info_ => _i;
+
+  @$core.pragma('dart2js:noInline')
+  static Holdings create() => Holdings._();
+  @$core.override
+  Holdings createEmptyInstance() => create();
+  static $pb.PbList<Holdings> createRepeated() => $pb.PbList<Holdings>();
+  @$core.pragma('dart2js:noInline')
+  static Holdings getDefault() =>
+      _defaultInstance ??= $pb.GeneratedMessage.$_defaultFor<Holdings>(create);
+  static Holdings? _defaultInstance;
+
+  Holdings_AssetId whichAssetId() => _Holdings_AssetIdByTag[$_whichOneof(0)]!;
+  void clearAssetId() => $_clearField($_whichOneof(0));
+
+  @$pb.TagNumber(1)
+  $core.String get instrumentIid => $_getSZ(0);
+  @$pb.TagNumber(1)
+  set instrumentIid($core.String value) => $_setString(0, value);
+  @$pb.TagNumber(1)
+  $core.bool hasInstrumentIid() => $_has(0);
+  @$pb.TagNumber(1)
+  void clearInstrumentIid() => $_clearField(1);
+
+  @$pb.TagNumber(2)
+  $core.String get currencyCode => $_getSZ(1);
+  @$pb.TagNumber(2)
+  set currencyCode($core.String value) => $_setString(1, value);
+  @$pb.TagNumber(2)
+  $core.bool hasCurrencyCode() => $_has(1);
+  @$pb.TagNumber(2)
+  void clearCurrencyCode() => $_clearField(2);
+
+  @$pb.TagNumber(3)
+  $core.String get totalUnits => $_getSZ(2);
+  @$pb.TagNumber(3)
+  set totalUnits($core.String value) => $_setString(2, value);
+  @$pb.TagNumber(3)
+  $core.bool hasTotalUnits() => $_has(2);
+  @$pb.TagNumber(3)
+  void clearTotalUnits() => $_clearField(3);
+
+  @$pb.TagNumber(4)
+  $pb.PbMap<$core.String, $core.String> get stashUnits => $_getMap(3);
+}
+
+class Portfolio extends $pb.GeneratedMessage {
+  factory Portfolio({
+    $core.String? accountIid,
+    $0.DateTime? generatedAtDt,
+    $core.Iterable<$core.MapEntry<$core.String, Holdings>>? holdings,
+    $core.Iterable<$core.MapEntry<$core.String, $core.String>>? metadata,
+  }) {
+    final result = create();
+    if (accountIid != null) result.accountIid = accountIid;
+    if (generatedAtDt != null) result.generatedAtDt = generatedAtDt;
+    if (holdings != null) result.holdings.addEntries(holdings);
+    if (metadata != null) result.metadata.addEntries(metadata);
+    return result;
+  }
+
+  Portfolio._();
+
+  factory Portfolio.fromBuffer($core.List<$core.int> data,
+          [$pb.ExtensionRegistry registry = $pb.ExtensionRegistry.EMPTY]) =>
+      create()..mergeFromBuffer(data, registry);
+  factory Portfolio.fromJson($core.String json,
+          [$pb.ExtensionRegistry registry = $pb.ExtensionRegistry.EMPTY]) =>
+      create()..mergeFromJson(json, registry);
+
+  static final $pb.BuilderInfo _i = $pb.BuilderInfo(
+      _omitMessageNames ? '' : 'Portfolio',
+      package: const $pb.PackageName(
+          _omitMessageNames ? '' : 'qomet.agora.daemons.prtagent.v1'),
+      createEmptyInstance: create)
+    ..aOS(1, _omitFieldNames ? '' : 'accountIid')
+    ..aOM<$0.DateTime>(2, _omitFieldNames ? '' : 'generatedAtDt',
+        subBuilder: $0.DateTime.create)
+    ..m<$core.String, Holdings>(3, _omitFieldNames ? '' : 'holdings',
+        entryClassName: 'Portfolio.HoldingsEntry',
+        keyFieldType: $pb.PbFieldType.OS,
+        valueFieldType: $pb.PbFieldType.OM,
+        valueCreator: Holdings.create,
+        valueDefaultOrMaker: Holdings.getDefault,
+        packageName: const $pb.PackageName('qomet.agora.daemons.prtagent.v1'))
+    ..m<$core.String, $core.String>(105, _omitFieldNames ? '' : 'metadata',
+        entryClassName: 'Portfolio.MetadataEntry',
+        keyFieldType: $pb.PbFieldType.OS,
+        valueFieldType: $pb.PbFieldType.OS,
+        packageName: const $pb.PackageName('qomet.agora.daemons.prtagent.v1'))
+    ..hasRequiredFields = false;
+
+  @$core.Deprecated('See https://github.com/google/protobuf.dart/issues/998.')
+  Portfolio clone() => Portfolio()..mergeFromMessage(this);
+  @$core.Deprecated('See https://github.com/google/protobuf.dart/issues/998.')
+  Portfolio copyWith(void Function(Portfolio) updates) =>
+      super.copyWith((message) => updates(message as Portfolio)) as Portfolio;
+
+  @$core.override
+  $pb.BuilderInfo get info_ => _i;
+
+  @$core.pragma('dart2js:noInline')
+  static Portfolio create() => Portfolio._();
+  @$core.override
+  Portfolio createEmptyInstance() => create();
+  static $pb.PbList<Portfolio> createRepeated() => $pb.PbList<Portfolio>();
+  @$core.pragma('dart2js:noInline')
+  static Portfolio getDefault() =>
+      _defaultInstance ??= $pb.GeneratedMessage.$_defaultFor<Portfolio>(create);
+  static Portfolio? _defaultInstance;
+
+  @$pb.TagNumber(1)
+  $core.String get accountIid => $_getSZ(0);
+  @$pb.TagNumber(1)
+  set accountIid($core.String value) => $_setString(0, value);
+  @$pb.TagNumber(1)
+  $core.bool hasAccountIid() => $_has(0);
+  @$pb.TagNumber(1)
+  void clearAccountIid() => $_clearField(1);
+
+  @$pb.TagNumber(2)
+  $0.DateTime get generatedAtDt => $_getN(1);
+  @$pb.TagNumber(2)
+  set generatedAtDt($0.DateTime value) => $_setField(2, value);
+  @$pb.TagNumber(2)
+  $core.bool hasGeneratedAtDt() => $_has(1);
+  @$pb.TagNumber(2)
+  void clearGeneratedAtDt() => $_clearField(2);
+  @$pb.TagNumber(2)
+  $0.DateTime ensureGeneratedAtDt() => $_ensure(1);
+
+  @$pb.TagNumber(3)
+  $pb.PbMap<$core.String, Holdings> get holdings => $_getMap(2);
+
+  @$pb.TagNumber(105)
+  $pb.PbMap<$core.String, $core.String> get metadata => $_getMap(3);
 }
 
 class Market extends $pb.GeneratedMessage {
@@ -1801,492 +2562,6 @@ class Venue extends $pb.GeneratedMessage {
 
   @$pb.TagNumber(105)
   $pb.PbMap<$core.String, $core.String> get metadata => $_getMap(21);
-}
-
-class FinInstrumentClass extends $pb.GeneratedMessage {
-  factory FinInstrumentClass({
-    $core.String? schema,
-    $core.Iterable<InstrumentClassEnum>? classes,
-    $core.Iterable<$core.MapEntry<$core.String, $core.String>>? displayNames,
-    $core.Iterable<$core.MapEntry<$core.String, $core.String>>? descriptions,
-    $core.Iterable<$core.MapEntry<$core.String, $core.String>>? labels,
-    $core.Iterable<$core.String>? tags,
-    $core.Iterable<$core.MapEntry<$core.String, $core.String>>? metadata,
-  }) {
-    final result = create();
-    if (schema != null) result.schema = schema;
-    if (classes != null) result.classes.addAll(classes);
-    if (displayNames != null) result.displayNames.addEntries(displayNames);
-    if (descriptions != null) result.descriptions.addEntries(descriptions);
-    if (labels != null) result.labels.addEntries(labels);
-    if (tags != null) result.tags.addAll(tags);
-    if (metadata != null) result.metadata.addEntries(metadata);
-    return result;
-  }
-
-  FinInstrumentClass._();
-
-  factory FinInstrumentClass.fromBuffer($core.List<$core.int> data,
-          [$pb.ExtensionRegistry registry = $pb.ExtensionRegistry.EMPTY]) =>
-      create()..mergeFromBuffer(data, registry);
-  factory FinInstrumentClass.fromJson($core.String json,
-          [$pb.ExtensionRegistry registry = $pb.ExtensionRegistry.EMPTY]) =>
-      create()..mergeFromJson(json, registry);
-
-  static final $pb.BuilderInfo _i = $pb.BuilderInfo(
-      _omitMessageNames ? '' : 'FinInstrumentClass',
-      package: const $pb.PackageName(
-          _omitMessageNames ? '' : 'qomet.agora.daemons.prtagent.v1'),
-      createEmptyInstance: create)
-    ..aOS(1, _omitFieldNames ? '' : 'schema')
-    ..pc<InstrumentClassEnum>(
-        2, _omitFieldNames ? '' : 'classes', $pb.PbFieldType.KE,
-        valueOf: InstrumentClassEnum.valueOf,
-        enumValues: InstrumentClassEnum.values,
-        defaultEnumValue: InstrumentClassEnum.INSTRUMENT_CLASS_ENUM__UNKNOWN)
-    ..m<$core.String, $core.String>(101, _omitFieldNames ? '' : 'displayNames',
-        entryClassName: 'FinInstrumentClass.DisplayNamesEntry',
-        keyFieldType: $pb.PbFieldType.OS,
-        valueFieldType: $pb.PbFieldType.OS,
-        packageName: const $pb.PackageName('qomet.agora.daemons.prtagent.v1'))
-    ..m<$core.String, $core.String>(102, _omitFieldNames ? '' : 'descriptions',
-        entryClassName: 'FinInstrumentClass.DescriptionsEntry',
-        keyFieldType: $pb.PbFieldType.OS,
-        valueFieldType: $pb.PbFieldType.OS,
-        packageName: const $pb.PackageName('qomet.agora.daemons.prtagent.v1'))
-    ..m<$core.String, $core.String>(103, _omitFieldNames ? '' : 'labels',
-        entryClassName: 'FinInstrumentClass.LabelsEntry',
-        keyFieldType: $pb.PbFieldType.OS,
-        valueFieldType: $pb.PbFieldType.OS,
-        packageName: const $pb.PackageName('qomet.agora.daemons.prtagent.v1'))
-    ..pPS(104, _omitFieldNames ? '' : 'tags')
-    ..m<$core.String, $core.String>(105, _omitFieldNames ? '' : 'metadata',
-        entryClassName: 'FinInstrumentClass.MetadataEntry',
-        keyFieldType: $pb.PbFieldType.OS,
-        valueFieldType: $pb.PbFieldType.OS,
-        packageName: const $pb.PackageName('qomet.agora.daemons.prtagent.v1'))
-    ..hasRequiredFields = false;
-
-  @$core.Deprecated('See https://github.com/google/protobuf.dart/issues/998.')
-  FinInstrumentClass clone() => FinInstrumentClass()..mergeFromMessage(this);
-  @$core.Deprecated('See https://github.com/google/protobuf.dart/issues/998.')
-  FinInstrumentClass copyWith(void Function(FinInstrumentClass) updates) =>
-      super.copyWith((message) => updates(message as FinInstrumentClass))
-          as FinInstrumentClass;
-
-  @$core.override
-  $pb.BuilderInfo get info_ => _i;
-
-  @$core.pragma('dart2js:noInline')
-  static FinInstrumentClass create() => FinInstrumentClass._();
-  @$core.override
-  FinInstrumentClass createEmptyInstance() => create();
-  static $pb.PbList<FinInstrumentClass> createRepeated() =>
-      $pb.PbList<FinInstrumentClass>();
-  @$core.pragma('dart2js:noInline')
-  static FinInstrumentClass getDefault() => _defaultInstance ??=
-      $pb.GeneratedMessage.$_defaultFor<FinInstrumentClass>(create);
-  static FinInstrumentClass? _defaultInstance;
-
-  @$pb.TagNumber(1)
-  $core.String get schema => $_getSZ(0);
-  @$pb.TagNumber(1)
-  set schema($core.String value) => $_setString(0, value);
-  @$pb.TagNumber(1)
-  $core.bool hasSchema() => $_has(0);
-  @$pb.TagNumber(1)
-  void clearSchema() => $_clearField(1);
-
-  @$pb.TagNumber(2)
-  $pb.PbList<InstrumentClassEnum> get classes => $_getList(1);
-
-  @$pb.TagNumber(101)
-  $pb.PbMap<$core.String, $core.String> get displayNames => $_getMap(2);
-
-  @$pb.TagNumber(102)
-  $pb.PbMap<$core.String, $core.String> get descriptions => $_getMap(3);
-
-  @$pb.TagNumber(103)
-  $pb.PbMap<$core.String, $core.String> get labels => $_getMap(4);
-
-  @$pb.TagNumber(104)
-  $pb.PbList<$core.String> get tags => $_getList(5);
-
-  @$pb.TagNumber(105)
-  $pb.PbMap<$core.String, $core.String> get metadata => $_getMap(6);
-}
-
-enum OneOfIdOrParticipant_Participant { iid, obj, notSet }
-
-class OneOfIdOrParticipant extends $pb.GeneratedMessage {
-  factory OneOfIdOrParticipant({
-    $core.String? iid,
-    Participant? obj,
-  }) {
-    final result = create();
-    if (iid != null) result.iid = iid;
-    if (obj != null) result.obj = obj;
-    return result;
-  }
-
-  OneOfIdOrParticipant._();
-
-  factory OneOfIdOrParticipant.fromBuffer($core.List<$core.int> data,
-          [$pb.ExtensionRegistry registry = $pb.ExtensionRegistry.EMPTY]) =>
-      create()..mergeFromBuffer(data, registry);
-  factory OneOfIdOrParticipant.fromJson($core.String json,
-          [$pb.ExtensionRegistry registry = $pb.ExtensionRegistry.EMPTY]) =>
-      create()..mergeFromJson(json, registry);
-
-  static const $core.Map<$core.int, OneOfIdOrParticipant_Participant>
-      _OneOfIdOrParticipant_ParticipantByTag = {
-    1: OneOfIdOrParticipant_Participant.iid,
-    2: OneOfIdOrParticipant_Participant.obj,
-    0: OneOfIdOrParticipant_Participant.notSet
-  };
-  static final $pb.BuilderInfo _i = $pb.BuilderInfo(
-      _omitMessageNames ? '' : 'OneOfIdOrParticipant',
-      package: const $pb.PackageName(
-          _omitMessageNames ? '' : 'qomet.agora.daemons.prtagent.v1'),
-      createEmptyInstance: create)
-    ..oo(0, [1, 2])
-    ..aOS(1, _omitFieldNames ? '' : 'iid')
-    ..aOM<Participant>(2, _omitFieldNames ? '' : 'obj',
-        subBuilder: Participant.create)
-    ..hasRequiredFields = false;
-
-  @$core.Deprecated('See https://github.com/google/protobuf.dart/issues/998.')
-  OneOfIdOrParticipant clone() =>
-      OneOfIdOrParticipant()..mergeFromMessage(this);
-  @$core.Deprecated('See https://github.com/google/protobuf.dart/issues/998.')
-  OneOfIdOrParticipant copyWith(void Function(OneOfIdOrParticipant) updates) =>
-      super.copyWith((message) => updates(message as OneOfIdOrParticipant))
-          as OneOfIdOrParticipant;
-
-  @$core.override
-  $pb.BuilderInfo get info_ => _i;
-
-  @$core.pragma('dart2js:noInline')
-  static OneOfIdOrParticipant create() => OneOfIdOrParticipant._();
-  @$core.override
-  OneOfIdOrParticipant createEmptyInstance() => create();
-  static $pb.PbList<OneOfIdOrParticipant> createRepeated() =>
-      $pb.PbList<OneOfIdOrParticipant>();
-  @$core.pragma('dart2js:noInline')
-  static OneOfIdOrParticipant getDefault() => _defaultInstance ??=
-      $pb.GeneratedMessage.$_defaultFor<OneOfIdOrParticipant>(create);
-  static OneOfIdOrParticipant? _defaultInstance;
-
-  OneOfIdOrParticipant_Participant whichParticipant() =>
-      _OneOfIdOrParticipant_ParticipantByTag[$_whichOneof(0)]!;
-  void clearParticipant() => $_clearField($_whichOneof(0));
-
-  @$pb.TagNumber(1)
-  $core.String get iid => $_getSZ(0);
-  @$pb.TagNumber(1)
-  set iid($core.String value) => $_setString(0, value);
-  @$pb.TagNumber(1)
-  $core.bool hasIid() => $_has(0);
-  @$pb.TagNumber(1)
-  void clearIid() => $_clearField(1);
-
-  @$pb.TagNumber(2)
-  Participant get obj => $_getN(1);
-  @$pb.TagNumber(2)
-  set obj(Participant value) => $_setField(2, value);
-  @$pb.TagNumber(2)
-  $core.bool hasObj() => $_has(1);
-  @$pb.TagNumber(2)
-  void clearObj() => $_clearField(2);
-  @$pb.TagNumber(2)
-  Participant ensureObj() => $_ensure(1);
-}
-
-enum Instrument_Asset { assetIid, assetObj, notSet }
-
-class Instrument extends $pb.GeneratedMessage {
-  factory Instrument({
-    $core.String? iid,
-    $core.Iterable<FinIdentifier>? identifiers,
-    InstrumentCfiC1ClassEnum? cfiC1Class,
-    InstrumentCfiC2ClassEnum? cfiC2Class,
-    $core.Iterable<FinInstrumentClass>? classes,
-    $0.DateTime? maturityDt,
-    $core.String? assetIid,
-    Asset? assetObj,
-    $0.DateTime? issueDt,
-    $core.Iterable<OneOfIdOrParticipant>? issuers,
-    $core.String? issueCountryCode,
-    $core.String? issueCurrency,
-    $core.String? issueInitialUnits,
-    $core.String? issueDivisibility,
-    $core.String? issueInitialAuthorizedUnits,
-    $core.Iterable<$core.MapEntry<$core.String, $core.String>>? displayNames,
-    $core.Iterable<$core.MapEntry<$core.String, $core.String>>? descriptions,
-    $core.Iterable<$core.MapEntry<$core.String, $core.String>>? labels,
-    $core.Iterable<$core.String>? tags,
-    $core.Iterable<$core.MapEntry<$core.String, $core.String>>? metadata,
-  }) {
-    final result = create();
-    if (iid != null) result.iid = iid;
-    if (identifiers != null) result.identifiers.addAll(identifiers);
-    if (cfiC1Class != null) result.cfiC1Class = cfiC1Class;
-    if (cfiC2Class != null) result.cfiC2Class = cfiC2Class;
-    if (classes != null) result.classes.addAll(classes);
-    if (maturityDt != null) result.maturityDt = maturityDt;
-    if (assetIid != null) result.assetIid = assetIid;
-    if (assetObj != null) result.assetObj = assetObj;
-    if (issueDt != null) result.issueDt = issueDt;
-    if (issuers != null) result.issuers.addAll(issuers);
-    if (issueCountryCode != null) result.issueCountryCode = issueCountryCode;
-    if (issueCurrency != null) result.issueCurrency = issueCurrency;
-    if (issueInitialUnits != null) result.issueInitialUnits = issueInitialUnits;
-    if (issueDivisibility != null) result.issueDivisibility = issueDivisibility;
-    if (issueInitialAuthorizedUnits != null)
-      result.issueInitialAuthorizedUnits = issueInitialAuthorizedUnits;
-    if (displayNames != null) result.displayNames.addEntries(displayNames);
-    if (descriptions != null) result.descriptions.addEntries(descriptions);
-    if (labels != null) result.labels.addEntries(labels);
-    if (tags != null) result.tags.addAll(tags);
-    if (metadata != null) result.metadata.addEntries(metadata);
-    return result;
-  }
-
-  Instrument._();
-
-  factory Instrument.fromBuffer($core.List<$core.int> data,
-          [$pb.ExtensionRegistry registry = $pb.ExtensionRegistry.EMPTY]) =>
-      create()..mergeFromBuffer(data, registry);
-  factory Instrument.fromJson($core.String json,
-          [$pb.ExtensionRegistry registry = $pb.ExtensionRegistry.EMPTY]) =>
-      create()..mergeFromJson(json, registry);
-
-  static const $core.Map<$core.int, Instrument_Asset> _Instrument_AssetByTag = {
-    7: Instrument_Asset.assetIid,
-    8: Instrument_Asset.assetObj,
-    0: Instrument_Asset.notSet
-  };
-  static final $pb.BuilderInfo _i = $pb.BuilderInfo(
-      _omitMessageNames ? '' : 'Instrument',
-      package: const $pb.PackageName(
-          _omitMessageNames ? '' : 'qomet.agora.daemons.prtagent.v1'),
-      createEmptyInstance: create)
-    ..oo(0, [7, 8])
-    ..aOS(1, _omitFieldNames ? '' : 'iid')
-    ..pc<FinIdentifier>(
-        2, _omitFieldNames ? '' : 'identifiers', $pb.PbFieldType.PM,
-        subBuilder: FinIdentifier.create)
-    ..e<InstrumentCfiC1ClassEnum>(
-        3, _omitFieldNames ? '' : 'cfiC1Class', $pb.PbFieldType.OE,
-        defaultOrMaker:
-            InstrumentCfiC1ClassEnum.INSTRUMENT_CFI_C1_CLASS_ENUM__UNKNOWN,
-        valueOf: InstrumentCfiC1ClassEnum.valueOf,
-        enumValues: InstrumentCfiC1ClassEnum.values)
-    ..e<InstrumentCfiC2ClassEnum>(
-        4, _omitFieldNames ? '' : 'cfiC2Class', $pb.PbFieldType.OE,
-        defaultOrMaker:
-            InstrumentCfiC2ClassEnum.INSTRUMENT_CFI_C2_CLASS_ENUM__UNKNOWN,
-        valueOf: InstrumentCfiC2ClassEnum.valueOf,
-        enumValues: InstrumentCfiC2ClassEnum.values)
-    ..pc<FinInstrumentClass>(
-        5, _omitFieldNames ? '' : 'classes', $pb.PbFieldType.PM,
-        subBuilder: FinInstrumentClass.create)
-    ..aOM<$0.DateTime>(6, _omitFieldNames ? '' : 'maturityDt',
-        subBuilder: $0.DateTime.create)
-    ..aOS(7, _omitFieldNames ? '' : 'assetIid')
-    ..aOM<Asset>(8, _omitFieldNames ? '' : 'assetObj', subBuilder: Asset.create)
-    ..aOM<$0.DateTime>(9, _omitFieldNames ? '' : 'issueDt',
-        subBuilder: $0.DateTime.create)
-    ..pc<OneOfIdOrParticipant>(
-        10, _omitFieldNames ? '' : 'issuers', $pb.PbFieldType.PM,
-        subBuilder: OneOfIdOrParticipant.create)
-    ..aOS(11, _omitFieldNames ? '' : 'issueCountryCode')
-    ..aOS(12, _omitFieldNames ? '' : 'issueCurrency')
-    ..aOS(13, _omitFieldNames ? '' : 'issueInitialUnits')
-    ..aOS(14, _omitFieldNames ? '' : 'issueDivisibility')
-    ..aOS(15, _omitFieldNames ? '' : 'issueInitialAuthorizedUnits')
-    ..m<$core.String, $core.String>(101, _omitFieldNames ? '' : 'displayNames',
-        entryClassName: 'Instrument.DisplayNamesEntry',
-        keyFieldType: $pb.PbFieldType.OS,
-        valueFieldType: $pb.PbFieldType.OS,
-        packageName: const $pb.PackageName('qomet.agora.daemons.prtagent.v1'))
-    ..m<$core.String, $core.String>(102, _omitFieldNames ? '' : 'descriptions',
-        entryClassName: 'Instrument.DescriptionsEntry',
-        keyFieldType: $pb.PbFieldType.OS,
-        valueFieldType: $pb.PbFieldType.OS,
-        packageName: const $pb.PackageName('qomet.agora.daemons.prtagent.v1'))
-    ..m<$core.String, $core.String>(103, _omitFieldNames ? '' : 'labels',
-        entryClassName: 'Instrument.LabelsEntry',
-        keyFieldType: $pb.PbFieldType.OS,
-        valueFieldType: $pb.PbFieldType.OS,
-        packageName: const $pb.PackageName('qomet.agora.daemons.prtagent.v1'))
-    ..pPS(104, _omitFieldNames ? '' : 'tags')
-    ..m<$core.String, $core.String>(105, _omitFieldNames ? '' : 'metadata',
-        entryClassName: 'Instrument.MetadataEntry',
-        keyFieldType: $pb.PbFieldType.OS,
-        valueFieldType: $pb.PbFieldType.OS,
-        packageName: const $pb.PackageName('qomet.agora.daemons.prtagent.v1'))
-    ..hasRequiredFields = false;
-
-  @$core.Deprecated('See https://github.com/google/protobuf.dart/issues/998.')
-  Instrument clone() => Instrument()..mergeFromMessage(this);
-  @$core.Deprecated('See https://github.com/google/protobuf.dart/issues/998.')
-  Instrument copyWith(void Function(Instrument) updates) =>
-      super.copyWith((message) => updates(message as Instrument)) as Instrument;
-
-  @$core.override
-  $pb.BuilderInfo get info_ => _i;
-
-  @$core.pragma('dart2js:noInline')
-  static Instrument create() => Instrument._();
-  @$core.override
-  Instrument createEmptyInstance() => create();
-  static $pb.PbList<Instrument> createRepeated() => $pb.PbList<Instrument>();
-  @$core.pragma('dart2js:noInline')
-  static Instrument getDefault() => _defaultInstance ??=
-      $pb.GeneratedMessage.$_defaultFor<Instrument>(create);
-  static Instrument? _defaultInstance;
-
-  Instrument_Asset whichAsset() => _Instrument_AssetByTag[$_whichOneof(0)]!;
-  void clearAsset() => $_clearField($_whichOneof(0));
-
-  @$pb.TagNumber(1)
-  $core.String get iid => $_getSZ(0);
-  @$pb.TagNumber(1)
-  set iid($core.String value) => $_setString(0, value);
-  @$pb.TagNumber(1)
-  $core.bool hasIid() => $_has(0);
-  @$pb.TagNumber(1)
-  void clearIid() => $_clearField(1);
-
-  @$pb.TagNumber(2)
-  $pb.PbList<FinIdentifier> get identifiers => $_getList(1);
-
-  @$pb.TagNumber(3)
-  InstrumentCfiC1ClassEnum get cfiC1Class => $_getN(2);
-  @$pb.TagNumber(3)
-  set cfiC1Class(InstrumentCfiC1ClassEnum value) => $_setField(3, value);
-  @$pb.TagNumber(3)
-  $core.bool hasCfiC1Class() => $_has(2);
-  @$pb.TagNumber(3)
-  void clearCfiC1Class() => $_clearField(3);
-
-  @$pb.TagNumber(4)
-  InstrumentCfiC2ClassEnum get cfiC2Class => $_getN(3);
-  @$pb.TagNumber(4)
-  set cfiC2Class(InstrumentCfiC2ClassEnum value) => $_setField(4, value);
-  @$pb.TagNumber(4)
-  $core.bool hasCfiC2Class() => $_has(3);
-  @$pb.TagNumber(4)
-  void clearCfiC2Class() => $_clearField(4);
-
-  @$pb.TagNumber(5)
-  $pb.PbList<FinInstrumentClass> get classes => $_getList(4);
-
-  @$pb.TagNumber(6)
-  $0.DateTime get maturityDt => $_getN(5);
-  @$pb.TagNumber(6)
-  set maturityDt($0.DateTime value) => $_setField(6, value);
-  @$pb.TagNumber(6)
-  $core.bool hasMaturityDt() => $_has(5);
-  @$pb.TagNumber(6)
-  void clearMaturityDt() => $_clearField(6);
-  @$pb.TagNumber(6)
-  $0.DateTime ensureMaturityDt() => $_ensure(5);
-
-  @$pb.TagNumber(7)
-  $core.String get assetIid => $_getSZ(6);
-  @$pb.TagNumber(7)
-  set assetIid($core.String value) => $_setString(6, value);
-  @$pb.TagNumber(7)
-  $core.bool hasAssetIid() => $_has(6);
-  @$pb.TagNumber(7)
-  void clearAssetIid() => $_clearField(7);
-
-  @$pb.TagNumber(8)
-  Asset get assetObj => $_getN(7);
-  @$pb.TagNumber(8)
-  set assetObj(Asset value) => $_setField(8, value);
-  @$pb.TagNumber(8)
-  $core.bool hasAssetObj() => $_has(7);
-  @$pb.TagNumber(8)
-  void clearAssetObj() => $_clearField(8);
-  @$pb.TagNumber(8)
-  Asset ensureAssetObj() => $_ensure(7);
-
-  @$pb.TagNumber(9)
-  $0.DateTime get issueDt => $_getN(8);
-  @$pb.TagNumber(9)
-  set issueDt($0.DateTime value) => $_setField(9, value);
-  @$pb.TagNumber(9)
-  $core.bool hasIssueDt() => $_has(8);
-  @$pb.TagNumber(9)
-  void clearIssueDt() => $_clearField(9);
-  @$pb.TagNumber(9)
-  $0.DateTime ensureIssueDt() => $_ensure(8);
-
-  @$pb.TagNumber(10)
-  $pb.PbList<OneOfIdOrParticipant> get issuers => $_getList(9);
-
-  @$pb.TagNumber(11)
-  $core.String get issueCountryCode => $_getSZ(10);
-  @$pb.TagNumber(11)
-  set issueCountryCode($core.String value) => $_setString(10, value);
-  @$pb.TagNumber(11)
-  $core.bool hasIssueCountryCode() => $_has(10);
-  @$pb.TagNumber(11)
-  void clearIssueCountryCode() => $_clearField(11);
-
-  @$pb.TagNumber(12)
-  $core.String get issueCurrency => $_getSZ(11);
-  @$pb.TagNumber(12)
-  set issueCurrency($core.String value) => $_setString(11, value);
-  @$pb.TagNumber(12)
-  $core.bool hasIssueCurrency() => $_has(11);
-  @$pb.TagNumber(12)
-  void clearIssueCurrency() => $_clearField(12);
-
-  @$pb.TagNumber(13)
-  $core.String get issueInitialUnits => $_getSZ(12);
-  @$pb.TagNumber(13)
-  set issueInitialUnits($core.String value) => $_setString(12, value);
-  @$pb.TagNumber(13)
-  $core.bool hasIssueInitialUnits() => $_has(12);
-  @$pb.TagNumber(13)
-  void clearIssueInitialUnits() => $_clearField(13);
-
-  @$pb.TagNumber(14)
-  $core.String get issueDivisibility => $_getSZ(13);
-  @$pb.TagNumber(14)
-  set issueDivisibility($core.String value) => $_setString(13, value);
-  @$pb.TagNumber(14)
-  $core.bool hasIssueDivisibility() => $_has(13);
-  @$pb.TagNumber(14)
-  void clearIssueDivisibility() => $_clearField(14);
-
-  @$pb.TagNumber(15)
-  $core.String get issueInitialAuthorizedUnits => $_getSZ(14);
-  @$pb.TagNumber(15)
-  set issueInitialAuthorizedUnits($core.String value) => $_setString(14, value);
-  @$pb.TagNumber(15)
-  $core.bool hasIssueInitialAuthorizedUnits() => $_has(14);
-  @$pb.TagNumber(15)
-  void clearIssueInitialAuthorizedUnits() => $_clearField(15);
-
-  @$pb.TagNumber(101)
-  $pb.PbMap<$core.String, $core.String> get displayNames => $_getMap(15);
-
-  @$pb.TagNumber(102)
-  $pb.PbMap<$core.String, $core.String> get descriptions => $_getMap(16);
-
-  @$pb.TagNumber(103)
-  $pb.PbMap<$core.String, $core.String> get labels => $_getMap(17);
-
-  @$pb.TagNumber(104)
-  $pb.PbList<$core.String> get tags => $_getList(18);
-
-  @$pb.TagNumber(105)
-  $pb.PbMap<$core.String, $core.String> get metadata => $_getMap(19);
 }
 
 enum InstrumentListing_Instrument { instrumentIid, instrumentObj, notSet }

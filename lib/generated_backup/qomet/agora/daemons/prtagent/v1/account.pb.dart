@@ -1,6 +1,6 @@
 // This is a generated file - do not edit.
 //
-// Generated from qomet/agora/daemons/prtagent/v1/account.proto.
+// Generated from account.proto.
 
 // @dart = 3.3
 
@@ -12,398 +12,28 @@
 
 import 'dart:core' as $core;
 
-import 'package:fixnum/fixnum.dart' as $fixnum;
 import 'package:protobuf/protobuf.dart' as $pb;
 
-import 'account.pbenum.dart';
 import 'common.pb.dart' as $1;
+import 'filter.pb.dart' as $3;
+import 'fin_common.pb.dart' as $2;
 
 export 'package:protobuf/protobuf.dart' show GeneratedMessageGenericExtensions;
 
-export 'account.pbenum.dart';
-
-class Account extends $pb.GeneratedMessage {
-  factory Account({
-    $core.String? id,
-    $core.String? externalId,
-    $core.String? metadata,
-  }) {
-    final result = create();
-    if (id != null) result.id = id;
-    if (externalId != null) result.externalId = externalId;
-    if (metadata != null) result.metadata = metadata;
-    return result;
-  }
-
-  Account._();
-
-  factory Account.fromBuffer($core.List<$core.int> data,
-          [$pb.ExtensionRegistry registry = $pb.ExtensionRegistry.EMPTY]) =>
-      create()..mergeFromBuffer(data, registry);
-  factory Account.fromJson($core.String json,
-          [$pb.ExtensionRegistry registry = $pb.ExtensionRegistry.EMPTY]) =>
-      create()..mergeFromJson(json, registry);
-
-  static final $pb.BuilderInfo _i = $pb.BuilderInfo(
-      _omitMessageNames ? '' : 'Account',
-      package: const $pb.PackageName(
-          _omitMessageNames ? '' : 'qomet.agora.daemons.prtagent.v1'),
-      createEmptyInstance: create)
-    ..aOS(1, _omitFieldNames ? '' : 'id')
-    ..aOS(2, _omitFieldNames ? '' : 'externalId')
-    ..aOS(3, _omitFieldNames ? '' : 'metadata')
-    ..hasRequiredFields = false;
-
-  @$core.Deprecated('See https://github.com/google/protobuf.dart/issues/998.')
-  Account clone() => Account()..mergeFromMessage(this);
-  @$core.Deprecated('See https://github.com/google/protobuf.dart/issues/998.')
-  Account copyWith(void Function(Account) updates) =>
-      super.copyWith((message) => updates(message as Account)) as Account;
-
-  @$core.override
-  $pb.BuilderInfo get info_ => _i;
-
-  @$core.pragma('dart2js:noInline')
-  static Account create() => Account._();
-  @$core.override
-  Account createEmptyInstance() => create();
-  static $pb.PbList<Account> createRepeated() => $pb.PbList<Account>();
-  @$core.pragma('dart2js:noInline')
-  static Account getDefault() =>
-      _defaultInstance ??= $pb.GeneratedMessage.$_defaultFor<Account>(create);
-  static Account? _defaultInstance;
-
-  @$pb.TagNumber(1)
-  $core.String get id => $_getSZ(0);
-  @$pb.TagNumber(1)
-  set id($core.String value) => $_setString(0, value);
-  @$pb.TagNumber(1)
-  $core.bool hasId() => $_has(0);
-  @$pb.TagNumber(1)
-  void clearId() => $_clearField(1);
-
-  @$pb.TagNumber(2)
-  $core.String get externalId => $_getSZ(1);
-  @$pb.TagNumber(2)
-  set externalId($core.String value) => $_setString(1, value);
-  @$pb.TagNumber(2)
-  $core.bool hasExternalId() => $_has(1);
-  @$pb.TagNumber(2)
-  void clearExternalId() => $_clearField(2);
-
-  @$pb.TagNumber(3)
-  $core.String get metadata => $_getSZ(2);
-  @$pb.TagNumber(3)
-  set metadata($core.String value) => $_setString(2, value);
-  @$pb.TagNumber(3)
-  $core.bool hasMetadata() => $_has(2);
-  @$pb.TagNumber(3)
-  void clearMetadata() => $_clearField(3);
-}
-
-class NewAccountRequest extends $pb.GeneratedMessage {
-  factory NewAccountRequest({
-    $core.String? refRequestId,
-    $core.String? externalAccountId,
-    $core.String? auxData,
-  }) {
-    final result = create();
-    if (refRequestId != null) result.refRequestId = refRequestId;
-    if (externalAccountId != null) result.externalAccountId = externalAccountId;
-    if (auxData != null) result.auxData = auxData;
-    return result;
-  }
-
-  NewAccountRequest._();
-
-  factory NewAccountRequest.fromBuffer($core.List<$core.int> data,
-          [$pb.ExtensionRegistry registry = $pb.ExtensionRegistry.EMPTY]) =>
-      create()..mergeFromBuffer(data, registry);
-  factory NewAccountRequest.fromJson($core.String json,
-          [$pb.ExtensionRegistry registry = $pb.ExtensionRegistry.EMPTY]) =>
-      create()..mergeFromJson(json, registry);
-
-  static final $pb.BuilderInfo _i = $pb.BuilderInfo(
-      _omitMessageNames ? '' : 'NewAccountRequest',
-      package: const $pb.PackageName(
-          _omitMessageNames ? '' : 'qomet.agora.daemons.prtagent.v1'),
-      createEmptyInstance: create)
-    ..aOS(1, _omitFieldNames ? '' : 'refRequestId')
-    ..aOS(2, _omitFieldNames ? '' : 'externalAccountId')
-    ..aOS(3, _omitFieldNames ? '' : 'auxData')
-    ..hasRequiredFields = false;
-
-  @$core.Deprecated('See https://github.com/google/protobuf.dart/issues/998.')
-  NewAccountRequest clone() => NewAccountRequest()..mergeFromMessage(this);
-  @$core.Deprecated('See https://github.com/google/protobuf.dart/issues/998.')
-  NewAccountRequest copyWith(void Function(NewAccountRequest) updates) =>
-      super.copyWith((message) => updates(message as NewAccountRequest))
-          as NewAccountRequest;
-
-  @$core.override
-  $pb.BuilderInfo get info_ => _i;
-
-  @$core.pragma('dart2js:noInline')
-  static NewAccountRequest create() => NewAccountRequest._();
-  @$core.override
-  NewAccountRequest createEmptyInstance() => create();
-  static $pb.PbList<NewAccountRequest> createRepeated() =>
-      $pb.PbList<NewAccountRequest>();
-  @$core.pragma('dart2js:noInline')
-  static NewAccountRequest getDefault() => _defaultInstance ??=
-      $pb.GeneratedMessage.$_defaultFor<NewAccountRequest>(create);
-  static NewAccountRequest? _defaultInstance;
-
-  @$pb.TagNumber(1)
-  $core.String get refRequestId => $_getSZ(0);
-  @$pb.TagNumber(1)
-  set refRequestId($core.String value) => $_setString(0, value);
-  @$pb.TagNumber(1)
-  $core.bool hasRefRequestId() => $_has(0);
-  @$pb.TagNumber(1)
-  void clearRefRequestId() => $_clearField(1);
-
-  @$pb.TagNumber(2)
-  $core.String get externalAccountId => $_getSZ(1);
-  @$pb.TagNumber(2)
-  set externalAccountId($core.String value) => $_setString(1, value);
-  @$pb.TagNumber(2)
-  $core.bool hasExternalAccountId() => $_has(1);
-  @$pb.TagNumber(2)
-  void clearExternalAccountId() => $_clearField(2);
-
-  @$pb.TagNumber(3)
-  $core.String get auxData => $_getSZ(2);
-  @$pb.TagNumber(3)
-  set auxData($core.String value) => $_setString(2, value);
-  @$pb.TagNumber(3)
-  $core.bool hasAuxData() => $_has(2);
-  @$pb.TagNumber(3)
-  void clearAuxData() => $_clearField(3);
-}
-
-class NewAccountResponse extends $pb.GeneratedMessage {
-  factory NewAccountResponse({
-    $core.String? refRequestId,
-    $core.String? newAccountId,
-  }) {
-    final result = create();
-    if (refRequestId != null) result.refRequestId = refRequestId;
-    if (newAccountId != null) result.newAccountId = newAccountId;
-    return result;
-  }
-
-  NewAccountResponse._();
-
-  factory NewAccountResponse.fromBuffer($core.List<$core.int> data,
-          [$pb.ExtensionRegistry registry = $pb.ExtensionRegistry.EMPTY]) =>
-      create()..mergeFromBuffer(data, registry);
-  factory NewAccountResponse.fromJson($core.String json,
-          [$pb.ExtensionRegistry registry = $pb.ExtensionRegistry.EMPTY]) =>
-      create()..mergeFromJson(json, registry);
-
-  static final $pb.BuilderInfo _i = $pb.BuilderInfo(
-      _omitMessageNames ? '' : 'NewAccountResponse',
-      package: const $pb.PackageName(
-          _omitMessageNames ? '' : 'qomet.agora.daemons.prtagent.v1'),
-      createEmptyInstance: create)
-    ..aOS(1, _omitFieldNames ? '' : 'refRequestId')
-    ..aOS(2, _omitFieldNames ? '' : 'newAccountId')
-    ..hasRequiredFields = false;
-
-  @$core.Deprecated('See https://github.com/google/protobuf.dart/issues/998.')
-  NewAccountResponse clone() => NewAccountResponse()..mergeFromMessage(this);
-  @$core.Deprecated('See https://github.com/google/protobuf.dart/issues/998.')
-  NewAccountResponse copyWith(void Function(NewAccountResponse) updates) =>
-      super.copyWith((message) => updates(message as NewAccountResponse))
-          as NewAccountResponse;
-
-  @$core.override
-  $pb.BuilderInfo get info_ => _i;
-
-  @$core.pragma('dart2js:noInline')
-  static NewAccountResponse create() => NewAccountResponse._();
-  @$core.override
-  NewAccountResponse createEmptyInstance() => create();
-  static $pb.PbList<NewAccountResponse> createRepeated() =>
-      $pb.PbList<NewAccountResponse>();
-  @$core.pragma('dart2js:noInline')
-  static NewAccountResponse getDefault() => _defaultInstance ??=
-      $pb.GeneratedMessage.$_defaultFor<NewAccountResponse>(create);
-  static NewAccountResponse? _defaultInstance;
-
-  @$pb.TagNumber(1)
-  $core.String get refRequestId => $_getSZ(0);
-  @$pb.TagNumber(1)
-  set refRequestId($core.String value) => $_setString(0, value);
-  @$pb.TagNumber(1)
-  $core.bool hasRefRequestId() => $_has(0);
-  @$pb.TagNumber(1)
-  void clearRefRequestId() => $_clearField(1);
-
-  @$pb.TagNumber(2)
-  $core.String get newAccountId => $_getSZ(1);
-  @$pb.TagNumber(2)
-  set newAccountId($core.String value) => $_setString(1, value);
-  @$pb.TagNumber(2)
-  $core.bool hasNewAccountId() => $_has(1);
-  @$pb.TagNumber(2)
-  void clearNewAccountId() => $_clearField(2);
-}
-
-class GetAccountInfoRequest extends $pb.GeneratedMessage {
-  factory GetAccountInfoRequest({
-    $core.String? refRequestId,
-    $core.String? accountId,
-  }) {
-    final result = create();
-    if (refRequestId != null) result.refRequestId = refRequestId;
-    if (accountId != null) result.accountId = accountId;
-    return result;
-  }
-
-  GetAccountInfoRequest._();
-
-  factory GetAccountInfoRequest.fromBuffer($core.List<$core.int> data,
-          [$pb.ExtensionRegistry registry = $pb.ExtensionRegistry.EMPTY]) =>
-      create()..mergeFromBuffer(data, registry);
-  factory GetAccountInfoRequest.fromJson($core.String json,
-          [$pb.ExtensionRegistry registry = $pb.ExtensionRegistry.EMPTY]) =>
-      create()..mergeFromJson(json, registry);
-
-  static final $pb.BuilderInfo _i = $pb.BuilderInfo(
-      _omitMessageNames ? '' : 'GetAccountInfoRequest',
-      package: const $pb.PackageName(
-          _omitMessageNames ? '' : 'qomet.agora.daemons.prtagent.v1'),
-      createEmptyInstance: create)
-    ..aOS(1, _omitFieldNames ? '' : 'refRequestId')
-    ..aOS(2, _omitFieldNames ? '' : 'accountId')
-    ..hasRequiredFields = false;
-
-  @$core.Deprecated('See https://github.com/google/protobuf.dart/issues/998.')
-  GetAccountInfoRequest clone() =>
-      GetAccountInfoRequest()..mergeFromMessage(this);
-  @$core.Deprecated('See https://github.com/google/protobuf.dart/issues/998.')
-  GetAccountInfoRequest copyWith(
-          void Function(GetAccountInfoRequest) updates) =>
-      super.copyWith((message) => updates(message as GetAccountInfoRequest))
-          as GetAccountInfoRequest;
-
-  @$core.override
-  $pb.BuilderInfo get info_ => _i;
-
-  @$core.pragma('dart2js:noInline')
-  static GetAccountInfoRequest create() => GetAccountInfoRequest._();
-  @$core.override
-  GetAccountInfoRequest createEmptyInstance() => create();
-  static $pb.PbList<GetAccountInfoRequest> createRepeated() =>
-      $pb.PbList<GetAccountInfoRequest>();
-  @$core.pragma('dart2js:noInline')
-  static GetAccountInfoRequest getDefault() => _defaultInstance ??=
-      $pb.GeneratedMessage.$_defaultFor<GetAccountInfoRequest>(create);
-  static GetAccountInfoRequest? _defaultInstance;
-
-  @$pb.TagNumber(1)
-  $core.String get refRequestId => $_getSZ(0);
-  @$pb.TagNumber(1)
-  set refRequestId($core.String value) => $_setString(0, value);
-  @$pb.TagNumber(1)
-  $core.bool hasRefRequestId() => $_has(0);
-  @$pb.TagNumber(1)
-  void clearRefRequestId() => $_clearField(1);
-
-  @$pb.TagNumber(2)
-  $core.String get accountId => $_getSZ(1);
-  @$pb.TagNumber(2)
-  set accountId($core.String value) => $_setString(1, value);
-  @$pb.TagNumber(2)
-  $core.bool hasAccountId() => $_has(1);
-  @$pb.TagNumber(2)
-  void clearAccountId() => $_clearField(2);
-}
-
-class GetAccountInfoResponse extends $pb.GeneratedMessage {
-  factory GetAccountInfoResponse({
-    $core.String? refRequestId,
-    Account? account,
-  }) {
-    final result = create();
-    if (refRequestId != null) result.refRequestId = refRequestId;
-    if (account != null) result.account = account;
-    return result;
-  }
-
-  GetAccountInfoResponse._();
-
-  factory GetAccountInfoResponse.fromBuffer($core.List<$core.int> data,
-          [$pb.ExtensionRegistry registry = $pb.ExtensionRegistry.EMPTY]) =>
-      create()..mergeFromBuffer(data, registry);
-  factory GetAccountInfoResponse.fromJson($core.String json,
-          [$pb.ExtensionRegistry registry = $pb.ExtensionRegistry.EMPTY]) =>
-      create()..mergeFromJson(json, registry);
-
-  static final $pb.BuilderInfo _i = $pb.BuilderInfo(
-      _omitMessageNames ? '' : 'GetAccountInfoResponse',
-      package: const $pb.PackageName(
-          _omitMessageNames ? '' : 'qomet.agora.daemons.prtagent.v1'),
-      createEmptyInstance: create)
-    ..aOS(1, _omitFieldNames ? '' : 'refRequestId')
-    ..aOM<Account>(2, _omitFieldNames ? '' : 'account',
-        subBuilder: Account.create)
-    ..hasRequiredFields = false;
-
-  @$core.Deprecated('See https://github.com/google/protobuf.dart/issues/998.')
-  GetAccountInfoResponse clone() =>
-      GetAccountInfoResponse()..mergeFromMessage(this);
-  @$core.Deprecated('See https://github.com/google/protobuf.dart/issues/998.')
-  GetAccountInfoResponse copyWith(
-          void Function(GetAccountInfoResponse) updates) =>
-      super.copyWith((message) => updates(message as GetAccountInfoResponse))
-          as GetAccountInfoResponse;
-
-  @$core.override
-  $pb.BuilderInfo get info_ => _i;
-
-  @$core.pragma('dart2js:noInline')
-  static GetAccountInfoResponse create() => GetAccountInfoResponse._();
-  @$core.override
-  GetAccountInfoResponse createEmptyInstance() => create();
-  static $pb.PbList<GetAccountInfoResponse> createRepeated() =>
-      $pb.PbList<GetAccountInfoResponse>();
-  @$core.pragma('dart2js:noInline')
-  static GetAccountInfoResponse getDefault() => _defaultInstance ??=
-      $pb.GeneratedMessage.$_defaultFor<GetAccountInfoResponse>(create);
-  static GetAccountInfoResponse? _defaultInstance;
-
-  @$pb.TagNumber(1)
-  $core.String get refRequestId => $_getSZ(0);
-  @$pb.TagNumber(1)
-  set refRequestId($core.String value) => $_setString(0, value);
-  @$pb.TagNumber(1)
-  $core.bool hasRefRequestId() => $_has(0);
-  @$pb.TagNumber(1)
-  void clearRefRequestId() => $_clearField(1);
-
-  @$pb.TagNumber(2)
-  Account get account => $_getN(1);
-  @$pb.TagNumber(2)
-  set account(Account value) => $_setField(2, value);
-  @$pb.TagNumber(2)
-  $core.bool hasAccount() => $_has(1);
-  @$pb.TagNumber(2)
-  void clearAccount() => $_clearField(2);
-  @$pb.TagNumber(2)
-  Account ensureAccount() => $_ensure(1);
-}
-
 class GetAccountListRequest extends $pb.GeneratedMessage {
   factory GetAccountListRequest({
-    $core.String? refRequestId,
+    $core.String? proposedExecutionId,
     $1.PaginationParams? pagination,
+    $core.String? accountIidOrExternalIdRegex,
+    $core.Iterable<$core.MapEntry<$core.String, $core.String>>? auxData,
   }) {
     final result = create();
-    if (refRequestId != null) result.refRequestId = refRequestId;
+    if (proposedExecutionId != null)
+      result.proposedExecutionId = proposedExecutionId;
     if (pagination != null) result.pagination = pagination;
+    if (accountIidOrExternalIdRegex != null)
+      result.accountIidOrExternalIdRegex = accountIidOrExternalIdRegex;
+    if (auxData != null) result.auxData.addEntries(auxData);
     return result;
   }
 
@@ -421,9 +51,15 @@ class GetAccountListRequest extends $pb.GeneratedMessage {
       package: const $pb.PackageName(
           _omitMessageNames ? '' : 'qomet.agora.daemons.prtagent.v1'),
       createEmptyInstance: create)
-    ..aOS(1, _omitFieldNames ? '' : 'refRequestId')
+    ..aOS(1, _omitFieldNames ? '' : 'proposedExecutionId')
     ..aOM<$1.PaginationParams>(2, _omitFieldNames ? '' : 'pagination',
         subBuilder: $1.PaginationParams.create)
+    ..aOS(3, _omitFieldNames ? '' : 'accountIidOrExternalIdRegex')
+    ..m<$core.String, $core.String>(105, _omitFieldNames ? '' : 'auxData',
+        entryClassName: 'GetAccountListRequest.AuxDataEntry',
+        keyFieldType: $pb.PbFieldType.OS,
+        valueFieldType: $pb.PbFieldType.OS,
+        packageName: const $pb.PackageName('qomet.agora.daemons.prtagent.v1'))
     ..hasRequiredFields = false;
 
   @$core.Deprecated('See https://github.com/google/protobuf.dart/issues/998.')
@@ -450,13 +86,13 @@ class GetAccountListRequest extends $pb.GeneratedMessage {
   static GetAccountListRequest? _defaultInstance;
 
   @$pb.TagNumber(1)
-  $core.String get refRequestId => $_getSZ(0);
+  $core.String get proposedExecutionId => $_getSZ(0);
   @$pb.TagNumber(1)
-  set refRequestId($core.String value) => $_setString(0, value);
+  set proposedExecutionId($core.String value) => $_setString(0, value);
   @$pb.TagNumber(1)
-  $core.bool hasRefRequestId() => $_has(0);
+  $core.bool hasProposedExecutionId() => $_has(0);
   @$pb.TagNumber(1)
-  void clearRefRequestId() => $_clearField(1);
+  void clearProposedExecutionId() => $_clearField(1);
 
   @$pb.TagNumber(2)
   $1.PaginationParams get pagination => $_getN(1);
@@ -468,18 +104,32 @@ class GetAccountListRequest extends $pb.GeneratedMessage {
   void clearPagination() => $_clearField(2);
   @$pb.TagNumber(2)
   $1.PaginationParams ensurePagination() => $_ensure(1);
+
+  @$pb.TagNumber(3)
+  $core.String get accountIidOrExternalIdRegex => $_getSZ(2);
+  @$pb.TagNumber(3)
+  set accountIidOrExternalIdRegex($core.String value) => $_setString(2, value);
+  @$pb.TagNumber(3)
+  $core.bool hasAccountIidOrExternalIdRegex() => $_has(2);
+  @$pb.TagNumber(3)
+  void clearAccountIidOrExternalIdRegex() => $_clearField(3);
+
+  @$pb.TagNumber(105)
+  $pb.PbMap<$core.String, $core.String> get auxData => $_getMap(3);
 }
 
 class GetAccountListResponse extends $pb.GeneratedMessage {
   factory GetAccountListResponse({
-    $core.String? refRequestId,
+    $core.String? refExecutionId,
     $1.PaginationInfo? paginationInfo,
-    $core.Iterable<Account>? accounts,
+    $core.Iterable<$2.Account>? accounts,
+    $core.Iterable<$core.MapEntry<$core.String, $core.String>>? metadata,
   }) {
     final result = create();
-    if (refRequestId != null) result.refRequestId = refRequestId;
+    if (refExecutionId != null) result.refExecutionId = refExecutionId;
     if (paginationInfo != null) result.paginationInfo = paginationInfo;
     if (accounts != null) result.accounts.addAll(accounts);
+    if (metadata != null) result.metadata.addEntries(metadata);
     return result;
   }
 
@@ -497,11 +147,16 @@ class GetAccountListResponse extends $pb.GeneratedMessage {
       package: const $pb.PackageName(
           _omitMessageNames ? '' : 'qomet.agora.daemons.prtagent.v1'),
       createEmptyInstance: create)
-    ..aOS(1, _omitFieldNames ? '' : 'refRequestId')
+    ..aOS(1, _omitFieldNames ? '' : 'refExecutionId')
     ..aOM<$1.PaginationInfo>(2, _omitFieldNames ? '' : 'paginationInfo',
         subBuilder: $1.PaginationInfo.create)
-    ..pc<Account>(3, _omitFieldNames ? '' : 'accounts', $pb.PbFieldType.PM,
-        subBuilder: Account.create)
+    ..pc<$2.Account>(3, _omitFieldNames ? '' : 'accounts', $pb.PbFieldType.PM,
+        subBuilder: $2.Account.create)
+    ..m<$core.String, $core.String>(105, _omitFieldNames ? '' : 'metadata',
+        entryClassName: 'GetAccountListResponse.MetadataEntry',
+        keyFieldType: $pb.PbFieldType.OS,
+        valueFieldType: $pb.PbFieldType.OS,
+        packageName: const $pb.PackageName('qomet.agora.daemons.prtagent.v1'))
     ..hasRequiredFields = false;
 
   @$core.Deprecated('See https://github.com/google/protobuf.dart/issues/998.')
@@ -528,13 +183,13 @@ class GetAccountListResponse extends $pb.GeneratedMessage {
   static GetAccountListResponse? _defaultInstance;
 
   @$pb.TagNumber(1)
-  $core.String get refRequestId => $_getSZ(0);
+  $core.String get refExecutionId => $_getSZ(0);
   @$pb.TagNumber(1)
-  set refRequestId($core.String value) => $_setString(0, value);
+  set refExecutionId($core.String value) => $_setString(0, value);
   @$pb.TagNumber(1)
-  $core.bool hasRefRequestId() => $_has(0);
+  $core.bool hasRefExecutionId() => $_has(0);
   @$pb.TagNumber(1)
-  void clearRefRequestId() => $_clearField(1);
+  void clearRefExecutionId() => $_clearField(1);
 
   @$pb.TagNumber(2)
   $1.PaginationInfo get paginationInfo => $_getN(1);
@@ -548,419 +203,729 @@ class GetAccountListResponse extends $pb.GeneratedMessage {
   $1.PaginationInfo ensurePaginationInfo() => $_ensure(1);
 
   @$pb.TagNumber(3)
-  $pb.PbList<Account> get accounts => $_getList(2);
+  $pb.PbList<$2.Account> get accounts => $_getList(2);
+
+  @$pb.TagNumber(105)
+  $pb.PbMap<$core.String, $core.String> get metadata => $_getMap(3);
 }
 
-class EnableMarketForAccountRequest extends $pb.GeneratedMessage {
-  factory EnableMarketForAccountRequest({
-    $core.String? refRequestId,
-    $core.String? accountId,
-    $core.String? marketId,
-    $core.String? auxData,
+class GetAccountInfoBatchRequest extends $pb.GeneratedMessage {
+  factory GetAccountInfoBatchRequest({
+    $core.String? proposedExecutionId,
+    $core.Iterable<$core.String>? accountIids,
+    $core.Iterable<$core.MapEntry<$core.String, $core.String>>? auxData,
   }) {
     final result = create();
-    if (refRequestId != null) result.refRequestId = refRequestId;
-    if (accountId != null) result.accountId = accountId;
-    if (marketId != null) result.marketId = marketId;
-    if (auxData != null) result.auxData = auxData;
+    if (proposedExecutionId != null)
+      result.proposedExecutionId = proposedExecutionId;
+    if (accountIids != null) result.accountIids.addAll(accountIids);
+    if (auxData != null) result.auxData.addEntries(auxData);
     return result;
   }
 
-  EnableMarketForAccountRequest._();
+  GetAccountInfoBatchRequest._();
 
-  factory EnableMarketForAccountRequest.fromBuffer($core.List<$core.int> data,
+  factory GetAccountInfoBatchRequest.fromBuffer($core.List<$core.int> data,
           [$pb.ExtensionRegistry registry = $pb.ExtensionRegistry.EMPTY]) =>
       create()..mergeFromBuffer(data, registry);
-  factory EnableMarketForAccountRequest.fromJson($core.String json,
+  factory GetAccountInfoBatchRequest.fromJson($core.String json,
           [$pb.ExtensionRegistry registry = $pb.ExtensionRegistry.EMPTY]) =>
       create()..mergeFromJson(json, registry);
 
   static final $pb.BuilderInfo _i = $pb.BuilderInfo(
-      _omitMessageNames ? '' : 'EnableMarketForAccountRequest',
+      _omitMessageNames ? '' : 'GetAccountInfoBatchRequest',
       package: const $pb.PackageName(
           _omitMessageNames ? '' : 'qomet.agora.daemons.prtagent.v1'),
       createEmptyInstance: create)
-    ..aOS(1, _omitFieldNames ? '' : 'refRequestId')
-    ..aOS(2, _omitFieldNames ? '' : 'accountId')
-    ..aOS(3, _omitFieldNames ? '' : 'marketId')
-    ..aOS(4, _omitFieldNames ? '' : 'auxData')
-    ..hasRequiredFields = false;
-
-  @$core.Deprecated('See https://github.com/google/protobuf.dart/issues/998.')
-  EnableMarketForAccountRequest clone() =>
-      EnableMarketForAccountRequest()..mergeFromMessage(this);
-  @$core.Deprecated('See https://github.com/google/protobuf.dart/issues/998.')
-  EnableMarketForAccountRequest copyWith(
-          void Function(EnableMarketForAccountRequest) updates) =>
-      super.copyWith(
-              (message) => updates(message as EnableMarketForAccountRequest))
-          as EnableMarketForAccountRequest;
-
-  @$core.override
-  $pb.BuilderInfo get info_ => _i;
-
-  @$core.pragma('dart2js:noInline')
-  static EnableMarketForAccountRequest create() =>
-      EnableMarketForAccountRequest._();
-  @$core.override
-  EnableMarketForAccountRequest createEmptyInstance() => create();
-  static $pb.PbList<EnableMarketForAccountRequest> createRepeated() =>
-      $pb.PbList<EnableMarketForAccountRequest>();
-  @$core.pragma('dart2js:noInline')
-  static EnableMarketForAccountRequest getDefault() => _defaultInstance ??=
-      $pb.GeneratedMessage.$_defaultFor<EnableMarketForAccountRequest>(create);
-  static EnableMarketForAccountRequest? _defaultInstance;
-
-  @$pb.TagNumber(1)
-  $core.String get refRequestId => $_getSZ(0);
-  @$pb.TagNumber(1)
-  set refRequestId($core.String value) => $_setString(0, value);
-  @$pb.TagNumber(1)
-  $core.bool hasRefRequestId() => $_has(0);
-  @$pb.TagNumber(1)
-  void clearRefRequestId() => $_clearField(1);
-
-  @$pb.TagNumber(2)
-  $core.String get accountId => $_getSZ(1);
-  @$pb.TagNumber(2)
-  set accountId($core.String value) => $_setString(1, value);
-  @$pb.TagNumber(2)
-  $core.bool hasAccountId() => $_has(1);
-  @$pb.TagNumber(2)
-  void clearAccountId() => $_clearField(2);
-
-  @$pb.TagNumber(3)
-  $core.String get marketId => $_getSZ(2);
-  @$pb.TagNumber(3)
-  set marketId($core.String value) => $_setString(2, value);
-  @$pb.TagNumber(3)
-  $core.bool hasMarketId() => $_has(2);
-  @$pb.TagNumber(3)
-  void clearMarketId() => $_clearField(3);
-
-  @$pb.TagNumber(4)
-  $core.String get auxData => $_getSZ(3);
-  @$pb.TagNumber(4)
-  set auxData($core.String value) => $_setString(3, value);
-  @$pb.TagNumber(4)
-  $core.bool hasAuxData() => $_has(3);
-  @$pb.TagNumber(4)
-  void clearAuxData() => $_clearField(4);
-}
-
-class EnableMarketForAccountResponse extends $pb.GeneratedMessage {
-  factory EnableMarketForAccountResponse({
-    $core.String? refRequestId,
-  }) {
-    final result = create();
-    if (refRequestId != null) result.refRequestId = refRequestId;
-    return result;
-  }
-
-  EnableMarketForAccountResponse._();
-
-  factory EnableMarketForAccountResponse.fromBuffer($core.List<$core.int> data,
-          [$pb.ExtensionRegistry registry = $pb.ExtensionRegistry.EMPTY]) =>
-      create()..mergeFromBuffer(data, registry);
-  factory EnableMarketForAccountResponse.fromJson($core.String json,
-          [$pb.ExtensionRegistry registry = $pb.ExtensionRegistry.EMPTY]) =>
-      create()..mergeFromJson(json, registry);
-
-  static final $pb.BuilderInfo _i = $pb.BuilderInfo(
-      _omitMessageNames ? '' : 'EnableMarketForAccountResponse',
-      package: const $pb.PackageName(
-          _omitMessageNames ? '' : 'qomet.agora.daemons.prtagent.v1'),
-      createEmptyInstance: create)
-    ..aOS(1, _omitFieldNames ? '' : 'refRequestId')
-    ..hasRequiredFields = false;
-
-  @$core.Deprecated('See https://github.com/google/protobuf.dart/issues/998.')
-  EnableMarketForAccountResponse clone() =>
-      EnableMarketForAccountResponse()..mergeFromMessage(this);
-  @$core.Deprecated('See https://github.com/google/protobuf.dart/issues/998.')
-  EnableMarketForAccountResponse copyWith(
-          void Function(EnableMarketForAccountResponse) updates) =>
-      super.copyWith(
-              (message) => updates(message as EnableMarketForAccountResponse))
-          as EnableMarketForAccountResponse;
-
-  @$core.override
-  $pb.BuilderInfo get info_ => _i;
-
-  @$core.pragma('dart2js:noInline')
-  static EnableMarketForAccountResponse create() =>
-      EnableMarketForAccountResponse._();
-  @$core.override
-  EnableMarketForAccountResponse createEmptyInstance() => create();
-  static $pb.PbList<EnableMarketForAccountResponse> createRepeated() =>
-      $pb.PbList<EnableMarketForAccountResponse>();
-  @$core.pragma('dart2js:noInline')
-  static EnableMarketForAccountResponse getDefault() => _defaultInstance ??=
-      $pb.GeneratedMessage.$_defaultFor<EnableMarketForAccountResponse>(create);
-  static EnableMarketForAccountResponse? _defaultInstance;
-
-  @$pb.TagNumber(1)
-  $core.String get refRequestId => $_getSZ(0);
-  @$pb.TagNumber(1)
-  set refRequestId($core.String value) => $_setString(0, value);
-  @$pb.TagNumber(1)
-  $core.bool hasRefRequestId() => $_has(0);
-  @$pb.TagNumber(1)
-  void clearRefRequestId() => $_clearField(1);
-}
-
-class AssetHoldings extends $pb.GeneratedMessage {
-  factory AssetHoldings({
-    $core.Iterable<$core.MapEntry<$core.String, $fixnum.Int64>>? balances,
-  }) {
-    final result = create();
-    if (balances != null) result.balances.addEntries(balances);
-    return result;
-  }
-
-  AssetHoldings._();
-
-  factory AssetHoldings.fromBuffer($core.List<$core.int> data,
-          [$pb.ExtensionRegistry registry = $pb.ExtensionRegistry.EMPTY]) =>
-      create()..mergeFromBuffer(data, registry);
-  factory AssetHoldings.fromJson($core.String json,
-          [$pb.ExtensionRegistry registry = $pb.ExtensionRegistry.EMPTY]) =>
-      create()..mergeFromJson(json, registry);
-
-  static final $pb.BuilderInfo _i = $pb.BuilderInfo(
-      _omitMessageNames ? '' : 'AssetHoldings',
-      package: const $pb.PackageName(
-          _omitMessageNames ? '' : 'qomet.agora.daemons.prtagent.v1'),
-      createEmptyInstance: create)
-    ..m<$core.String, $fixnum.Int64>(1, _omitFieldNames ? '' : 'balances',
-        entryClassName: 'AssetHoldings.BalancesEntry',
+    ..aOS(1, _omitFieldNames ? '' : 'proposedExecutionId')
+    ..pPS(2, _omitFieldNames ? '' : 'accountIids')
+    ..m<$core.String, $core.String>(105, _omitFieldNames ? '' : 'auxData',
+        entryClassName: 'GetAccountInfoBatchRequest.AuxDataEntry',
         keyFieldType: $pb.PbFieldType.OS,
-        valueFieldType: $pb.PbFieldType.O6,
+        valueFieldType: $pb.PbFieldType.OS,
         packageName: const $pb.PackageName('qomet.agora.daemons.prtagent.v1'))
     ..hasRequiredFields = false;
 
   @$core.Deprecated('See https://github.com/google/protobuf.dart/issues/998.')
-  AssetHoldings clone() => AssetHoldings()..mergeFromMessage(this);
+  GetAccountInfoBatchRequest clone() =>
+      GetAccountInfoBatchRequest()..mergeFromMessage(this);
   @$core.Deprecated('See https://github.com/google/protobuf.dart/issues/998.')
-  AssetHoldings copyWith(void Function(AssetHoldings) updates) =>
-      super.copyWith((message) => updates(message as AssetHoldings))
-          as AssetHoldings;
+  GetAccountInfoBatchRequest copyWith(
+          void Function(GetAccountInfoBatchRequest) updates) =>
+      super.copyWith(
+              (message) => updates(message as GetAccountInfoBatchRequest))
+          as GetAccountInfoBatchRequest;
 
   @$core.override
   $pb.BuilderInfo get info_ => _i;
 
   @$core.pragma('dart2js:noInline')
-  static AssetHoldings create() => AssetHoldings._();
+  static GetAccountInfoBatchRequest create() => GetAccountInfoBatchRequest._();
   @$core.override
-  AssetHoldings createEmptyInstance() => create();
-  static $pb.PbList<AssetHoldings> createRepeated() =>
-      $pb.PbList<AssetHoldings>();
+  GetAccountInfoBatchRequest createEmptyInstance() => create();
+  static $pb.PbList<GetAccountInfoBatchRequest> createRepeated() =>
+      $pb.PbList<GetAccountInfoBatchRequest>();
   @$core.pragma('dart2js:noInline')
-  static AssetHoldings getDefault() => _defaultInstance ??=
-      $pb.GeneratedMessage.$_defaultFor<AssetHoldings>(create);
-  static AssetHoldings? _defaultInstance;
+  static GetAccountInfoBatchRequest getDefault() => _defaultInstance ??=
+      $pb.GeneratedMessage.$_defaultFor<GetAccountInfoBatchRequest>(create);
+  static GetAccountInfoBatchRequest? _defaultInstance;
 
-  /// asset-id > balance
   @$pb.TagNumber(1)
-  $pb.PbMap<$core.String, $fixnum.Int64> get balances => $_getMap(0);
+  $core.String get proposedExecutionId => $_getSZ(0);
+  @$pb.TagNumber(1)
+  set proposedExecutionId($core.String value) => $_setString(0, value);
+  @$pb.TagNumber(1)
+  $core.bool hasProposedExecutionId() => $_has(0);
+  @$pb.TagNumber(1)
+  void clearProposedExecutionId() => $_clearField(1);
+
+  @$pb.TagNumber(2)
+  $pb.PbList<$core.String> get accountIids => $_getList(1);
+
+  @$pb.TagNumber(105)
+  $pb.PbMap<$core.String, $core.String> get auxData => $_getMap(2);
 }
 
-class GetAccountMarketPortfolioRequest extends $pb.GeneratedMessage {
-  factory GetAccountMarketPortfolioRequest({
-    $core.String? refRequestId,
-    $core.String? accountId,
-    $core.String? marketId,
-    $core.Iterable<$core.String>? assetIds,
+class GetAccountInfoBatchResponse extends $pb.GeneratedMessage {
+  factory GetAccountInfoBatchResponse({
+    $core.String? refExecutionId,
+    $core.Iterable<$2.Account>? accounts,
+    $core.Iterable<$core.MapEntry<$core.String, $core.String>>? metadata,
   }) {
     final result = create();
-    if (refRequestId != null) result.refRequestId = refRequestId;
-    if (accountId != null) result.accountId = accountId;
-    if (marketId != null) result.marketId = marketId;
-    if (assetIds != null) result.assetIds.addAll(assetIds);
+    if (refExecutionId != null) result.refExecutionId = refExecutionId;
+    if (accounts != null) result.accounts.addAll(accounts);
+    if (metadata != null) result.metadata.addEntries(metadata);
     return result;
   }
 
-  GetAccountMarketPortfolioRequest._();
+  GetAccountInfoBatchResponse._();
 
-  factory GetAccountMarketPortfolioRequest.fromBuffer(
-          $core.List<$core.int> data,
+  factory GetAccountInfoBatchResponse.fromBuffer($core.List<$core.int> data,
           [$pb.ExtensionRegistry registry = $pb.ExtensionRegistry.EMPTY]) =>
       create()..mergeFromBuffer(data, registry);
-  factory GetAccountMarketPortfolioRequest.fromJson($core.String json,
+  factory GetAccountInfoBatchResponse.fromJson($core.String json,
           [$pb.ExtensionRegistry registry = $pb.ExtensionRegistry.EMPTY]) =>
       create()..mergeFromJson(json, registry);
 
   static final $pb.BuilderInfo _i = $pb.BuilderInfo(
-      _omitMessageNames ? '' : 'GetAccountMarketPortfolioRequest',
+      _omitMessageNames ? '' : 'GetAccountInfoBatchResponse',
       package: const $pb.PackageName(
           _omitMessageNames ? '' : 'qomet.agora.daemons.prtagent.v1'),
       createEmptyInstance: create)
-    ..aOS(1, _omitFieldNames ? '' : 'refRequestId')
-    ..aOS(2, _omitFieldNames ? '' : 'accountId')
-    ..aOS(3, _omitFieldNames ? '' : 'marketId')
-    ..pPS(4, _omitFieldNames ? '' : 'assetIds')
+    ..aOS(1, _omitFieldNames ? '' : 'refExecutionId')
+    ..pc<$2.Account>(2, _omitFieldNames ? '' : 'accounts', $pb.PbFieldType.PM,
+        subBuilder: $2.Account.create)
+    ..m<$core.String, $core.String>(105, _omitFieldNames ? '' : 'metadata',
+        entryClassName: 'GetAccountInfoBatchResponse.MetadataEntry',
+        keyFieldType: $pb.PbFieldType.OS,
+        valueFieldType: $pb.PbFieldType.OS,
+        packageName: const $pb.PackageName('qomet.agora.daemons.prtagent.v1'))
     ..hasRequiredFields = false;
 
   @$core.Deprecated('See https://github.com/google/protobuf.dart/issues/998.')
-  GetAccountMarketPortfolioRequest clone() =>
-      GetAccountMarketPortfolioRequest()..mergeFromMessage(this);
+  GetAccountInfoBatchResponse clone() =>
+      GetAccountInfoBatchResponse()..mergeFromMessage(this);
   @$core.Deprecated('See https://github.com/google/protobuf.dart/issues/998.')
-  GetAccountMarketPortfolioRequest copyWith(
-          void Function(GetAccountMarketPortfolioRequest) updates) =>
+  GetAccountInfoBatchResponse copyWith(
+          void Function(GetAccountInfoBatchResponse) updates) =>
       super.copyWith(
-              (message) => updates(message as GetAccountMarketPortfolioRequest))
-          as GetAccountMarketPortfolioRequest;
+              (message) => updates(message as GetAccountInfoBatchResponse))
+          as GetAccountInfoBatchResponse;
 
   @$core.override
   $pb.BuilderInfo get info_ => _i;
 
   @$core.pragma('dart2js:noInline')
-  static GetAccountMarketPortfolioRequest create() =>
-      GetAccountMarketPortfolioRequest._();
+  static GetAccountInfoBatchResponse create() =>
+      GetAccountInfoBatchResponse._();
   @$core.override
-  GetAccountMarketPortfolioRequest createEmptyInstance() => create();
-  static $pb.PbList<GetAccountMarketPortfolioRequest> createRepeated() =>
-      $pb.PbList<GetAccountMarketPortfolioRequest>();
+  GetAccountInfoBatchResponse createEmptyInstance() => create();
+  static $pb.PbList<GetAccountInfoBatchResponse> createRepeated() =>
+      $pb.PbList<GetAccountInfoBatchResponse>();
   @$core.pragma('dart2js:noInline')
-  static GetAccountMarketPortfolioRequest getDefault() => _defaultInstance ??=
-      $pb.GeneratedMessage.$_defaultFor<GetAccountMarketPortfolioRequest>(
+  static GetAccountInfoBatchResponse getDefault() => _defaultInstance ??=
+      $pb.GeneratedMessage.$_defaultFor<GetAccountInfoBatchResponse>(create);
+  static GetAccountInfoBatchResponse? _defaultInstance;
+
+  @$pb.TagNumber(1)
+  $core.String get refExecutionId => $_getSZ(0);
+  @$pb.TagNumber(1)
+  set refExecutionId($core.String value) => $_setString(0, value);
+  @$pb.TagNumber(1)
+  $core.bool hasRefExecutionId() => $_has(0);
+  @$pb.TagNumber(1)
+  void clearRefExecutionId() => $_clearField(1);
+
+  @$pb.TagNumber(2)
+  $pb.PbList<$2.Account> get accounts => $_getList(1);
+
+  @$pb.TagNumber(105)
+  $pb.PbMap<$core.String, $core.String> get metadata => $_getMap(2);
+}
+
+class NewAccountRequest extends $pb.GeneratedMessage {
+  factory NewAccountRequest({
+    $core.String? proposedExecutionId,
+    $core.String? externalAccountId,
+    $core.Iterable<$core.MapEntry<$core.String, $core.String>>? auxData,
+  }) {
+    final result = create();
+    if (proposedExecutionId != null)
+      result.proposedExecutionId = proposedExecutionId;
+    if (externalAccountId != null) result.externalAccountId = externalAccountId;
+    if (auxData != null) result.auxData.addEntries(auxData);
+    return result;
+  }
+
+  NewAccountRequest._();
+
+  factory NewAccountRequest.fromBuffer($core.List<$core.int> data,
+          [$pb.ExtensionRegistry registry = $pb.ExtensionRegistry.EMPTY]) =>
+      create()..mergeFromBuffer(data, registry);
+  factory NewAccountRequest.fromJson($core.String json,
+          [$pb.ExtensionRegistry registry = $pb.ExtensionRegistry.EMPTY]) =>
+      create()..mergeFromJson(json, registry);
+
+  static final $pb.BuilderInfo _i = $pb.BuilderInfo(
+      _omitMessageNames ? '' : 'NewAccountRequest',
+      package: const $pb.PackageName(
+          _omitMessageNames ? '' : 'qomet.agora.daemons.prtagent.v1'),
+      createEmptyInstance: create)
+    ..aOS(1, _omitFieldNames ? '' : 'proposedExecutionId')
+    ..aOS(2, _omitFieldNames ? '' : 'externalAccountId')
+    ..m<$core.String, $core.String>(105, _omitFieldNames ? '' : 'auxData',
+        entryClassName: 'NewAccountRequest.AuxDataEntry',
+        keyFieldType: $pb.PbFieldType.OS,
+        valueFieldType: $pb.PbFieldType.OS,
+        packageName: const $pb.PackageName('qomet.agora.daemons.prtagent.v1'))
+    ..hasRequiredFields = false;
+
+  @$core.Deprecated('See https://github.com/google/protobuf.dart/issues/998.')
+  NewAccountRequest clone() => NewAccountRequest()..mergeFromMessage(this);
+  @$core.Deprecated('See https://github.com/google/protobuf.dart/issues/998.')
+  NewAccountRequest copyWith(void Function(NewAccountRequest) updates) =>
+      super.copyWith((message) => updates(message as NewAccountRequest))
+          as NewAccountRequest;
+
+  @$core.override
+  $pb.BuilderInfo get info_ => _i;
+
+  @$core.pragma('dart2js:noInline')
+  static NewAccountRequest create() => NewAccountRequest._();
+  @$core.override
+  NewAccountRequest createEmptyInstance() => create();
+  static $pb.PbList<NewAccountRequest> createRepeated() =>
+      $pb.PbList<NewAccountRequest>();
+  @$core.pragma('dart2js:noInline')
+  static NewAccountRequest getDefault() => _defaultInstance ??=
+      $pb.GeneratedMessage.$_defaultFor<NewAccountRequest>(create);
+  static NewAccountRequest? _defaultInstance;
+
+  @$pb.TagNumber(1)
+  $core.String get proposedExecutionId => $_getSZ(0);
+  @$pb.TagNumber(1)
+  set proposedExecutionId($core.String value) => $_setString(0, value);
+  @$pb.TagNumber(1)
+  $core.bool hasProposedExecutionId() => $_has(0);
+  @$pb.TagNumber(1)
+  void clearProposedExecutionId() => $_clearField(1);
+
+  @$pb.TagNumber(2)
+  $core.String get externalAccountId => $_getSZ(1);
+  @$pb.TagNumber(2)
+  set externalAccountId($core.String value) => $_setString(1, value);
+  @$pb.TagNumber(2)
+  $core.bool hasExternalAccountId() => $_has(1);
+  @$pb.TagNumber(2)
+  void clearExternalAccountId() => $_clearField(2);
+
+  @$pb.TagNumber(105)
+  $pb.PbMap<$core.String, $core.String> get auxData => $_getMap(2);
+}
+
+class NewAccountResponse extends $pb.GeneratedMessage {
+  factory NewAccountResponse({
+    $core.String? refExecutionId,
+    $core.String? agentAccountId,
+    $1.DateTime? activationDt,
+    $core.Iterable<$core.MapEntry<$core.String, $core.String>>? metadata,
+  }) {
+    final result = create();
+    if (refExecutionId != null) result.refExecutionId = refExecutionId;
+    if (agentAccountId != null) result.agentAccountId = agentAccountId;
+    if (activationDt != null) result.activationDt = activationDt;
+    if (metadata != null) result.metadata.addEntries(metadata);
+    return result;
+  }
+
+  NewAccountResponse._();
+
+  factory NewAccountResponse.fromBuffer($core.List<$core.int> data,
+          [$pb.ExtensionRegistry registry = $pb.ExtensionRegistry.EMPTY]) =>
+      create()..mergeFromBuffer(data, registry);
+  factory NewAccountResponse.fromJson($core.String json,
+          [$pb.ExtensionRegistry registry = $pb.ExtensionRegistry.EMPTY]) =>
+      create()..mergeFromJson(json, registry);
+
+  static final $pb.BuilderInfo _i = $pb.BuilderInfo(
+      _omitMessageNames ? '' : 'NewAccountResponse',
+      package: const $pb.PackageName(
+          _omitMessageNames ? '' : 'qomet.agora.daemons.prtagent.v1'),
+      createEmptyInstance: create)
+    ..aOS(1, _omitFieldNames ? '' : 'refExecutionId')
+    ..aOS(2, _omitFieldNames ? '' : 'agentAccountId')
+    ..aOM<$1.DateTime>(3, _omitFieldNames ? '' : 'activationDt',
+        subBuilder: $1.DateTime.create)
+    ..m<$core.String, $core.String>(105, _omitFieldNames ? '' : 'metadata',
+        entryClassName: 'NewAccountResponse.MetadataEntry',
+        keyFieldType: $pb.PbFieldType.OS,
+        valueFieldType: $pb.PbFieldType.OS,
+        packageName: const $pb.PackageName('qomet.agora.daemons.prtagent.v1'))
+    ..hasRequiredFields = false;
+
+  @$core.Deprecated('See https://github.com/google/protobuf.dart/issues/998.')
+  NewAccountResponse clone() => NewAccountResponse()..mergeFromMessage(this);
+  @$core.Deprecated('See https://github.com/google/protobuf.dart/issues/998.')
+  NewAccountResponse copyWith(void Function(NewAccountResponse) updates) =>
+      super.copyWith((message) => updates(message as NewAccountResponse))
+          as NewAccountResponse;
+
+  @$core.override
+  $pb.BuilderInfo get info_ => _i;
+
+  @$core.pragma('dart2js:noInline')
+  static NewAccountResponse create() => NewAccountResponse._();
+  @$core.override
+  NewAccountResponse createEmptyInstance() => create();
+  static $pb.PbList<NewAccountResponse> createRepeated() =>
+      $pb.PbList<NewAccountResponse>();
+  @$core.pragma('dart2js:noInline')
+  static NewAccountResponse getDefault() => _defaultInstance ??=
+      $pb.GeneratedMessage.$_defaultFor<NewAccountResponse>(create);
+  static NewAccountResponse? _defaultInstance;
+
+  @$pb.TagNumber(1)
+  $core.String get refExecutionId => $_getSZ(0);
+  @$pb.TagNumber(1)
+  set refExecutionId($core.String value) => $_setString(0, value);
+  @$pb.TagNumber(1)
+  $core.bool hasRefExecutionId() => $_has(0);
+  @$pb.TagNumber(1)
+  void clearRefExecutionId() => $_clearField(1);
+
+  @$pb.TagNumber(2)
+  $core.String get agentAccountId => $_getSZ(1);
+  @$pb.TagNumber(2)
+  set agentAccountId($core.String value) => $_setString(1, value);
+  @$pb.TagNumber(2)
+  $core.bool hasAgentAccountId() => $_has(1);
+  @$pb.TagNumber(2)
+  void clearAgentAccountId() => $_clearField(2);
+
+  @$pb.TagNumber(3)
+  $1.DateTime get activationDt => $_getN(2);
+  @$pb.TagNumber(3)
+  set activationDt($1.DateTime value) => $_setField(3, value);
+  @$pb.TagNumber(3)
+  $core.bool hasActivationDt() => $_has(2);
+  @$pb.TagNumber(3)
+  void clearActivationDt() => $_clearField(3);
+  @$pb.TagNumber(3)
+  $1.DateTime ensureActivationDt() => $_ensure(2);
+
+  @$pb.TagNumber(105)
+  $pb.PbMap<$core.String, $core.String> get metadata => $_getMap(3);
+}
+
+class ActivateVenueForAccountRequest extends $pb.GeneratedMessage {
+  factory ActivateVenueForAccountRequest({
+    $core.String? proposedExecutionId,
+    $core.String? accountIid,
+    $core.String? venueIid,
+    $core.Iterable<$core.MapEntry<$core.String, $core.String>>? auxData,
+  }) {
+    final result = create();
+    if (proposedExecutionId != null)
+      result.proposedExecutionId = proposedExecutionId;
+    if (accountIid != null) result.accountIid = accountIid;
+    if (venueIid != null) result.venueIid = venueIid;
+    if (auxData != null) result.auxData.addEntries(auxData);
+    return result;
+  }
+
+  ActivateVenueForAccountRequest._();
+
+  factory ActivateVenueForAccountRequest.fromBuffer($core.List<$core.int> data,
+          [$pb.ExtensionRegistry registry = $pb.ExtensionRegistry.EMPTY]) =>
+      create()..mergeFromBuffer(data, registry);
+  factory ActivateVenueForAccountRequest.fromJson($core.String json,
+          [$pb.ExtensionRegistry registry = $pb.ExtensionRegistry.EMPTY]) =>
+      create()..mergeFromJson(json, registry);
+
+  static final $pb.BuilderInfo _i = $pb.BuilderInfo(
+      _omitMessageNames ? '' : 'ActivateVenueForAccountRequest',
+      package: const $pb.PackageName(
+          _omitMessageNames ? '' : 'qomet.agora.daemons.prtagent.v1'),
+      createEmptyInstance: create)
+    ..aOS(1, _omitFieldNames ? '' : 'proposedExecutionId')
+    ..aOS(2, _omitFieldNames ? '' : 'accountIid')
+    ..aOS(3, _omitFieldNames ? '' : 'venueIid')
+    ..m<$core.String, $core.String>(105, _omitFieldNames ? '' : 'auxData',
+        entryClassName: 'ActivateVenueForAccountRequest.AuxDataEntry',
+        keyFieldType: $pb.PbFieldType.OS,
+        valueFieldType: $pb.PbFieldType.OS,
+        packageName: const $pb.PackageName('qomet.agora.daemons.prtagent.v1'))
+    ..hasRequiredFields = false;
+
+  @$core.Deprecated('See https://github.com/google/protobuf.dart/issues/998.')
+  ActivateVenueForAccountRequest clone() =>
+      ActivateVenueForAccountRequest()..mergeFromMessage(this);
+  @$core.Deprecated('See https://github.com/google/protobuf.dart/issues/998.')
+  ActivateVenueForAccountRequest copyWith(
+          void Function(ActivateVenueForAccountRequest) updates) =>
+      super.copyWith(
+              (message) => updates(message as ActivateVenueForAccountRequest))
+          as ActivateVenueForAccountRequest;
+
+  @$core.override
+  $pb.BuilderInfo get info_ => _i;
+
+  @$core.pragma('dart2js:noInline')
+  static ActivateVenueForAccountRequest create() =>
+      ActivateVenueForAccountRequest._();
+  @$core.override
+  ActivateVenueForAccountRequest createEmptyInstance() => create();
+  static $pb.PbList<ActivateVenueForAccountRequest> createRepeated() =>
+      $pb.PbList<ActivateVenueForAccountRequest>();
+  @$core.pragma('dart2js:noInline')
+  static ActivateVenueForAccountRequest getDefault() => _defaultInstance ??=
+      $pb.GeneratedMessage.$_defaultFor<ActivateVenueForAccountRequest>(create);
+  static ActivateVenueForAccountRequest? _defaultInstance;
+
+  @$pb.TagNumber(1)
+  $core.String get proposedExecutionId => $_getSZ(0);
+  @$pb.TagNumber(1)
+  set proposedExecutionId($core.String value) => $_setString(0, value);
+  @$pb.TagNumber(1)
+  $core.bool hasProposedExecutionId() => $_has(0);
+  @$pb.TagNumber(1)
+  void clearProposedExecutionId() => $_clearField(1);
+
+  @$pb.TagNumber(2)
+  $core.String get accountIid => $_getSZ(1);
+  @$pb.TagNumber(2)
+  set accountIid($core.String value) => $_setString(1, value);
+  @$pb.TagNumber(2)
+  $core.bool hasAccountIid() => $_has(1);
+  @$pb.TagNumber(2)
+  void clearAccountIid() => $_clearField(2);
+
+  @$pb.TagNumber(3)
+  $core.String get venueIid => $_getSZ(2);
+  @$pb.TagNumber(3)
+  set venueIid($core.String value) => $_setString(2, value);
+  @$pb.TagNumber(3)
+  $core.bool hasVenueIid() => $_has(2);
+  @$pb.TagNumber(3)
+  void clearVenueIid() => $_clearField(3);
+
+  @$pb.TagNumber(105)
+  $pb.PbMap<$core.String, $core.String> get auxData => $_getMap(3);
+}
+
+class ActivateVenueForAccountResponse extends $pb.GeneratedMessage {
+  factory ActivateVenueForAccountResponse({
+    $core.String? refExecutionId,
+    $1.DateTime? activationDt,
+    $core.Iterable<$core.MapEntry<$core.String, $core.String>>? metadata,
+  }) {
+    final result = create();
+    if (refExecutionId != null) result.refExecutionId = refExecutionId;
+    if (activationDt != null) result.activationDt = activationDt;
+    if (metadata != null) result.metadata.addEntries(metadata);
+    return result;
+  }
+
+  ActivateVenueForAccountResponse._();
+
+  factory ActivateVenueForAccountResponse.fromBuffer($core.List<$core.int> data,
+          [$pb.ExtensionRegistry registry = $pb.ExtensionRegistry.EMPTY]) =>
+      create()..mergeFromBuffer(data, registry);
+  factory ActivateVenueForAccountResponse.fromJson($core.String json,
+          [$pb.ExtensionRegistry registry = $pb.ExtensionRegistry.EMPTY]) =>
+      create()..mergeFromJson(json, registry);
+
+  static final $pb.BuilderInfo _i = $pb.BuilderInfo(
+      _omitMessageNames ? '' : 'ActivateVenueForAccountResponse',
+      package: const $pb.PackageName(
+          _omitMessageNames ? '' : 'qomet.agora.daemons.prtagent.v1'),
+      createEmptyInstance: create)
+    ..aOS(1, _omitFieldNames ? '' : 'refExecutionId')
+    ..aOM<$1.DateTime>(2, _omitFieldNames ? '' : 'activationDt',
+        subBuilder: $1.DateTime.create)
+    ..m<$core.String, $core.String>(105, _omitFieldNames ? '' : 'metadata',
+        entryClassName: 'ActivateVenueForAccountResponse.MetadataEntry',
+        keyFieldType: $pb.PbFieldType.OS,
+        valueFieldType: $pb.PbFieldType.OS,
+        packageName: const $pb.PackageName('qomet.agora.daemons.prtagent.v1'))
+    ..hasRequiredFields = false;
+
+  @$core.Deprecated('See https://github.com/google/protobuf.dart/issues/998.')
+  ActivateVenueForAccountResponse clone() =>
+      ActivateVenueForAccountResponse()..mergeFromMessage(this);
+  @$core.Deprecated('See https://github.com/google/protobuf.dart/issues/998.')
+  ActivateVenueForAccountResponse copyWith(
+          void Function(ActivateVenueForAccountResponse) updates) =>
+      super.copyWith(
+              (message) => updates(message as ActivateVenueForAccountResponse))
+          as ActivateVenueForAccountResponse;
+
+  @$core.override
+  $pb.BuilderInfo get info_ => _i;
+
+  @$core.pragma('dart2js:noInline')
+  static ActivateVenueForAccountResponse create() =>
+      ActivateVenueForAccountResponse._();
+  @$core.override
+  ActivateVenueForAccountResponse createEmptyInstance() => create();
+  static $pb.PbList<ActivateVenueForAccountResponse> createRepeated() =>
+      $pb.PbList<ActivateVenueForAccountResponse>();
+  @$core.pragma('dart2js:noInline')
+  static ActivateVenueForAccountResponse getDefault() => _defaultInstance ??=
+      $pb.GeneratedMessage.$_defaultFor<ActivateVenueForAccountResponse>(
           create);
-  static GetAccountMarketPortfolioRequest? _defaultInstance;
+  static ActivateVenueForAccountResponse? _defaultInstance;
 
   @$pb.TagNumber(1)
-  $core.String get refRequestId => $_getSZ(0);
+  $core.String get refExecutionId => $_getSZ(0);
   @$pb.TagNumber(1)
-  set refRequestId($core.String value) => $_setString(0, value);
+  set refExecutionId($core.String value) => $_setString(0, value);
   @$pb.TagNumber(1)
-  $core.bool hasRefRequestId() => $_has(0);
+  $core.bool hasRefExecutionId() => $_has(0);
   @$pb.TagNumber(1)
-  void clearRefRequestId() => $_clearField(1);
+  void clearRefExecutionId() => $_clearField(1);
 
   @$pb.TagNumber(2)
-  $core.String get accountId => $_getSZ(1);
+  $1.DateTime get activationDt => $_getN(1);
   @$pb.TagNumber(2)
-  set accountId($core.String value) => $_setString(1, value);
+  set activationDt($1.DateTime value) => $_setField(2, value);
   @$pb.TagNumber(2)
-  $core.bool hasAccountId() => $_has(1);
+  $core.bool hasActivationDt() => $_has(1);
   @$pb.TagNumber(2)
-  void clearAccountId() => $_clearField(2);
+  void clearActivationDt() => $_clearField(2);
+  @$pb.TagNumber(2)
+  $1.DateTime ensureActivationDt() => $_ensure(1);
+
+  @$pb.TagNumber(105)
+  $pb.PbMap<$core.String, $core.String> get metadata => $_getMap(2);
+}
+
+class GetAccountInstrumentHoldingsRequest extends $pb.GeneratedMessage {
+  factory GetAccountInstrumentHoldingsRequest({
+    $core.String? proposedExecutionId,
+    $core.String? accountIid,
+    $core.String? venueIid,
+    $core.Iterable<$core.String>? instrumentIids,
+    $core.Iterable<$core.MapEntry<$core.String, $core.String>>? auxData,
+  }) {
+    final result = create();
+    if (proposedExecutionId != null)
+      result.proposedExecutionId = proposedExecutionId;
+    if (accountIid != null) result.accountIid = accountIid;
+    if (venueIid != null) result.venueIid = venueIid;
+    if (instrumentIids != null) result.instrumentIids.addAll(instrumentIids);
+    if (auxData != null) result.auxData.addEntries(auxData);
+    return result;
+  }
+
+  GetAccountInstrumentHoldingsRequest._();
+
+  factory GetAccountInstrumentHoldingsRequest.fromBuffer(
+          $core.List<$core.int> data,
+          [$pb.ExtensionRegistry registry = $pb.ExtensionRegistry.EMPTY]) =>
+      create()..mergeFromBuffer(data, registry);
+  factory GetAccountInstrumentHoldingsRequest.fromJson($core.String json,
+          [$pb.ExtensionRegistry registry = $pb.ExtensionRegistry.EMPTY]) =>
+      create()..mergeFromJson(json, registry);
+
+  static final $pb.BuilderInfo _i = $pb.BuilderInfo(
+      _omitMessageNames ? '' : 'GetAccountInstrumentHoldingsRequest',
+      package: const $pb.PackageName(
+          _omitMessageNames ? '' : 'qomet.agora.daemons.prtagent.v1'),
+      createEmptyInstance: create)
+    ..aOS(1, _omitFieldNames ? '' : 'proposedExecutionId')
+    ..aOS(2, _omitFieldNames ? '' : 'accountIid')
+    ..aOS(3, _omitFieldNames ? '' : 'venueIid')
+    ..pPS(4, _omitFieldNames ? '' : 'instrumentIids')
+    ..m<$core.String, $core.String>(105, _omitFieldNames ? '' : 'auxData',
+        entryClassName: 'GetAccountInstrumentHoldingsRequest.AuxDataEntry',
+        keyFieldType: $pb.PbFieldType.OS,
+        valueFieldType: $pb.PbFieldType.OS,
+        packageName: const $pb.PackageName('qomet.agora.daemons.prtagent.v1'))
+    ..hasRequiredFields = false;
+
+  @$core.Deprecated('See https://github.com/google/protobuf.dart/issues/998.')
+  GetAccountInstrumentHoldingsRequest clone() =>
+      GetAccountInstrumentHoldingsRequest()..mergeFromMessage(this);
+  @$core.Deprecated('See https://github.com/google/protobuf.dart/issues/998.')
+  GetAccountInstrumentHoldingsRequest copyWith(
+          void Function(GetAccountInstrumentHoldingsRequest) updates) =>
+      super.copyWith((message) =>
+              updates(message as GetAccountInstrumentHoldingsRequest))
+          as GetAccountInstrumentHoldingsRequest;
+
+  @$core.override
+  $pb.BuilderInfo get info_ => _i;
+
+  @$core.pragma('dart2js:noInline')
+  static GetAccountInstrumentHoldingsRequest create() =>
+      GetAccountInstrumentHoldingsRequest._();
+  @$core.override
+  GetAccountInstrumentHoldingsRequest createEmptyInstance() => create();
+  static $pb.PbList<GetAccountInstrumentHoldingsRequest> createRepeated() =>
+      $pb.PbList<GetAccountInstrumentHoldingsRequest>();
+  @$core.pragma('dart2js:noInline')
+  static GetAccountInstrumentHoldingsRequest getDefault() =>
+      _defaultInstance ??= $pb.GeneratedMessage.$_defaultFor<
+          GetAccountInstrumentHoldingsRequest>(create);
+  static GetAccountInstrumentHoldingsRequest? _defaultInstance;
+
+  @$pb.TagNumber(1)
+  $core.String get proposedExecutionId => $_getSZ(0);
+  @$pb.TagNumber(1)
+  set proposedExecutionId($core.String value) => $_setString(0, value);
+  @$pb.TagNumber(1)
+  $core.bool hasProposedExecutionId() => $_has(0);
+  @$pb.TagNumber(1)
+  void clearProposedExecutionId() => $_clearField(1);
+
+  @$pb.TagNumber(2)
+  $core.String get accountIid => $_getSZ(1);
+  @$pb.TagNumber(2)
+  set accountIid($core.String value) => $_setString(1, value);
+  @$pb.TagNumber(2)
+  $core.bool hasAccountIid() => $_has(1);
+  @$pb.TagNumber(2)
+  void clearAccountIid() => $_clearField(2);
 
   @$pb.TagNumber(3)
-  $core.String get marketId => $_getSZ(2);
+  $core.String get venueIid => $_getSZ(2);
   @$pb.TagNumber(3)
-  set marketId($core.String value) => $_setString(2, value);
+  set venueIid($core.String value) => $_setString(2, value);
   @$pb.TagNumber(3)
-  $core.bool hasMarketId() => $_has(2);
+  $core.bool hasVenueIid() => $_has(2);
   @$pb.TagNumber(3)
-  void clearMarketId() => $_clearField(3);
+  void clearVenueIid() => $_clearField(3);
 
   @$pb.TagNumber(4)
-  $pb.PbList<$core.String> get assetIds => $_getList(3);
+  $pb.PbList<$core.String> get instrumentIids => $_getList(3);
+
+  @$pb.TagNumber(105)
+  $pb.PbMap<$core.String, $core.String> get auxData => $_getMap(4);
 }
 
-class GetAccountMarketPortfolioResponse extends $pb.GeneratedMessage {
-  factory GetAccountMarketPortfolioResponse({
-    $core.String? refRequestId,
-    $1.Time? createdAt,
-    AssetHoldings? portfolio,
+class GetAccountInstrumentHoldingsResponse extends $pb.GeneratedMessage {
+  factory GetAccountInstrumentHoldingsResponse({
+    $core.String? refExecutionId,
+    $2.Portfolio? portfolio,
+    $core.Iterable<$core.MapEntry<$core.String, $core.String>>? metadata,
   }) {
     final result = create();
-    if (refRequestId != null) result.refRequestId = refRequestId;
-    if (createdAt != null) result.createdAt = createdAt;
+    if (refExecutionId != null) result.refExecutionId = refExecutionId;
     if (portfolio != null) result.portfolio = portfolio;
+    if (metadata != null) result.metadata.addEntries(metadata);
     return result;
   }
 
-  GetAccountMarketPortfolioResponse._();
+  GetAccountInstrumentHoldingsResponse._();
 
-  factory GetAccountMarketPortfolioResponse.fromBuffer(
+  factory GetAccountInstrumentHoldingsResponse.fromBuffer(
           $core.List<$core.int> data,
           [$pb.ExtensionRegistry registry = $pb.ExtensionRegistry.EMPTY]) =>
       create()..mergeFromBuffer(data, registry);
-  factory GetAccountMarketPortfolioResponse.fromJson($core.String json,
+  factory GetAccountInstrumentHoldingsResponse.fromJson($core.String json,
           [$pb.ExtensionRegistry registry = $pb.ExtensionRegistry.EMPTY]) =>
       create()..mergeFromJson(json, registry);
 
   static final $pb.BuilderInfo _i = $pb.BuilderInfo(
-      _omitMessageNames ? '' : 'GetAccountMarketPortfolioResponse',
+      _omitMessageNames ? '' : 'GetAccountInstrumentHoldingsResponse',
       package: const $pb.PackageName(
           _omitMessageNames ? '' : 'qomet.agora.daemons.prtagent.v1'),
       createEmptyInstance: create)
-    ..aOS(1, _omitFieldNames ? '' : 'refRequestId')
-    ..aOM<$1.Time>(2, _omitFieldNames ? '' : 'createdAt',
-        subBuilder: $1.Time.create)
-    ..aOM<AssetHoldings>(3, _omitFieldNames ? '' : 'portfolio',
-        subBuilder: AssetHoldings.create)
+    ..aOS(1, _omitFieldNames ? '' : 'refExecutionId')
+    ..aOM<$2.Portfolio>(2, _omitFieldNames ? '' : 'portfolio',
+        subBuilder: $2.Portfolio.create)
+    ..m<$core.String, $core.String>(105, _omitFieldNames ? '' : 'metadata',
+        entryClassName: 'GetAccountInstrumentHoldingsResponse.MetadataEntry',
+        keyFieldType: $pb.PbFieldType.OS,
+        valueFieldType: $pb.PbFieldType.OS,
+        packageName: const $pb.PackageName('qomet.agora.daemons.prtagent.v1'))
     ..hasRequiredFields = false;
 
   @$core.Deprecated('See https://github.com/google/protobuf.dart/issues/998.')
-  GetAccountMarketPortfolioResponse clone() =>
-      GetAccountMarketPortfolioResponse()..mergeFromMessage(this);
+  GetAccountInstrumentHoldingsResponse clone() =>
+      GetAccountInstrumentHoldingsResponse()..mergeFromMessage(this);
   @$core.Deprecated('See https://github.com/google/protobuf.dart/issues/998.')
-  GetAccountMarketPortfolioResponse copyWith(
-          void Function(GetAccountMarketPortfolioResponse) updates) =>
+  GetAccountInstrumentHoldingsResponse copyWith(
+          void Function(GetAccountInstrumentHoldingsResponse) updates) =>
       super.copyWith((message) =>
-              updates(message as GetAccountMarketPortfolioResponse))
-          as GetAccountMarketPortfolioResponse;
+              updates(message as GetAccountInstrumentHoldingsResponse))
+          as GetAccountInstrumentHoldingsResponse;
 
   @$core.override
   $pb.BuilderInfo get info_ => _i;
 
   @$core.pragma('dart2js:noInline')
-  static GetAccountMarketPortfolioResponse create() =>
-      GetAccountMarketPortfolioResponse._();
+  static GetAccountInstrumentHoldingsResponse create() =>
+      GetAccountInstrumentHoldingsResponse._();
   @$core.override
-  GetAccountMarketPortfolioResponse createEmptyInstance() => create();
-  static $pb.PbList<GetAccountMarketPortfolioResponse> createRepeated() =>
-      $pb.PbList<GetAccountMarketPortfolioResponse>();
+  GetAccountInstrumentHoldingsResponse createEmptyInstance() => create();
+  static $pb.PbList<GetAccountInstrumentHoldingsResponse> createRepeated() =>
+      $pb.PbList<GetAccountInstrumentHoldingsResponse>();
   @$core.pragma('dart2js:noInline')
-  static GetAccountMarketPortfolioResponse getDefault() => _defaultInstance ??=
-      $pb.GeneratedMessage.$_defaultFor<GetAccountMarketPortfolioResponse>(
-          create);
-  static GetAccountMarketPortfolioResponse? _defaultInstance;
+  static GetAccountInstrumentHoldingsResponse getDefault() =>
+      _defaultInstance ??= $pb.GeneratedMessage.$_defaultFor<
+          GetAccountInstrumentHoldingsResponse>(create);
+  static GetAccountInstrumentHoldingsResponse? _defaultInstance;
 
   @$pb.TagNumber(1)
-  $core.String get refRequestId => $_getSZ(0);
+  $core.String get refExecutionId => $_getSZ(0);
   @$pb.TagNumber(1)
-  set refRequestId($core.String value) => $_setString(0, value);
+  set refExecutionId($core.String value) => $_setString(0, value);
   @$pb.TagNumber(1)
-  $core.bool hasRefRequestId() => $_has(0);
+  $core.bool hasRefExecutionId() => $_has(0);
   @$pb.TagNumber(1)
-  void clearRefRequestId() => $_clearField(1);
+  void clearRefExecutionId() => $_clearField(1);
 
   @$pb.TagNumber(2)
-  $1.Time get createdAt => $_getN(1);
+  $2.Portfolio get portfolio => $_getN(1);
   @$pb.TagNumber(2)
-  set createdAt($1.Time value) => $_setField(2, value);
+  set portfolio($2.Portfolio value) => $_setField(2, value);
   @$pb.TagNumber(2)
-  $core.bool hasCreatedAt() => $_has(1);
+  $core.bool hasPortfolio() => $_has(1);
   @$pb.TagNumber(2)
-  void clearCreatedAt() => $_clearField(2);
+  void clearPortfolio() => $_clearField(2);
   @$pb.TagNumber(2)
-  $1.Time ensureCreatedAt() => $_ensure(1);
+  $2.Portfolio ensurePortfolio() => $_ensure(1);
 
-  @$pb.TagNumber(3)
-  AssetHoldings get portfolio => $_getN(2);
-  @$pb.TagNumber(3)
-  set portfolio(AssetHoldings value) => $_setField(3, value);
-  @$pb.TagNumber(3)
-  $core.bool hasPortfolio() => $_has(2);
-  @$pb.TagNumber(3)
-  void clearPortfolio() => $_clearField(3);
-  @$pb.TagNumber(3)
-  AssetHoldings ensurePortfolio() => $_ensure(2);
+  @$pb.TagNumber(105)
+  $pb.PbMap<$core.String, $core.String> get metadata => $_getMap(2);
 }
 
 class GetAccountCashHoldingsRequest extends $pb.GeneratedMessage {
   factory GetAccountCashHoldingsRequest({
-    $core.String? refRequestId,
-    $core.String? accountId,
-    $core.Iterable<$core.String>? cashAssetIds,
+    $core.String? proposedExecutionId,
+    $core.String? accountIid,
+    $core.Iterable<$core.String>? currencyCodes,
+    $core.Iterable<$core.MapEntry<$core.String, $core.String>>? auxData,
   }) {
     final result = create();
-    if (refRequestId != null) result.refRequestId = refRequestId;
-    if (accountId != null) result.accountId = accountId;
-    if (cashAssetIds != null) result.cashAssetIds.addAll(cashAssetIds);
+    if (proposedExecutionId != null)
+      result.proposedExecutionId = proposedExecutionId;
+    if (accountIid != null) result.accountIid = accountIid;
+    if (currencyCodes != null) result.currencyCodes.addAll(currencyCodes);
+    if (auxData != null) result.auxData.addEntries(auxData);
     return result;
   }
 
@@ -978,9 +943,14 @@ class GetAccountCashHoldingsRequest extends $pb.GeneratedMessage {
       package: const $pb.PackageName(
           _omitMessageNames ? '' : 'qomet.agora.daemons.prtagent.v1'),
       createEmptyInstance: create)
-    ..aOS(1, _omitFieldNames ? '' : 'refRequestId')
-    ..aOS(2, _omitFieldNames ? '' : 'accountId')
-    ..pPS(3, _omitFieldNames ? '' : 'cashAssetIds')
+    ..aOS(1, _omitFieldNames ? '' : 'proposedExecutionId')
+    ..aOS(2, _omitFieldNames ? '' : 'accountIid')
+    ..pPS(3, _omitFieldNames ? '' : 'currencyCodes')
+    ..m<$core.String, $core.String>(105, _omitFieldNames ? '' : 'auxData',
+        entryClassName: 'GetAccountCashHoldingsRequest.AuxDataEntry',
+        keyFieldType: $pb.PbFieldType.OS,
+        valueFieldType: $pb.PbFieldType.OS,
+        packageName: const $pb.PackageName('qomet.agora.daemons.prtagent.v1'))
     ..hasRequiredFields = false;
 
   @$core.Deprecated('See https://github.com/google/protobuf.dart/issues/998.')
@@ -1009,37 +979,40 @@ class GetAccountCashHoldingsRequest extends $pb.GeneratedMessage {
   static GetAccountCashHoldingsRequest? _defaultInstance;
 
   @$pb.TagNumber(1)
-  $core.String get refRequestId => $_getSZ(0);
+  $core.String get proposedExecutionId => $_getSZ(0);
   @$pb.TagNumber(1)
-  set refRequestId($core.String value) => $_setString(0, value);
+  set proposedExecutionId($core.String value) => $_setString(0, value);
   @$pb.TagNumber(1)
-  $core.bool hasRefRequestId() => $_has(0);
+  $core.bool hasProposedExecutionId() => $_has(0);
   @$pb.TagNumber(1)
-  void clearRefRequestId() => $_clearField(1);
+  void clearProposedExecutionId() => $_clearField(1);
 
   @$pb.TagNumber(2)
-  $core.String get accountId => $_getSZ(1);
+  $core.String get accountIid => $_getSZ(1);
   @$pb.TagNumber(2)
-  set accountId($core.String value) => $_setString(1, value);
+  set accountIid($core.String value) => $_setString(1, value);
   @$pb.TagNumber(2)
-  $core.bool hasAccountId() => $_has(1);
+  $core.bool hasAccountIid() => $_has(1);
   @$pb.TagNumber(2)
-  void clearAccountId() => $_clearField(2);
+  void clearAccountIid() => $_clearField(2);
 
   @$pb.TagNumber(3)
-  $pb.PbList<$core.String> get cashAssetIds => $_getList(2);
+  $pb.PbList<$core.String> get currencyCodes => $_getList(2);
+
+  @$pb.TagNumber(105)
+  $pb.PbMap<$core.String, $core.String> get auxData => $_getMap(3);
 }
 
 class GetAccountCashHoldingsResponse extends $pb.GeneratedMessage {
   factory GetAccountCashHoldingsResponse({
-    $core.String? refRequestId,
-    $1.Time? createdAt,
-    AssetHoldings? cashHoldings,
+    $core.String? refExecutionId,
+    $2.Portfolio? cashPortfolio,
+    $core.Iterable<$core.MapEntry<$core.String, $core.String>>? metadata,
   }) {
     final result = create();
-    if (refRequestId != null) result.refRequestId = refRequestId;
-    if (createdAt != null) result.createdAt = createdAt;
-    if (cashHoldings != null) result.cashHoldings = cashHoldings;
+    if (refExecutionId != null) result.refExecutionId = refExecutionId;
+    if (cashPortfolio != null) result.cashPortfolio = cashPortfolio;
+    if (metadata != null) result.metadata.addEntries(metadata);
     return result;
   }
 
@@ -1057,11 +1030,14 @@ class GetAccountCashHoldingsResponse extends $pb.GeneratedMessage {
       package: const $pb.PackageName(
           _omitMessageNames ? '' : 'qomet.agora.daemons.prtagent.v1'),
       createEmptyInstance: create)
-    ..aOS(1, _omitFieldNames ? '' : 'refRequestId')
-    ..aOM<$1.Time>(2, _omitFieldNames ? '' : 'createdAt',
-        subBuilder: $1.Time.create)
-    ..aOM<AssetHoldings>(3, _omitFieldNames ? '' : 'cashHoldings',
-        subBuilder: AssetHoldings.create)
+    ..aOS(1, _omitFieldNames ? '' : 'refExecutionId')
+    ..aOM<$2.Portfolio>(2, _omitFieldNames ? '' : 'cashPortfolio',
+        subBuilder: $2.Portfolio.create)
+    ..m<$core.String, $core.String>(105, _omitFieldNames ? '' : 'metadata',
+        entryClassName: 'GetAccountCashHoldingsResponse.MetadataEntry',
+        keyFieldType: $pb.PbFieldType.OS,
+        valueFieldType: $pb.PbFieldType.OS,
+        packageName: const $pb.PackageName('qomet.agora.daemons.prtagent.v1'))
     ..hasRequiredFields = false;
 
   @$core.Deprecated('See https://github.com/google/protobuf.dart/issues/998.')
@@ -1090,51 +1066,44 @@ class GetAccountCashHoldingsResponse extends $pb.GeneratedMessage {
   static GetAccountCashHoldingsResponse? _defaultInstance;
 
   @$pb.TagNumber(1)
-  $core.String get refRequestId => $_getSZ(0);
+  $core.String get refExecutionId => $_getSZ(0);
   @$pb.TagNumber(1)
-  set refRequestId($core.String value) => $_setString(0, value);
+  set refExecutionId($core.String value) => $_setString(0, value);
   @$pb.TagNumber(1)
-  $core.bool hasRefRequestId() => $_has(0);
+  $core.bool hasRefExecutionId() => $_has(0);
   @$pb.TagNumber(1)
-  void clearRefRequestId() => $_clearField(1);
+  void clearRefExecutionId() => $_clearField(1);
 
   @$pb.TagNumber(2)
-  $1.Time get createdAt => $_getN(1);
+  $2.Portfolio get cashPortfolio => $_getN(1);
   @$pb.TagNumber(2)
-  set createdAt($1.Time value) => $_setField(2, value);
+  set cashPortfolio($2.Portfolio value) => $_setField(2, value);
   @$pb.TagNumber(2)
-  $core.bool hasCreatedAt() => $_has(1);
+  $core.bool hasCashPortfolio() => $_has(1);
   @$pb.TagNumber(2)
-  void clearCreatedAt() => $_clearField(2);
+  void clearCashPortfolio() => $_clearField(2);
   @$pb.TagNumber(2)
-  $1.Time ensureCreatedAt() => $_ensure(1);
+  $2.Portfolio ensureCashPortfolio() => $_ensure(1);
 
-  @$pb.TagNumber(3)
-  AssetHoldings get cashHoldings => $_getN(2);
-  @$pb.TagNumber(3)
-  set cashHoldings(AssetHoldings value) => $_setField(3, value);
-  @$pb.TagNumber(3)
-  $core.bool hasCashHoldings() => $_has(2);
-  @$pb.TagNumber(3)
-  void clearCashHoldings() => $_clearField(3);
-  @$pb.TagNumber(3)
-  AssetHoldings ensureCashHoldings() => $_ensure(2);
+  @$pb.TagNumber(105)
+  $pb.PbMap<$core.String, $core.String> get metadata => $_getMap(2);
 }
 
 class DepositCashRequest extends $pb.GeneratedMessage {
   factory DepositCashRequest({
-    $core.String? refRequestId,
-    $core.String? accountId,
-    $core.String? currencyAssetId,
+    $core.String? proposedExecutionId,
+    $core.String? accountIid,
+    $core.String? currencyCode,
     $core.String? amount,
-    $core.String? auxData,
+    $core.Iterable<$core.MapEntry<$core.String, $core.String>>? auxData,
   }) {
     final result = create();
-    if (refRequestId != null) result.refRequestId = refRequestId;
-    if (accountId != null) result.accountId = accountId;
-    if (currencyAssetId != null) result.currencyAssetId = currencyAssetId;
+    if (proposedExecutionId != null)
+      result.proposedExecutionId = proposedExecutionId;
+    if (accountIid != null) result.accountIid = accountIid;
+    if (currencyCode != null) result.currencyCode = currencyCode;
     if (amount != null) result.amount = amount;
-    if (auxData != null) result.auxData = auxData;
+    if (auxData != null) result.auxData.addEntries(auxData);
     return result;
   }
 
@@ -1152,11 +1121,15 @@ class DepositCashRequest extends $pb.GeneratedMessage {
       package: const $pb.PackageName(
           _omitMessageNames ? '' : 'qomet.agora.daemons.prtagent.v1'),
       createEmptyInstance: create)
-    ..aOS(1, _omitFieldNames ? '' : 'refRequestId')
-    ..aOS(2, _omitFieldNames ? '' : 'accountId')
-    ..aOS(3, _omitFieldNames ? '' : 'currencyAssetId')
+    ..aOS(1, _omitFieldNames ? '' : 'proposedExecutionId')
+    ..aOS(2, _omitFieldNames ? '' : 'accountIid')
+    ..aOS(3, _omitFieldNames ? '' : 'currencyCode')
     ..aOS(4, _omitFieldNames ? '' : 'amount')
-    ..aOS(5, _omitFieldNames ? '' : 'auxData')
+    ..m<$core.String, $core.String>(105, _omitFieldNames ? '' : 'auxData',
+        entryClassName: 'DepositCashRequest.AuxDataEntry',
+        keyFieldType: $pb.PbFieldType.OS,
+        valueFieldType: $pb.PbFieldType.OS,
+        packageName: const $pb.PackageName('qomet.agora.daemons.prtagent.v1'))
     ..hasRequiredFields = false;
 
   @$core.Deprecated('See https://github.com/google/protobuf.dart/issues/998.')
@@ -1181,31 +1154,31 @@ class DepositCashRequest extends $pb.GeneratedMessage {
   static DepositCashRequest? _defaultInstance;
 
   @$pb.TagNumber(1)
-  $core.String get refRequestId => $_getSZ(0);
+  $core.String get proposedExecutionId => $_getSZ(0);
   @$pb.TagNumber(1)
-  set refRequestId($core.String value) => $_setString(0, value);
+  set proposedExecutionId($core.String value) => $_setString(0, value);
   @$pb.TagNumber(1)
-  $core.bool hasRefRequestId() => $_has(0);
+  $core.bool hasProposedExecutionId() => $_has(0);
   @$pb.TagNumber(1)
-  void clearRefRequestId() => $_clearField(1);
+  void clearProposedExecutionId() => $_clearField(1);
 
   @$pb.TagNumber(2)
-  $core.String get accountId => $_getSZ(1);
+  $core.String get accountIid => $_getSZ(1);
   @$pb.TagNumber(2)
-  set accountId($core.String value) => $_setString(1, value);
+  set accountIid($core.String value) => $_setString(1, value);
   @$pb.TagNumber(2)
-  $core.bool hasAccountId() => $_has(1);
+  $core.bool hasAccountIid() => $_has(1);
   @$pb.TagNumber(2)
-  void clearAccountId() => $_clearField(2);
+  void clearAccountIid() => $_clearField(2);
 
   @$pb.TagNumber(3)
-  $core.String get currencyAssetId => $_getSZ(2);
+  $core.String get currencyCode => $_getSZ(2);
   @$pb.TagNumber(3)
-  set currencyAssetId($core.String value) => $_setString(2, value);
+  set currencyCode($core.String value) => $_setString(2, value);
   @$pb.TagNumber(3)
-  $core.bool hasCurrencyAssetId() => $_has(2);
+  $core.bool hasCurrencyCode() => $_has(2);
   @$pb.TagNumber(3)
-  void clearCurrencyAssetId() => $_clearField(3);
+  void clearCurrencyCode() => $_clearField(3);
 
   @$pb.TagNumber(4)
   $core.String get amount => $_getSZ(3);
@@ -1216,22 +1189,18 @@ class DepositCashRequest extends $pb.GeneratedMessage {
   @$pb.TagNumber(4)
   void clearAmount() => $_clearField(4);
 
-  @$pb.TagNumber(5)
-  $core.String get auxData => $_getSZ(4);
-  @$pb.TagNumber(5)
-  set auxData($core.String value) => $_setString(4, value);
-  @$pb.TagNumber(5)
-  $core.bool hasAuxData() => $_has(4);
-  @$pb.TagNumber(5)
-  void clearAuxData() => $_clearField(5);
+  @$pb.TagNumber(105)
+  $pb.PbMap<$core.String, $core.String> get auxData => $_getMap(4);
 }
 
 class DepositCashResponse extends $pb.GeneratedMessage {
   factory DepositCashResponse({
-    $core.String? refRequestId,
+    $core.String? refExecutionId,
+    $core.Iterable<$core.MapEntry<$core.String, $core.String>>? metadata,
   }) {
     final result = create();
-    if (refRequestId != null) result.refRequestId = refRequestId;
+    if (refExecutionId != null) result.refExecutionId = refExecutionId;
+    if (metadata != null) result.metadata.addEntries(metadata);
     return result;
   }
 
@@ -1249,7 +1218,12 @@ class DepositCashResponse extends $pb.GeneratedMessage {
       package: const $pb.PackageName(
           _omitMessageNames ? '' : 'qomet.agora.daemons.prtagent.v1'),
       createEmptyInstance: create)
-    ..aOS(1, _omitFieldNames ? '' : 'refRequestId')
+    ..aOS(1, _omitFieldNames ? '' : 'refExecutionId')
+    ..m<$core.String, $core.String>(105, _omitFieldNames ? '' : 'metadata',
+        entryClassName: 'DepositCashResponse.MetadataEntry',
+        keyFieldType: $pb.PbFieldType.OS,
+        valueFieldType: $pb.PbFieldType.OS,
+        packageName: const $pb.PackageName('qomet.agora.daemons.prtagent.v1'))
     ..hasRequiredFields = false;
 
   @$core.Deprecated('See https://github.com/google/protobuf.dart/issues/998.')
@@ -1274,192 +1248,208 @@ class DepositCashResponse extends $pb.GeneratedMessage {
   static DepositCashResponse? _defaultInstance;
 
   @$pb.TagNumber(1)
-  $core.String get refRequestId => $_getSZ(0);
+  $core.String get refExecutionId => $_getSZ(0);
   @$pb.TagNumber(1)
-  set refRequestId($core.String value) => $_setString(0, value);
+  set refExecutionId($core.String value) => $_setString(0, value);
   @$pb.TagNumber(1)
-  $core.bool hasRefRequestId() => $_has(0);
+  $core.bool hasRefExecutionId() => $_has(0);
   @$pb.TagNumber(1)
-  void clearRefRequestId() => $_clearField(1);
+  void clearRefExecutionId() => $_clearField(1);
+
+  @$pb.TagNumber(105)
+  $pb.PbMap<$core.String, $core.String> get metadata => $_getMap(1);
 }
 
-class DepositAssetRequest extends $pb.GeneratedMessage {
-  factory DepositAssetRequest({
-    $core.String? refRequestId,
-    $core.String? accountId,
-    $core.String? assetId,
-    $fixnum.Int64? amount,
-    $core.String? auxData,
+class DepositInstrumentRequest extends $pb.GeneratedMessage {
+  factory DepositInstrumentRequest({
+    $core.String? proposedExecutionId,
+    $core.String? accountIid,
+    $core.String? instrumentIid,
+    $core.String? units,
+    $core.Iterable<$core.MapEntry<$core.String, $core.String>>? auxData,
   }) {
     final result = create();
-    if (refRequestId != null) result.refRequestId = refRequestId;
-    if (accountId != null) result.accountId = accountId;
-    if (assetId != null) result.assetId = assetId;
-    if (amount != null) result.amount = amount;
-    if (auxData != null) result.auxData = auxData;
+    if (proposedExecutionId != null)
+      result.proposedExecutionId = proposedExecutionId;
+    if (accountIid != null) result.accountIid = accountIid;
+    if (instrumentIid != null) result.instrumentIid = instrumentIid;
+    if (units != null) result.units = units;
+    if (auxData != null) result.auxData.addEntries(auxData);
     return result;
   }
 
-  DepositAssetRequest._();
+  DepositInstrumentRequest._();
 
-  factory DepositAssetRequest.fromBuffer($core.List<$core.int> data,
+  factory DepositInstrumentRequest.fromBuffer($core.List<$core.int> data,
           [$pb.ExtensionRegistry registry = $pb.ExtensionRegistry.EMPTY]) =>
       create()..mergeFromBuffer(data, registry);
-  factory DepositAssetRequest.fromJson($core.String json,
+  factory DepositInstrumentRequest.fromJson($core.String json,
           [$pb.ExtensionRegistry registry = $pb.ExtensionRegistry.EMPTY]) =>
       create()..mergeFromJson(json, registry);
 
   static final $pb.BuilderInfo _i = $pb.BuilderInfo(
-      _omitMessageNames ? '' : 'DepositAssetRequest',
+      _omitMessageNames ? '' : 'DepositInstrumentRequest',
       package: const $pb.PackageName(
           _omitMessageNames ? '' : 'qomet.agora.daemons.prtagent.v1'),
       createEmptyInstance: create)
-    ..aOS(1, _omitFieldNames ? '' : 'refRequestId')
-    ..aOS(2, _omitFieldNames ? '' : 'accountId')
-    ..aOS(3, _omitFieldNames ? '' : 'assetId')
-    ..aInt64(4, _omitFieldNames ? '' : 'amount')
-    ..aOS(5, _omitFieldNames ? '' : 'auxData')
+    ..aOS(1, _omitFieldNames ? '' : 'proposedExecutionId')
+    ..aOS(2, _omitFieldNames ? '' : 'accountIid')
+    ..aOS(3, _omitFieldNames ? '' : 'instrumentIid')
+    ..aOS(4, _omitFieldNames ? '' : 'units')
+    ..m<$core.String, $core.String>(105, _omitFieldNames ? '' : 'auxData',
+        entryClassName: 'DepositInstrumentRequest.AuxDataEntry',
+        keyFieldType: $pb.PbFieldType.OS,
+        valueFieldType: $pb.PbFieldType.OS,
+        packageName: const $pb.PackageName('qomet.agora.daemons.prtagent.v1'))
     ..hasRequiredFields = false;
 
   @$core.Deprecated('See https://github.com/google/protobuf.dart/issues/998.')
-  DepositAssetRequest clone() => DepositAssetRequest()..mergeFromMessage(this);
+  DepositInstrumentRequest clone() =>
+      DepositInstrumentRequest()..mergeFromMessage(this);
   @$core.Deprecated('See https://github.com/google/protobuf.dart/issues/998.')
-  DepositAssetRequest copyWith(void Function(DepositAssetRequest) updates) =>
-      super.copyWith((message) => updates(message as DepositAssetRequest))
-          as DepositAssetRequest;
+  DepositInstrumentRequest copyWith(
+          void Function(DepositInstrumentRequest) updates) =>
+      super.copyWith((message) => updates(message as DepositInstrumentRequest))
+          as DepositInstrumentRequest;
 
   @$core.override
   $pb.BuilderInfo get info_ => _i;
 
   @$core.pragma('dart2js:noInline')
-  static DepositAssetRequest create() => DepositAssetRequest._();
+  static DepositInstrumentRequest create() => DepositInstrumentRequest._();
   @$core.override
-  DepositAssetRequest createEmptyInstance() => create();
-  static $pb.PbList<DepositAssetRequest> createRepeated() =>
-      $pb.PbList<DepositAssetRequest>();
+  DepositInstrumentRequest createEmptyInstance() => create();
+  static $pb.PbList<DepositInstrumentRequest> createRepeated() =>
+      $pb.PbList<DepositInstrumentRequest>();
   @$core.pragma('dart2js:noInline')
-  static DepositAssetRequest getDefault() => _defaultInstance ??=
-      $pb.GeneratedMessage.$_defaultFor<DepositAssetRequest>(create);
-  static DepositAssetRequest? _defaultInstance;
+  static DepositInstrumentRequest getDefault() => _defaultInstance ??=
+      $pb.GeneratedMessage.$_defaultFor<DepositInstrumentRequest>(create);
+  static DepositInstrumentRequest? _defaultInstance;
 
   @$pb.TagNumber(1)
-  $core.String get refRequestId => $_getSZ(0);
+  $core.String get proposedExecutionId => $_getSZ(0);
   @$pb.TagNumber(1)
-  set refRequestId($core.String value) => $_setString(0, value);
+  set proposedExecutionId($core.String value) => $_setString(0, value);
   @$pb.TagNumber(1)
-  $core.bool hasRefRequestId() => $_has(0);
+  $core.bool hasProposedExecutionId() => $_has(0);
   @$pb.TagNumber(1)
-  void clearRefRequestId() => $_clearField(1);
+  void clearProposedExecutionId() => $_clearField(1);
 
   @$pb.TagNumber(2)
-  $core.String get accountId => $_getSZ(1);
+  $core.String get accountIid => $_getSZ(1);
   @$pb.TagNumber(2)
-  set accountId($core.String value) => $_setString(1, value);
+  set accountIid($core.String value) => $_setString(1, value);
   @$pb.TagNumber(2)
-  $core.bool hasAccountId() => $_has(1);
+  $core.bool hasAccountIid() => $_has(1);
   @$pb.TagNumber(2)
-  void clearAccountId() => $_clearField(2);
+  void clearAccountIid() => $_clearField(2);
 
   @$pb.TagNumber(3)
-  $core.String get assetId => $_getSZ(2);
+  $core.String get instrumentIid => $_getSZ(2);
   @$pb.TagNumber(3)
-  set assetId($core.String value) => $_setString(2, value);
+  set instrumentIid($core.String value) => $_setString(2, value);
   @$pb.TagNumber(3)
-  $core.bool hasAssetId() => $_has(2);
+  $core.bool hasInstrumentIid() => $_has(2);
   @$pb.TagNumber(3)
-  void clearAssetId() => $_clearField(3);
+  void clearInstrumentIid() => $_clearField(3);
 
   @$pb.TagNumber(4)
-  $fixnum.Int64 get amount => $_getI64(3);
+  $core.String get units => $_getSZ(3);
   @$pb.TagNumber(4)
-  set amount($fixnum.Int64 value) => $_setInt64(3, value);
+  set units($core.String value) => $_setString(3, value);
   @$pb.TagNumber(4)
-  $core.bool hasAmount() => $_has(3);
+  $core.bool hasUnits() => $_has(3);
   @$pb.TagNumber(4)
-  void clearAmount() => $_clearField(4);
+  void clearUnits() => $_clearField(4);
 
-  @$pb.TagNumber(5)
-  $core.String get auxData => $_getSZ(4);
-  @$pb.TagNumber(5)
-  set auxData($core.String value) => $_setString(4, value);
-  @$pb.TagNumber(5)
-  $core.bool hasAuxData() => $_has(4);
-  @$pb.TagNumber(5)
-  void clearAuxData() => $_clearField(5);
+  @$pb.TagNumber(105)
+  $pb.PbMap<$core.String, $core.String> get auxData => $_getMap(4);
 }
 
-class DepositAssetResponse extends $pb.GeneratedMessage {
-  factory DepositAssetResponse({
-    $core.String? refRequestId,
+class DepositInstrumentResponse extends $pb.GeneratedMessage {
+  factory DepositInstrumentResponse({
+    $core.String? refExecutionId,
+    $core.Iterable<$core.MapEntry<$core.String, $core.String>>? metadata,
   }) {
     final result = create();
-    if (refRequestId != null) result.refRequestId = refRequestId;
+    if (refExecutionId != null) result.refExecutionId = refExecutionId;
+    if (metadata != null) result.metadata.addEntries(metadata);
     return result;
   }
 
-  DepositAssetResponse._();
+  DepositInstrumentResponse._();
 
-  factory DepositAssetResponse.fromBuffer($core.List<$core.int> data,
+  factory DepositInstrumentResponse.fromBuffer($core.List<$core.int> data,
           [$pb.ExtensionRegistry registry = $pb.ExtensionRegistry.EMPTY]) =>
       create()..mergeFromBuffer(data, registry);
-  factory DepositAssetResponse.fromJson($core.String json,
+  factory DepositInstrumentResponse.fromJson($core.String json,
           [$pb.ExtensionRegistry registry = $pb.ExtensionRegistry.EMPTY]) =>
       create()..mergeFromJson(json, registry);
 
   static final $pb.BuilderInfo _i = $pb.BuilderInfo(
-      _omitMessageNames ? '' : 'DepositAssetResponse',
+      _omitMessageNames ? '' : 'DepositInstrumentResponse',
       package: const $pb.PackageName(
           _omitMessageNames ? '' : 'qomet.agora.daemons.prtagent.v1'),
       createEmptyInstance: create)
-    ..aOS(1, _omitFieldNames ? '' : 'refRequestId')
+    ..aOS(1, _omitFieldNames ? '' : 'refExecutionId')
+    ..m<$core.String, $core.String>(105, _omitFieldNames ? '' : 'metadata',
+        entryClassName: 'DepositInstrumentResponse.MetadataEntry',
+        keyFieldType: $pb.PbFieldType.OS,
+        valueFieldType: $pb.PbFieldType.OS,
+        packageName: const $pb.PackageName('qomet.agora.daemons.prtagent.v1'))
     ..hasRequiredFields = false;
 
   @$core.Deprecated('See https://github.com/google/protobuf.dart/issues/998.')
-  DepositAssetResponse clone() =>
-      DepositAssetResponse()..mergeFromMessage(this);
+  DepositInstrumentResponse clone() =>
+      DepositInstrumentResponse()..mergeFromMessage(this);
   @$core.Deprecated('See https://github.com/google/protobuf.dart/issues/998.')
-  DepositAssetResponse copyWith(void Function(DepositAssetResponse) updates) =>
-      super.copyWith((message) => updates(message as DepositAssetResponse))
-          as DepositAssetResponse;
+  DepositInstrumentResponse copyWith(
+          void Function(DepositInstrumentResponse) updates) =>
+      super.copyWith((message) => updates(message as DepositInstrumentResponse))
+          as DepositInstrumentResponse;
 
   @$core.override
   $pb.BuilderInfo get info_ => _i;
 
   @$core.pragma('dart2js:noInline')
-  static DepositAssetResponse create() => DepositAssetResponse._();
+  static DepositInstrumentResponse create() => DepositInstrumentResponse._();
   @$core.override
-  DepositAssetResponse createEmptyInstance() => create();
-  static $pb.PbList<DepositAssetResponse> createRepeated() =>
-      $pb.PbList<DepositAssetResponse>();
+  DepositInstrumentResponse createEmptyInstance() => create();
+  static $pb.PbList<DepositInstrumentResponse> createRepeated() =>
+      $pb.PbList<DepositInstrumentResponse>();
   @$core.pragma('dart2js:noInline')
-  static DepositAssetResponse getDefault() => _defaultInstance ??=
-      $pb.GeneratedMessage.$_defaultFor<DepositAssetResponse>(create);
-  static DepositAssetResponse? _defaultInstance;
+  static DepositInstrumentResponse getDefault() => _defaultInstance ??=
+      $pb.GeneratedMessage.$_defaultFor<DepositInstrumentResponse>(create);
+  static DepositInstrumentResponse? _defaultInstance;
 
   @$pb.TagNumber(1)
-  $core.String get refRequestId => $_getSZ(0);
+  $core.String get refExecutionId => $_getSZ(0);
   @$pb.TagNumber(1)
-  set refRequestId($core.String value) => $_setString(0, value);
+  set refExecutionId($core.String value) => $_setString(0, value);
   @$pb.TagNumber(1)
-  $core.bool hasRefRequestId() => $_has(0);
+  $core.bool hasRefExecutionId() => $_has(0);
   @$pb.TagNumber(1)
-  void clearRefRequestId() => $_clearField(1);
+  void clearRefExecutionId() => $_clearField(1);
+
+  @$pb.TagNumber(105)
+  $pb.PbMap<$core.String, $core.String> get metadata => $_getMap(1);
 }
 
 class WithdrawCashRequest extends $pb.GeneratedMessage {
   factory WithdrawCashRequest({
-    $core.String? refRequestId,
-    $core.String? accountId,
-    $core.String? currencyAssetId,
-    $fixnum.Int64? amount,
-    $core.String? auxData,
+    $core.String? proposedExecutionId,
+    $core.String? accountIid,
+    $core.String? currencyCode,
+    $core.String? amount,
+    $core.Iterable<$core.MapEntry<$core.String, $core.String>>? auxData,
   }) {
     final result = create();
-    if (refRequestId != null) result.refRequestId = refRequestId;
-    if (accountId != null) result.accountId = accountId;
-    if (currencyAssetId != null) result.currencyAssetId = currencyAssetId;
+    if (proposedExecutionId != null)
+      result.proposedExecutionId = proposedExecutionId;
+    if (accountIid != null) result.accountIid = accountIid;
+    if (currencyCode != null) result.currencyCode = currencyCode;
     if (amount != null) result.amount = amount;
-    if (auxData != null) result.auxData = auxData;
+    if (auxData != null) result.auxData.addEntries(auxData);
     return result;
   }
 
@@ -1477,11 +1467,15 @@ class WithdrawCashRequest extends $pb.GeneratedMessage {
       package: const $pb.PackageName(
           _omitMessageNames ? '' : 'qomet.agora.daemons.prtagent.v1'),
       createEmptyInstance: create)
-    ..aOS(1, _omitFieldNames ? '' : 'refRequestId')
-    ..aOS(2, _omitFieldNames ? '' : 'accountId')
-    ..aOS(3, _omitFieldNames ? '' : 'currencyAssetId')
-    ..aInt64(4, _omitFieldNames ? '' : 'amount')
-    ..aOS(5, _omitFieldNames ? '' : 'auxData')
+    ..aOS(1, _omitFieldNames ? '' : 'proposedExecutionId')
+    ..aOS(2, _omitFieldNames ? '' : 'accountIid')
+    ..aOS(3, _omitFieldNames ? '' : 'currencyCode')
+    ..aOS(4, _omitFieldNames ? '' : 'amount')
+    ..m<$core.String, $core.String>(105, _omitFieldNames ? '' : 'auxData',
+        entryClassName: 'WithdrawCashRequest.AuxDataEntry',
+        keyFieldType: $pb.PbFieldType.OS,
+        valueFieldType: $pb.PbFieldType.OS,
+        packageName: const $pb.PackageName('qomet.agora.daemons.prtagent.v1'))
     ..hasRequiredFields = false;
 
   @$core.Deprecated('See https://github.com/google/protobuf.dart/issues/998.')
@@ -1506,57 +1500,53 @@ class WithdrawCashRequest extends $pb.GeneratedMessage {
   static WithdrawCashRequest? _defaultInstance;
 
   @$pb.TagNumber(1)
-  $core.String get refRequestId => $_getSZ(0);
+  $core.String get proposedExecutionId => $_getSZ(0);
   @$pb.TagNumber(1)
-  set refRequestId($core.String value) => $_setString(0, value);
+  set proposedExecutionId($core.String value) => $_setString(0, value);
   @$pb.TagNumber(1)
-  $core.bool hasRefRequestId() => $_has(0);
+  $core.bool hasProposedExecutionId() => $_has(0);
   @$pb.TagNumber(1)
-  void clearRefRequestId() => $_clearField(1);
+  void clearProposedExecutionId() => $_clearField(1);
 
   @$pb.TagNumber(2)
-  $core.String get accountId => $_getSZ(1);
+  $core.String get accountIid => $_getSZ(1);
   @$pb.TagNumber(2)
-  set accountId($core.String value) => $_setString(1, value);
+  set accountIid($core.String value) => $_setString(1, value);
   @$pb.TagNumber(2)
-  $core.bool hasAccountId() => $_has(1);
+  $core.bool hasAccountIid() => $_has(1);
   @$pb.TagNumber(2)
-  void clearAccountId() => $_clearField(2);
+  void clearAccountIid() => $_clearField(2);
 
   @$pb.TagNumber(3)
-  $core.String get currencyAssetId => $_getSZ(2);
+  $core.String get currencyCode => $_getSZ(2);
   @$pb.TagNumber(3)
-  set currencyAssetId($core.String value) => $_setString(2, value);
+  set currencyCode($core.String value) => $_setString(2, value);
   @$pb.TagNumber(3)
-  $core.bool hasCurrencyAssetId() => $_has(2);
+  $core.bool hasCurrencyCode() => $_has(2);
   @$pb.TagNumber(3)
-  void clearCurrencyAssetId() => $_clearField(3);
+  void clearCurrencyCode() => $_clearField(3);
 
   @$pb.TagNumber(4)
-  $fixnum.Int64 get amount => $_getI64(3);
+  $core.String get amount => $_getSZ(3);
   @$pb.TagNumber(4)
-  set amount($fixnum.Int64 value) => $_setInt64(3, value);
+  set amount($core.String value) => $_setString(3, value);
   @$pb.TagNumber(4)
   $core.bool hasAmount() => $_has(3);
   @$pb.TagNumber(4)
   void clearAmount() => $_clearField(4);
 
-  @$pb.TagNumber(5)
-  $core.String get auxData => $_getSZ(4);
-  @$pb.TagNumber(5)
-  set auxData($core.String value) => $_setString(4, value);
-  @$pb.TagNumber(5)
-  $core.bool hasAuxData() => $_has(4);
-  @$pb.TagNumber(5)
-  void clearAuxData() => $_clearField(5);
+  @$pb.TagNumber(105)
+  $pb.PbMap<$core.String, $core.String> get auxData => $_getMap(4);
 }
 
 class WithdrawCashResponse extends $pb.GeneratedMessage {
   factory WithdrawCashResponse({
-    $core.String? refRequestId,
+    $core.String? refExecutionId,
+    $core.Iterable<$core.MapEntry<$core.String, $core.String>>? metadata,
   }) {
     final result = create();
-    if (refRequestId != null) result.refRequestId = refRequestId;
+    if (refExecutionId != null) result.refExecutionId = refExecutionId;
+    if (metadata != null) result.metadata.addEntries(metadata);
     return result;
   }
 
@@ -1574,7 +1564,12 @@ class WithdrawCashResponse extends $pb.GeneratedMessage {
       package: const $pb.PackageName(
           _omitMessageNames ? '' : 'qomet.agora.daemons.prtagent.v1'),
       createEmptyInstance: create)
-    ..aOS(1, _omitFieldNames ? '' : 'refRequestId')
+    ..aOS(1, _omitFieldNames ? '' : 'refExecutionId')
+    ..m<$core.String, $core.String>(105, _omitFieldNames ? '' : 'metadata',
+        entryClassName: 'WithdrawCashResponse.MetadataEntry',
+        keyFieldType: $pb.PbFieldType.OS,
+        valueFieldType: $pb.PbFieldType.OS,
+        packageName: const $pb.PackageName('qomet.agora.daemons.prtagent.v1'))
     ..hasRequiredFields = false;
 
   @$core.Deprecated('See https://github.com/google/protobuf.dart/issues/998.')
@@ -1600,315 +1595,212 @@ class WithdrawCashResponse extends $pb.GeneratedMessage {
   static WithdrawCashResponse? _defaultInstance;
 
   @$pb.TagNumber(1)
-  $core.String get refRequestId => $_getSZ(0);
+  $core.String get refExecutionId => $_getSZ(0);
   @$pb.TagNumber(1)
-  set refRequestId($core.String value) => $_setString(0, value);
+  set refExecutionId($core.String value) => $_setString(0, value);
   @$pb.TagNumber(1)
-  $core.bool hasRefRequestId() => $_has(0);
+  $core.bool hasRefExecutionId() => $_has(0);
   @$pb.TagNumber(1)
-  void clearRefRequestId() => $_clearField(1);
+  void clearRefExecutionId() => $_clearField(1);
+
+  @$pb.TagNumber(105)
+  $pb.PbMap<$core.String, $core.String> get metadata => $_getMap(1);
 }
 
-/// Transaction message reflects Activity structure with from/to accounts and stashes
-/// This structure mirrors the Activity model from pkg/chain/trezor/activity.go
-class Transaction extends $pb.GeneratedMessage {
-  factory Transaction({
-    $core.String? transactionId,
-    $core.String? transactionHash,
-    $1.Time? timestamp,
-    TransactionType? type,
-    $core.String? operation,
-    $core.String? accountId,
-    $core.String? fromAccount,
-    $core.String? toAccount,
-    $core.String? fromReserveId,
-    $core.String? toReserveId,
-    $core.String? fromStash,
-    $core.String? toStash,
-    $core.String? assetId,
-    $core.String? amount,
-    $core.String? referenceId,
-    $core.String? referenceType,
-    $core.String? description,
-    $core.String? metadata,
+class WithdrawInstrumentRequest extends $pb.GeneratedMessage {
+  factory WithdrawInstrumentRequest({
+    $core.String? proposedExecutionId,
+    $core.String? accountIid,
+    $core.String? instrumentIid,
+    $core.String? units,
+    $core.Iterable<$core.MapEntry<$core.String, $core.String>>? auxData,
   }) {
     final result = create();
-    if (transactionId != null) result.transactionId = transactionId;
-    if (transactionHash != null) result.transactionHash = transactionHash;
-    if (timestamp != null) result.timestamp = timestamp;
-    if (type != null) result.type = type;
-    if (operation != null) result.operation = operation;
-    if (accountId != null) result.accountId = accountId;
-    if (fromAccount != null) result.fromAccount = fromAccount;
-    if (toAccount != null) result.toAccount = toAccount;
-    if (fromReserveId != null) result.fromReserveId = fromReserveId;
-    if (toReserveId != null) result.toReserveId = toReserveId;
-    if (fromStash != null) result.fromStash = fromStash;
-    if (toStash != null) result.toStash = toStash;
-    if (assetId != null) result.assetId = assetId;
-    if (amount != null) result.amount = amount;
-    if (referenceId != null) result.referenceId = referenceId;
-    if (referenceType != null) result.referenceType = referenceType;
-    if (description != null) result.description = description;
-    if (metadata != null) result.metadata = metadata;
+    if (proposedExecutionId != null)
+      result.proposedExecutionId = proposedExecutionId;
+    if (accountIid != null) result.accountIid = accountIid;
+    if (instrumentIid != null) result.instrumentIid = instrumentIid;
+    if (units != null) result.units = units;
+    if (auxData != null) result.auxData.addEntries(auxData);
     return result;
   }
 
-  Transaction._();
+  WithdrawInstrumentRequest._();
 
-  factory Transaction.fromBuffer($core.List<$core.int> data,
+  factory WithdrawInstrumentRequest.fromBuffer($core.List<$core.int> data,
           [$pb.ExtensionRegistry registry = $pb.ExtensionRegistry.EMPTY]) =>
       create()..mergeFromBuffer(data, registry);
-  factory Transaction.fromJson($core.String json,
+  factory WithdrawInstrumentRequest.fromJson($core.String json,
           [$pb.ExtensionRegistry registry = $pb.ExtensionRegistry.EMPTY]) =>
       create()..mergeFromJson(json, registry);
 
   static final $pb.BuilderInfo _i = $pb.BuilderInfo(
-      _omitMessageNames ? '' : 'Transaction',
+      _omitMessageNames ? '' : 'WithdrawInstrumentRequest',
       package: const $pb.PackageName(
           _omitMessageNames ? '' : 'qomet.agora.daemons.prtagent.v1'),
       createEmptyInstance: create)
-    ..aOS(1, _omitFieldNames ? '' : 'transactionId')
-    ..aOS(2, _omitFieldNames ? '' : 'transactionHash')
-    ..aOM<$1.Time>(3, _omitFieldNames ? '' : 'timestamp',
-        subBuilder: $1.Time.create)
-    ..e<TransactionType>(4, _omitFieldNames ? '' : 'type', $pb.PbFieldType.OE,
-        defaultOrMaker: TransactionType.TRANSACTION_TYPE__UNKNOWN,
-        valueOf: TransactionType.valueOf,
-        enumValues: TransactionType.values)
-    ..aOS(5, _omitFieldNames ? '' : 'operation')
-    ..aOS(6, _omitFieldNames ? '' : 'accountId')
-    ..aOS(7, _omitFieldNames ? '' : 'fromAccount')
-    ..aOS(8, _omitFieldNames ? '' : 'toAccount')
-    ..aOS(9, _omitFieldNames ? '' : 'fromReserveId')
-    ..aOS(10, _omitFieldNames ? '' : 'toReserveId')
-    ..aOS(11, _omitFieldNames ? '' : 'fromStash')
-    ..aOS(12, _omitFieldNames ? '' : 'toStash')
-    ..aOS(13, _omitFieldNames ? '' : 'assetId')
-    ..aOS(14, _omitFieldNames ? '' : 'amount')
-    ..aOS(15, _omitFieldNames ? '' : 'referenceId')
-    ..aOS(16, _omitFieldNames ? '' : 'referenceType')
-    ..aOS(17, _omitFieldNames ? '' : 'description')
-    ..aOS(18, _omitFieldNames ? '' : 'metadata')
+    ..aOS(1, _omitFieldNames ? '' : 'proposedExecutionId')
+    ..aOS(2, _omitFieldNames ? '' : 'accountIid')
+    ..aOS(3, _omitFieldNames ? '' : 'instrumentIid')
+    ..aOS(4, _omitFieldNames ? '' : 'units')
+    ..m<$core.String, $core.String>(105, _omitFieldNames ? '' : 'auxData',
+        entryClassName: 'WithdrawInstrumentRequest.AuxDataEntry',
+        keyFieldType: $pb.PbFieldType.OS,
+        valueFieldType: $pb.PbFieldType.OS,
+        packageName: const $pb.PackageName('qomet.agora.daemons.prtagent.v1'))
     ..hasRequiredFields = false;
 
   @$core.Deprecated('See https://github.com/google/protobuf.dart/issues/998.')
-  Transaction clone() => Transaction()..mergeFromMessage(this);
+  WithdrawInstrumentRequest clone() =>
+      WithdrawInstrumentRequest()..mergeFromMessage(this);
   @$core.Deprecated('See https://github.com/google/protobuf.dart/issues/998.')
-  Transaction copyWith(void Function(Transaction) updates) =>
-      super.copyWith((message) => updates(message as Transaction))
-          as Transaction;
+  WithdrawInstrumentRequest copyWith(
+          void Function(WithdrawInstrumentRequest) updates) =>
+      super.copyWith((message) => updates(message as WithdrawInstrumentRequest))
+          as WithdrawInstrumentRequest;
 
   @$core.override
   $pb.BuilderInfo get info_ => _i;
 
   @$core.pragma('dart2js:noInline')
-  static Transaction create() => Transaction._();
+  static WithdrawInstrumentRequest create() => WithdrawInstrumentRequest._();
   @$core.override
-  Transaction createEmptyInstance() => create();
-  static $pb.PbList<Transaction> createRepeated() => $pb.PbList<Transaction>();
+  WithdrawInstrumentRequest createEmptyInstance() => create();
+  static $pb.PbList<WithdrawInstrumentRequest> createRepeated() =>
+      $pb.PbList<WithdrawInstrumentRequest>();
   @$core.pragma('dart2js:noInline')
-  static Transaction getDefault() => _defaultInstance ??=
-      $pb.GeneratedMessage.$_defaultFor<Transaction>(create);
-  static Transaction? _defaultInstance;
+  static WithdrawInstrumentRequest getDefault() => _defaultInstance ??=
+      $pb.GeneratedMessage.$_defaultFor<WithdrawInstrumentRequest>(create);
+  static WithdrawInstrumentRequest? _defaultInstance;
 
-  /// Core identifiers
   @$pb.TagNumber(1)
-  $core.String get transactionId => $_getSZ(0);
+  $core.String get proposedExecutionId => $_getSZ(0);
   @$pb.TagNumber(1)
-  set transactionId($core.String value) => $_setString(0, value);
+  set proposedExecutionId($core.String value) => $_setString(0, value);
   @$pb.TagNumber(1)
-  $core.bool hasTransactionId() => $_has(0);
+  $core.bool hasProposedExecutionId() => $_has(0);
   @$pb.TagNumber(1)
-  void clearTransactionId() => $_clearField(1);
+  void clearProposedExecutionId() => $_clearField(1);
 
   @$pb.TagNumber(2)
-  $core.String get transactionHash => $_getSZ(1);
+  $core.String get accountIid => $_getSZ(1);
   @$pb.TagNumber(2)
-  set transactionHash($core.String value) => $_setString(1, value);
+  set accountIid($core.String value) => $_setString(1, value);
   @$pb.TagNumber(2)
-  $core.bool hasTransactionHash() => $_has(1);
+  $core.bool hasAccountIid() => $_has(1);
   @$pb.TagNumber(2)
-  void clearTransactionHash() => $_clearField(2);
+  void clearAccountIid() => $_clearField(2);
 
   @$pb.TagNumber(3)
-  $1.Time get timestamp => $_getN(2);
+  $core.String get instrumentIid => $_getSZ(2);
   @$pb.TagNumber(3)
-  set timestamp($1.Time value) => $_setField(3, value);
+  set instrumentIid($core.String value) => $_setString(2, value);
   @$pb.TagNumber(3)
-  $core.bool hasTimestamp() => $_has(2);
+  $core.bool hasInstrumentIid() => $_has(2);
   @$pb.TagNumber(3)
-  void clearTimestamp() => $_clearField(3);
-  @$pb.TagNumber(3)
-  $1.Time ensureTimestamp() => $_ensure(2);
+  void clearInstrumentIid() => $_clearField(3);
 
-  /// Transaction type and operation
   @$pb.TagNumber(4)
-  TransactionType get type => $_getN(3);
+  $core.String get units => $_getSZ(3);
   @$pb.TagNumber(4)
-  set type(TransactionType value) => $_setField(4, value);
+  set units($core.String value) => $_setString(3, value);
   @$pb.TagNumber(4)
-  $core.bool hasType() => $_has(3);
+  $core.bool hasUnits() => $_has(3);
   @$pb.TagNumber(4)
-  void clearType() => $_clearField(4);
+  void clearUnits() => $_clearField(4);
 
-  @$pb.TagNumber(5)
-  $core.String get operation => $_getSZ(4);
-  @$pb.TagNumber(5)
-  set operation($core.String value) => $_setString(4, value);
-  @$pb.TagNumber(5)
-  $core.bool hasOperation() => $_has(4);
-  @$pb.TagNumber(5)
-  void clearOperation() => $_clearField(5);
+  @$pb.TagNumber(105)
+  $pb.PbMap<$core.String, $core.String> get auxData => $_getMap(4);
+}
 
-  /// Account information (reflecting Activity structure)
-  @$pb.TagNumber(6)
-  $core.String get accountId => $_getSZ(5);
-  @$pb.TagNumber(6)
-  set accountId($core.String value) => $_setString(5, value);
-  @$pb.TagNumber(6)
-  $core.bool hasAccountId() => $_has(5);
-  @$pb.TagNumber(6)
-  void clearAccountId() => $_clearField(6);
+class WithdrawInstrumentResponse extends $pb.GeneratedMessage {
+  factory WithdrawInstrumentResponse({
+    $core.String? refExecutionId,
+    $core.Iterable<$core.MapEntry<$core.String, $core.String>>? metadata,
+  }) {
+    final result = create();
+    if (refExecutionId != null) result.refExecutionId = refExecutionId;
+    if (metadata != null) result.metadata.addEntries(metadata);
+    return result;
+  }
 
-  @$pb.TagNumber(7)
-  $core.String get fromAccount => $_getSZ(6);
-  @$pb.TagNumber(7)
-  set fromAccount($core.String value) => $_setString(6, value);
-  @$pb.TagNumber(7)
-  $core.bool hasFromAccount() => $_has(6);
-  @$pb.TagNumber(7)
-  void clearFromAccount() => $_clearField(7);
+  WithdrawInstrumentResponse._();
 
-  @$pb.TagNumber(8)
-  $core.String get toAccount => $_getSZ(7);
-  @$pb.TagNumber(8)
-  set toAccount($core.String value) => $_setString(7, value);
-  @$pb.TagNumber(8)
-  $core.bool hasToAccount() => $_has(7);
-  @$pb.TagNumber(8)
-  void clearToAccount() => $_clearField(8);
+  factory WithdrawInstrumentResponse.fromBuffer($core.List<$core.int> data,
+          [$pb.ExtensionRegistry registry = $pb.ExtensionRegistry.EMPTY]) =>
+      create()..mergeFromBuffer(data, registry);
+  factory WithdrawInstrumentResponse.fromJson($core.String json,
+          [$pb.ExtensionRegistry registry = $pb.ExtensionRegistry.EMPTY]) =>
+      create()..mergeFromJson(json, registry);
 
-  /// Reserve IDs (from Activity model)
-  @$pb.TagNumber(9)
-  $core.String get fromReserveId => $_getSZ(8);
-  @$pb.TagNumber(9)
-  set fromReserveId($core.String value) => $_setString(8, value);
-  @$pb.TagNumber(9)
-  $core.bool hasFromReserveId() => $_has(8);
-  @$pb.TagNumber(9)
-  void clearFromReserveId() => $_clearField(9);
+  static final $pb.BuilderInfo _i = $pb.BuilderInfo(
+      _omitMessageNames ? '' : 'WithdrawInstrumentResponse',
+      package: const $pb.PackageName(
+          _omitMessageNames ? '' : 'qomet.agora.daemons.prtagent.v1'),
+      createEmptyInstance: create)
+    ..aOS(1, _omitFieldNames ? '' : 'refExecutionId')
+    ..m<$core.String, $core.String>(105, _omitFieldNames ? '' : 'metadata',
+        entryClassName: 'WithdrawInstrumentResponse.MetadataEntry',
+        keyFieldType: $pb.PbFieldType.OS,
+        valueFieldType: $pb.PbFieldType.OS,
+        packageName: const $pb.PackageName('qomet.agora.daemons.prtagent.v1'))
+    ..hasRequiredFields = false;
 
-  @$pb.TagNumber(10)
-  $core.String get toReserveId => $_getSZ(9);
-  @$pb.TagNumber(10)
-  set toReserveId($core.String value) => $_setString(9, value);
-  @$pb.TagNumber(10)
-  $core.bool hasToReserveId() => $_has(9);
-  @$pb.TagNumber(10)
-  void clearToReserveId() => $_clearField(10);
+  @$core.Deprecated('See https://github.com/google/protobuf.dart/issues/998.')
+  WithdrawInstrumentResponse clone() =>
+      WithdrawInstrumentResponse()..mergeFromMessage(this);
+  @$core.Deprecated('See https://github.com/google/protobuf.dart/issues/998.')
+  WithdrawInstrumentResponse copyWith(
+          void Function(WithdrawInstrumentResponse) updates) =>
+      super.copyWith(
+              (message) => updates(message as WithdrawInstrumentResponse))
+          as WithdrawInstrumentResponse;
 
-  /// Stash information (critical for the Activity model)
-  @$pb.TagNumber(11)
-  $core.String get fromStash => $_getSZ(10);
-  @$pb.TagNumber(11)
-  set fromStash($core.String value) => $_setString(10, value);
-  @$pb.TagNumber(11)
-  $core.bool hasFromStash() => $_has(10);
-  @$pb.TagNumber(11)
-  void clearFromStash() => $_clearField(11);
+  @$core.override
+  $pb.BuilderInfo get info_ => _i;
 
-  @$pb.TagNumber(12)
-  $core.String get toStash => $_getSZ(11);
-  @$pb.TagNumber(12)
-  set toStash($core.String value) => $_setString(11, value);
-  @$pb.TagNumber(12)
-  $core.bool hasToStash() => $_has(11);
-  @$pb.TagNumber(12)
-  void clearToStash() => $_clearField(12);
+  @$core.pragma('dart2js:noInline')
+  static WithdrawInstrumentResponse create() => WithdrawInstrumentResponse._();
+  @$core.override
+  WithdrawInstrumentResponse createEmptyInstance() => create();
+  static $pb.PbList<WithdrawInstrumentResponse> createRepeated() =>
+      $pb.PbList<WithdrawInstrumentResponse>();
+  @$core.pragma('dart2js:noInline')
+  static WithdrawInstrumentResponse getDefault() => _defaultInstance ??=
+      $pb.GeneratedMessage.$_defaultFor<WithdrawInstrumentResponse>(create);
+  static WithdrawInstrumentResponse? _defaultInstance;
 
-  /// Asset and amount
-  @$pb.TagNumber(13)
-  $core.String get assetId => $_getSZ(12);
-  @$pb.TagNumber(13)
-  set assetId($core.String value) => $_setString(12, value);
-  @$pb.TagNumber(13)
-  $core.bool hasAssetId() => $_has(12);
-  @$pb.TagNumber(13)
-  void clearAssetId() => $_clearField(13);
+  @$pb.TagNumber(1)
+  $core.String get refExecutionId => $_getSZ(0);
+  @$pb.TagNumber(1)
+  set refExecutionId($core.String value) => $_setString(0, value);
+  @$pb.TagNumber(1)
+  $core.bool hasRefExecutionId() => $_has(0);
+  @$pb.TagNumber(1)
+  void clearRefExecutionId() => $_clearField(1);
 
-  @$pb.TagNumber(14)
-  $core.String get amount => $_getSZ(13);
-  @$pb.TagNumber(14)
-  set amount($core.String value) => $_setString(13, value);
-  @$pb.TagNumber(14)
-  $core.bool hasAmount() => $_has(13);
-  @$pb.TagNumber(14)
-  void clearAmount() => $_clearField(14);
-
-  /// Reference information
-  @$pb.TagNumber(15)
-  $core.String get referenceId => $_getSZ(14);
-  @$pb.TagNumber(15)
-  set referenceId($core.String value) => $_setString(14, value);
-  @$pb.TagNumber(15)
-  $core.bool hasReferenceId() => $_has(14);
-  @$pb.TagNumber(15)
-  void clearReferenceId() => $_clearField(15);
-
-  @$pb.TagNumber(16)
-  $core.String get referenceType => $_getSZ(15);
-  @$pb.TagNumber(16)
-  set referenceType($core.String value) => $_setString(15, value);
-  @$pb.TagNumber(16)
-  $core.bool hasReferenceType() => $_has(15);
-  @$pb.TagNumber(16)
-  void clearReferenceType() => $_clearField(16);
-
-  /// Additional fields
-  @$pb.TagNumber(17)
-  $core.String get description => $_getSZ(16);
-  @$pb.TagNumber(17)
-  set description($core.String value) => $_setString(16, value);
-  @$pb.TagNumber(17)
-  $core.bool hasDescription() => $_has(16);
-  @$pb.TagNumber(17)
-  void clearDescription() => $_clearField(17);
-
-  @$pb.TagNumber(18)
-  $core.String get metadata => $_getSZ(17);
-  @$pb.TagNumber(18)
-  set metadata($core.String value) => $_setString(17, value);
-  @$pb.TagNumber(18)
-  $core.bool hasMetadata() => $_has(17);
-  @$pb.TagNumber(18)
-  void clearMetadata() => $_clearField(18);
+  @$pb.TagNumber(105)
+  $pb.PbMap<$core.String, $core.String> get metadata => $_getMap(1);
 }
 
 class GetAccountOrdersRequest extends $pb.GeneratedMessage {
   factory GetAccountOrdersRequest({
-    $core.String? refRequestId,
-    $core.String? accountId,
-    $core.Iterable<$core.String>? marketIdOrNameRegexes,
+    $core.String? proposedExecutionId,
+    $core.String? accountIid,
+    $core.Iterable<$core.String>? venueIdOrSymbolRegexes,
     $1.PaginationParams? pagination,
-    $1.Time? fromTime,
-    $1.Time? toTime,
-    $1.OrderSide? side,
-    $core.Iterable<$core.bool>? statusFilters,
-    $core.Iterable<$core.String>? instrumentIdOrSymbolRegexes,
+    $3.OrderQueryFilter? orderQueryFilter,
+    $core.Iterable<$core.MapEntry<$core.String, $core.String>>? auxData,
   }) {
     final result = create();
-    if (refRequestId != null) result.refRequestId = refRequestId;
-    if (accountId != null) result.accountId = accountId;
-    if (marketIdOrNameRegexes != null)
-      result.marketIdOrNameRegexes.addAll(marketIdOrNameRegexes);
+    if (proposedExecutionId != null)
+      result.proposedExecutionId = proposedExecutionId;
+    if (accountIid != null) result.accountIid = accountIid;
+    if (venueIdOrSymbolRegexes != null)
+      result.venueIdOrSymbolRegexes.addAll(venueIdOrSymbolRegexes);
     if (pagination != null) result.pagination = pagination;
-    if (fromTime != null) result.fromTime = fromTime;
-    if (toTime != null) result.toTime = toTime;
-    if (side != null) result.side = side;
-    if (statusFilters != null) result.statusFilters.addAll(statusFilters);
-    if (instrumentIdOrSymbolRegexes != null)
-      result.instrumentIdOrSymbolRegexes.addAll(instrumentIdOrSymbolRegexes);
+    if (orderQueryFilter != null) result.orderQueryFilter = orderQueryFilter;
+    if (auxData != null) result.auxData.addEntries(auxData);
     return result;
   }
 
@@ -1926,22 +1818,18 @@ class GetAccountOrdersRequest extends $pb.GeneratedMessage {
       package: const $pb.PackageName(
           _omitMessageNames ? '' : 'qomet.agora.daemons.prtagent.v1'),
       createEmptyInstance: create)
-    ..aOS(1, _omitFieldNames ? '' : 'refRequestId')
-    ..aOS(2, _omitFieldNames ? '' : 'accountId')
-    ..pPS(3, _omitFieldNames ? '' : 'marketIdOrNameRegexes')
+    ..aOS(1, _omitFieldNames ? '' : 'proposedExecutionId')
+    ..aOS(2, _omitFieldNames ? '' : 'accountIid')
+    ..pPS(3, _omitFieldNames ? '' : 'venueIdOrSymbolRegexes')
     ..aOM<$1.PaginationParams>(4, _omitFieldNames ? '' : 'pagination',
         subBuilder: $1.PaginationParams.create)
-    ..aOM<$1.Time>(5, _omitFieldNames ? '' : 'fromTime',
-        subBuilder: $1.Time.create)
-    ..aOM<$1.Time>(6, _omitFieldNames ? '' : 'toTime',
-        subBuilder: $1.Time.create)
-    ..e<$1.OrderSide>(7, _omitFieldNames ? '' : 'side', $pb.PbFieldType.OE,
-        defaultOrMaker: $1.OrderSide.ORDER_SIDE__UNKNOWN,
-        valueOf: $1.OrderSide.valueOf,
-        enumValues: $1.OrderSide.values)
-    ..p<$core.bool>(
-        8, _omitFieldNames ? '' : 'statusFilters', $pb.PbFieldType.KB)
-    ..pPS(9, _omitFieldNames ? '' : 'instrumentIdOrSymbolRegexes')
+    ..aOM<$3.OrderQueryFilter>(5, _omitFieldNames ? '' : 'orderQueryFilter',
+        subBuilder: $3.OrderQueryFilter.create)
+    ..m<$core.String, $core.String>(105, _omitFieldNames ? '' : 'auxData',
+        entryClassName: 'GetAccountOrdersRequest.AuxDataEntry',
+        keyFieldType: $pb.PbFieldType.OS,
+        valueFieldType: $pb.PbFieldType.OS,
+        packageName: const $pb.PackageName('qomet.agora.daemons.prtagent.v1'))
     ..hasRequiredFields = false;
 
   @$core.Deprecated('See https://github.com/google/protobuf.dart/issues/998.')
@@ -1968,25 +1856,25 @@ class GetAccountOrdersRequest extends $pb.GeneratedMessage {
   static GetAccountOrdersRequest? _defaultInstance;
 
   @$pb.TagNumber(1)
-  $core.String get refRequestId => $_getSZ(0);
+  $core.String get proposedExecutionId => $_getSZ(0);
   @$pb.TagNumber(1)
-  set refRequestId($core.String value) => $_setString(0, value);
+  set proposedExecutionId($core.String value) => $_setString(0, value);
   @$pb.TagNumber(1)
-  $core.bool hasRefRequestId() => $_has(0);
+  $core.bool hasProposedExecutionId() => $_has(0);
   @$pb.TagNumber(1)
-  void clearRefRequestId() => $_clearField(1);
+  void clearProposedExecutionId() => $_clearField(1);
 
   @$pb.TagNumber(2)
-  $core.String get accountId => $_getSZ(1);
+  $core.String get accountIid => $_getSZ(1);
   @$pb.TagNumber(2)
-  set accountId($core.String value) => $_setString(1, value);
+  set accountIid($core.String value) => $_setString(1, value);
   @$pb.TagNumber(2)
-  $core.bool hasAccountId() => $_has(1);
+  $core.bool hasAccountIid() => $_has(1);
   @$pb.TagNumber(2)
-  void clearAccountId() => $_clearField(2);
+  void clearAccountIid() => $_clearField(2);
 
   @$pb.TagNumber(3)
-  $pb.PbList<$core.String> get marketIdOrNameRegexes => $_getList(2);
+  $pb.PbList<$core.String> get venueIdOrSymbolRegexes => $_getList(2);
 
   @$pb.TagNumber(4)
   $1.PaginationParams get pagination => $_getN(3);
@@ -1999,57 +1887,35 @@ class GetAccountOrdersRequest extends $pb.GeneratedMessage {
   @$pb.TagNumber(4)
   $1.PaginationParams ensurePagination() => $_ensure(3);
 
-  /// Optional filters
   @$pb.TagNumber(5)
-  $1.Time get fromTime => $_getN(4);
+  $3.OrderQueryFilter get orderQueryFilter => $_getN(4);
   @$pb.TagNumber(5)
-  set fromTime($1.Time value) => $_setField(5, value);
+  set orderQueryFilter($3.OrderQueryFilter value) => $_setField(5, value);
   @$pb.TagNumber(5)
-  $core.bool hasFromTime() => $_has(4);
+  $core.bool hasOrderQueryFilter() => $_has(4);
   @$pb.TagNumber(5)
-  void clearFromTime() => $_clearField(5);
+  void clearOrderQueryFilter() => $_clearField(5);
   @$pb.TagNumber(5)
-  $1.Time ensureFromTime() => $_ensure(4);
+  $3.OrderQueryFilter ensureOrderQueryFilter() => $_ensure(4);
 
-  @$pb.TagNumber(6)
-  $1.Time get toTime => $_getN(5);
-  @$pb.TagNumber(6)
-  set toTime($1.Time value) => $_setField(6, value);
-  @$pb.TagNumber(6)
-  $core.bool hasToTime() => $_has(5);
-  @$pb.TagNumber(6)
-  void clearToTime() => $_clearField(6);
-  @$pb.TagNumber(6)
-  $1.Time ensureToTime() => $_ensure(5);
-
-  @$pb.TagNumber(7)
-  $1.OrderSide get side => $_getN(6);
-  @$pb.TagNumber(7)
-  set side($1.OrderSide value) => $_setField(7, value);
-  @$pb.TagNumber(7)
-  $core.bool hasSide() => $_has(6);
-  @$pb.TagNumber(7)
-  void clearSide() => $_clearField(7);
-
-  @$pb.TagNumber(8)
-  $pb.PbList<$core.bool> get statusFilters => $_getList(7);
-
-  @$pb.TagNumber(9)
-  $pb.PbList<$core.String> get instrumentIdOrSymbolRegexes => $_getList(8);
+  @$pb.TagNumber(105)
+  $pb.PbMap<$core.String, $core.String> get auxData => $_getMap(5);
 }
 
 class GetAccountOrdersResponse extends $pb.GeneratedMessage {
   factory GetAccountOrdersResponse({
-    $core.String? refRequestId,
+    $core.String? refExecutionId,
     $1.PaginationInfo? paginationInfo,
-    $core.Iterable<$1.Order>? orders,
-    $1.Time? createdAt,
+    $1.DateTime? generatedAtDt,
+    $core.Iterable<$2.Order>? orders,
+    $core.Iterable<$core.MapEntry<$core.String, $core.String>>? metadata,
   }) {
     final result = create();
-    if (refRequestId != null) result.refRequestId = refRequestId;
+    if (refExecutionId != null) result.refExecutionId = refExecutionId;
     if (paginationInfo != null) result.paginationInfo = paginationInfo;
+    if (generatedAtDt != null) result.generatedAtDt = generatedAtDt;
     if (orders != null) result.orders.addAll(orders);
-    if (createdAt != null) result.createdAt = createdAt;
+    if (metadata != null) result.metadata.addEntries(metadata);
     return result;
   }
 
@@ -2067,13 +1933,18 @@ class GetAccountOrdersResponse extends $pb.GeneratedMessage {
       package: const $pb.PackageName(
           _omitMessageNames ? '' : 'qomet.agora.daemons.prtagent.v1'),
       createEmptyInstance: create)
-    ..aOS(1, _omitFieldNames ? '' : 'refRequestId')
+    ..aOS(1, _omitFieldNames ? '' : 'refExecutionId')
     ..aOM<$1.PaginationInfo>(2, _omitFieldNames ? '' : 'paginationInfo',
         subBuilder: $1.PaginationInfo.create)
-    ..pc<$1.Order>(3, _omitFieldNames ? '' : 'orders', $pb.PbFieldType.PM,
-        subBuilder: $1.Order.create)
-    ..aOM<$1.Time>(4, _omitFieldNames ? '' : 'createdAt',
-        subBuilder: $1.Time.create)
+    ..aOM<$1.DateTime>(3, _omitFieldNames ? '' : 'generatedAtDt',
+        subBuilder: $1.DateTime.create)
+    ..pc<$2.Order>(4, _omitFieldNames ? '' : 'orders', $pb.PbFieldType.PM,
+        subBuilder: $2.Order.create)
+    ..m<$core.String, $core.String>(105, _omitFieldNames ? '' : 'metadata',
+        entryClassName: 'GetAccountOrdersResponse.MetadataEntry',
+        keyFieldType: $pb.PbFieldType.OS,
+        valueFieldType: $pb.PbFieldType.OS,
+        packageName: const $pb.PackageName('qomet.agora.daemons.prtagent.v1'))
     ..hasRequiredFields = false;
 
   @$core.Deprecated('See https://github.com/google/protobuf.dart/issues/998.')
@@ -2100,13 +1971,13 @@ class GetAccountOrdersResponse extends $pb.GeneratedMessage {
   static GetAccountOrdersResponse? _defaultInstance;
 
   @$pb.TagNumber(1)
-  $core.String get refRequestId => $_getSZ(0);
+  $core.String get refExecutionId => $_getSZ(0);
   @$pb.TagNumber(1)
-  set refRequestId($core.String value) => $_setString(0, value);
+  set refExecutionId($core.String value) => $_setString(0, value);
   @$pb.TagNumber(1)
-  $core.bool hasRefRequestId() => $_has(0);
+  $core.bool hasRefExecutionId() => $_has(0);
   @$pb.TagNumber(1)
-  void clearRefRequestId() => $_clearField(1);
+  void clearRefExecutionId() => $_clearField(1);
 
   @$pb.TagNumber(2)
   $1.PaginationInfo get paginationInfo => $_getN(1);
@@ -2120,42 +1991,48 @@ class GetAccountOrdersResponse extends $pb.GeneratedMessage {
   $1.PaginationInfo ensurePaginationInfo() => $_ensure(1);
 
   @$pb.TagNumber(3)
-  $pb.PbList<$1.Order> get orders => $_getList(2);
+  $1.DateTime get generatedAtDt => $_getN(2);
+  @$pb.TagNumber(3)
+  set generatedAtDt($1.DateTime value) => $_setField(3, value);
+  @$pb.TagNumber(3)
+  $core.bool hasGeneratedAtDt() => $_has(2);
+  @$pb.TagNumber(3)
+  void clearGeneratedAtDt() => $_clearField(3);
+  @$pb.TagNumber(3)
+  $1.DateTime ensureGeneratedAtDt() => $_ensure(2);
 
   @$pb.TagNumber(4)
-  $1.Time get createdAt => $_getN(3);
-  @$pb.TagNumber(4)
-  set createdAt($1.Time value) => $_setField(4, value);
-  @$pb.TagNumber(4)
-  $core.bool hasCreatedAt() => $_has(3);
-  @$pb.TagNumber(4)
-  void clearCreatedAt() => $_clearField(4);
-  @$pb.TagNumber(4)
-  $1.Time ensureCreatedAt() => $_ensure(3);
+  $pb.PbList<$2.Order> get orders => $_getList(3);
+
+  @$pb.TagNumber(105)
+  $pb.PbMap<$core.String, $core.String> get metadata => $_getMap(4);
 }
 
 class GetAccountTradesRequest extends $pb.GeneratedMessage {
   factory GetAccountTradesRequest({
-    $core.String? refRequestId,
-    $core.String? accountId,
+    $core.String? proposedExecutionId,
+    $core.String? accountIid,
     $core.Iterable<$core.String>? marketIdOrNameRegexes,
     $1.PaginationParams? pagination,
-    $1.Time? fromTime,
-    $1.Time? toTime,
+    $1.DateTime? fromDt,
+    $1.DateTime? toDt,
     $core.Iterable<$core.String>? instrumentIdOrSymbolRegexes,
-    $1.OrderSide? side,
+    $2.OrderSide? side,
+    $core.Iterable<$core.MapEntry<$core.String, $core.String>>? auxData,
   }) {
     final result = create();
-    if (refRequestId != null) result.refRequestId = refRequestId;
-    if (accountId != null) result.accountId = accountId;
+    if (proposedExecutionId != null)
+      result.proposedExecutionId = proposedExecutionId;
+    if (accountIid != null) result.accountIid = accountIid;
     if (marketIdOrNameRegexes != null)
       result.marketIdOrNameRegexes.addAll(marketIdOrNameRegexes);
     if (pagination != null) result.pagination = pagination;
-    if (fromTime != null) result.fromTime = fromTime;
-    if (toTime != null) result.toTime = toTime;
+    if (fromDt != null) result.fromDt = fromDt;
+    if (toDt != null) result.toDt = toDt;
     if (instrumentIdOrSymbolRegexes != null)
       result.instrumentIdOrSymbolRegexes.addAll(instrumentIdOrSymbolRegexes);
     if (side != null) result.side = side;
+    if (auxData != null) result.auxData.addEntries(auxData);
     return result;
   }
 
@@ -2173,20 +2050,25 @@ class GetAccountTradesRequest extends $pb.GeneratedMessage {
       package: const $pb.PackageName(
           _omitMessageNames ? '' : 'qomet.agora.daemons.prtagent.v1'),
       createEmptyInstance: create)
-    ..aOS(1, _omitFieldNames ? '' : 'refRequestId')
-    ..aOS(2, _omitFieldNames ? '' : 'accountId')
+    ..aOS(1, _omitFieldNames ? '' : 'proposedExecutionId')
+    ..aOS(2, _omitFieldNames ? '' : 'accountIid')
     ..pPS(3, _omitFieldNames ? '' : 'marketIdOrNameRegexes')
     ..aOM<$1.PaginationParams>(4, _omitFieldNames ? '' : 'pagination',
         subBuilder: $1.PaginationParams.create)
-    ..aOM<$1.Time>(5, _omitFieldNames ? '' : 'fromTime',
-        subBuilder: $1.Time.create)
-    ..aOM<$1.Time>(6, _omitFieldNames ? '' : 'toTime',
-        subBuilder: $1.Time.create)
+    ..aOM<$1.DateTime>(5, _omitFieldNames ? '' : 'fromDt',
+        subBuilder: $1.DateTime.create)
+    ..aOM<$1.DateTime>(6, _omitFieldNames ? '' : 'toDt',
+        subBuilder: $1.DateTime.create)
     ..pPS(7, _omitFieldNames ? '' : 'instrumentIdOrSymbolRegexes')
-    ..e<$1.OrderSide>(8, _omitFieldNames ? '' : 'side', $pb.PbFieldType.OE,
-        defaultOrMaker: $1.OrderSide.ORDER_SIDE__UNKNOWN,
-        valueOf: $1.OrderSide.valueOf,
-        enumValues: $1.OrderSide.values)
+    ..e<$2.OrderSide>(8, _omitFieldNames ? '' : 'side', $pb.PbFieldType.OE,
+        defaultOrMaker: $2.OrderSide.ORDER_SIDE__UNKNOWN,
+        valueOf: $2.OrderSide.valueOf,
+        enumValues: $2.OrderSide.values)
+    ..m<$core.String, $core.String>(105, _omitFieldNames ? '' : 'auxData',
+        entryClassName: 'GetAccountTradesRequest.AuxDataEntry',
+        keyFieldType: $pb.PbFieldType.OS,
+        valueFieldType: $pb.PbFieldType.OS,
+        packageName: const $pb.PackageName('qomet.agora.daemons.prtagent.v1'))
     ..hasRequiredFields = false;
 
   @$core.Deprecated('See https://github.com/google/protobuf.dart/issues/998.')
@@ -2213,22 +2095,22 @@ class GetAccountTradesRequest extends $pb.GeneratedMessage {
   static GetAccountTradesRequest? _defaultInstance;
 
   @$pb.TagNumber(1)
-  $core.String get refRequestId => $_getSZ(0);
+  $core.String get proposedExecutionId => $_getSZ(0);
   @$pb.TagNumber(1)
-  set refRequestId($core.String value) => $_setString(0, value);
+  set proposedExecutionId($core.String value) => $_setString(0, value);
   @$pb.TagNumber(1)
-  $core.bool hasRefRequestId() => $_has(0);
+  $core.bool hasProposedExecutionId() => $_has(0);
   @$pb.TagNumber(1)
-  void clearRefRequestId() => $_clearField(1);
+  void clearProposedExecutionId() => $_clearField(1);
 
   @$pb.TagNumber(2)
-  $core.String get accountId => $_getSZ(1);
+  $core.String get accountIid => $_getSZ(1);
   @$pb.TagNumber(2)
-  set accountId($core.String value) => $_setString(1, value);
+  set accountIid($core.String value) => $_setString(1, value);
   @$pb.TagNumber(2)
-  $core.bool hasAccountId() => $_has(1);
+  $core.bool hasAccountIid() => $_has(1);
   @$pb.TagNumber(2)
-  void clearAccountId() => $_clearField(2);
+  void clearAccountIid() => $_clearField(2);
 
   @$pb.TagNumber(3)
   $pb.PbList<$core.String> get marketIdOrNameRegexes => $_getList(2);
@@ -2244,54 +2126,58 @@ class GetAccountTradesRequest extends $pb.GeneratedMessage {
   @$pb.TagNumber(4)
   $1.PaginationParams ensurePagination() => $_ensure(3);
 
-  /// Optional filters
   @$pb.TagNumber(5)
-  $1.Time get fromTime => $_getN(4);
+  $1.DateTime get fromDt => $_getN(4);
   @$pb.TagNumber(5)
-  set fromTime($1.Time value) => $_setField(5, value);
+  set fromDt($1.DateTime value) => $_setField(5, value);
   @$pb.TagNumber(5)
-  $core.bool hasFromTime() => $_has(4);
+  $core.bool hasFromDt() => $_has(4);
   @$pb.TagNumber(5)
-  void clearFromTime() => $_clearField(5);
+  void clearFromDt() => $_clearField(5);
   @$pb.TagNumber(5)
-  $1.Time ensureFromTime() => $_ensure(4);
+  $1.DateTime ensureFromDt() => $_ensure(4);
 
   @$pb.TagNumber(6)
-  $1.Time get toTime => $_getN(5);
+  $1.DateTime get toDt => $_getN(5);
   @$pb.TagNumber(6)
-  set toTime($1.Time value) => $_setField(6, value);
+  set toDt($1.DateTime value) => $_setField(6, value);
   @$pb.TagNumber(6)
-  $core.bool hasToTime() => $_has(5);
+  $core.bool hasToDt() => $_has(5);
   @$pb.TagNumber(6)
-  void clearToTime() => $_clearField(6);
+  void clearToDt() => $_clearField(6);
   @$pb.TagNumber(6)
-  $1.Time ensureToTime() => $_ensure(5);
+  $1.DateTime ensureToDt() => $_ensure(5);
 
   @$pb.TagNumber(7)
   $pb.PbList<$core.String> get instrumentIdOrSymbolRegexes => $_getList(6);
 
   @$pb.TagNumber(8)
-  $1.OrderSide get side => $_getN(7);
+  $2.OrderSide get side => $_getN(7);
   @$pb.TagNumber(8)
-  set side($1.OrderSide value) => $_setField(8, value);
+  set side($2.OrderSide value) => $_setField(8, value);
   @$pb.TagNumber(8)
   $core.bool hasSide() => $_has(7);
   @$pb.TagNumber(8)
   void clearSide() => $_clearField(8);
+
+  @$pb.TagNumber(105)
+  $pb.PbMap<$core.String, $core.String> get auxData => $_getMap(8);
 }
 
 class GetAccountTradesResponse extends $pb.GeneratedMessage {
   factory GetAccountTradesResponse({
-    $core.String? refRequestId,
+    $core.String? refExecutionId,
     $1.PaginationInfo? paginationInfo,
-    $core.Iterable<$1.Trade>? trades,
-    $1.Time? createdAt,
+    $1.DateTime? generatedAtDt,
+    $core.Iterable<$2.Trade>? trades,
+    $core.Iterable<$core.MapEntry<$core.String, $core.String>>? metadata,
   }) {
     final result = create();
-    if (refRequestId != null) result.refRequestId = refRequestId;
+    if (refExecutionId != null) result.refExecutionId = refExecutionId;
     if (paginationInfo != null) result.paginationInfo = paginationInfo;
+    if (generatedAtDt != null) result.generatedAtDt = generatedAtDt;
     if (trades != null) result.trades.addAll(trades);
-    if (createdAt != null) result.createdAt = createdAt;
+    if (metadata != null) result.metadata.addEntries(metadata);
     return result;
   }
 
@@ -2309,13 +2195,18 @@ class GetAccountTradesResponse extends $pb.GeneratedMessage {
       package: const $pb.PackageName(
           _omitMessageNames ? '' : 'qomet.agora.daemons.prtagent.v1'),
       createEmptyInstance: create)
-    ..aOS(1, _omitFieldNames ? '' : 'refRequestId')
+    ..aOS(1, _omitFieldNames ? '' : 'refExecutionId')
     ..aOM<$1.PaginationInfo>(2, _omitFieldNames ? '' : 'paginationInfo',
         subBuilder: $1.PaginationInfo.create)
-    ..pc<$1.Trade>(3, _omitFieldNames ? '' : 'trades', $pb.PbFieldType.PM,
-        subBuilder: $1.Trade.create)
-    ..aOM<$1.Time>(4, _omitFieldNames ? '' : 'createdAt',
-        subBuilder: $1.Time.create)
+    ..aOM<$1.DateTime>(3, _omitFieldNames ? '' : 'generatedAtDt',
+        subBuilder: $1.DateTime.create)
+    ..pc<$2.Trade>(4, _omitFieldNames ? '' : 'trades', $pb.PbFieldType.PM,
+        subBuilder: $2.Trade.create)
+    ..m<$core.String, $core.String>(105, _omitFieldNames ? '' : 'metadata',
+        entryClassName: 'GetAccountTradesResponse.MetadataEntry',
+        keyFieldType: $pb.PbFieldType.OS,
+        valueFieldType: $pb.PbFieldType.OS,
+        packageName: const $pb.PackageName('qomet.agora.daemons.prtagent.v1'))
     ..hasRequiredFields = false;
 
   @$core.Deprecated('See https://github.com/google/protobuf.dart/issues/998.')
@@ -2342,13 +2233,13 @@ class GetAccountTradesResponse extends $pb.GeneratedMessage {
   static GetAccountTradesResponse? _defaultInstance;
 
   @$pb.TagNumber(1)
-  $core.String get refRequestId => $_getSZ(0);
+  $core.String get refExecutionId => $_getSZ(0);
   @$pb.TagNumber(1)
-  set refRequestId($core.String value) => $_setString(0, value);
+  set refExecutionId($core.String value) => $_setString(0, value);
   @$pb.TagNumber(1)
-  $core.bool hasRefRequestId() => $_has(0);
+  $core.bool hasRefExecutionId() => $_has(0);
   @$pb.TagNumber(1)
-  void clearRefRequestId() => $_clearField(1);
+  void clearRefExecutionId() => $_clearField(1);
 
   @$pb.TagNumber(2)
   $1.PaginationInfo get paginationInfo => $_getN(1);
@@ -2362,42 +2253,48 @@ class GetAccountTradesResponse extends $pb.GeneratedMessage {
   $1.PaginationInfo ensurePaginationInfo() => $_ensure(1);
 
   @$pb.TagNumber(3)
-  $pb.PbList<$1.Trade> get trades => $_getList(2);
+  $1.DateTime get generatedAtDt => $_getN(2);
+  @$pb.TagNumber(3)
+  set generatedAtDt($1.DateTime value) => $_setField(3, value);
+  @$pb.TagNumber(3)
+  $core.bool hasGeneratedAtDt() => $_has(2);
+  @$pb.TagNumber(3)
+  void clearGeneratedAtDt() => $_clearField(3);
+  @$pb.TagNumber(3)
+  $1.DateTime ensureGeneratedAtDt() => $_ensure(2);
 
   @$pb.TagNumber(4)
-  $1.Time get createdAt => $_getN(3);
-  @$pb.TagNumber(4)
-  set createdAt($1.Time value) => $_setField(4, value);
-  @$pb.TagNumber(4)
-  $core.bool hasCreatedAt() => $_has(3);
-  @$pb.TagNumber(4)
-  void clearCreatedAt() => $_clearField(4);
-  @$pb.TagNumber(4)
-  $1.Time ensureCreatedAt() => $_ensure(3);
+  $pb.PbList<$2.Trade> get trades => $_getList(3);
+
+  @$pb.TagNumber(105)
+  $pb.PbMap<$core.String, $core.String> get metadata => $_getMap(4);
 }
 
 class GetAccountSettlementsRequest extends $pb.GeneratedMessage {
   factory GetAccountSettlementsRequest({
-    $core.String? refRequestId,
-    $core.String? accountId,
+    $core.String? proposedExecutionId,
+    $core.String? accountIid,
     $core.Iterable<$core.String>? marketIdOrNameRegexes,
     $1.PaginationParams? pagination,
-    $1.Time? fromTime,
-    $1.Time? toTime,
-    $1.ConfirmationStatus? status,
+    $1.DateTime? fromDt,
+    $1.DateTime? toDt,
+    $2.ConfirmationStatus? status,
     $core.Iterable<$core.String>? assetIdOrNameRegexes,
+    $core.Iterable<$core.MapEntry<$core.String, $core.String>>? auxData,
   }) {
     final result = create();
-    if (refRequestId != null) result.refRequestId = refRequestId;
-    if (accountId != null) result.accountId = accountId;
+    if (proposedExecutionId != null)
+      result.proposedExecutionId = proposedExecutionId;
+    if (accountIid != null) result.accountIid = accountIid;
     if (marketIdOrNameRegexes != null)
       result.marketIdOrNameRegexes.addAll(marketIdOrNameRegexes);
     if (pagination != null) result.pagination = pagination;
-    if (fromTime != null) result.fromTime = fromTime;
-    if (toTime != null) result.toTime = toTime;
+    if (fromDt != null) result.fromDt = fromDt;
+    if (toDt != null) result.toDt = toDt;
     if (status != null) result.status = status;
     if (assetIdOrNameRegexes != null)
       result.assetIdOrNameRegexes.addAll(assetIdOrNameRegexes);
+    if (auxData != null) result.auxData.addEntries(auxData);
     return result;
   }
 
@@ -2415,21 +2312,26 @@ class GetAccountSettlementsRequest extends $pb.GeneratedMessage {
       package: const $pb.PackageName(
           _omitMessageNames ? '' : 'qomet.agora.daemons.prtagent.v1'),
       createEmptyInstance: create)
-    ..aOS(1, _omitFieldNames ? '' : 'refRequestId')
-    ..aOS(2, _omitFieldNames ? '' : 'accountId')
+    ..aOS(1, _omitFieldNames ? '' : 'proposedExecutionId')
+    ..aOS(2, _omitFieldNames ? '' : 'accountIid')
     ..pPS(3, _omitFieldNames ? '' : 'marketIdOrNameRegexes')
     ..aOM<$1.PaginationParams>(4, _omitFieldNames ? '' : 'pagination',
         subBuilder: $1.PaginationParams.create)
-    ..aOM<$1.Time>(5, _omitFieldNames ? '' : 'fromTime',
-        subBuilder: $1.Time.create)
-    ..aOM<$1.Time>(6, _omitFieldNames ? '' : 'toTime',
-        subBuilder: $1.Time.create)
-    ..e<$1.ConfirmationStatus>(
+    ..aOM<$1.DateTime>(5, _omitFieldNames ? '' : 'fromDt',
+        subBuilder: $1.DateTime.create)
+    ..aOM<$1.DateTime>(6, _omitFieldNames ? '' : 'toDt',
+        subBuilder: $1.DateTime.create)
+    ..e<$2.ConfirmationStatus>(
         7, _omitFieldNames ? '' : 'status', $pb.PbFieldType.OE,
-        defaultOrMaker: $1.ConfirmationStatus.CONFIRMATION_STATUS__UNKNOWN,
-        valueOf: $1.ConfirmationStatus.valueOf,
-        enumValues: $1.ConfirmationStatus.values)
+        defaultOrMaker: $2.ConfirmationStatus.CONFIRMATION_STATUS__UNKNOWN,
+        valueOf: $2.ConfirmationStatus.valueOf,
+        enumValues: $2.ConfirmationStatus.values)
     ..pPS(8, _omitFieldNames ? '' : 'assetIdOrNameRegexes')
+    ..m<$core.String, $core.String>(105, _omitFieldNames ? '' : 'auxData',
+        entryClassName: 'GetAccountSettlementsRequest.AuxDataEntry',
+        keyFieldType: $pb.PbFieldType.OS,
+        valueFieldType: $pb.PbFieldType.OS,
+        packageName: const $pb.PackageName('qomet.agora.daemons.prtagent.v1'))
     ..hasRequiredFields = false;
 
   @$core.Deprecated('See https://github.com/google/protobuf.dart/issues/998.')
@@ -2458,22 +2360,22 @@ class GetAccountSettlementsRequest extends $pb.GeneratedMessage {
   static GetAccountSettlementsRequest? _defaultInstance;
 
   @$pb.TagNumber(1)
-  $core.String get refRequestId => $_getSZ(0);
+  $core.String get proposedExecutionId => $_getSZ(0);
   @$pb.TagNumber(1)
-  set refRequestId($core.String value) => $_setString(0, value);
+  set proposedExecutionId($core.String value) => $_setString(0, value);
   @$pb.TagNumber(1)
-  $core.bool hasRefRequestId() => $_has(0);
+  $core.bool hasProposedExecutionId() => $_has(0);
   @$pb.TagNumber(1)
-  void clearRefRequestId() => $_clearField(1);
+  void clearProposedExecutionId() => $_clearField(1);
 
   @$pb.TagNumber(2)
-  $core.String get accountId => $_getSZ(1);
+  $core.String get accountIid => $_getSZ(1);
   @$pb.TagNumber(2)
-  set accountId($core.String value) => $_setString(1, value);
+  set accountIid($core.String value) => $_setString(1, value);
   @$pb.TagNumber(2)
-  $core.bool hasAccountId() => $_has(1);
+  $core.bool hasAccountIid() => $_has(1);
   @$pb.TagNumber(2)
-  void clearAccountId() => $_clearField(2);
+  void clearAccountIid() => $_clearField(2);
 
   @$pb.TagNumber(3)
   $pb.PbList<$core.String> get marketIdOrNameRegexes => $_getList(2);
@@ -2489,33 +2391,32 @@ class GetAccountSettlementsRequest extends $pb.GeneratedMessage {
   @$pb.TagNumber(4)
   $1.PaginationParams ensurePagination() => $_ensure(3);
 
-  /// Optional filters
   @$pb.TagNumber(5)
-  $1.Time get fromTime => $_getN(4);
+  $1.DateTime get fromDt => $_getN(4);
   @$pb.TagNumber(5)
-  set fromTime($1.Time value) => $_setField(5, value);
+  set fromDt($1.DateTime value) => $_setField(5, value);
   @$pb.TagNumber(5)
-  $core.bool hasFromTime() => $_has(4);
+  $core.bool hasFromDt() => $_has(4);
   @$pb.TagNumber(5)
-  void clearFromTime() => $_clearField(5);
+  void clearFromDt() => $_clearField(5);
   @$pb.TagNumber(5)
-  $1.Time ensureFromTime() => $_ensure(4);
+  $1.DateTime ensureFromDt() => $_ensure(4);
 
   @$pb.TagNumber(6)
-  $1.Time get toTime => $_getN(5);
+  $1.DateTime get toDt => $_getN(5);
   @$pb.TagNumber(6)
-  set toTime($1.Time value) => $_setField(6, value);
+  set toDt($1.DateTime value) => $_setField(6, value);
   @$pb.TagNumber(6)
-  $core.bool hasToTime() => $_has(5);
+  $core.bool hasToDt() => $_has(5);
   @$pb.TagNumber(6)
-  void clearToTime() => $_clearField(6);
+  void clearToDt() => $_clearField(6);
   @$pb.TagNumber(6)
-  $1.Time ensureToTime() => $_ensure(5);
+  $1.DateTime ensureToDt() => $_ensure(5);
 
   @$pb.TagNumber(7)
-  $1.ConfirmationStatus get status => $_getN(6);
+  $2.ConfirmationStatus get status => $_getN(6);
   @$pb.TagNumber(7)
-  set status($1.ConfirmationStatus value) => $_setField(7, value);
+  set status($2.ConfirmationStatus value) => $_setField(7, value);
   @$pb.TagNumber(7)
   $core.bool hasStatus() => $_has(6);
   @$pb.TagNumber(7)
@@ -2523,20 +2424,25 @@ class GetAccountSettlementsRequest extends $pb.GeneratedMessage {
 
   @$pb.TagNumber(8)
   $pb.PbList<$core.String> get assetIdOrNameRegexes => $_getList(7);
+
+  @$pb.TagNumber(105)
+  $pb.PbMap<$core.String, $core.String> get auxData => $_getMap(8);
 }
 
 class GetAccountSettlementsResponse extends $pb.GeneratedMessage {
   factory GetAccountSettlementsResponse({
-    $core.String? refRequestId,
+    $core.String? refExecutionId,
     $1.PaginationInfo? paginationInfo,
-    $core.Iterable<$1.Settlement>? settlements,
-    $1.Time? createdAt,
+    $1.DateTime? generatedAtDt,
+    $core.Iterable<$2.Settlement>? settlements,
+    $core.Iterable<$core.MapEntry<$core.String, $core.String>>? metadata,
   }) {
     final result = create();
-    if (refRequestId != null) result.refRequestId = refRequestId;
+    if (refExecutionId != null) result.refExecutionId = refExecutionId;
     if (paginationInfo != null) result.paginationInfo = paginationInfo;
+    if (generatedAtDt != null) result.generatedAtDt = generatedAtDt;
     if (settlements != null) result.settlements.addAll(settlements);
-    if (createdAt != null) result.createdAt = createdAt;
+    if (metadata != null) result.metadata.addEntries(metadata);
     return result;
   }
 
@@ -2554,14 +2460,19 @@ class GetAccountSettlementsResponse extends $pb.GeneratedMessage {
       package: const $pb.PackageName(
           _omitMessageNames ? '' : 'qomet.agora.daemons.prtagent.v1'),
       createEmptyInstance: create)
-    ..aOS(1, _omitFieldNames ? '' : 'refRequestId')
+    ..aOS(1, _omitFieldNames ? '' : 'refExecutionId')
     ..aOM<$1.PaginationInfo>(2, _omitFieldNames ? '' : 'paginationInfo',
         subBuilder: $1.PaginationInfo.create)
-    ..pc<$1.Settlement>(
-        3, _omitFieldNames ? '' : 'settlements', $pb.PbFieldType.PM,
-        subBuilder: $1.Settlement.create)
-    ..aOM<$1.Time>(4, _omitFieldNames ? '' : 'createdAt',
-        subBuilder: $1.Time.create)
+    ..aOM<$1.DateTime>(3, _omitFieldNames ? '' : 'generatedAtDt',
+        subBuilder: $1.DateTime.create)
+    ..pc<$2.Settlement>(
+        4, _omitFieldNames ? '' : 'settlements', $pb.PbFieldType.PM,
+        subBuilder: $2.Settlement.create)
+    ..m<$core.String, $core.String>(105, _omitFieldNames ? '' : 'metadata',
+        entryClassName: 'GetAccountSettlementsResponse.MetadataEntry',
+        keyFieldType: $pb.PbFieldType.OS,
+        valueFieldType: $pb.PbFieldType.OS,
+        packageName: const $pb.PackageName('qomet.agora.daemons.prtagent.v1'))
     ..hasRequiredFields = false;
 
   @$core.Deprecated('See https://github.com/google/protobuf.dart/issues/998.')
@@ -2590,13 +2501,13 @@ class GetAccountSettlementsResponse extends $pb.GeneratedMessage {
   static GetAccountSettlementsResponse? _defaultInstance;
 
   @$pb.TagNumber(1)
-  $core.String get refRequestId => $_getSZ(0);
+  $core.String get refExecutionId => $_getSZ(0);
   @$pb.TagNumber(1)
-  set refRequestId($core.String value) => $_setString(0, value);
+  set refExecutionId($core.String value) => $_setString(0, value);
   @$pb.TagNumber(1)
-  $core.bool hasRefRequestId() => $_has(0);
+  $core.bool hasRefExecutionId() => $_has(0);
   @$pb.TagNumber(1)
-  void clearRefRequestId() => $_clearField(1);
+  void clearRefExecutionId() => $_clearField(1);
 
   @$pb.TagNumber(2)
   $1.PaginationInfo get paginationInfo => $_getN(1);
@@ -2610,40 +2521,46 @@ class GetAccountSettlementsResponse extends $pb.GeneratedMessage {
   $1.PaginationInfo ensurePaginationInfo() => $_ensure(1);
 
   @$pb.TagNumber(3)
-  $pb.PbList<$1.Settlement> get settlements => $_getList(2);
+  $1.DateTime get generatedAtDt => $_getN(2);
+  @$pb.TagNumber(3)
+  set generatedAtDt($1.DateTime value) => $_setField(3, value);
+  @$pb.TagNumber(3)
+  $core.bool hasGeneratedAtDt() => $_has(2);
+  @$pb.TagNumber(3)
+  void clearGeneratedAtDt() => $_clearField(3);
+  @$pb.TagNumber(3)
+  $1.DateTime ensureGeneratedAtDt() => $_ensure(2);
 
   @$pb.TagNumber(4)
-  $1.Time get createdAt => $_getN(3);
-  @$pb.TagNumber(4)
-  set createdAt($1.Time value) => $_setField(4, value);
-  @$pb.TagNumber(4)
-  $core.bool hasCreatedAt() => $_has(3);
-  @$pb.TagNumber(4)
-  void clearCreatedAt() => $_clearField(4);
-  @$pb.TagNumber(4)
-  $1.Time ensureCreatedAt() => $_ensure(3);
+  $pb.PbList<$2.Settlement> get settlements => $_getList(3);
+
+  @$pb.TagNumber(105)
+  $pb.PbMap<$core.String, $core.String> get metadata => $_getMap(4);
 }
 
 class GetAccountTransactionsRequest extends $pb.GeneratedMessage {
   factory GetAccountTransactionsRequest({
-    $core.String? refRequestId,
-    $core.String? accountId,
+    $core.String? proposedExecutionId,
+    $core.String? accountIid,
     $1.PaginationParams? pagination,
-    $1.Time? fromTime,
-    $1.Time? toTime,
-    $core.Iterable<TransactionType>? transactionTypes,
+    $1.DateTime? fromDt,
+    $1.DateTime? toDt,
+    $core.Iterable<$2.TransactionTypeEnum>? transactionTypes,
     $core.Iterable<$core.String>? assetIdOrNameRegexes,
+    $core.Iterable<$core.MapEntry<$core.String, $core.String>>? auxData,
   }) {
     final result = create();
-    if (refRequestId != null) result.refRequestId = refRequestId;
-    if (accountId != null) result.accountId = accountId;
+    if (proposedExecutionId != null)
+      result.proposedExecutionId = proposedExecutionId;
+    if (accountIid != null) result.accountIid = accountIid;
     if (pagination != null) result.pagination = pagination;
-    if (fromTime != null) result.fromTime = fromTime;
-    if (toTime != null) result.toTime = toTime;
+    if (fromDt != null) result.fromDt = fromDt;
+    if (toDt != null) result.toDt = toDt;
     if (transactionTypes != null)
       result.transactionTypes.addAll(transactionTypes);
     if (assetIdOrNameRegexes != null)
       result.assetIdOrNameRegexes.addAll(assetIdOrNameRegexes);
+    if (auxData != null) result.auxData.addEntries(auxData);
     return result;
   }
 
@@ -2661,20 +2578,25 @@ class GetAccountTransactionsRequest extends $pb.GeneratedMessage {
       package: const $pb.PackageName(
           _omitMessageNames ? '' : 'qomet.agora.daemons.prtagent.v1'),
       createEmptyInstance: create)
-    ..aOS(1, _omitFieldNames ? '' : 'refRequestId')
-    ..aOS(2, _omitFieldNames ? '' : 'accountId')
+    ..aOS(1, _omitFieldNames ? '' : 'proposedExecutionId')
+    ..aOS(2, _omitFieldNames ? '' : 'accountIid')
     ..aOM<$1.PaginationParams>(3, _omitFieldNames ? '' : 'pagination',
         subBuilder: $1.PaginationParams.create)
-    ..aOM<$1.Time>(4, _omitFieldNames ? '' : 'fromTime',
-        subBuilder: $1.Time.create)
-    ..aOM<$1.Time>(5, _omitFieldNames ? '' : 'toTime',
-        subBuilder: $1.Time.create)
-    ..pc<TransactionType>(
+    ..aOM<$1.DateTime>(4, _omitFieldNames ? '' : 'fromDt',
+        subBuilder: $1.DateTime.create)
+    ..aOM<$1.DateTime>(5, _omitFieldNames ? '' : 'toDt',
+        subBuilder: $1.DateTime.create)
+    ..pc<$2.TransactionTypeEnum>(
         6, _omitFieldNames ? '' : 'transactionTypes', $pb.PbFieldType.KE,
-        valueOf: TransactionType.valueOf,
-        enumValues: TransactionType.values,
-        defaultEnumValue: TransactionType.TRANSACTION_TYPE__UNKNOWN)
+        valueOf: $2.TransactionTypeEnum.valueOf,
+        enumValues: $2.TransactionTypeEnum.values,
+        defaultEnumValue: $2.TransactionTypeEnum.TRANSACTION_TYPE_ENUM__UNKNOWN)
     ..pPS(7, _omitFieldNames ? '' : 'assetIdOrNameRegexes')
+    ..m<$core.String, $core.String>(105, _omitFieldNames ? '' : 'auxData',
+        entryClassName: 'GetAccountTransactionsRequest.AuxDataEntry',
+        keyFieldType: $pb.PbFieldType.OS,
+        valueFieldType: $pb.PbFieldType.OS,
+        packageName: const $pb.PackageName('qomet.agora.daemons.prtagent.v1'))
     ..hasRequiredFields = false;
 
   @$core.Deprecated('See https://github.com/google/protobuf.dart/issues/998.')
@@ -2703,22 +2625,22 @@ class GetAccountTransactionsRequest extends $pb.GeneratedMessage {
   static GetAccountTransactionsRequest? _defaultInstance;
 
   @$pb.TagNumber(1)
-  $core.String get refRequestId => $_getSZ(0);
+  $core.String get proposedExecutionId => $_getSZ(0);
   @$pb.TagNumber(1)
-  set refRequestId($core.String value) => $_setString(0, value);
+  set proposedExecutionId($core.String value) => $_setString(0, value);
   @$pb.TagNumber(1)
-  $core.bool hasRefRequestId() => $_has(0);
+  $core.bool hasProposedExecutionId() => $_has(0);
   @$pb.TagNumber(1)
-  void clearRefRequestId() => $_clearField(1);
+  void clearProposedExecutionId() => $_clearField(1);
 
   @$pb.TagNumber(2)
-  $core.String get accountId => $_getSZ(1);
+  $core.String get accountIid => $_getSZ(1);
   @$pb.TagNumber(2)
-  set accountId($core.String value) => $_setString(1, value);
+  set accountIid($core.String value) => $_setString(1, value);
   @$pb.TagNumber(2)
-  $core.bool hasAccountId() => $_has(1);
+  $core.bool hasAccountIid() => $_has(1);
   @$pb.TagNumber(2)
-  void clearAccountId() => $_clearField(2);
+  void clearAccountIid() => $_clearField(2);
 
   @$pb.TagNumber(3)
   $1.PaginationParams get pagination => $_getN(2);
@@ -2731,48 +2653,52 @@ class GetAccountTransactionsRequest extends $pb.GeneratedMessage {
   @$pb.TagNumber(3)
   $1.PaginationParams ensurePagination() => $_ensure(2);
 
-  /// Optional filters
   @$pb.TagNumber(4)
-  $1.Time get fromTime => $_getN(3);
+  $1.DateTime get fromDt => $_getN(3);
   @$pb.TagNumber(4)
-  set fromTime($1.Time value) => $_setField(4, value);
+  set fromDt($1.DateTime value) => $_setField(4, value);
   @$pb.TagNumber(4)
-  $core.bool hasFromTime() => $_has(3);
+  $core.bool hasFromDt() => $_has(3);
   @$pb.TagNumber(4)
-  void clearFromTime() => $_clearField(4);
+  void clearFromDt() => $_clearField(4);
   @$pb.TagNumber(4)
-  $1.Time ensureFromTime() => $_ensure(3);
+  $1.DateTime ensureFromDt() => $_ensure(3);
 
   @$pb.TagNumber(5)
-  $1.Time get toTime => $_getN(4);
+  $1.DateTime get toDt => $_getN(4);
   @$pb.TagNumber(5)
-  set toTime($1.Time value) => $_setField(5, value);
+  set toDt($1.DateTime value) => $_setField(5, value);
   @$pb.TagNumber(5)
-  $core.bool hasToTime() => $_has(4);
+  $core.bool hasToDt() => $_has(4);
   @$pb.TagNumber(5)
-  void clearToTime() => $_clearField(5);
+  void clearToDt() => $_clearField(5);
   @$pb.TagNumber(5)
-  $1.Time ensureToTime() => $_ensure(4);
+  $1.DateTime ensureToDt() => $_ensure(4);
 
   @$pb.TagNumber(6)
-  $pb.PbList<TransactionType> get transactionTypes => $_getList(5);
+  $pb.PbList<$2.TransactionTypeEnum> get transactionTypes => $_getList(5);
 
   @$pb.TagNumber(7)
   $pb.PbList<$core.String> get assetIdOrNameRegexes => $_getList(6);
+
+  @$pb.TagNumber(105)
+  $pb.PbMap<$core.String, $core.String> get auxData => $_getMap(7);
 }
 
 class GetAccountTransactionsResponse extends $pb.GeneratedMessage {
   factory GetAccountTransactionsResponse({
-    $core.String? refRequestId,
+    $core.String? refExecutionId,
     $1.PaginationInfo? paginationInfo,
-    $core.Iterable<Transaction>? transactions,
-    $1.Time? createdAt,
+    $1.DateTime? generatedAtDt,
+    $core.Iterable<$2.Transaction>? transactions,
+    $core.Iterable<$core.MapEntry<$core.String, $core.String>>? metadata,
   }) {
     final result = create();
-    if (refRequestId != null) result.refRequestId = refRequestId;
+    if (refExecutionId != null) result.refExecutionId = refExecutionId;
     if (paginationInfo != null) result.paginationInfo = paginationInfo;
+    if (generatedAtDt != null) result.generatedAtDt = generatedAtDt;
     if (transactions != null) result.transactions.addAll(transactions);
-    if (createdAt != null) result.createdAt = createdAt;
+    if (metadata != null) result.metadata.addEntries(metadata);
     return result;
   }
 
@@ -2790,14 +2716,19 @@ class GetAccountTransactionsResponse extends $pb.GeneratedMessage {
       package: const $pb.PackageName(
           _omitMessageNames ? '' : 'qomet.agora.daemons.prtagent.v1'),
       createEmptyInstance: create)
-    ..aOS(1, _omitFieldNames ? '' : 'refRequestId')
+    ..aOS(1, _omitFieldNames ? '' : 'refExecutionId')
     ..aOM<$1.PaginationInfo>(2, _omitFieldNames ? '' : 'paginationInfo',
         subBuilder: $1.PaginationInfo.create)
-    ..pc<Transaction>(
-        3, _omitFieldNames ? '' : 'transactions', $pb.PbFieldType.PM,
-        subBuilder: Transaction.create)
-    ..aOM<$1.Time>(4, _omitFieldNames ? '' : 'createdAt',
-        subBuilder: $1.Time.create)
+    ..aOM<$1.DateTime>(3, _omitFieldNames ? '' : 'generatedAtDt',
+        subBuilder: $1.DateTime.create)
+    ..pc<$2.Transaction>(
+        4, _omitFieldNames ? '' : 'transactions', $pb.PbFieldType.PM,
+        subBuilder: $2.Transaction.create)
+    ..m<$core.String, $core.String>(105, _omitFieldNames ? '' : 'metadata',
+        entryClassName: 'GetAccountTransactionsResponse.MetadataEntry',
+        keyFieldType: $pb.PbFieldType.OS,
+        valueFieldType: $pb.PbFieldType.OS,
+        packageName: const $pb.PackageName('qomet.agora.daemons.prtagent.v1'))
     ..hasRequiredFields = false;
 
   @$core.Deprecated('See https://github.com/google/protobuf.dart/issues/998.')
@@ -2826,13 +2757,13 @@ class GetAccountTransactionsResponse extends $pb.GeneratedMessage {
   static GetAccountTransactionsResponse? _defaultInstance;
 
   @$pb.TagNumber(1)
-  $core.String get refRequestId => $_getSZ(0);
+  $core.String get refExecutionId => $_getSZ(0);
   @$pb.TagNumber(1)
-  set refRequestId($core.String value) => $_setString(0, value);
+  set refExecutionId($core.String value) => $_setString(0, value);
   @$pb.TagNumber(1)
-  $core.bool hasRefRequestId() => $_has(0);
+  $core.bool hasRefExecutionId() => $_has(0);
   @$pb.TagNumber(1)
-  void clearRefRequestId() => $_clearField(1);
+  void clearRefExecutionId() => $_clearField(1);
 
   @$pb.TagNumber(2)
   $1.PaginationInfo get paginationInfo => $_getN(1);
@@ -2846,18 +2777,21 @@ class GetAccountTransactionsResponse extends $pb.GeneratedMessage {
   $1.PaginationInfo ensurePaginationInfo() => $_ensure(1);
 
   @$pb.TagNumber(3)
-  $pb.PbList<Transaction> get transactions => $_getList(2);
+  $1.DateTime get generatedAtDt => $_getN(2);
+  @$pb.TagNumber(3)
+  set generatedAtDt($1.DateTime value) => $_setField(3, value);
+  @$pb.TagNumber(3)
+  $core.bool hasGeneratedAtDt() => $_has(2);
+  @$pb.TagNumber(3)
+  void clearGeneratedAtDt() => $_clearField(3);
+  @$pb.TagNumber(3)
+  $1.DateTime ensureGeneratedAtDt() => $_ensure(2);
 
   @$pb.TagNumber(4)
-  $1.Time get createdAt => $_getN(3);
-  @$pb.TagNumber(4)
-  set createdAt($1.Time value) => $_setField(4, value);
-  @$pb.TagNumber(4)
-  $core.bool hasCreatedAt() => $_has(3);
-  @$pb.TagNumber(4)
-  void clearCreatedAt() => $_clearField(4);
-  @$pb.TagNumber(4)
-  $1.Time ensureCreatedAt() => $_ensure(3);
+  $pb.PbList<$2.Transaction> get transactions => $_getList(3);
+
+  @$pb.TagNumber(105)
+  $pb.PbMap<$core.String, $core.String> get metadata => $_getMap(4);
 }
 
 const $core.bool _omitFieldNames =

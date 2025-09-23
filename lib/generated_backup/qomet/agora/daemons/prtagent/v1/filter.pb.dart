@@ -1,6 +1,6 @@
 // This is a generated file - do not edit.
 //
-// Generated from qomet/agora/daemons/prtagent/v1/filter.proto.
+// Generated from filter.proto.
 
 // @dart = 3.3
 
@@ -14,8 +14,8 @@ import 'dart:core' as $core;
 
 import 'package:protobuf/protobuf.dart' as $pb;
 
-import '../../../../../common.pb.dart' as $0;
-import '../../../../../fin_common.pb.dart' as $1;
+import 'common.pb.dart' as $0;
+import 'fin_common.pb.dart' as $1;
 
 export 'package:protobuf/protobuf.dart' show GeneratedMessageGenericExtensions;
 

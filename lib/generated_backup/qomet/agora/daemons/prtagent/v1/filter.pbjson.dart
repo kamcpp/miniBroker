@@ -1,6 +1,6 @@
 // This is a generated file - do not edit.
 //
-// Generated from qomet/agora/daemons/prtagent/v1/filter.proto.
+// Generated from filter.proto.
 
 // @dart = 3.3
 

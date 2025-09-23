@@ -17,23 +17,16 @@ import "common.proto";
 enum AccountTypeEnum {
   ACCOUNT_TYPE_ENUM__UNKNOWN = 0;
 
-  ACCOUNT_TYPE_ENUM__CASH = 1;
-  ACCOUNT_TYPE_ENUM__MARGIN = 2;
-  ACCOUNT_TYPE_ENUM__CUSTODY = 3;
-  ACCOUNT_TYPE_ENUM__SETTLEMENT = 4;
-  ACCOUNT_TYPE_ENUM__TREASURY = 5;
+  ACCOUNT_TYPE_ENUM__OMNIBUS = 1;
+  ACCOUNT_TYPE_ENUM__SEGREGATED = 2;
+  ACCOUNT_TYPE_ENUM__HOUSE = 3;
+  ACCOUNT_TYPE_ENUM__CLIENT = 4;
+  ACCOUNT_TYPE_ENUM__NOMINEE = 5;
+  ACCOUNT_TYPE_ENUM__COLLATERAL = 6;
+  ACCOUNT_TYPE_ENUM__ESCROW = 7;
+  ACCOUNT_TYPE_ENUM__ISSUER = 8;
 
   ACCOUNT_TYPE_ENUM__OTHER = 1000;
-}
-
-enum AccountStructureEnum {
-  ACCOUNT_STRUCTURE_ENUM__UNKNOWN = 0;
-
-  ACCOUNT_STRUCTURE_ENUM__SINGLE = 1;
-  ACCOUNT_STRUCTURE_ENUM__MASTER = 2;
-  ACCOUNT_STRUCTURE_ENUM__SUB = 3;
-
-  ACCOUNT_STRUCTURE_ENUM__OTHER = 1000;
 }
 
 enum AccountStatusEnum {
@@ -41,47 +34,22 @@ enum AccountStatusEnum {
 
   ACCOUNT_STATUS_ENUM__ACTIVE = 1;
   ACCOUNT_STATUS_ENUM__INACTIVE = 2;
-  ACCOUNT_STATUS_ENUM__FROZEN = 3;
+  ACCOUNT_STATUS_ENUM__SUSPENDED = 3;
   ACCOUNT_STATUS_ENUM__BLOCKED = 4;
   ACCOUNT_STATUS_ENUM__CLOSED = 5;
+  ACCOUNT_STATUS_ENUM__PENDING = 6;
+  ACCOUNT_STATUS_ENUM__TERMINATED = 7;
 
   ACCOUNT_STATUS_ENUM__OTHER = 1000;
 }
 
-enum AccountClassEnum {
-  ACCOUNT_CLASS_ENUM__UNKNOWN = 0;
-
-  ACCOUNT_CLASS_ENUM__CLIENT = 1;
-  ACCOUNT_CLASS_ENUM__HOUSE = 2;
-  ACCOUNT_CLASS_ENUM__PROPRIETARY = 3;
-
-  ACCOUNT_CLASS_ENUM__OTHER = 1000;
-}
-
-enum AccountNature {
-  ACCOUNT_NATURE__UNKNOWN = 0;
-
-  ACCOUNT_NATURE__INDIVIDUAL = 1;
-  ACCOUNT_NATURE__JOINT = 2;
-  ACCOUNT_NATURE__CORPORATE = 3;
-  ACCOUNT_NATURE__TRUST = 4;
-  ACCOUNT_NATURE__FUND = 5;
-
-  ACCOUNT_NATURE__OTHER = 1000;
-}
-
 message Account {
   string iid = 1;                             // REQUIRED: Internal identifier
-  string external_id = 2;                     // OPTIONAL: External identifier
+  repeated FinIdentifier identifiers = 2;     // OPTIONAL: Associated identifiers
+  string external_account_id = 3;             // OPTIONAL: External account identifier stored by participant
 
-  string participant_id = 3;                  // REQUIRED: Associated participant ID
   AccountTypeEnum account_type = 4;           // REQUIRED: Type of account
-  AccountStructureEnum account_structure = 5; // REQUIRED: Account structure
-  string parent_account_iid = 6;              // OPTIONAL: Parent account (for sub-accounts)
-  repeated string sub_account_iids = 7;       // OPTIONAL: List of sub-account IDs
   AccountStatusEnum account_status = 8;       // REQUIRED: Current account status
-  AccountClassEnum account_class = 9;         // REQUIRED: Account classification
-  AccountNature account_nature = 10;          // REQUIRED: Nature of account holder
 
   map<string, string> display_names = 101;    // OPTIONAL: Display names for localization
   map<string, string> descriptions = 102;     // OPTIONAL: Descriptions for localization
@@ -90,21 +58,37 @@ message Account {
   map<string, string> metadata = 105;         // OPTIONAL: Additional metadata
 }
 
-message Holdings {
-  oneof asset_id {                            // REQUIRED: Must specify one asset type
-    string instrument_iid = 1;                // Instrument internal ID
-    string currency_code = 2;                 // ISO 4217 currency code
-  }
-  string total_units = 3;                     // REQUIRED: Total units held
-  map<string, string> stash_units = 4;        // OPTIONAL: Units by stash (stash-name -> units)
+enum AccountToAccountRelationTypeEnum {
+  ACCOUNT_TO_ACCOUNT_RELATION_TYPE_ENUM__UNKNOWN = 0;
+
+  ACCOUNT_TO_ACCOUNT_RELATION_TYPE_ENUM__PARENT_CHILD = 1;       // Hierarchical (e.g. omnibus → sub-account)
+  ACCOUNT_TO_ACCOUNT_RELATION_TYPE_ENUM__HOUSE_CLIENT = 2;       // Separation between proprietary and client
+  ACCOUNT_TO_ACCOUNT_RELATION_TYPE_ENUM__NOMINEE_BENEFICIAL = 3; // Nominee vs. beneficial owner
+  ACCOUNT_TO_ACCOUNT_RELATION_TYPE_ENUM__COLLATERAL_LINK = 4;    // Pledged / blocked collateral
+  ACCOUNT_TO_ACCOUNT_RELATION_TYPE_ENUM__ESCROW_CONDITIONAL = 5; // Conditional holding
+  ACCOUNT_TO_ACCOUNT_RELATION_TYPE_ENUM__CROSS_PARTICIPANT = 6;  // Mirror / link between two participants
+  ACCOUNT_TO_ACCOUNT_RELATION_TYPE_ENUM__ISSUANCE_FLOW = 7;      // Issuer account → investor accounts
+  ACCOUNT_TO_ACCOUNT_RELATION_TYPE_ENUM__REPORTING_POOL = 8;     // Aggregation/grouping
+
+  ACCOUNT_TO_ACCOUNT_RELATION_TYPE_ENUM__OTHER = 1000;
 }
 
-message Portfolio {
-  string account_iid = 1;                     // REQUIRED: Associated account ID
-  DateTime generated_at_dt = 2;               // REQUIRED: Portfolio generation timestamp
-  map<string, Holdings> holdings = 3;         // REQUIRED: Holdings by asset (can be empty)
+message AccountToAccountRelation {
+  string iid = 1;                               // REQUIRED: Internal relation identifier
 
-  map<string, string> metadata = 105;         // OPTIONAL: Additional metadata
+  string from_account_iid = 2;                  // REQUIRED: From account internal identifier
+  string to_account_iid = 3;                    // REQUIRED: To account internal identifier
+
+  AccountToAccountRelationTypeEnum relation_type = 4; // REQUIRED: Type of relation
+
+  DateTime effective_from_dt = 5;               // OPTIONAL: Relation effective start date
+  DateTime effective_to_dt = 6;                 // OPTIONAL: Relation effective end date
+
+  map<string, string> display_names = 101;     // OPTIONAL: Display names for localization
+  map<string, string> descriptions = 102;      // OPTIONAL: Descriptions for localization
+  map<string, string> labels = 103;            // OPTIONAL: Key-value labels
+  repeated string tags = 104;                  // OPTIONAL: Tags for categorization
+  map<string, string> metadata = 105;          // OPTIONAL: Additional metadata
 }
 
 enum FinEntityTypeEnum {
@@ -151,6 +135,7 @@ enum AssetClassEnum {
   ASSET_CLASS_ENUM__CREDIT = 14;
   ASSET_CLASS_ENUM__DIGITAL = 15;
   ASSET_CLASS_ENUM__LEDGER_NATIVE_COIN = 16;
+  ASSET_CLASS_ENUM__EXTERNAL_INSTRUMENT = 17;
 
   ASSET_CLASS_ENUM__OTHER = 1000; 
 }
@@ -179,10 +164,50 @@ message Asset {
   map<string, string> metadata = 105;          // OPTIONAL: Additional metadata
 }
 
+enum ParticipantTypeEnum {
+  PARTICIPANT_TYPE_ENUM__UNKNOWN = 0;
+
+  PARTICIPANT_TYPE_ENUM__INDIVIDUAL = 1;
+  PARTICIPANT_TYPE_ENUM__CORPORATE = 2;
+  PARTICIPANT_TYPE_ENUM__GOVERMENTAL = 3;
+  PARTICIPANT_TYPE_ENUM__FINANCIAL_INSTITUTION = 4;
+  PARTICIPANT_TYPE_ENUM__MARKET = 5;
+  PARTICIPANT_TYPE_ENUM__VENUE = 6;
+  PARTICIPANT_TYPE_ENUM__CUSTODIAN = 7;
+  PARTICIPANT_TYPE_ENUM__BROKER_DEALER = 8;
+  PARTICIPANT_TYPE_ENUM__CLEARING_HOUSE = 9;
+  PARTICIPANT_TYPE_ENUM__CSD = 10;
+  PARTICIPANT_TYPE_ENUM__REGULATOR = 11;
+  PARTICIPANT_TYPE_ENUM__EXTERNAL_PRINCIPAL = 12; // Wallet, Personal Eth. Account (Private Key), etc.
+  PARTICIPANT_TYPE_ENUM__INTERNAL_PRINCIPAL = 13; // Managed Eth. Account (Managed Private Key), etc.
+  PARTICIPANT_TYPE_ENUM__SERVICE_PROVIDER = 14;
+  PARTICIPANT_TYPE_ENUM__ISSUER = 15; // Instrument Issuer, etc.
+  PARTICIPANT_TYPE_ENUM__INVESTOR = 16; // Asset Investor, etc.
+  PARTICIPANT_TYPE_ENUM__TRADER = 17; // Asset Trader, etc.
+  PARTICIPANT_TYPE_ENUM__MINER_VALIDATOR = 18; // Blockchain Miner, Validator, etc.
+  PARTICIPANT_TYPE_ENUM__LIQUIDITY_PROVIDER = 19; // Market Maker, Liquidity Provider, etc.
+  PARTICIPANT_TYPE_ENUM__ORACLE = 20; // Price Oracle, Data Oracle, etc.
+  PARTICIPANT_TYPE_ENUM__AGENT = 21; // Transfer Agent, Paying Agent, etc.
+  PARTICIPANT_TYPE_ENUM__FUND_ADMINISTRATOR = 22; // Fund Administrator, etc.
+  PARTICIPANT_TYPE_ENUM__AUDITOR = 23; // Auditor, Compliance Officer, etc.
+  PARTICIPANT_TYPE_ENUM__LEGAL_ENTITY = 24; // Legal Entity, Law Firm, etc.
+  PARTICIPANT_TYPE_ENUM__ACCOUNTING_ENTITY = 25; // Accounting Firm, etc.
+  PARTICIPANT_TYPE_ENUM__TAX_ENTITY = 26; // Tax Authority, Tax Consultant, etc.
+  PARTICIPANT_TYPE_ENUM__INSURANCE_ENTITY = 27; // Insurance Company, Insurance Broker, etc.
+  PARTICIPANT_TYPE_ENUM__PENSION_ENTITY = 28; // Pension Fund, Pension Consultant, etc.
+  PARTICIPANT_TYPE_ENUM__PAYMENT_ENTITY = 29; // Payment Processor, Payment Gateway, etc.
+  PARTICIPANT_TYPE_ENUM__TECHNOLOGY_PROVIDER = 30; // IT Service Provider, Cloud Provider, etc.
+  PARTICIPANT_TYPE_ENUM__DATA_PROVIDER = 31; // Market Data Provider, Financial Data Provider, etc.
+
+  PARTICIPANT_TYPE_ENUM__OTHER = 1000;
+}
+
 message Participant {
-  string iid = 1;                               // REQUIRED: Internal participant identifier
+  string iid = 1;                              // REQUIRED: Internal participant identifier
 
-  repeated FinIdentifier identifiers = 2;       // OPTIONAL: List of participant identifiers
+  repeated FinIdentifier identifiers = 2;      // AT LEAST ONE IS REQUIRED: List of participant identifiers (BIC, LET, etc)
+
+  repeated ParticipantTypeEnum types = 3;      // AT LEAST ONE IS REQUIRED: List of participant types (can be empty)
 
   map<string, string> display_names = 101;     // OPTIONAL: Display names for localization
   map<string, string> descriptions = 102;      // OPTIONAL: Descriptions for localization
@@ -191,36 +216,180 @@ message Participant {
   map<string, string> metadata = 105;          // OPTIONAL: Additional metadata
 }
 
-enum ParticipantAssetRelationEnum {
-  PARTICIPANT_ASSET_RELATION_ENUM__UNKNOWN = 0;
+enum ParticipantToAssetRelationEnum {
+  PARTICIPANT_TO_ASSET_RELATION_ENUM__UNKNOWN = 0;
 
-  PARTICIPANT_ASSET_RELATION_ENUM__ISSUER = 1;
-  PARTICIPANT_ASSET_RELATION_ENUM__OWNER = 2;
-  PARTICIPANT_ASSET_RELATION_ENUM__SPONSOR = 3;
-  PARTICIPANT_ASSET_RELATION_ENUM__REGULATOR = 4;
-  PARTICIPANT_ASSET_RELATION_ENUM__SUPERVISOR = 5;
-  PARTICIPANT_ASSET_RELATION_ENUM__GOVERNOR = 6;
+  PARTICIPANT_TO_ASSET_RELATION_ENUM__ISSUER = 1;
+  PARTICIPANT_TO_ASSET_RELATION_ENUM__OWNER = 2;
+  PARTICIPANT_TO_ASSET_RELATION_ENUM__SPONSOR = 3;
+  PARTICIPANT_TO_ASSET_RELATION_ENUM__REGULATOR = 4;
+  PARTICIPANT_TO_ASSET_RELATION_ENUM__SUPERVISOR = 5;
+  PARTICIPANT_TO_ASSET_RELATION_ENUM__GOVERNOR = 6;
+  PARTICIPANT_TO_ASSET_RELATION_ENUM__CUSTODIAN = 7;
+  PARTICIPANT_TO_ASSET_RELATION_ENUM__BROKER = 8;
+  PARTICIPANT_TO_ASSET_RELATION_ENUM__DEALER = 9;
+  PARTICIPANT_TO_ASSET_RELATION_ENUM__MARKET = 10;
+  PARTICIPANT_TO_ASSET_RELATION_ENUM__VENUE = 11;
+  PARTICIPANT_TO_ASSET_RELATION_ENUM__AUDITOR = 12;
+  PARTICIPANT_TO_ASSET_RELATION_ENUM__AGENT = 13;
+  PARTICIPANT_TO_ASSET_RELATION_ENUM__ADVISOR = 14;
+  PARTICIPANT_TO_ASSET_RELATION_ENUM__VALUATOR = 15;
+  PARTICIPANT_TO_ASSET_RELATION_ENUM__ADMINISTRATOR = 16;
+  PARTICIPANT_TO_ASSET_RELATION_ENUM__MARKET_MAKER = 21;
+  PARTICIPANT_TO_ASSET_RELATION_ENUM__LIQUIDITY_PROVIDER = 22;
+  PARTICIPANT_TO_ASSET_RELATION_ENUM__ORACLE = 23;
+  PARTICIPANT_TO_ASSET_RELATION_ENUM__MINER_VALIDATOR = 24;
+  PARTICIPANT_TO_ASSET_RELATION_ENUM__SERVICE_PROVIDER = 25;
 
-  PARTICIPANT_ASSET_RELATION_ENUM__OTHER = 1000;
+  PARTICIPANT_TO_ASSET_RELATION_ENUM__OTHER = 1000;
 }
 
-message ParticipantAssetRelation {
-  string iid = 1;                               // REQUIRED: Internal relation identifier
+message ParticipantToAssetRelation {
+  string iid = 1;                                           // REQUIRED: Internal relation identifier
 
-  string asset_iid = 2;                         // REQUIRED: Asset internal identifier
-  string participant_iid = 3;                   // REQUIRED: Participant internal identifier
+  string participant_iid = 2;                               // REQUIRED: Participant internal identifier
+  string asset_iid = 3;                                     // REQUIRED: Asset internal identifier
 
-  ParticipantAssetRelationEnum relation = 4;    // REQUIRED: Type of relation
+  repeated ParticipantToAssetRelationEnum relations = 4;    // REQUIRED: Type of relation
 
-  DateTime effective_from_dt = 5;               // OPTIONAL: Relation effective start date
-  DateTime effective_to_dt = 6;                 // OPTIONAL: Relation effective end date
-  string weight = 7;                            // OPTIONAL: Relation weight (e.g. percentage of ownership)
+  DateTime effective_from_dt = 5;                           // OPTIONAL: Relation effective start date
+  DateTime effective_to_dt = 6;                             // OPTIONAL: Relation effective end date
+  string weight = 7;                                        // OPTIONAL: Relation weight (e.g. percentage of ownership)
+
+  map<string, string> display_names = 101;                  // OPTIONAL: Display names for localization
+  map<string, string> descriptions = 102;                   // OPTIONAL: Descriptions for localization
+  map<string, string> labels = 103;                         // OPTIONAL: Key-value labels
+  repeated string tags = 104;                               // OPTIONAL: Tags for categorization
+  map<string, string> metadata = 105;                       // OPTIONAL: Additional metadata
+}
+
+enum InstrumentClassEnum {
+  INSTRUMENT_CLASS_ENUM__UNKNOWN = 0;
+
+  INSTRUMENT_CLASS_ENUM__EQUITY_SHARE = 1;
+  INSTRUMENT_CLASS_ENUM__TOKENIZED_SECURITY = 2;
+  INSTRUMENT_CLASS_ENUM__FUND_UNIT = 3;
+  INSTRUMENT_CLASS_ENUM__ETF_SHARE = 4;
+  INSTRUMENT_CLASS_ENUM__BOND = 5;
+  INSTRUMENT_CLASS_ENUM__EQUITY_DERIVATIVE = 6;
+  INSTRUMENT_CLASS_ENUM__INDEX_DERIVATIVE = 7;
+  INSTRUMENT_CLASS_ENUM__FX = 8;
+  INSTRUMENT_CLASS_ENUM__WARRANT = 9;
+  INSTRUMENT_CLASS_ENUM__CFD = 10;
+  INSTRUMENT_CLASS_ENUM__OPTION = 11;
+  INSTRUMENT_CLASS_ENUM__FUTURE = 12;
+
+  INSTRUMENT_CLASS_ENUM__OTHER = 1000;
+}
+
+message FinInstrumentClass {
+  string schema = 1;
+  repeated InstrumentClassEnum classes = 2;
+
+  map<string, string> display_names = 101;
+  map<string, string> descriptions = 102;
+  map<string, string> labels = 103;
+  repeated string tags = 104;
+  map<string, string> metadata = 105;
+}
+
+message OneOfIdOrParticipant {
+  oneof participant {
+    string iid = 1;
+    Participant obj = 2;
+  }
+}
+
+message Instrument {
+  string iid = 1;                               // REQUIRED: Internal instrument identifier
+
+  repeated FinIdentifier identifiers = 2;       // REQUIRED: List of instrument identifiers
+  string cfi_code = 3;                          // REQUIRED: CFI 6 letters code
+  repeated FinInstrumentClass classes = 4;      // REQUIRED: List of instrument classifications
+
+  DateTime maturity_dt = 5;                     // OPTIONAL: Instrument maturity date
+
+  oneof asset {                                 // REQUIRED: Underlying asset
+    string asset_iid = 6;                       // Asset internal identifier
+    Asset asset_obj = 7;                        // Asset object
+  }
+
+  DateTime issue_dt = 8;                        // REQUIRED: Issue date
+  repeated OneOfIdOrParticipant issuers = 9;    // OPTIONAL: List of issuers
+  string issue_country_code = 10;               // REQUIRED: ISO 3166-1 alpha-2
+  string issue_currency = 11;                   // REQUIRED: ISO 4217 currency code
+  string issue_initial_units = 12;              // REQUIRED: Number of shares issued
+  string issue_divisibility = 13;               // REQUIRED: Unit divisibility
+  string issue_initial_authorized_units = 14;   // OPTIONAL: Number of shares authorized
 
   map<string, string> display_names = 101;     // OPTIONAL: Display names for localization
   map<string, string> descriptions = 102;      // OPTIONAL: Descriptions for localization
   map<string, string> labels = 103;            // OPTIONAL: Key-value labels
   repeated string tags = 104;                  // OPTIONAL: Tags for categorization
   map<string, string> metadata = 105;          // OPTIONAL: Additional metadata
+}
+
+enum ParticipantToInstrumentRelationEnum {
+  PARTICIPANT_TO_INSTRUMENT_RELATION_ENUM__UNKNOWN = 0;
+
+  PARTICIPANT_TO_INSTRUMENT_RELATION_ENUM__ISSUER = 1;
+  PARTICIPANT_TO_INSTRUMENT_RELATION_ENUM__OWNER = 2;
+  PARTICIPANT_TO_INSTRUMENT_RELATION_ENUM__SPONSOR = 3;
+  PARTICIPANT_TO_INSTRUMENT_RELATION_ENUM__REGULATOR = 4;
+  PARTICIPANT_TO_INSTRUMENT_RELATION_ENUM__SUPERVISOR = 5;
+  PARTICIPANT_TO_INSTRUMENT_RELATION_ENUM__GOVERNOR = 6;
+  PARTICIPANT_TO_INSTRUMENT_RELATION_ENUM__CUSTODIAN = 7;
+  PARTICIPANT_TO_INSTRUMENT_RELATION_ENUM__BROKER = 8;
+  PARTICIPANT_TO_INSTRUMENT_RELATION_ENUM__DEALER = 9;
+  PARTICIPANT_TO_INSTRUMENT_RELATION_ENUM__MARKET = 10;
+  PARTICIPANT_TO_INSTRUMENT_RELATION_ENUM__VENUE = 11;
+  PARTICIPANT_TO_INSTRUMENT_RELATION_ENUM__AUDITOR = 12;
+  PARTICIPANT_TO_INSTRUMENT_RELATION_ENUM__AGENT = 13;
+  PARTICIPANT_TO_INSTRUMENT_RELATION_ENUM__ADVISOR = 14;
+  PARTICIPANT_TO_INSTRUMENT_RELATION_ENUM__ADMINISTRATOR = 16;
+  PARTICIPANT_TO_INSTRUMENT_RELATION_ENUM__MARKET_MAKER = 21;
+  PARTICIPANT_TO_INSTRUMENT_RELATION_ENUM__LIQUIDITY_PROVIDER = 22;
+  PARTICIPANT_TO_INSTRUMENT_RELATION_ENUM__ORACLE = 23;
+  PARTICIPANT_TO_INSTRUMENT_RELATION_ENUM__MINER_VALIDATOR = 24;
+  PARTICIPANT_TO_INSTRUMENT_RELATION_ENUM__SERVICE_PROVIDER = 25;
+
+  PARTICIPANT_TO_INSTRUMENT_RELATION_ENUM__OTHER = 1000;
+}
+
+message ParticipantToInstrumentRelation {
+  string iid = 1;                                                // REQUIRED: Internal relation identifier
+
+  string participant_iid = 2;                                    // REQUIRED: Participant internal identifier
+  string instrument_iid = 3;                                     // REQUIRED: Instrument internal identifier
+
+  repeated ParticipantToInstrumentRelationEnum relations = 4;    // REQUIRED: Type of relation
+
+  DateTime effective_from_dt = 5;                                // OPTIONAL: Relation effective start date
+  DateTime effective_to_dt = 6;                                  // OPTIONAL: Relation effective end date
+  string weight = 7;                                             // OPTIONAL: Relation weight (e.g. percentage of ownership)
+
+  map<string, string> display_names = 101;                       // OPTIONAL: Display names for localization
+  map<string, string> descriptions = 102;                        // OPTIONAL: Descriptions for localization
+  map<string, string> labels = 103;                              // OPTIONAL: Key-value labels
+  repeated string tags = 104;                                    // OPTIONAL: Tags for categorization
+  map<string, string> metadata = 105;                            // OPTIONAL: Additional metadata
+}
+
+message Holdings {
+  oneof asset_id {                            // REQUIRED: Must specify one asset type
+    string instrument_iid = 1;                // Instrument internal ID
+    string currency_code = 2;                 // ISO 4217 currency code
+  }
+  string total_units = 3;                     // REQUIRED: Total units held
+  map<string, string> stash_units = 4;        // OPTIONAL: Units by stash (stash-name -> units)
+}
+
+message Portfolio {
+  string account_iid = 1;                     // REQUIRED: Associated account ID
+  DateTime generated_at_dt = 2;               // REQUIRED: Portfolio generation timestamp
+  map<string, Holdings> holdings = 3;         // REQUIRED: Holdings by asset (can be empty)
+
+  map<string, string> metadata = 105;         // OPTIONAL: Additional metadata
 }
 
 enum MarketStatus {
@@ -327,150 +496,6 @@ message Venue {
   repeated OneOfIdOrParticipant settlement_depositories = 15; // OPTIONAL: CSDs
   repeated OneOfIdOrParticipant clearing_houses = 16;         // OPTIONAL: Clearing houses
   repeated OneOfIdOrParticipant regulators = 17;              // OPTIONAL: Regulators
-
-  map<string, string> display_names = 101;     // OPTIONAL: Display names for localization
-  map<string, string> descriptions = 102;      // OPTIONAL: Descriptions for localization
-  map<string, string> labels = 103;            // OPTIONAL: Key-value labels
-  repeated string tags = 104;                  // OPTIONAL: Tags for categorization
-  map<string, string> metadata = 105;          // OPTIONAL: Additional metadata
-}
-
-enum InstrumentClassEnum {
-  INSTRUMENT_CLASS_ENUM__UNKNOWN = 0;
-
-  INSTRUMENT_CLASS_ENUM__EQUITY_SHARE = 1;
-  INSTRUMENT_CLASS_ENUM__TOKENIZED_SECURITY = 2;
-  INSTRUMENT_CLASS_ENUM__FUND_UNIT = 3;
-  INSTRUMENT_CLASS_ENUM__ETF_SHARE = 4;
-  INSTRUMENT_CLASS_ENUM__BOND = 5;
-  INSTRUMENT_CLASS_ENUM__EQUITY_DERIVATIVE = 6;
-  INSTRUMENT_CLASS_ENUM__INDEX_DERIVATIVE = 7;
-  INSTRUMENT_CLASS_ENUM__FX = 8;
-  INSTRUMENT_CLASS_ENUM__WARRANT = 9;
-  INSTRUMENT_CLASS_ENUM__CFD = 10;
-  INSTRUMENT_CLASS_ENUM__OPTION = 11;
-  INSTRUMENT_CLASS_ENUM__FUTURE = 12;
-
-  INSTRUMENT_CLASS_ENUM__OTHER = 1000;
-}
-
-message FinInstrumentClass {
-  string schema = 1;
-  repeated InstrumentClassEnum classes = 2;
-
-  map<string, string> display_names = 101;
-  map<string, string> descriptions = 102;
-  map<string, string> labels = 103;
-  repeated string tags = 104;
-  map<string, string> metadata = 105;
-}
-
-enum InstrumentCfiC1ClassEnum {
-  INSTRUMENT_CFI_C1_CLASS_ENUM__UNKNOWN = 0;
-
-  INSTRUMENT_CFI_C1_CLASS_ENUM__EQUITY__E = 2;
-  INSTRUMENT_CFI_C1_CLASS_ENUM__DEBT__D = 1;
-  INSTRUMENT_CFI_C1_CLASS_ENUM__COLLECTIVE_INVESTMENT_VEHICLE__C = 6;
-  INSTRUMENT_CFI_C1_CLASS_ENUM__RIGHTS_WARRANT__R = 4;
-  INSTRUMENT_CFI_C1_CLASS_ENUM__OPTION__O = 3;
-  INSTRUMENT_CFI_C1_CLASS_ENUM__FUTURE__F = 5;
-  INSTRUMENT_CFI_C1_CLASS_ENUM__SWAPS__S = 7;
-  INSTRUMENT_CFI_C1_CLASS_ENUM__HEDGE_OTHER__H = 8;
-
-  INSTRUMENT_CFI_C1_CLASS_ENUM__OTHER = 1000;
-}
-
-enum InstrumentCfiC2ClassEnum {
-  INSTRUMENT_CFI_C2_CLASS_ENUM__UNKNOWN = 0;
-
-  // Equity (E) C2 codes
-  INSTRUMENT_CFI_C2_CLASS_ENUM__COMMON_ORDINARY_SHARES__ES = 1;
-  INSTRUMENT_CFI_C2_CLASS_ENUM__PREFERRED_PREFERENCE_SHARES__EP = 2;
-  INSTRUMENT_CFI_C2_CLASS_ENUM__COMMON_CONDITIONAL_ENTITLEMENT__EC = 3;
-  INSTRUMENT_CFI_C2_CLASS_ENUM__PREFERRED_CONDITIONAL_ENTITLEMENT__EF = 4;
-  INSTRUMENT_CFI_C2_CLASS_ENUM__PREFERRED_SHARES__ER = 5;
-  INSTRUMENT_CFI_C2_CLASS_ENUM__UNITS_UNCLASSIFIED__EU = 6;
-  INSTRUMENT_CFI_C2_CLASS_ENUM__OTHERS_MISCELLANEOUS__EM = 7;
-
-  // Debt (D) C2 codes  
-  INSTRUMENT_CFI_C2_CLASS_ENUM__BONDS__DB = 8;
-  INSTRUMENT_CFI_C2_CLASS_ENUM__CONVERTIBLE_BONDS__DC = 9;
-  INSTRUMENT_CFI_C2_CLASS_ENUM__BONDS_WITH_WARRANTS_ATTACHED__DW = 10;
-  INSTRUMENT_CFI_C2_CLASS_ENUM__MEDIUM_TERM_NOTES__DT = 11;
-  INSTRUMENT_CFI_C2_CLASS_ENUM__MONEY_MARKETS__DY = 12;
-  INSTRUMENT_CFI_C2_CLASS_ENUM__MUNICIPAL_BONDS__DN = 13;
-  INSTRUMENT_CFI_C2_CLASS_ENUM__DEPOSITS__DD = 14;
-  INSTRUMENT_CFI_C2_CLASS_ENUM__OTHERS_DEBT__DM = 15;
-
-  // Rights (R) C2 codes
-  INSTRUMENT_CFI_C2_CLASS_ENUM__ALLOTMENT_RIGHTS__RA = 16;
-  INSTRUMENT_CFI_C2_CLASS_ENUM__SUBSCRIPTION_RIGHTS__RS = 17;
-  INSTRUMENT_CFI_C2_CLASS_ENUM__PURCHASE_RIGHTS__RP = 18;
-  INSTRUMENT_CFI_C2_CLASS_ENUM__WARRANT_RIGHTS__RW = 19;
-  INSTRUMENT_CFI_C2_CLASS_ENUM__OTHERS_RIGHTS__RM = 20;
-
-  // Options (O) C2 codes
-  INSTRUMENT_CFI_C2_CLASS_ENUM__CALL_OPTIONS__OC = 21;
-  INSTRUMENT_CFI_C2_CLASS_ENUM__PUT_OPTIONS__OP = 22;
-  INSTRUMENT_CFI_C2_CLASS_ENUM__OTHERS_OPTIONS__OM = 23;
-
-  // Futures (F) C2 codes
-  INSTRUMENT_CFI_C2_CLASS_ENUM__FINANCIAL_FUTURES__FF = 24;
-  INSTRUMENT_CFI_C2_CLASS_ENUM__COMMODITY_FUTURES__FC = 25;
-  INSTRUMENT_CFI_C2_CLASS_ENUM__OTHERS_FUTURES__FM = 26;
-
-  // Collective Investment Vehicles (C) C2 codes
-  INSTRUMENT_CFI_C2_CLASS_ENUM__STANDARD_OPEN_END__CO = 27;
-  INSTRUMENT_CFI_C2_CLASS_ENUM__STANDARD_CLOSED_END__CC = 28;
-  INSTRUMENT_CFI_C2_CLASS_ENUM__NON_STANDARD__CN = 29;
-  INSTRUMENT_CFI_C2_CLASS_ENUM__OTHERS_COLLECTIVE__CM = 30;
-
-  // Swaps (S) C2 codes
-  INSTRUMENT_CFI_C2_CLASS_ENUM__CREDIT_DEFAULT_SWAPS__SC = 31;
-  INSTRUMENT_CFI_C2_CLASS_ENUM__INTEREST_RATE_SWAPS__SI = 32;
-  INSTRUMENT_CFI_C2_CLASS_ENUM__CURRENCY_SWAPS__SR = 33;
-  INSTRUMENT_CFI_C2_CLASS_ENUM__COMMODITY_SWAPS__SO = 34;
-  INSTRUMENT_CFI_C2_CLASS_ENUM__EQUITY_SWAPS__SE = 35;
-  INSTRUMENT_CFI_C2_CLASS_ENUM__TOTAL_RETURN_SWAPS__ST = 36;
-  INSTRUMENT_CFI_C2_CLASS_ENUM__OTHERS_SWAPS__SM = 37;
-
-  // Non-listed and complex listed (H) C2 codes
-  INSTRUMENT_CFI_C2_CLASS_ENUM__NON_LISTED__HN = 38;
-  INSTRUMENT_CFI_C2_CLASS_ENUM__COMPLEX_LISTED__HC = 39;
-  INSTRUMENT_CFI_C2_CLASS_ENUM__OTHERS_HEDGE__HM = 40;
-
-  INSTRUMENT_CFI_C2_CLASS_ENUM__OTHER = 1000;
-}
-
-message OneOfIdOrParticipant {
-  oneof participant {
-    string iid = 1;
-    Participant obj = 2;
-  }
-}
-
-message Instrument {
-  string iid = 1;                               // REQUIRED: Internal instrument identifier
-
-  repeated FinIdentifier identifiers = 2;       // OPTIONAL: List of instrument identifiers
-  InstrumentCfiC1ClassEnum cfi_c1_class = 3;    // OPTIONAL: CFI C1 classification
-  InstrumentCfiC2ClassEnum cfi_c2_class = 4;    // OPTIONAL: CFI C2 classification
-  repeated FinInstrumentClass classes = 5;      // OPTIONAL: List of instrument classifications
-
-  DateTime maturity_dt = 6;                     // OPTIONAL: Instrument maturity date
-
-  oneof asset {                                 // OPTIONAL: Underlying asset
-    string asset_iid = 7;                       // Asset internal identifier
-    Asset asset_obj = 8;                        // Asset object
-  }
-
-  DateTime issue_dt = 9;                        // OPTIONAL: Issue date
-  repeated OneOfIdOrParticipant issuers = 10;   // OPTIONAL: List of issuers
-  string issue_country_code = 11;               // OPTIONAL: ISO 3166-1 alpha-2
-  string issue_currency = 12;                   // OPTIONAL: ISO 4217 currency code
-  string issue_initial_units = 13;              // OPTIONAL: Number of shares issued
-  string issue_divisibility = 14;               // OPTIONAL: Unit divisibility
-  string issue_initial_authorized_units = 15;   // OPTIONAL: Number of shares authorized
 
   map<string, string> display_names = 101;     // OPTIONAL: Display names for localization
   map<string, string> descriptions = 102;      // OPTIONAL: Descriptions for localization

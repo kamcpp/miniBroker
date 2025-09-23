@@ -1,6 +1,6 @@
 // This is a generated file - do not edit.
 //
-// Generated from qomet/agora/daemons/prtagent/v1/agent.proto.
+// Generated from agent.proto.
 
 // @dart = 3.3
 
@@ -18,6 +18,7 @@ import 'package:protobuf/protobuf.dart' as $pb;
 
 import 'agent.pb.dart' as $0;
 import 'common.pb.dart' as $1;
+import 'event.pb.dart' as $2;
 
 export 'agent.pb.dart';
 
@@ -40,13 +41,6 @@ class AgentServiceClient extends $grpc.Client {
     return $createUnaryCall(_$ping, request, options: options);
   }
 
-  $grpc.ResponseFuture<$0.GetParticipantInfoResponse> getParticipantInfo(
-    $0.GetParticipantInfoRequest request, {
-    $grpc.CallOptions? options,
-  }) {
-    return $createUnaryCall(_$getParticipantInfo, request, options: options);
-  }
-
   $grpc.ResponseFuture<$0.GetSupportedCurrenciesResponse>
       getSupportedCurrencies(
     $0.GetSupportedCurrenciesRequest request, {
@@ -56,35 +50,20 @@ class AgentServiceClient extends $grpc.Client {
         options: options);
   }
 
-  $grpc.ResponseFuture<$0.GetParticipantOrdersResponse> getParticipantOrders(
-    $0.GetParticipantOrdersRequest request, {
+  $grpc.ResponseFuture<$1.ExecutionAsyncResponse> getSupportedCurrenciesAsync(
+    $0.GetSupportedCurrenciesRequest request, {
     $grpc.CallOptions? options,
   }) {
-    return $createUnaryCall(_$getParticipantOrders, request, options: options);
-  }
-
-  $grpc.ResponseFuture<$0.GetParticipantTradesResponse> getParticipantTrades(
-    $0.GetParticipantTradesRequest request, {
-    $grpc.CallOptions? options,
-  }) {
-    return $createUnaryCall(_$getParticipantTrades, request, options: options);
-  }
-
-  $grpc.ResponseFuture<$0.GetParticipantSettlementsResponse>
-      getParticipantSettlements(
-    $0.GetParticipantSettlementsRequest request, {
-    $grpc.CallOptions? options,
-  }) {
-    return $createUnaryCall(_$getParticipantSettlements, request,
+    return $createUnaryCall(_$getSupportedCurrenciesAsync, request,
         options: options);
   }
 
-  $grpc.ResponseStream<$1.Event> subscribeToAgentEvents(
-    $1.EventSubscriptionParams request, {
+  $grpc.ResponseStream<$2.Event> subscribeToEvents(
+    $2.EventSubscriptionParams request, {
     $grpc.CallOptions? options,
   }) {
     return $createStreamingCall(
-        _$subscribeToAgentEvents, $async.Stream.fromIterable([request]),
+        _$subscribeToEvents, $async.Stream.fromIterable([request]),
         options: options);
   }
 
@@ -94,37 +73,21 @@ class AgentServiceClient extends $grpc.Client {
       '/qomet.agora.daemons.prtagent.v1.AgentService/Ping',
       ($0.PingRequest value) => value.writeToBuffer(),
       $0.PingResponse.fromBuffer);
-  static final _$getParticipantInfo = $grpc.ClientMethod<
-          $0.GetParticipantInfoRequest, $0.GetParticipantInfoResponse>(
-      '/qomet.agora.daemons.prtagent.v1.AgentService/GetParticipantInfo',
-      ($0.GetParticipantInfoRequest value) => value.writeToBuffer(),
-      $0.GetParticipantInfoResponse.fromBuffer);
   static final _$getSupportedCurrencies = $grpc.ClientMethod<
           $0.GetSupportedCurrenciesRequest, $0.GetSupportedCurrenciesResponse>(
       '/qomet.agora.daemons.prtagent.v1.AgentService/GetSupportedCurrencies',
       ($0.GetSupportedCurrenciesRequest value) => value.writeToBuffer(),
       $0.GetSupportedCurrenciesResponse.fromBuffer);
-  static final _$getParticipantOrders = $grpc.ClientMethod<
-          $0.GetParticipantOrdersRequest, $0.GetParticipantOrdersResponse>(
-      '/qomet.agora.daemons.prtagent.v1.AgentService/GetParticipantOrders',
-      ($0.GetParticipantOrdersRequest value) => value.writeToBuffer(),
-      $0.GetParticipantOrdersResponse.fromBuffer);
-  static final _$getParticipantTrades = $grpc.ClientMethod<
-          $0.GetParticipantTradesRequest, $0.GetParticipantTradesResponse>(
-      '/qomet.agora.daemons.prtagent.v1.AgentService/GetParticipantTrades',
-      ($0.GetParticipantTradesRequest value) => value.writeToBuffer(),
-      $0.GetParticipantTradesResponse.fromBuffer);
-  static final _$getParticipantSettlements = $grpc.ClientMethod<
-          $0.GetParticipantSettlementsRequest,
-          $0.GetParticipantSettlementsResponse>(
-      '/qomet.agora.daemons.prtagent.v1.AgentService/GetParticipantSettlements',
-      ($0.GetParticipantSettlementsRequest value) => value.writeToBuffer(),
-      $0.GetParticipantSettlementsResponse.fromBuffer);
-  static final _$subscribeToAgentEvents = $grpc.ClientMethod<
-          $1.EventSubscriptionParams, $1.Event>(
-      '/qomet.agora.daemons.prtagent.v1.AgentService/SubscribeToAgentEvents',
-      ($1.EventSubscriptionParams value) => value.writeToBuffer(),
-      $1.Event.fromBuffer);
+  static final _$getSupportedCurrenciesAsync = $grpc.ClientMethod<
+          $0.GetSupportedCurrenciesRequest, $1.ExecutionAsyncResponse>(
+      '/qomet.agora.daemons.prtagent.v1.AgentService/GetSupportedCurrenciesAsync',
+      ($0.GetSupportedCurrenciesRequest value) => value.writeToBuffer(),
+      $1.ExecutionAsyncResponse.fromBuffer);
+  static final _$subscribeToEvents =
+      $grpc.ClientMethod<$2.EventSubscriptionParams, $2.Event>(
+          '/qomet.agora.daemons.prtagent.v1.AgentService/SubscribeToEvents',
+          ($2.EventSubscriptionParams value) => value.writeToBuffer(),
+          $2.Event.fromBuffer);
 }
 
 @$pb.GrpcServiceName('qomet.agora.daemons.prtagent.v1.AgentService')
@@ -139,15 +102,6 @@ abstract class AgentServiceBase extends $grpc.Service {
         false,
         ($core.List<$core.int> value) => $0.PingRequest.fromBuffer(value),
         ($0.PingResponse value) => value.writeToBuffer()));
-    $addMethod($grpc.ServiceMethod<$0.GetParticipantInfoRequest,
-            $0.GetParticipantInfoResponse>(
-        'GetParticipantInfo',
-        getParticipantInfo_Pre,
-        false,
-        false,
-        ($core.List<$core.int> value) =>
-            $0.GetParticipantInfoRequest.fromBuffer(value),
-        ($0.GetParticipantInfoResponse value) => value.writeToBuffer()));
     $addMethod($grpc.ServiceMethod<$0.GetSupportedCurrenciesRequest,
             $0.GetSupportedCurrenciesResponse>(
         'GetSupportedCurrencies',
@@ -157,41 +111,23 @@ abstract class AgentServiceBase extends $grpc.Service {
         ($core.List<$core.int> value) =>
             $0.GetSupportedCurrenciesRequest.fromBuffer(value),
         ($0.GetSupportedCurrenciesResponse value) => value.writeToBuffer()));
-    $addMethod($grpc.ServiceMethod<$0.GetParticipantOrdersRequest,
-            $0.GetParticipantOrdersResponse>(
-        'GetParticipantOrders',
-        getParticipantOrders_Pre,
+    $addMethod($grpc.ServiceMethod<$0.GetSupportedCurrenciesRequest,
+            $1.ExecutionAsyncResponse>(
+        'GetSupportedCurrenciesAsync',
+        getSupportedCurrenciesAsync_Pre,
         false,
         false,
         ($core.List<$core.int> value) =>
-            $0.GetParticipantOrdersRequest.fromBuffer(value),
-        ($0.GetParticipantOrdersResponse value) => value.writeToBuffer()));
-    $addMethod($grpc.ServiceMethod<$0.GetParticipantTradesRequest,
-            $0.GetParticipantTradesResponse>(
-        'GetParticipantTrades',
-        getParticipantTrades_Pre,
-        false,
-        false,
-        ($core.List<$core.int> value) =>
-            $0.GetParticipantTradesRequest.fromBuffer(value),
-        ($0.GetParticipantTradesResponse value) => value.writeToBuffer()));
-    $addMethod($grpc.ServiceMethod<$0.GetParticipantSettlementsRequest,
-            $0.GetParticipantSettlementsResponse>(
-        'GetParticipantSettlements',
-        getParticipantSettlements_Pre,
-        false,
-        false,
-        ($core.List<$core.int> value) =>
-            $0.GetParticipantSettlementsRequest.fromBuffer(value),
-        ($0.GetParticipantSettlementsResponse value) => value.writeToBuffer()));
-    $addMethod($grpc.ServiceMethod<$1.EventSubscriptionParams, $1.Event>(
-        'SubscribeToAgentEvents',
-        subscribeToAgentEvents_Pre,
+            $0.GetSupportedCurrenciesRequest.fromBuffer(value),
+        ($1.ExecutionAsyncResponse value) => value.writeToBuffer()));
+    $addMethod($grpc.ServiceMethod<$2.EventSubscriptionParams, $2.Event>(
+        'SubscribeToEvents',
+        subscribeToEvents_Pre,
         false,
         true,
         ($core.List<$core.int> value) =>
-            $1.EventSubscriptionParams.fromBuffer(value),
-        ($1.Event value) => value.writeToBuffer()));
+            $2.EventSubscriptionParams.fromBuffer(value),
+        ($2.Event value) => value.writeToBuffer()));
   }
 
   $async.Future<$0.PingResponse> ping_Pre(
@@ -202,15 +138,6 @@ abstract class AgentServiceBase extends $grpc.Service {
   $async.Future<$0.PingResponse> ping(
       $grpc.ServiceCall call, $0.PingRequest request);
 
-  $async.Future<$0.GetParticipantInfoResponse> getParticipantInfo_Pre(
-      $grpc.ServiceCall $call,
-      $async.Future<$0.GetParticipantInfoRequest> $request) async {
-    return getParticipantInfo($call, await $request);
-  }
-
-  $async.Future<$0.GetParticipantInfoResponse> getParticipantInfo(
-      $grpc.ServiceCall call, $0.GetParticipantInfoRequest request);
-
   $async.Future<$0.GetSupportedCurrenciesResponse> getSupportedCurrencies_Pre(
       $grpc.ServiceCall $call,
       $async.Future<$0.GetSupportedCurrenciesRequest> $request) async {
@@ -220,38 +147,20 @@ abstract class AgentServiceBase extends $grpc.Service {
   $async.Future<$0.GetSupportedCurrenciesResponse> getSupportedCurrencies(
       $grpc.ServiceCall call, $0.GetSupportedCurrenciesRequest request);
 
-  $async.Future<$0.GetParticipantOrdersResponse> getParticipantOrders_Pre(
+  $async.Future<$1.ExecutionAsyncResponse> getSupportedCurrenciesAsync_Pre(
       $grpc.ServiceCall $call,
-      $async.Future<$0.GetParticipantOrdersRequest> $request) async {
-    return getParticipantOrders($call, await $request);
+      $async.Future<$0.GetSupportedCurrenciesRequest> $request) async {
+    return getSupportedCurrenciesAsync($call, await $request);
   }
 
-  $async.Future<$0.GetParticipantOrdersResponse> getParticipantOrders(
-      $grpc.ServiceCall call, $0.GetParticipantOrdersRequest request);
+  $async.Future<$1.ExecutionAsyncResponse> getSupportedCurrenciesAsync(
+      $grpc.ServiceCall call, $0.GetSupportedCurrenciesRequest request);
 
-  $async.Future<$0.GetParticipantTradesResponse> getParticipantTrades_Pre(
-      $grpc.ServiceCall $call,
-      $async.Future<$0.GetParticipantTradesRequest> $request) async {
-    return getParticipantTrades($call, await $request);
+  $async.Stream<$2.Event> subscribeToEvents_Pre($grpc.ServiceCall $call,
+      $async.Future<$2.EventSubscriptionParams> $request) async* {
+    yield* subscribeToEvents($call, await $request);
   }
 
-  $async.Future<$0.GetParticipantTradesResponse> getParticipantTrades(
-      $grpc.ServiceCall call, $0.GetParticipantTradesRequest request);
-
-  $async.Future<$0.GetParticipantSettlementsResponse>
-      getParticipantSettlements_Pre($grpc.ServiceCall $call,
-          $async.Future<$0.GetParticipantSettlementsRequest> $request) async {
-    return getParticipantSettlements($call, await $request);
-  }
-
-  $async.Future<$0.GetParticipantSettlementsResponse> getParticipantSettlements(
-      $grpc.ServiceCall call, $0.GetParticipantSettlementsRequest request);
-
-  $async.Stream<$1.Event> subscribeToAgentEvents_Pre($grpc.ServiceCall $call,
-      $async.Future<$1.EventSubscriptionParams> $request) async* {
-    yield* subscribeToAgentEvents($call, await $request);
-  }
-
-  $async.Stream<$1.Event> subscribeToAgentEvents(
-      $grpc.ServiceCall call, $1.EventSubscriptionParams request);
+  $async.Stream<$2.Event> subscribeToEvents(
+      $grpc.ServiceCall call, $2.EventSubscriptionParams request);
 }
