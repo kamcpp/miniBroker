@@ -221,18 +221,30 @@ class _TradingPageState extends State<TradingPage> {
         
         for (final currency in currencies) {
           if (currency is Map<String, dynamic>) {
-            // Handle new response structure (from fallback data)
-            final currencyCode = currency['code'] as String? ?? '';
-            final currencySymbol = currency['symbol'] as String? ?? '';
-            final displayNames = currency['displayNames'] as Map<String, dynamic>? ?? {};
-            final currencyName = displayNames['en'] as String? ?? currency['name'] as String? ?? currencyCode;
+            // Extract currency value from currencies > identifiers > ids[0] > value
+            String currencyValue = '';
+            final identifiers = currency['identifiers'] as List<dynamic>? ?? [];
+            if (identifiers.isNotEmpty) {
+              final firstIdentifier = identifiers.first as Map<String, dynamic>? ?? {};
+              final ids = firstIdentifier['ids'] as List<dynamic>? ?? [];
+              if (ids.isNotEmpty) {
+                final firstId = ids.first as Map<String, dynamic>? ?? {};
+                currencyValue = firstId['value'] as String? ?? '';
+              }
+            }
 
-            if (currencyCode.isNotEmpty) {
+            // Get display name and labels
+            final displayNames = currency['displayNames'] as Map<String, dynamic>? ?? {};
+            final currencyName = displayNames['en'] as String? ?? '';
+            final labels = currency['labels'] as Map<String, dynamic>? ?? {};
+            final currencySymbol = labels['symbol'] as String? ?? '';
+
+            if (currencyValue.isNotEmpty) {
               final currencyMap = {
-                'code': currencyCode,
-                'symbol': currencySymbol.isNotEmpty ? currencySymbol : currencyCode,
-                'display': currencyName.isNotEmpty ? '$currencyName ($currencyCode)' : currencyCode,
-                'asset_id': currencyCode, // For compatibility with existing code
+                'code': currencyValue,
+                'symbol': currencySymbol.isNotEmpty ? currencySymbol : currencyValue,
+                'display': currencyValue, // Show currencies > identifiers > ids[0] > value
+                'asset_id': currencyValue, // For compatibility with existing code
               };
               currencyData.add(currencyMap);
               continue;

@@ -73,24 +73,24 @@ class _BalancePageState extends State<BalancePage> {
         final currencyData = currencies.map((currency) {
           final currencyMap = currency as Map<String, dynamic>;
 
-          // Extract currency code from nested structure: zonedSymbols -> symbols -> value
-          String currencyCode = '';
-          final zonedSymbols = currencyMap['zonedSymbols'] as List<dynamic>? ?? [];
-          if (zonedSymbols.isNotEmpty) {
-            final firstZonedSymbol = zonedSymbols.first as Map<String, dynamic>? ?? {};
-            final symbols = firstZonedSymbol['symbols'] as List<dynamic>? ?? [];
-            if (symbols.isNotEmpty) {
-              final firstSymbol = symbols.first as Map<String, dynamic>? ?? {};
-              currencyCode = firstSymbol['value']?.toString() ?? '';
+          // Extract currency value from currencies > identifiers > ids[0] > value
+          String currencyValue = '';
+          final identifiers = currencyMap['identifiers'] as List<dynamic>? ?? [];
+          if (identifiers.isNotEmpty) {
+            final firstIdentifier = identifiers.first as Map<String, dynamic>? ?? {};
+            final ids = firstIdentifier['ids'] as List<dynamic>? ?? [];
+            if (ids.isNotEmpty) {
+              final firstId = ids.first as Map<String, dynamic>? ?? {};
+              currencyValue = firstId['value']?.toString() ?? '';
             }
           }
 
-          // Use currency code as both asset_id and symbol for now
+          // Use currency value as both asset_id and symbol for now
           return {
-            'asset_id': currencyCode, // Using currency code as asset_id
-            'code': currencyCode,
-            'symbol': currencyCode,
-            'display': currencyCode,
+            'asset_id': currencyValue, // Using currency value as asset_id
+            'code': currencyValue,
+            'symbol': currencyValue,
+            'display': currencyValue, // Show currencies > identifiers > ids[0] > value
           };
         }).where((currency) => currency['code']!.isNotEmpty).toList();
 

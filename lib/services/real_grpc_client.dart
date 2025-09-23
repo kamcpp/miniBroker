@@ -1071,17 +1071,7 @@ class RealGrpcClient {
         pageSize: pageSize,
       );
 
-      print('📤 GetSupportedCurrencies OUTPUT: ${result.toString()}');
-      return {
-        'input': {
-          'page_nr': pageNumber,
-          'page_size': pageSize,
-        },
-        'output': result['success'] ? result['output'] : {'error': result['output']?['error'] ?? 'Unknown error'},
-        'requestTime': _toUnixTimestamp(DateTime.now()).toString(),
-        'serverType': 'real_grpc',
-        'success': result['success'] ?? false,
-      };
+      return result;
     } catch (e) {
       print('❌ Critical error in getSupportedCurrencies: $e');
       return {
