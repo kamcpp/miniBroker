@@ -298,10 +298,6 @@ class _TradingPageState extends State<TradingPage> {
           _supportedCurrencies = currencyData;
           if (_selectedCurrency.isEmpty && _supportedCurrencies.isNotEmpty) {
             _selectedCurrency = _supportedCurrencies.first;
-            // Fetch cash holdings for the initially selected currency
-            WidgetsBinding.instance.addPostFrameCallback((_) {
-              _fetchCashHoldingsForCurrency(_selectedCurrency['code']!);
-            });
           }
           _isLoadingSupportedCurrencies = false;
         });
@@ -531,58 +527,21 @@ class _TradingPageState extends State<TradingPage> {
     }
   }
 
-  /// Fetch cash holdings for a specific currency
-  Future<void> _fetchCashHoldingsForCurrency(String currencyCode) async {
-    try {
-      print('💰 Fetching cash holdings for currency: $currencyCode');
-      
-      // Check if we have a cached account ID
-      if (_cachedAccountId == null || _cachedAccountId!.isEmpty) {
-        print('❌ No cached account ID available for cash holdings');
-        return;
-      }
-
-      final cashHoldingsResponse = await realGrpcClient.getAccountCashHoldings(
-        accountId: _cachedAccountId!,
-        cashAssetIds: [currencyCode], // Use the selected currency code
-      ).timeout(
-        const Duration(seconds: 15),
-        onTimeout: () => {
-          'input': {'ref_request_id': 'timeout'},
-          'output': {'error': 'Request timed out', 'message': 'Cash holdings request timed out after 15 seconds'},
-          'requestTime': (DateTime.now().millisecondsSinceEpoch ~/ 1000).toString(),
-          'serverType': 'timeout',
-          'success': false,
-        },
-      );
-
-      print('💰 Cash Holdings Response: $cashHoldingsResponse');
-
-      if (cashHoldingsResponse['success'] == true) {
-        // Extract balance from the response for the specific currency
-        final output = cashHoldingsResponse['output'] as Map<String, dynamic>;
-        final cashHoldings = output['cashHoldings'] as Map<String, dynamic>? ?? {};
-        final balances = cashHoldings['balances'] as Map<String, dynamic>? ?? {};
-        final currencyBalance = balances[currencyCode]?.toString() ?? '0';
-        
-        setState(() {
-          _buyingPower = currencyBalance;
-        });
-        
-        print('✅ Updated buying power for $currencyCode: $currencyBalance');
-      } else {
-        print('❌ Failed to fetch cash holdings for $currencyCode: ${cashHoldingsResponse['output']}');
-        setState(() {
-          _buyingPower = '0';
-        });
-      }
-    } catch (e) {
-      print('❌ Error fetching cash holdings for $currencyCode: $e');
-      setState(() {
-        _buyingPower = '0';
-      });
+  /// Update buying power from cached holdings data when currency changes
+  void _updateBuyingPowerFromCachedData() {
+    if (_cachedHoldings == null || _selectedCurrency.isEmpty) {
+      _buyingPower = '0';
+      return;
     }
+
+    final selectedCurrencyCode = _selectedCurrency['code'];
+    final currencyHolding = _cachedHoldings![selectedCurrencyCode] as Map<String, dynamic>? ?? {};
+    final currencyBalance = currencyHolding['totalUnits']?.toString() ?? '0';
+
+    _buyingPower = currencyBalance;
+    print('✅ Updated buying power from cache for $selectedCurrencyCode: $currencyBalance');
   }
+
 
   /// Fetch account market portfolio for available balance
   Future<void> _fetchAccountMarketPortfolio() async {
@@ -716,6 +675,7 @@ class _TradingPageState extends State<TradingPage> {
   String _buyingPower = '0'; // Default fallback value
   String _availableBalance = '0'; // For sell orders - available asset balance
   String? _cachedAccountId; // Cache account ID for entire session (doesn't change until logout)
+  Map<String, dynamic>? _cachedHoldings; // Cache all holdings data
 
   // Order fee calculation
   bool _isLoadingFee = false;
@@ -1084,18 +1044,24 @@ class _TradingPageState extends State<TradingPage> {
         });
 
         if (cashHoldingsResponse['success'] == true) {
-          // Extract USD balance from the response
+          // Extract balance for selected currency from the response
           final output = cashHoldingsResponse['output'] as Map<String, dynamic>;
           final cashPortfolio = output['cashPortfolio'] as Map<String, dynamic>? ?? {};
           final holdings = cashPortfolio['holdings'] as Map<String, dynamic>? ?? {};
-          final usdHolding = holdings['USD'] as Map<String, dynamic>? ?? {};
-          final usdBalance = usdHolding['totalUnits']?.toString() ?? '0';
-          
+
+          // Cache the holdings data for currency switching
+          _cachedHoldings = holdings;
+
+          // Get balance for currently selected currency
+          final selectedCurrencyCode = _selectedCurrency.isNotEmpty ? _selectedCurrency['code'] : 'USD';
+          final currencyHolding = holdings[selectedCurrencyCode] as Map<String, dynamic>? ?? {};
+          final currencyBalance = currencyHolding['totalUnits']?.toString() ?? '0';
+
           setState(() {
-            _buyingPower = usdBalance;
+            _buyingPower = currencyBalance;
           });
-          
-          print('✅ Cash holdings loaded successfully! USD balance: $usdBalance');
+
+          print('✅ Cash holdings loaded successfully! $selectedCurrencyCode balance: $currencyBalance');
         } else {
           final output = cashHoldingsResponse['output'] as Map<String, dynamic>;
           setState(() {
@@ -5133,9 +5099,9 @@ class _TradingPageState extends State<TradingPage> {
                         if (newValue != null) {
                           setState(() {
                             _selectedCurrency = newValue;
+                            // Update buying power from already-fetched cash holdings data
+                            _updateBuyingPowerFromCachedData();
                           });
-                          // Call cash holdings with the selected currency code
-                          _fetchCashHoldingsForCurrency(newValue['code']!);
                         }
                       },
                       dropdownColor: isDarkTheme ? const Color(0xFF1e1e1e) : Colors.white,

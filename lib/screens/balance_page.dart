@@ -45,7 +45,6 @@ class _BalancePageState extends State<BalancePage> {
   Future<void> _initializeBalanceData() async {
     if (mounted) {
       _fetchSupportedCurrencies();
-      _fetchCashHoldings();
     }
   }
 
@@ -271,15 +270,15 @@ class _BalancePageState extends State<BalancePage> {
           final output = cashHoldingsResponse['output'] as Map<String, dynamic>;
           final cashPortfolio = output['cashPortfolio'] as Map<String, dynamic>? ?? {};
           final holdings = cashPortfolio['holdings'] as Map<String, dynamic>? ?? {};
-          final assetId = _selectedCurrency['asset_id'] ?? '';
-          final assetHolding = holdings[assetId] as Map<String, dynamic>? ?? {};
+          final currencyCode = _selectedCurrency['code'] ?? '';
+          final assetHolding = holdings[currencyCode] as Map<String, dynamic>? ?? {};
           final assetBalance = assetHolding['totalUnits']?.toString() ?? '0';
 
           setState(() {
             _buyingPower = assetBalance;
           });
 
-          print('✅ Cash holdings loaded successfully! Asset $assetId balance: $assetBalance');
+          print('✅ Cash holdings loaded successfully! Currency $currencyCode balance: $assetBalance');
         } else {
           final output = cashHoldingsResponse['output'] as Map<String, dynamic>;
           setState(() {
@@ -304,6 +303,7 @@ class _BalancePageState extends State<BalancePage> {
   }
 
   Future<void> _fetchCashHoldingsForCurrency(String assetId) async {
+    print('🔍 _fetchCashHoldingsForCurrency called with assetId: $assetId');
     if (_cachedAccountId == null || _cachedAccountId!.isEmpty) {
       print('❌ No cached account ID available for currency fetch');
       return;
@@ -319,6 +319,8 @@ class _BalancePageState extends State<BalancePage> {
         cashAssetIds: [assetId], // Use the specific asset_id
       ).timeout(const Duration(seconds: 15));
 
+      print('🔍 Currency fetch response: ${cashHoldingsResponse['output']}');
+
       if (mounted) {
         setState(() {
           _isLoadingCashHoldings = false;
@@ -326,15 +328,51 @@ class _BalancePageState extends State<BalancePage> {
 
         if (cashHoldingsResponse['success'] == true) {
           final output = cashHoldingsResponse['output'] as Map<String, dynamic>;
-          final cashHoldings = output['cashHoldings'] as Map<String, dynamic>? ?? {};
-          final balances = cashHoldings['balances'] as Map<String, dynamic>? ?? {};
-          final assetBalance = balances[assetId]?.toString() ?? '0';
+          final cashPortfolio = output['cashPortfolio'] as Map<String, dynamic>? ?? {};
+          final holdings = cashPortfolio['holdings'] as Map<String, dynamic>? ?? {};
+
+          // Extract currency code from asset ID or use it directly
+          String currencyCode = assetId;
+          if (currencyCode.startsWith('cash_')) {
+            currencyCode = currencyCode.replaceFirst('cash_', '');
+          }
+
+          print('🔍 Looking for currency code: $currencyCode in holdings: ${holdings.keys}');
+          print('🔍 Holdings content: $holdings');
+
+          // Try to find the holding by currency code
+          Map<String, dynamic>? assetHolding;
+          String assetBalance = '0';
+
+          // First try direct lookup
+          if (holdings.containsKey(currencyCode)) {
+            assetHolding = holdings[currencyCode] as Map<String, dynamic>?;
+            print('🔍 Direct lookup found: $assetHolding');
+          } else {
+            // If not found, try to find any holding that matches
+            for (String key in holdings.keys) {
+              if (key.toUpperCase() == currencyCode.toUpperCase()) {
+                assetHolding = holdings[key] as Map<String, dynamic>?;
+                print('🔍 Case-insensitive lookup found: $assetHolding');
+                break;
+              }
+            }
+          }
+
+          if (assetHolding != null) {
+            final totalUnits = assetHolding['totalUnits'];
+            print('🔍 totalUnits raw value: $totalUnits (type: ${totalUnits.runtimeType})');
+            assetBalance = totalUnits?.toString() ?? '0';
+            print('🔍 Converted to string: $assetBalance');
+          }
+
+          print('🔍 Found holding: $assetHolding, extracted balance: $assetBalance');
 
           setState(() {
             _buyingPower = assetBalance;
           });
 
-          print('✅ Updated buying power for asset $assetId: $assetBalance');
+          print('✅ Updated buying power for $currencyCode: $assetBalance');
         } else {
           print('❌ Failed to fetch cash holdings for asset $assetId: ${cashHoldingsResponse['output']}');
           setState(() {
