@@ -108,9 +108,17 @@ class _PortfolioPageState extends State<PortfolioPage> {
       print('🔍 Final account ID selected: "$accountId" for user: $currentUsername');
 
       if (accountId == null || accountId.isEmpty) {
+        print('❌ Portfolio: Account ID is null, will retry in 2 seconds...');
         if (mounted) {
           setState(() {
             _isLoadingPortfolio = false;
+          });
+          // Retry after a short delay to allow grpcurl path to be cached
+          Future.delayed(const Duration(seconds: 2), () {
+            if (mounted) {
+              print('🔄 Portfolio: Retrying account lookup...');
+              _fetchPortfolioData();
+            }
           });
         }
         return;

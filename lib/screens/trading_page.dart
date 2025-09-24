@@ -9,6 +9,7 @@ import 'package:http/http.dart' as http;
 import '../services/auth_service.dart';
 import '../services/theme_service.dart';
 import '../services/real_grpc_client.dart';
+import '../services/grpcurl_helper.dart';
 import '../utils/connectivity_checker.dart';
 import 'portfolio_page.dart';
 import 'balance_page.dart';
@@ -795,6 +796,11 @@ class _TradingPageState extends State<TradingPage> {
     },
   ];
 
+  // Real orders data from GetAccountOrders API
+  List<Map<String, dynamic>> _realOrders = [];
+  bool _isLoadingRealOrders = false;
+  String? _realOrdersError;
+
   // Sample order history data (completed orders)
   final List<Map<String, dynamic>> _sampleOrderHistory = [
     {
@@ -894,7 +900,7 @@ class _TradingPageState extends State<TradingPage> {
     
     // Fetch supported currencies for the dropdown
     _fetchSupportedCurrencies();
-    
+
       // Fetch trade history, orderbook, and chart for default symbol when page is shown and assets are loaded
       WidgetsBinding.instance.addPostFrameCallback((_) {
         if (_selectedSymbol.isNotEmpty) {
@@ -1029,7 +1035,10 @@ class _TradingPageState extends State<TradingPage> {
       // Cache the account ID for the entire session
       _cachedAccountId = accountId;
       print('💾 Cached account ID: $_cachedAccountId for session');
-      
+
+      // Fetch real orders now that we have the account ID
+      _fetchRealOrders();
+
       await _fetchCashHoldingsForAccount(accountId);
     } catch (e) {
       // Ultimate crash protection
@@ -1108,6 +1117,87 @@ class _TradingPageState extends State<TradingPage> {
       } catch (innerE) {
         print('❌ Critical error in _fetchCashHoldings: $e, UI update failed: $innerE');
       }
+    }
+  }
+
+  /// Fetch real account orders using GetAccountOrders API
+  Future<void> _fetchRealOrders() async {
+    if (_cachedAccountId == null || _cachedAccountId!.isEmpty) {
+      print('❌ No cached account ID available for fetching orders');
+      return;
+    }
+
+    if (_isLoadingRealOrders) return;
+
+    setState(() {
+      _isLoadingRealOrders = true;
+      _realOrdersError = null;
+    });
+
+    try {
+      print('📋 Fetching real orders for account: $_cachedAccountId');
+
+      final result = await GrpcurlHelper.getAccountOrders(
+        accountId: _cachedAccountId!,
+        refRequestId: 'flutter-trading-page-${DateTime.now().millisecondsSinceEpoch}',
+        pagination: {
+          'page_nr': 0,
+          'page_size': 50, // Get up to 50 orders
+          'page_token': '',
+        },
+      ).timeout(const Duration(seconds: 10));
+
+      if (result['success'] == true && result['output'] != null) {
+        final output = result['output'];
+        print('📬 GetAccountOrders Response: $output');
+
+        if (output['orders'] != null && output['orders'] is List) {
+          final List<dynamic> ordersData = output['orders'];
+
+          final processedOrders = ordersData.map<Map<String, dynamic>>((order) {
+            return {
+              'order_id': order['orderIid'] ?? order['order_id'] ?? 'N/A',
+              'side': order['side'] ?? 'N/A',
+              'symbol': order['instrumentIid'] ?? order['symbol'] ?? 'N/A',
+              'quantity': order['quantity'] ?? '0',
+              'price': order['price'] ?? '0',
+              'create_timestamp': order['createdAtDt']?['ts'] ?? order['create_timestamp'],
+              'expire_timestamp': order['expireAtDt']?['ts'] ?? order['expire_timestamp'],
+              'is_filled': order['isFilled'] ?? order['is_filled'] ?? false,
+              'is_cancelled': order['isCancelled'] ?? order['is_cancelled'] ?? false,
+              'is_expired': order['isExpired'] ?? order['is_expired'] ?? false,
+              'order_status': order['orderStatus'] ?? 'UNKNOWN',
+              'order_type': order['orderType'] ?? order['order_type'] ?? 'UNKNOWN',
+            };
+          }).toList();
+
+          setState(() {
+            _realOrders = processedOrders;
+            _isLoadingRealOrders = false;
+          });
+
+          print('✅ Successfully loaded ${_realOrders.length} real orders');
+        } else {
+          print('📝 No orders found in response');
+          setState(() {
+            _realOrders = [];
+            _isLoadingRealOrders = false;
+          });
+        }
+      } else {
+        final errorMsg = result['output']?['error'] ?? 'Failed to fetch orders';
+        print('❌ GetAccountOrders failed: $errorMsg');
+        setState(() {
+          _realOrdersError = errorMsg;
+          _isLoadingRealOrders = false;
+        });
+      }
+    } catch (e) {
+      print('❌ Exception in _fetchRealOrders: $e');
+      setState(() {
+        _realOrdersError = 'Exception: ${e.toString()}';
+        _isLoadingRealOrders = false;
+      });
     }
   }
 
@@ -4247,29 +4337,119 @@ class _TradingPageState extends State<TradingPage> {
           ),
           const SizedBox(height: 8),
           Expanded(
-            child: ListView(
-              children: [
-                // Orders from sample data
-                ..._sampleOrders.map((order) => _buildOrderRow(order, isDarkTheme)),
-                // Empty state message if no orders
-                if (_sampleOrders.isEmpty)
-                  Padding(
-                    padding: const EdgeInsets.all(20),
-                    child: Center(
-                      child: Text(
-                        'No orders found',
-                        style: TextStyle(
-                          color: isDarkTheme ? Colors.grey[400] : Colors.grey[600],
-                          fontSize: 14,
-                        ),
-                      ),
-                    ),
-                  ),
-              ],
-            ),
+            child: _buildOrdersContent(isDarkTheme),
           ),
         ],
       ),
+    );
+  }
+
+  /// Build orders content with loading states and real data
+  Widget _buildOrdersContent(bool isDarkTheme) {
+    if (_isLoadingRealOrders) {
+      return const Center(
+        child: Column(
+          mainAxisAlignment: MainAxisAlignment.center,
+          children: [
+            CircularProgressIndicator(),
+            SizedBox(height: 16),
+            Text('Loading orders...'),
+          ],
+        ),
+      );
+    }
+
+    if (_realOrdersError != null) {
+      return Center(
+        child: Column(
+          mainAxisAlignment: MainAxisAlignment.center,
+          children: [
+            Icon(
+              Icons.error_outline,
+              size: 48,
+              color: Colors.red[300],
+            ),
+            const SizedBox(height: 16),
+            Text(
+              'Failed to load orders',
+              style: TextStyle(
+                fontSize: 16,
+                fontWeight: FontWeight.w500,
+                color: isDarkTheme ? Colors.grey[300] : Colors.grey[700],
+              ),
+            ),
+            const SizedBox(height: 8),
+            Text(
+              _realOrdersError!,
+              style: TextStyle(
+                fontSize: 12,
+                color: Colors.red[300],
+              ),
+              textAlign: TextAlign.center,
+            ),
+            const SizedBox(height: 16),
+            ElevatedButton(
+              onPressed: _fetchRealOrders,
+              child: const Text('Retry'),
+            ),
+          ],
+        ),
+      );
+    }
+
+    // Show only real orders (no sample data fallback)
+    return ListView(
+      children: [
+        // Orders from real data only
+        ..._realOrders.map((order) => _buildOrderRow(order, isDarkTheme)),
+        // Empty state message if no orders
+        if (_realOrders.isEmpty)
+          Padding(
+            padding: const EdgeInsets.all(20),
+            child: Center(
+              child: Column(
+                children: [
+                  Icon(
+                    Icons.list_alt,
+                    size: 48,
+                    color: isDarkTheme ? Colors.grey[600] : Colors.grey[400],
+                  ),
+                  const SizedBox(height: 16),
+                  Text(
+                    'No orders found',
+                    style: TextStyle(
+                      color: isDarkTheme ? Colors.grey[400] : Colors.grey[600],
+                      fontSize: 16,
+                      fontWeight: FontWeight.w500,
+                    ),
+                  ),
+                  const SizedBox(height: 8),
+                  Text(
+                    'Your active orders will appear here',
+                    style: TextStyle(
+                      color: isDarkTheme ? Colors.grey[500] : Colors.grey[500],
+                      fontSize: 12,
+                    ),
+                  ),
+                ],
+              ),
+            ),
+          ),
+        // Add a refresh button at the bottom (always show)
+        Padding(
+          padding: const EdgeInsets.all(16),
+          child: Center(
+            child: ElevatedButton.icon(
+              onPressed: _fetchRealOrders,
+              icon: const Icon(Icons.refresh, size: 16),
+              label: const Text('Refresh Orders'),
+              style: ElevatedButton.styleFrom(
+                padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
+              ),
+            ),
+          ),
+        ),
+      ],
     );
   }
 
@@ -4854,6 +5034,9 @@ class _TradingPageState extends State<TradingPage> {
             duration: Duration(seconds: 5),
           ),
         );
+
+        // Refresh orders list to show the new order
+        _fetchRealOrders();
 
         // Order list functionality removed since tabs were removed
 
