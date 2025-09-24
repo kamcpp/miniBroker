@@ -1127,8 +1127,8 @@ class _TradingPageState extends State<TradingPage> {
               'symbol': order['instrumentIid'] ?? order['symbol'] ?? 'N/A',
               'quantity': order['quantity'] ?? '0',
               'price': order['price'] ?? '0',
-              'create_timestamp': order['createdAtDt']?['ts'] ?? order['create_timestamp'],
-              'expire_timestamp': order['expireAtDt']?['ts'] ?? order['expire_timestamp'],
+              'create_timestamp': order['createTimestamp'] ?? order['createdAtDt']?['ts'] ?? order['create_timestamp'],
+              'expire_timestamp': order['expireTimestamp'] ?? order['expireAtDt']?['ts'] ?? order['expire_timestamp'],
               'is_filled': order['isFilled'] ?? order['is_filled'] ?? false,
               'is_cancelled': order['isCancelled'] ?? order['is_cancelled'] ?? false,
               'is_expired': order['isExpired'] ?? order['is_expired'] ?? false,
@@ -4284,7 +4284,7 @@ class _TradingPageState extends State<TradingPage> {
               ),
               SizedBox(
                 width: 140,
-                child: Text('Expiration', style: TextStyle(color: Colors.grey[400], fontWeight: FontWeight.bold, fontSize: 13), textAlign: TextAlign.center),
+                child: Text('Expiration Time', style: TextStyle(color: Colors.grey[400], fontWeight: FontWeight.bold, fontSize: 13), textAlign: TextAlign.center),
               ),
               SizedBox(
                 width: 140,
@@ -4452,7 +4452,7 @@ class _TradingPageState extends State<TradingPage> {
               ),
               SizedBox(
                 width: 150,
-                child: Text('Expiration', style: TextStyle(color: Colors.grey[400], fontWeight: FontWeight.bold, fontSize: 13), textAlign: TextAlign.center),
+                child: Text('Expiration Time', style: TextStyle(color: Colors.grey[400], fontWeight: FontWeight.bold, fontSize: 13), textAlign: TextAlign.center),
               ),
               Expanded(
                 child: Text('Status', style: TextStyle(color: Colors.grey[400], fontWeight: FontWeight.bold, fontSize: 13), textAlign: TextAlign.center),
