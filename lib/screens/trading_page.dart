@@ -761,45 +761,8 @@ class _TradingPageState extends State<TradingPage> {
   bool _isLoadingRealOrders = false;
   String? _realOrdersError;
 
-  // Sample order history data (completed orders)
-  final List<Map<String, dynamic>> _sampleOrderHistory = [
-    {
-      "order_id": "ord_hist_001",
-      "side": "ORDER_SIDE__BUY",
-      "symbol": "ETH/USD",
-      "quantity": "1.0",
-      "price": "2920.00",
-      "create_timestamp": "1726570000",
-      "expire_timestamp": "1726580000",
-      "is_filled": true,
-      "is_cancelled": false,
-      "is_expired": false,
-    },
-    {
-      "order_id": "ord_hist_002",
-      "side": "ORDER_SIDE__SELL",
-      "symbol": "BTC/USD",
-      "quantity": "0.1",
-      "price": "68500.00",
-      "create_timestamp": "1726560000",
-      "expire_timestamp": null,
-      "is_filled": true,
-      "is_cancelled": false,
-      "is_expired": false,
-    },
-    {
-      "order_id": "ord_hist_003",
-      "side": "ORDER_SIDE__BUY",
-      "symbol": "SOL/USD",
-      "quantity": "50.0",
-      "price": "145.00",
-      "create_timestamp": "1726550000",
-      "expire_timestamp": "1726570000",
-      "is_filled": false,
-      "is_cancelled": false,
-      "is_expired": true,
-    },
-  ];
+  // Order history data (filled, expired, cancelled orders from GetAccountOrders)
+  List<Map<String, dynamic>> _orderHistory = [];
 
   // Chart data variables
   Map<String, List<Map<String, dynamic>>> _chartData = {}; // Cache chart data by symbol
@@ -1120,7 +1083,8 @@ class _TradingPageState extends State<TradingPage> {
         if (output['orders'] != null && output['orders'] is List) {
           final List<dynamic> ordersData = output['orders'];
 
-          final processedOrders = ordersData.map<Map<String, dynamic>>((order) {
+          // Process all orders first
+          final allProcessedOrders = ordersData.map<Map<String, dynamic>>((order) {
             return {
               'order_id': order['orderIid'] ?? order['order_id'] ?? 'N/A',
               'side': order['side'] ?? 'N/A',
@@ -1137,16 +1101,36 @@ class _TradingPageState extends State<TradingPage> {
             };
           }).toList();
 
+          // Split orders by status: active vs history
+          final activeOrders = <Map<String, dynamic>>[];
+          final historyOrders = <Map<String, dynamic>>[];
+
+          for (final order in allProcessedOrders) {
+            final isFilled = order['is_filled'] as bool;
+            final isCancelled = order['is_cancelled'] as bool;
+            final isExpired = order['is_expired'] as bool;
+
+            // History orders: filled, cancelled, or expired
+            if (isFilled || isCancelled || isExpired) {
+              historyOrders.add(order);
+            } else {
+              // Active orders: not filled, not cancelled, not expired
+              activeOrders.add(order);
+            }
+          }
+
           setState(() {
-            _realOrders = processedOrders;
+            _realOrders = activeOrders;  // Only active orders in main orders table
+            _orderHistory = historyOrders;  // Filled/cancelled/expired in history table
             _isLoadingRealOrders = false;
           });
 
-          print('✅ Successfully loaded ${_realOrders.length} real orders');
+          print('✅ Successfully loaded ${activeOrders.length} active orders and ${historyOrders.length} history orders');
         } else {
           print('📝 No orders found in response');
           setState(() {
             _realOrders = [];
+            _orderHistory = [];
             _isLoadingRealOrders = false;
           });
         }
@@ -4469,10 +4453,10 @@ class _TradingPageState extends State<TradingPage> {
           Expanded(
             child: ListView(
               children: [
-                // History from sample data
-                ..._sampleOrderHistory.map((order) => _buildOrderHistoryRow(order, isDarkTheme)),
+                // History from GetAccountOrders (filled, expired, cancelled)
+                ..._orderHistory.map((order) => _buildOrderHistoryRow(order, isDarkTheme)),
                 // Empty state message if no history
-                if (_sampleOrderHistory.isEmpty)
+                if (_orderHistory.isEmpty)
                   Padding(
                     padding: const EdgeInsets.all(20),
                     child: Center(
