@@ -4173,7 +4173,7 @@ class _TradingPageState extends State<TradingPage> {
           ),
           SizedBox(
             width: 140,
-            child: Text(order['price'] == '0.00' ? 'Market' : '\$${order['price'] ?? 'N/A'}', style: TextStyle(color: isDarkTheme ? Colors.white : Colors.black, fontSize: 12), textAlign: TextAlign.center),
+            child: Text(order['price'] == '0.00' ? 'Market' : '${order['price'] ?? 'N/A'}', style: TextStyle(color: isDarkTheme ? Colors.white : Colors.black, fontSize: 12), textAlign: TextAlign.center),
           ),
           SizedBox(
             width: 140,
@@ -4538,7 +4538,7 @@ class _TradingPageState extends State<TradingPage> {
           ),
           SizedBox(
             width: 150,
-            child: Text(order['price'] == '0.00' ? 'Market' : '\$${order['price'] ?? 'N/A'}', style: TextStyle(color: isDarkTheme ? Colors.white : Colors.black, fontSize: 12), textAlign: TextAlign.center),
+            child: Text(order['price'] == '0.00' ? 'Market' : '${order['price'] ?? 'N/A'}', style: TextStyle(color: isDarkTheme ? Colors.white : Colors.black, fontSize: 12), textAlign: TextAlign.center),
           ),
           SizedBox(
             width: 150,
