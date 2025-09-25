@@ -4250,76 +4250,142 @@ class _TradingPageState extends State<TradingPage> {
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
           const SizedBox(height: 16),
-          // Orderbook headers
-          Row(
-            children: [
-              Expanded(
-                child: Text(
-                  'Price',
-                  style: TextStyle(
-                    color: Colors.grey[400],
-                    fontWeight: FontWeight.bold,
-                    fontSize: 13,
-                  ),
-                  textAlign: TextAlign.left,
-                ),
-              ),
-              Expanded(
-                child: Text(
-                  'Quantity',
-                  style: TextStyle(
-                    color: Colors.grey[400],
-                    fontWeight: FontWeight.bold,
-                    fontSize: 13,
-                  ),
-                  textAlign: TextAlign.center,
-                ),
-              ),
-              Expanded(
-                child: Text(
-                  'Total',
-                  style: TextStyle(
-                    color: Colors.grey[400],
-                    fontWeight: FontWeight.bold,
-                    fontSize: 13,
-                  ),
-                  textAlign: TextAlign.right,
-                ),
-              ),
-            ],
-          ),
-          const SizedBox(height: 8),
-          Divider(color: Colors.grey, thickness: 0.7, height: 1),
-          const SizedBox(height: 8),
           Expanded(
             child: Column(
               children: [
-                // Sell orders (top half)
+                // Sell Orders Section
                 Expanded(
-                  child: _buildOrderbookSide(isDarkTheme, 'sell'),
-                ),
-                // Spread section
-                Container(
-                  height: 30,
-                  margin: const EdgeInsets.symmetric(vertical: 8),
-                  decoration: BoxDecoration(
-                    color: isDarkTheme ? Colors.grey[800] : Colors.grey[200],
-                    borderRadius: BorderRadius.circular(4),
-                  ),
-                  child: Center(
-                    child: Text(
-                      'Spread: 0.05',
-                      style: TextStyle(
-                        color: isDarkTheme ? Colors.white : Colors.black,
-                        fontSize: 12,
-                        fontWeight: FontWeight.w500,
+                  child: Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      // Sell Orders Title
+                      Text(
+                        'Sell Orders',
+                        style: TextStyle(
+                          fontSize: 18,
+                          fontWeight: FontWeight.bold,
+                          color: isDarkTheme ? Colors.white : Colors.black,
+                        ),
                       ),
-                    ),
+                      const SizedBox(height: 12),
+                      // Sell Orders Headers
+                      Row(
+                        children: [
+                          Expanded(
+                            child: Text(
+                              'Price',
+                              style: TextStyle(
+                                color: Colors.grey[400],
+                                fontWeight: FontWeight.bold,
+                                fontSize: 13,
+                              ),
+                              textAlign: TextAlign.left,
+                            ),
+                          ),
+                          Expanded(
+                            child: Text(
+                              'Quantity',
+                              style: TextStyle(
+                                color: Colors.grey[400],
+                                fontWeight: FontWeight.bold,
+                                fontSize: 13,
+                              ),
+                              textAlign: TextAlign.center,
+                            ),
+                          ),
+                          Expanded(
+                            child: Text(
+                              'Total',
+                              style: TextStyle(
+                                color: Colors.grey[400],
+                                fontWeight: FontWeight.bold,
+                                fontSize: 13,
+                              ),
+                              textAlign: TextAlign.right,
+                            ),
+                          ),
+                        ],
+                      ),
+                      const SizedBox(height: 8),
+                      Divider(color: Colors.grey, thickness: 0.7, height: 1),
+                      const SizedBox(height: 8),
+                      // Sell Orders List
+                      Expanded(
+                        child: _buildOrderbookSide(isDarkTheme, 'sell'),
+                      ),
+                      // Show More Button for Sell Orders (Centered)
+                      Center(child: _buildShowMoreButton(isDarkTheme, 'sell')),
+                    ],
                   ),
                 ),
-                // Buy orders (bottom half)
+
+                // Spacing between sections
+                const SizedBox(height: 16),
+
+                // Buy Orders Section
                 Expanded(
-                  child: _buildOrderbookSide(isDarkTheme, 'buy'),
+                  child: Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      // Buy Orders Title
+                      Text(
+                        'Buy Orders',
+                        style: TextStyle(
+                          fontSize: 18,
+                          fontWeight: FontWeight.bold,
+                          color: isDarkTheme ? Colors.white : Colors.black,
+                        ),
+                      ),
+                      const SizedBox(height: 12),
+                      // Buy Orders Headers
+                      Row(
+                        children: [
+                          Expanded(
+                            child: Text(
+                              'Price',
+                              style: TextStyle(
+                                color: Colors.grey[400],
+                                fontWeight: FontWeight.bold,
+                                fontSize: 13,
+                              ),
+                              textAlign: TextAlign.left,
+                            ),
+                          ),
+                          Expanded(
+                            child: Text(
+                              'Quantity',
+                              style: TextStyle(
+                                color: Colors.grey[400],
+                                fontWeight: FontWeight.bold,
+                                fontSize: 13,
+                              ),
+                              textAlign: TextAlign.center,
+                            ),
+                          ),
+                          Expanded(
+                            child: Text(
+                              'Total',
+                              style: TextStyle(
+                                color: Colors.grey[400],
+                                fontWeight: FontWeight.bold,
+                                fontSize: 13,
+                              ),
+                              textAlign: TextAlign.right,
+                            ),
+                          ),
+                        ],
+                      ),
+                      const SizedBox(height: 8),
+                      Divider(color: Colors.grey, thickness: 0.7, height: 1),
+                      const SizedBox(height: 8),
+                      // Buy Orders List
+                      Expanded(
+                        child: _buildOrderbookSide(isDarkTheme, 'buy'),
+                      ),
+                      // Show More Button for Buy Orders (Centered)
+                      Center(child: _buildShowMoreButton(isDarkTheme, 'buy')),
+                    ],
+                  ),
                 ),
               ],
             ),
@@ -4386,6 +4452,59 @@ class _TradingPageState extends State<TradingPage> {
           ),
         );
       },
+    );
+  }
+
+  /// Build Show More button for orderbook sections
+  Widget _buildShowMoreButton(bool isDarkTheme, String side) {
+    return Padding(
+      padding: const EdgeInsets.only(top: 8),
+      child: StatefulBuilder(
+        builder: (context, setState) {
+          bool isHovered = false;
+
+          return MouseRegion(
+            cursor: SystemMouseCursors.click,
+            onEnter: (_) => setState(() => isHovered = true),
+            onExit: (_) => setState(() => isHovered = false),
+            child: GestureDetector(
+              onTap: () {
+                print('Show more ${side} orders clicked');
+                // TODO: Implement show more functionality
+              },
+              child: AnimatedContainer(
+                duration: const Duration(milliseconds: 200),
+                padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
+                decoration: BoxDecoration(
+                  color: isHovered
+                      ? Colors.blue.withOpacity(0.1)
+                      : Colors.transparent,
+                  borderRadius: BorderRadius.circular(4),
+                ),
+                child: Row(
+                  mainAxisSize: MainAxisSize.min,
+                  children: [
+                    Icon(
+                      Icons.add,
+                      color: isHovered ? Colors.blue[700] : Colors.blue,
+                      size: 16,
+                    ),
+                    const SizedBox(width: 4),
+                    Text(
+                      'Show More',
+                      style: TextStyle(
+                        color: isHovered ? Colors.blue[700] : Colors.blue,
+                        fontSize: 14,
+                        fontWeight: FontWeight.w500,
+                      ),
+                    ),
+                  ],
+                ),
+              ),
+            ),
+          );
+        },
+      ),
     );
   }
 
@@ -4763,7 +4882,7 @@ class _TradingPageState extends State<TradingPage> {
                       child: CircularProgressIndicator(strokeWidth: 2),
                     )
                   : const Icon(Icons.add, size: 16),
-              label: Text(_isLoadingMoreOrders ? 'Loading...' : 'Load More Orders'),
+              label: Text(_isLoadingMoreOrders ? 'Loading...' : 'Show More Orders'),
               style: ElevatedButton.styleFrom(
                 padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
               ),
@@ -4853,7 +4972,7 @@ class _TradingPageState extends State<TradingPage> {
                               child: CircularProgressIndicator(strokeWidth: 2),
                             )
                           : const Icon(Icons.add, size: 16),
-                      label: Text(_isLoadingMoreHistory ? 'Loading...' : 'Load More History'),
+                      label: Text(_isLoadingMoreHistory ? 'Loading...' : 'Show More History'),
                       style: ElevatedButton.styleFrom(
                         padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
                       ),
