@@ -2965,16 +2965,8 @@ class _TradingPageState extends State<TradingPage> {
           const SizedBox(height: 10), // Space between title and dropdown
           
           // Market Dropdown
-          Container(
-            height: 35,
-            padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
-            decoration: BoxDecoration(
-              color: _isDarkTheme ? const Color(0xFF2d2d2d) : Colors.grey[200],
-              border: Border.all(
-                color: _isDarkTheme ? Colors.grey[600]! : Colors.grey[400]!,
-              ),
-              borderRadius: BorderRadius.circular(8),
-            ),
+          _HoverDropdownField(
+            isDarkTheme: _isDarkTheme,
             child: DropdownButtonHideUnderline(
               child: DropdownButton<Map<String, String>>(
                 value: _markets.isEmpty 
