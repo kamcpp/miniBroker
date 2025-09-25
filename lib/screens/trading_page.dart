@@ -2821,7 +2821,7 @@ class _TradingPageState extends State<TradingPage> {
                   ScaffoldMessenger.of(context).showSnackBar(
                     SnackBar(
                       content: Text('Logout failed: $e'),
-                      backgroundColor: Colors.red,
+                      backgroundColor: const Color(0xFFFF4081),
                     ),
                   );
                 }
@@ -3552,9 +3552,9 @@ class _TradingPageState extends State<TradingPage> {
       children: labels.map((price) {
         Color priceColor;
         if (price.toStringAsFixed(2) == maxPrice.toStringAsFixed(2)) {
-          priceColor = Colors.green;
+          priceColor = const Color(0xFF00D4AA);
         } else if (price.toStringAsFixed(2) == minPrice.toStringAsFixed(2)) {
-          priceColor = Colors.red;
+          priceColor = const Color(0xFFFF4081);
         } else {
           priceColor = isDarkTheme ? Colors.grey[400]! : Colors.grey[600]!;
         }
@@ -3565,7 +3565,7 @@ class _TradingPageState extends State<TradingPage> {
             style: TextStyle(
               fontSize: 10,
               color: priceColor,
-              fontWeight: (priceColor == Colors.green || priceColor == Colors.red) ? FontWeight.bold : FontWeight.normal,
+              fontWeight: (priceColor == const Color(0xFF00D4AA) || priceColor == const Color(0xFFFF4081)) ? FontWeight.bold : FontWeight.normal,
             ),
           ),
         );
@@ -3956,7 +3956,7 @@ class _TradingPageState extends State<TradingPage> {
       itemCount: sampleOrders.length,
       itemBuilder: (context, index) {
         final order = sampleOrders[index];
-        final color = side == 'sell' ? Colors.red[300] : Colors.green[300];
+        final color = side == 'sell' ? const Color(0xFFFF4081) : const Color(0xFF00D4AA);
 
         return Container(
           padding: const EdgeInsets.symmetric(vertical: 2, horizontal: 4),
@@ -4132,8 +4132,8 @@ class _TradingPageState extends State<TradingPage> {
     // Helper function to get status color
     Color getStatusColor(String status) {
       switch (status) {
-        case 'Filled': return Colors.green;
-        case 'Cancelled': return Colors.red;
+        case 'Filled': return const Color(0xFF00D4AA);
+        case 'Cancelled': return const Color(0xFFFF4081);
         case 'Expired': return Colors.orange;
         case 'Active': return Colors.blue;
         default: return isDarkTheme ? Colors.white : Colors.black;
@@ -4143,7 +4143,7 @@ class _TradingPageState extends State<TradingPage> {
     final side = formatSide(order['side'] ?? '');
     final status = getStatus(order);
     final statusColor = getStatusColor(status);
-    final sideColor = side == 'BUY' ? Colors.green : Colors.red;
+    final sideColor = side == 'BUY' ? const Color(0xFF00D4AA) : const Color(0xFFFF4081);
 
     return Container(
       margin: const EdgeInsets.only(bottom: 8),
@@ -4186,7 +4186,7 @@ class _TradingPageState extends State<TradingPage> {
                 Expanded(
                   child: _HoverButton(
                     text: 'Cancel',
-                    color: Colors.red,
+                    color: const Color(0xFFFF4081),
                     onTap: () {
                       // TODO: Implement cancel order functionality
                       print('Cancel order: ${order['order_id']}');
@@ -4295,7 +4295,7 @@ class _TradingPageState extends State<TradingPage> {
             Icon(
               Icons.error_outline,
               size: 48,
-              color: Colors.red[300],
+              color: const Color(0xFFFF4081),
             ),
             const SizedBox(height: 16),
             Text(
@@ -4311,7 +4311,7 @@ class _TradingPageState extends State<TradingPage> {
               _realOrdersError!,
               style: TextStyle(
                 fontSize: 12,
-                color: Colors.red[300],
+                color: const Color(0xFFFF4081),
               ),
               textAlign: TextAlign.center,
             ),
@@ -4483,8 +4483,8 @@ class _TradingPageState extends State<TradingPage> {
     // Helper function to get status color
     Color getStatusColor(String status) {
       switch (status) {
-        case 'Filled': return Colors.green;
-        case 'Cancelled': return Colors.red;
+        case 'Filled': return const Color(0xFF00D4AA);
+        case 'Cancelled': return const Color(0xFFFF4081);
         case 'Expired': return Colors.orange;
         case 'Active': return Colors.blue;
         default: return isDarkTheme ? Colors.white : Colors.black;
@@ -4494,7 +4494,7 @@ class _TradingPageState extends State<TradingPage> {
     final side = formatSide(order['side'] ?? '');
     final status = getStatus(order);
     final statusColor = getStatusColor(status);
-    final sideColor = side == 'BUY' ? Colors.green : Colors.red;
+    final sideColor = side == 'BUY' ? const Color(0xFF00D4AA) : const Color(0xFFFF4081);
 
     return Container(
       margin: const EdgeInsets.only(bottom: 8),
@@ -4851,7 +4851,7 @@ class _TradingPageState extends State<TradingPage> {
         ScaffoldMessenger.of(context).showSnackBar(
           const SnackBar(
             content: Text('Please enter a quantity'),
-            backgroundColor: Colors.red,
+            backgroundColor: const Color(0xFFFF4081),
           ),
         );
         return;
@@ -4861,7 +4861,7 @@ class _TradingPageState extends State<TradingPage> {
         ScaffoldMessenger.of(context).showSnackBar(
           const SnackBar(
             content: Text('Please enter a price for limit order'),
-            backgroundColor: Colors.red,
+            backgroundColor: const Color(0xFFFF4081),
           ),
         );
         return;
@@ -4871,7 +4871,7 @@ class _TradingPageState extends State<TradingPage> {
         ScaffoldMessenger.of(context).showSnackBar(
           const SnackBar(
             content: Text('Account ID not available'),
-            backgroundColor: Colors.red,
+            backgroundColor: const Color(0xFFFF4081),
           ),
         );
         return;
@@ -4881,7 +4881,7 @@ class _TradingPageState extends State<TradingPage> {
         ScaffoldMessenger.of(context).showSnackBar(
           const SnackBar(
             content: Text('No instrument selected'),
-            backgroundColor: Colors.red,
+            backgroundColor: const Color(0xFFFF4081),
           ),
         );
         return;
@@ -4920,7 +4920,7 @@ class _TradingPageState extends State<TradingPage> {
             ],
           ),
           duration: Duration(seconds: 30), // Long duration for loading
-          backgroundColor: _isBuySelected ? Colors.green : Colors.red,
+          backgroundColor: _isBuySelected ? const Color(0xFF00D4AA) : const Color(0xFFFF4081),
         ),
       );
 
@@ -4958,7 +4958,7 @@ class _TradingPageState extends State<TradingPage> {
             content: Text(
               '$side order submitted successfully!\nExecution ID: $orderId',
             ),
-            backgroundColor: Colors.green,
+            backgroundColor: const Color(0xFF00D4AA),
             duration: Duration(seconds: 5),
           ),
         );
@@ -4977,7 +4977,7 @@ class _TradingPageState extends State<TradingPage> {
         ScaffoldMessenger.of(context).showSnackBar(
           SnackBar(
             content: Text('Order failed: $errorMessage'),
-            backgroundColor: Colors.red,
+            backgroundColor: const Color(0xFFFF4081),
             duration: Duration(seconds: 7),
           ),
         );
@@ -4990,7 +4990,7 @@ class _TradingPageState extends State<TradingPage> {
       ScaffoldMessenger.of(context).showSnackBar(
         SnackBar(
           content: Text('Order failed: $e'),
-          backgroundColor: Colors.red,
+          backgroundColor: const Color(0xFFFF4081),
           duration: Duration(seconds: 7),
         ),
       );
@@ -5006,7 +5006,7 @@ class _TradingPageState extends State<TradingPage> {
       ScaffoldMessenger.of(context).showSnackBar(
         SnackBar(
           content: Text('An unexpected error occurred: $e'),
-          backgroundColor: Colors.red,
+          backgroundColor: const Color(0xFFFF4081),
           duration: Duration(seconds: 7),
         ),
       );
@@ -5372,10 +5372,6 @@ class _TradingPageState extends State<TradingPage> {
                             color: isDarkTheme ? Colors.white : Colors.black,
                             fontSize: 14,
                           ),
-                          icon: Icon(
-                            Icons.keyboard_arrow_down,
-                            color: isDarkTheme ? Colors.grey[400] : Colors.grey[600],
-                          ),
                           items: ['1 Day', '3 Days', '1 Week', '2 Weeks', '1 Month']
                               .map<DropdownMenuItem<String>>((String value) {
                             return DropdownMenuItem<String>(
@@ -5600,22 +5596,22 @@ class SimpleLinePainter extends CustomPainter {
       final minYSpot = size.height - ((minVal - minYPrice) / priceRange * size.height);
       // Draw max spot (green)
       final spotRadius = 6.0;
-      final spotPaintMax = Paint()..color = Colors.green;
+      final spotPaintMax = Paint()..color = const Color(0xFF00D4AA);
       canvas.drawCircle(Offset(maxX, maxYSpot), spotRadius, spotPaintMax);
       // Draw min spot (red)
-      final spotPaintMin = Paint()..color = Colors.red;
+      final spotPaintMin = Paint()..color = const Color(0xFFFF4081);
       canvas.drawCircle(Offset(minX, minYSpot), spotRadius, spotPaintMin);
       // Max line at maxYSpot
       canvas.drawLine(
         Offset(0, maxYSpot),
         Offset(size.width, maxYSpot),
-        minMaxPaint..color = Colors.green,
+        minMaxPaint..color = const Color(0xFF00D4AA),
       );
       // Min line at minYSpot
       canvas.drawLine(
         Offset(0, minYSpot),
         Offset(size.width, minYSpot),
-        minMaxPaint..color = Colors.red,
+        minMaxPaint..color = const Color(0xFFFF4081),
       );
     }
 
