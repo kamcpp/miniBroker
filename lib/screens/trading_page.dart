@@ -1288,43 +1288,153 @@ class _TradingPageState extends State<TradingPage> {
       final quantityController = TextEditingController(text: currentOrder['quantity']?.toString() ?? '');
       final priceController = TextEditingController(text: currentOrder['price']?.toString() ?? '');
 
+      // State variables for the dialog
+      DateTime? selectedExpirationDate;
+      TimeOfDay? selectedExpirationTime;
+
       // Show replace order dialog
-      final result = await showDialog<Map<String, String>>(
+      final result = await showDialog<Map<String, dynamic>>(
         context: context,
         builder: (BuildContext context) {
-          return AlertDialog(
-            title: Text('Replace Order $participantOrderId'),
-            content: Column(
-              mainAxisSize: MainAxisSize.min,
-              children: [
-                TextField(
-                  controller: quantityController,
-                  decoration: const InputDecoration(labelText: 'New Quantity'),
-                  keyboardType: TextInputType.number,
+          return StatefulBuilder(
+            builder: (BuildContext context, StateSetter setState) {
+              return AlertDialog(
+                title: Text('Replace Order $participantOrderId'),
+                content: SingleChildScrollView(
+                  child: Column(
+                    mainAxisSize: MainAxisSize.min,
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      TextField(
+                        controller: quantityController,
+                        decoration: const InputDecoration(labelText: 'New Quantity'),
+                        keyboardType: TextInputType.number,
+                      ),
+                      const SizedBox(height: 16),
+                      TextField(
+                        controller: priceController,
+                        decoration: const InputDecoration(labelText: 'New Price'),
+                        keyboardType: TextInputType.number,
+                      ),
+                      const SizedBox(height: 20),
+                      const Text(
+                        'New Expiration Time (Optional)',
+                        style: TextStyle(fontWeight: FontWeight.bold, fontSize: 14),
+                      ),
+                      const SizedBox(height: 10),
+                      // Date picker
+                      Row(
+                        children: [
+                          Expanded(
+                            child: OutlinedButton.icon(
+                              onPressed: () async {
+                                final date = await showDatePicker(
+                                  context: context,
+                                  initialDate: selectedExpirationDate ?? DateTime.now().add(const Duration(days: 1)),
+                                  firstDate: DateTime.now(),
+                                  lastDate: DateTime.now().add(const Duration(days: 365)),
+                                );
+                                if (date != null) {
+                                  setState(() {
+                                    selectedExpirationDate = date;
+                                  });
+                                }
+                              },
+                              icon: const Icon(Icons.calendar_today, size: 16),
+                              label: Text(
+                                selectedExpirationDate != null
+                                    ? '${selectedExpirationDate!.day}/${selectedExpirationDate!.month}/${selectedExpirationDate!.year}'
+                                    : 'Select Date',
+                                style: const TextStyle(fontSize: 12),
+                              ),
+                            ),
+                          ),
+                          const SizedBox(width: 8),
+                          Expanded(
+                            child: OutlinedButton.icon(
+                              onPressed: () async {
+                                final time = await showTimePicker(
+                                  context: context,
+                                  initialTime: selectedExpirationTime ?? const TimeOfDay(hour: 17, minute: 0),
+                                );
+                                if (time != null) {
+                                  setState(() {
+                                    selectedExpirationTime = time;
+                                  });
+                                }
+                              },
+                              icon: const Icon(Icons.access_time, size: 16),
+                              label: Text(
+                                selectedExpirationTime != null
+                                    ? '${selectedExpirationTime!.hour.toString().padLeft(2, '0')}:${selectedExpirationTime!.minute.toString().padLeft(2, '0')}'
+                                    : 'Select Time',
+                                style: const TextStyle(fontSize: 12),
+                              ),
+                            ),
+                          ),
+                        ],
+                      ),
+                      if (selectedExpirationDate != null || selectedExpirationTime != null)
+                        Padding(
+                          padding: const EdgeInsets.only(top: 8),
+                          child: Row(
+                            children: [
+                              Expanded(
+                                child: Text(
+                                  'Selected: ${_formatSelectedDateTime(selectedExpirationDate, selectedExpirationTime)}',
+                                  style: TextStyle(
+                                    fontSize: 12,
+                                    color: Colors.grey[600],
+                                    fontStyle: FontStyle.italic,
+                                  ),
+                                ),
+                              ),
+                              TextButton(
+                                onPressed: () {
+                                  setState(() {
+                                    selectedExpirationDate = null;
+                                    selectedExpirationTime = null;
+                                  });
+                                },
+                                child: const Text('Clear', style: TextStyle(fontSize: 12)),
+                              ),
+                            ],
+                          ),
+                        ),
+                    ],
+                  ),
                 ),
-                const SizedBox(height: 16),
-                TextField(
-                  controller: priceController,
-                  decoration: const InputDecoration(labelText: 'New Price'),
-                  keyboardType: TextInputType.number,
-                ),
-              ],
-            ),
-            actions: [
-              TextButton(
-                onPressed: () => Navigator.of(context).pop(),
-                child: const Text('Cancel'),
-              ),
-              TextButton(
-                onPressed: () {
-                  Navigator.of(context).pop({
-                    'quantity': quantityController.text,
-                    'price': priceController.text,
-                  });
-                },
-                child: const Text('Replace'),
-              ),
-            ],
+                actions: [
+                  TextButton(
+                    onPressed: () => Navigator.of(context).pop(),
+                    child: const Text('Cancel'),
+                  ),
+                  TextButton(
+                    onPressed: () {
+                      // Combine date and time if both are selected
+                      DateTime? fullExpirationDateTime;
+                      if (selectedExpirationDate != null) {
+                        final time = selectedExpirationTime ?? const TimeOfDay(hour: 0, minute: 0);
+                        fullExpirationDateTime = DateTime(
+                          selectedExpirationDate!.year,
+                          selectedExpirationDate!.month,
+                          selectedExpirationDate!.day,
+                          time.hour,
+                          time.minute,
+                        );
+                      }
+
+                      Navigator.of(context).pop({
+                        'quantity': quantityController.text,
+                        'price': priceController.text,
+                        'expirationDateTime': fullExpirationDateTime,
+                      });
+                    },
+                    child: const Text('Replace'),
+                  ),
+                ],
+              );
+            },
           );
         },
       );
@@ -1333,12 +1443,14 @@ class _TradingPageState extends State<TradingPage> {
 
       final newQuantity = result['quantity']?.trim();
       final newPrice = result['price']?.trim();
+      final DateTime? expirationDateTime = result['expirationDateTime'];
 
       if ((newQuantity == null || newQuantity.isEmpty) &&
-          (newPrice == null || newPrice.isEmpty)) {
+          (newPrice == null || newPrice.isEmpty) &&
+          expirationDateTime == null) {
         ScaffoldMessenger.of(context).showSnackBar(
           const SnackBar(
-            content: Text('Please provide new quantity or price'),
+            content: Text('Please provide new quantity, price, or expiration time'),
             backgroundColor: Color(0xFFFF4081),
           ),
         );
@@ -1368,6 +1480,7 @@ class _TradingPageState extends State<TradingPage> {
         newParticipantOrderId: newOrderId,
         newQuantity: newQuantity,
         newPrice: newPrice,
+        newExpireTime: expirationDateTime,
         reason: 'User requested replacement',
         refRequestId: 'flutter-replace-${DateTime.now().millisecondsSinceEpoch}',
       ).timeout(const Duration(seconds: 10));
@@ -1410,6 +1523,21 @@ class _TradingPageState extends State<TradingPage> {
       );
       print('❌ Error in _replaceOrder: $e');
     }
+  }
+
+  /// Helper method to format selected date and time for display
+  String _formatSelectedDateTime(DateTime? date, TimeOfDay? time) {
+    if (date == null && time == null) return 'None';
+
+    String result = '';
+    if (date != null) {
+      result += '${date.day}/${date.month}/${date.year}';
+    }
+    if (time != null) {
+      if (result.isNotEmpty) result += ' ';
+      result += '${time.hour.toString().padLeft(2, '0')}:${time.minute.toString().padLeft(2, '0')}';
+    }
+    return result;
   }
 
   /// Calculate order fees using the real GetOrderFees API

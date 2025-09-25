@@ -1917,6 +1917,7 @@ class GrpcurlHelper {
     required String newParticipantOrderId,
     String? newQuantity,
     String? newPrice,
+    DateTime? newExpireTime,
     String? reason,
     String refRequestId = 'flutter-replace-order',
   }) async {
@@ -1952,6 +1953,12 @@ class GrpcurlHelper {
 
       if (reason != null && reason.isNotEmpty) {
         requestPayload['reason'] = reason;
+      }
+
+      if (newExpireTime != null) {
+        // Format DateTime to Unix timestamp (seconds since epoch) for proto Time message
+        final timestamp = _toUnixTimestamp(newExpireTime);
+        requestPayload['new_expire_time'] = {'ts': timestamp};
       }
 
       final jsonPayload = jsonEncode(requestPayload);
