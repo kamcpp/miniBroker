@@ -1093,6 +1093,7 @@ class _TradingPageState extends State<TradingPage> {
           final allProcessedOrders = ordersData.map<Map<String, dynamic>>((order) {
             return {
               'order_id': order['orderIid'] ?? order['order_id'] ?? 'N/A',
+              'participantOrderId': order['participantOrderId'] ?? order['participant_order_id'] ?? order['orderIid'] ?? order['order_id'] ?? 'N/A',
               'side': order['side'] ?? 'N/A',
               'symbol': order['instrumentIid'] ?? order['symbol'] ?? 'N/A',
               'quantity': order['quantity'] ?? '0',
@@ -1187,6 +1188,228 @@ class _TradingPageState extends State<TradingPage> {
     setState(() {
       _isLoadingMoreHistory = false;
     });
+  }
+
+  /// Cancel an order using CancelOrderAsync
+  Future<void> _cancelOrder(String participantOrderId) async {
+    try {
+      print('🚫 Attempting to cancel order: $participantOrderId');
+
+      // Show confirmation dialog
+      final confirmed = await showDialog<bool>(
+        context: context,
+        builder: (BuildContext context) {
+          return AlertDialog(
+            title: const Text('Cancel Order'),
+            content: Text('Are you sure you want to cancel order $participantOrderId?'),
+            actions: [
+              TextButton(
+                onPressed: () => Navigator.of(context).pop(false),
+                child: const Text('No'),
+              ),
+              TextButton(
+                onPressed: () => Navigator.of(context).pop(true),
+                child: const Text('Yes'),
+              ),
+            ],
+          );
+        },
+      );
+
+      if (confirmed != true) return;
+
+      // Show loading snackbar
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(
+          content: Row(
+            children: [
+              CircularProgressIndicator(),
+              SizedBox(width: 16),
+              Text('Cancelling order...'),
+            ],
+          ),
+          duration: Duration(seconds: 30),
+        ),
+      );
+
+      // Call CancelOrderAsync
+      final result = await GrpcurlHelper.cancelOrderAsync(
+        participantOrderId: participantOrderId,
+        reason: 'User requested cancellation',
+        refRequestId: 'flutter-cancel-${DateTime.now().millisecondsSinceEpoch}',
+      ).timeout(const Duration(seconds: 10));
+
+      // Hide loading snackbar
+      ScaffoldMessenger.of(context).hideCurrentSnackBar();
+
+      if (result['success'] == true) {
+        // Show success message
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(
+            content: Text('Order $participantOrderId cancelled successfully!'),
+            backgroundColor: const Color(0xFF00D4AA),
+            duration: const Duration(seconds: 3),
+          ),
+        );
+
+        // Refresh orders to show updated status
+        _fetchRealOrders();
+      } else {
+        final errorMsg = result['output']?['error'] ?? 'Failed to cancel order';
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(
+            content: Text('Failed to cancel order: $errorMsg'),
+            backgroundColor: const Color(0xFFFF4081),
+            duration: const Duration(seconds: 5),
+          ),
+        );
+      }
+    } catch (e) {
+      // Hide loading snackbar
+      ScaffoldMessenger.of(context).hideCurrentSnackBar();
+
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(
+          content: Text('Error cancelling order: $e'),
+          backgroundColor: const Color(0xFFFF4081),
+          duration: const Duration(seconds: 5),
+        ),
+      );
+      print('❌ Error in _cancelOrder: $e');
+    }
+  }
+
+  /// Replace an order using ReplaceOrderAsync
+  Future<void> _replaceOrder(String participantOrderId, Map<String, dynamic> currentOrder) async {
+    try {
+      print('🔄 Attempting to replace order: $participantOrderId');
+
+      // Controllers for the dialog
+      final quantityController = TextEditingController(text: currentOrder['quantity']?.toString() ?? '');
+      final priceController = TextEditingController(text: currentOrder['price']?.toString() ?? '');
+
+      // Show replace order dialog
+      final result = await showDialog<Map<String, String>>(
+        context: context,
+        builder: (BuildContext context) {
+          return AlertDialog(
+            title: Text('Replace Order $participantOrderId'),
+            content: Column(
+              mainAxisSize: MainAxisSize.min,
+              children: [
+                TextField(
+                  controller: quantityController,
+                  decoration: const InputDecoration(labelText: 'New Quantity'),
+                  keyboardType: TextInputType.number,
+                ),
+                const SizedBox(height: 16),
+                TextField(
+                  controller: priceController,
+                  decoration: const InputDecoration(labelText: 'New Price'),
+                  keyboardType: TextInputType.number,
+                ),
+              ],
+            ),
+            actions: [
+              TextButton(
+                onPressed: () => Navigator.of(context).pop(),
+                child: const Text('Cancel'),
+              ),
+              TextButton(
+                onPressed: () {
+                  Navigator.of(context).pop({
+                    'quantity': quantityController.text,
+                    'price': priceController.text,
+                  });
+                },
+                child: const Text('Replace'),
+              ),
+            ],
+          );
+        },
+      );
+
+      if (result == null) return;
+
+      final newQuantity = result['quantity']?.trim();
+      final newPrice = result['price']?.trim();
+
+      if ((newQuantity == null || newQuantity.isEmpty) &&
+          (newPrice == null || newPrice.isEmpty)) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          const SnackBar(
+            content: Text('Please provide new quantity or price'),
+            backgroundColor: Color(0xFFFF4081),
+          ),
+        );
+        return;
+      }
+
+      // Show loading snackbar
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(
+          content: Row(
+            children: [
+              CircularProgressIndicator(),
+              SizedBox(width: 16),
+              Text('Replacing order...'),
+            ],
+          ),
+          duration: Duration(seconds: 30),
+        ),
+      );
+
+      // Generate new order ID
+      final newOrderId = '${participantOrderId}_repl_${DateTime.now().millisecondsSinceEpoch}';
+
+      // Call ReplaceOrderAsync
+      final replaceResult = await GrpcurlHelper.replaceOrderAsync(
+        oldParticipantOrderId: participantOrderId,
+        newParticipantOrderId: newOrderId,
+        newQuantity: newQuantity,
+        newPrice: newPrice,
+        reason: 'User requested replacement',
+        refRequestId: 'flutter-replace-${DateTime.now().millisecondsSinceEpoch}',
+      ).timeout(const Duration(seconds: 10));
+
+      // Hide loading snackbar
+      ScaffoldMessenger.of(context).hideCurrentSnackBar();
+
+      if (replaceResult['success'] == true) {
+        // Show success message
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(
+            content: Text('Order $participantOrderId replaced successfully!'),
+            backgroundColor: const Color(0xFF00D4AA),
+            duration: const Duration(seconds: 3),
+          ),
+        );
+
+        // Refresh orders to show updated status
+        _fetchRealOrders();
+      } else {
+        final errorMsg = replaceResult['output']?['error'] ?? 'Failed to replace order';
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(
+            content: Text('Failed to replace order: $errorMsg'),
+            backgroundColor: const Color(0xFFFF4081),
+            duration: const Duration(seconds: 5),
+          ),
+        );
+      }
+    } catch (e) {
+      // Hide loading snackbar
+      ScaffoldMessenger.of(context).hideCurrentSnackBar();
+
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(
+          content: Text('Error replacing order: $e'),
+          backgroundColor: const Color(0xFFFF4081),
+          duration: const Duration(seconds: 5),
+        ),
+      );
+      print('❌ Error in _replaceOrder: $e');
+    }
   }
 
   /// Calculate order fees using the real GetOrderFees API
@@ -4224,10 +4447,9 @@ class _TradingPageState extends State<TradingPage> {
                 Expanded(
                   child: _HoverButton(
                     text: 'Cancel',
-                    color: Colors.red,
+                    color: const Color(0xFFFF4081),
                     onTap: () {
-                      // TODO: Implement cancel order functionality
-                      print('Cancel order: ${order['order_id']}');
+                      _cancelOrder(order['participantOrderId']?.toString() ?? '');
                     },
                   ),
                 ),
@@ -4237,8 +4459,7 @@ class _TradingPageState extends State<TradingPage> {
                     text: 'Replace',
                     color: Colors.blue,
                     onTap: () {
-                      // TODO: Implement replace order functionality
-                      print('Replace order: ${order['order_id']}');
+                      _replaceOrder(order['participantOrderId']?.toString() ?? '', order);
                     },
                   ),
                 ),

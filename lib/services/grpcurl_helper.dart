@@ -1910,4 +1910,223 @@ class GrpcurlHelper {
       };
     }
   }
+
+  /// Replace an existing order using ReplaceOrderAsync gRPC method
+  static Future<Map<String, dynamic>> replaceOrderAsync({
+    required String oldParticipantOrderId,
+    required String newParticipantOrderId,
+    String? newQuantity,
+    String? newPrice,
+    String? reason,
+    String refRequestId = 'flutter-replace-order',
+  }) async {
+    try {
+      print('📋 Replacing order: $oldParticipantOrderId -> $newParticipantOrderId');
+
+      // Find the working grpcurl path
+      final grpcurlPath = await _findGrpcurlPath();
+      if (grpcurlPath == null) {
+        return {
+          'success': false,
+          'output': {'error': 'grpcurl not available'},
+          'requestTime': _toUnixTimestamp(DateTime.now()).toString(),
+          'serverType': 'grpcurl_unavailable',
+        };
+      }
+
+      // Prepare request payload
+      final requestPayload = <String, dynamic>{
+        'proposed_execution_id': refRequestId,
+        'old_participant_order_id': oldParticipantOrderId,
+        'new_participant_order_id': newParticipantOrderId,
+      };
+
+      // Add optional parameters if provided
+      if (newQuantity != null && newQuantity.isNotEmpty) {
+        requestPayload['new_quantity'] = newQuantity;
+      }
+
+      if (newPrice != null && newPrice.isNotEmpty) {
+        requestPayload['new_price'] = newPrice;
+      }
+
+      if (reason != null && reason.isNotEmpty) {
+        requestPayload['reason'] = reason;
+      }
+
+      final jsonPayload = jsonEncode(requestPayload);
+
+      // Print request details
+      print('📤 ReplaceOrderAsync Request:');
+      print('   Old Order ID: $oldParticipantOrderId');
+      print('   New Order ID: $newParticipantOrderId');
+      print('   Payload: $jsonPayload');
+
+      ProcessResult result;
+      try {
+        result = await Process.run(
+          grpcurlPath,
+          [
+            '-plaintext',
+            '-d', jsonPayload,
+            '$_host:$_port',
+            'qomet.agora.daemons.prtagent.v1.TradingService/ReplaceOrderAsync'
+          ],
+        ).timeout(const Duration(seconds: 10));
+      } catch (e) {
+        print('❌ Process.run failed for ReplaceOrderAsync: ${e.runtimeType}: ${e.toString()}');
+        return {
+          'success': false,
+          'output': {'error': 'Process execution failed', 'details': e.toString()},
+          'requestTime': _toUnixTimestamp(DateTime.now()).toString(),
+          'serverType': 'process_error',
+        };
+      }
+
+      final responseData = {
+        'input': requestPayload,
+        'output': {},
+        'requestTime': _toUnixTimestamp(DateTime.now()).toString(),
+        'serverType': 'real_grpc',
+        'success': false,
+      };
+
+      if (result.exitCode == 0) {
+        try {
+          final outputData = jsonDecode(result.stdout.toString());
+          responseData['output'] = outputData;
+          responseData['success'] = true;
+          print('✅ ReplaceOrderAsync successful for order: $oldParticipantOrderId');
+        } catch (e) {
+          responseData['output'] = {
+            'error': 'Invalid JSON response',
+            'raw_output': result.stdout.toString(),
+            'details': e.toString(),
+          };
+          print('❌ ReplaceOrderAsync JSON parse error: $e');
+        }
+      } else {
+        responseData['output'] = {
+          'error': 'gRPC call failed',
+          'stderr': result.stderr.toString(),
+          'stdout': result.stdout.toString(),
+          'exitCode': result.exitCode,
+        };
+        print('❌ ReplaceOrderAsync failed: ${result.stderr}');
+      }
+
+      return responseData;
+    } catch (e) {
+      print('❌ Exception in replaceOrderAsync: $e');
+      return {
+        'success': false,
+        'output': {'error': 'Exception occurred', 'details': e.toString()},
+        'requestTime': _toUnixTimestamp(DateTime.now()).toString(),
+        'serverType': 'exception',
+      };
+    }
+  }
+
+  /// Cancel an existing order using CancelOrderAsync gRPC method
+  static Future<Map<String, dynamic>> cancelOrderAsync({
+    required String participantOrderId,
+    String? reason,
+    String refRequestId = 'flutter-cancel-order',
+  }) async {
+    try {
+      print('📋 Cancelling order: $participantOrderId');
+
+      // Find the working grpcurl path
+      final grpcurlPath = await _findGrpcurlPath();
+      if (grpcurlPath == null) {
+        return {
+          'success': false,
+          'output': {'error': 'grpcurl not available'},
+          'requestTime': _toUnixTimestamp(DateTime.now()).toString(),
+          'serverType': 'grpcurl_unavailable',
+        };
+      }
+
+      // Prepare request payload
+      final requestPayload = <String, dynamic>{
+        'proposed_execution_id': refRequestId,
+        'participant_order_id': participantOrderId,
+      };
+
+      // Add optional reason if provided
+      if (reason != null && reason.isNotEmpty) {
+        requestPayload['reason'] = reason;
+      }
+
+      final jsonPayload = jsonEncode(requestPayload);
+
+      // Print request details
+      print('📤 CancelOrderAsync Request:');
+      print('   Order ID: $participantOrderId');
+      print('   Payload: $jsonPayload');
+
+      ProcessResult result;
+      try {
+        result = await Process.run(
+          grpcurlPath,
+          [
+            '-plaintext',
+            '-d', jsonPayload,
+            '$_host:$_port',
+            'qomet.agora.daemons.prtagent.v1.TradingService/CancelOrderAsync'
+          ],
+        ).timeout(const Duration(seconds: 10));
+      } catch (e) {
+        print('❌ Process.run failed for CancelOrderAsync: ${e.runtimeType}: ${e.toString()}');
+        return {
+          'success': false,
+          'output': {'error': 'Process execution failed', 'details': e.toString()},
+          'requestTime': _toUnixTimestamp(DateTime.now()).toString(),
+          'serverType': 'process_error',
+        };
+      }
+
+      final responseData = {
+        'input': requestPayload,
+        'output': {},
+        'requestTime': _toUnixTimestamp(DateTime.now()).toString(),
+        'serverType': 'real_grpc',
+        'success': false,
+      };
+
+      if (result.exitCode == 0) {
+        try {
+          final outputData = jsonDecode(result.stdout.toString());
+          responseData['output'] = outputData;
+          responseData['success'] = true;
+          print('✅ CancelOrderAsync successful for order: $participantOrderId');
+        } catch (e) {
+          responseData['output'] = {
+            'error': 'Invalid JSON response',
+            'raw_output': result.stdout.toString(),
+            'details': e.toString(),
+          };
+          print('❌ CancelOrderAsync JSON parse error: $e');
+        }
+      } else {
+        responseData['output'] = {
+          'error': 'gRPC call failed',
+          'stderr': result.stderr.toString(),
+          'stdout': result.stdout.toString(),
+          'exitCode': result.exitCode,
+        };
+        print('❌ CancelOrderAsync failed: ${result.stderr}');
+      }
+
+      return responseData;
+    } catch (e) {
+      print('❌ Exception in cancelOrderAsync: $e');
+      return {
+        'success': false,
+        'output': {'error': 'Exception occurred', 'details': e.toString()},
+        'requestTime': _toUnixTimestamp(DateTime.now()).toString(),
+        'serverType': 'exception',
+      };
+    }
+  }
 }
