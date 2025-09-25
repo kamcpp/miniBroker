@@ -1149,7 +1149,12 @@ class GrpcurlHelper {
       }
 
       final jsonPayload = jsonEncode(requestPayload);
-      
+
+      // Print request details
+      print('📤 GetAccountOrders Request:');
+      print('   Account ID: $accountId');
+      print('   Payload: $jsonPayload');
+
       ProcessResult result;
       try {
         result = await Process.run(
