@@ -4192,38 +4192,24 @@ class _TradingPageState extends State<TradingPage> {
               mainAxisSize: MainAxisSize.min,
               children: [
                 Expanded(
-                  child: InkWell(
+                  child: _HoverButton(
+                    text: 'Cancel',
+                    color: Colors.red,
                     onTap: () {
                       // TODO: Implement cancel order functionality
                       print('Cancel order: ${order['order_id']}');
                     },
-                    child: Container(
-                      padding: const EdgeInsets.symmetric(horizontal: 2, vertical: 2),
-                      decoration: BoxDecoration(
-                        color: Colors.red.withOpacity(0.1),
-                        borderRadius: BorderRadius.circular(3),
-                        border: Border.all(color: Colors.red, width: 0.5),
-                      ),
-                      child: Text('Cancel', style: TextStyle(color: Colors.red, fontSize: 9, fontWeight: FontWeight.bold), textAlign: TextAlign.center),
-                    ),
                   ),
                 ),
                 const SizedBox(width: 2),
                 Expanded(
-                  child: InkWell(
+                  child: _HoverButton(
+                    text: 'Replace',
+                    color: Colors.blue,
                     onTap: () {
                       // TODO: Implement replace order functionality
                       print('Replace order: ${order['order_id']}');
                     },
-                    child: Container(
-                      padding: const EdgeInsets.symmetric(horizontal: 2, vertical: 2),
-                      decoration: BoxDecoration(
-                        color: Colors.blue.withOpacity(0.1),
-                        borderRadius: BorderRadius.circular(3),
-                        border: Border.all(color: Colors.blue, width: 0.5),
-                      ),
-                      child: Text('Replace', style: TextStyle(color: Colors.blue, fontSize: 9, fontWeight: FontWeight.bold), textAlign: TextAlign.center),
-                    ),
                   ),
                 ),
               ],
@@ -5061,16 +5047,8 @@ class _TradingPageState extends State<TradingPage> {
                 ),
               ),
               Expanded(
-                child: Container(
-                  height: 35, // Made much smaller (was default ~48)
-                  padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4), // Reduced padding
-                  decoration: BoxDecoration(
-                    color: isDarkTheme ? const Color(0xFF2d2d2d) : Colors.grey[200],
-                    border: Border.all(
-                      color: isDarkTheme ? Colors.grey[600]! : Colors.grey[400]!,
-                    ),
-                    borderRadius: BorderRadius.circular(8),
-                  ),
+                child: _HoverDropdownField(
+                  isDarkTheme: isDarkTheme,
                   child: DropdownButtonHideUnderline(
                     child: DropdownButton<Map<String, String>>(
                       value: _supportedCurrencies.isEmpty
@@ -5122,66 +5100,28 @@ class _TradingPageState extends State<TradingPage> {
             child: Row(
               children: [
                 Expanded(
-                  child: MouseRegion(
-                    cursor: SystemMouseCursors.click, // Pointer cursor
-                    child: GestureDetector(
-                      onTap: () {
-                        setState(() => _isBuySelected = true);
-                        _calculateOrderFees();
-                      },
-                      child: Container(
-                        padding: const EdgeInsets.symmetric(vertical: 8), // Much smaller padding
-                        decoration: BoxDecoration(
-                          color: _isBuySelected
-                              ? const Color(0xFF00D4AA) // Cyan color for buy
-                              : Colors.transparent,
-                          borderRadius: BorderRadius.circular(20),
-                        ),
-                        child: Text(
-                          'Buy',
-                          textAlign: TextAlign.center,
-                          style: TextStyle(
-                            color: _isBuySelected
-                                ? Colors.white
-                                : (isDarkTheme ? Colors.grey[400] : Colors.grey[600]),
-                            fontWeight: FontWeight.w600,
-                            fontSize: 14, // Smaller font size
-                          ),
-                        ),
-                      ),
-                    ),
+                  child: _HoverTradeButton(
+                    text: 'Buy',
+                    isSelected: _isBuySelected,
+                    selectedColor: const Color(0xFF00D4AA),
+                    isDarkTheme: isDarkTheme,
+                    onTap: () {
+                      setState(() => _isBuySelected = true);
+                      _calculateOrderFees();
+                    },
                   ),
                 ),
                 Expanded(
-                  child: MouseRegion(
-                    cursor: SystemMouseCursors.click, // Pointer cursor
-                    child: GestureDetector(
-                      onTap: () {
-                        setState(() => _isBuySelected = false);
-                        _calculateOrderFees();
-                        _fetchAccountMarketPortfolio();
-                      },
-                      child: Container(
-                        padding: const EdgeInsets.symmetric(vertical: 8), // Much smaller padding
-                        decoration: BoxDecoration(
-                          color: !_isBuySelected
-                              ? const Color(0xFFFF4081) // Pink/red color for sell
-                              : Colors.transparent,
-                          borderRadius: BorderRadius.circular(20),
-                        ),
-                        child: Text(
-                          'Sell',
-                          textAlign: TextAlign.center,
-                          style: TextStyle(
-                            color: !_isBuySelected
-                                ? Colors.white
-                                : (isDarkTheme ? Colors.grey[400] : Colors.grey[600]),
-                            fontWeight: FontWeight.w600,
-                            fontSize: 14, // Smaller font size
-                          ),
-                        ),
-                      ),
-                    ),
+                  child: _HoverTradeButton(
+                    text: 'Sell',
+                    isSelected: !_isBuySelected,
+                    selectedColor: const Color(0xFFFF4081),
+                    isDarkTheme: isDarkTheme,
+                    onTap: () {
+                      setState(() => _isBuySelected = false);
+                      _calculateOrderFees();
+                      _fetchAccountMarketPortfolio();
+                    },
                   ),
                 ),
               ],
@@ -5199,63 +5139,27 @@ class _TradingPageState extends State<TradingPage> {
             child: Row(
               children: [
                 Expanded(
-                  child: MouseRegion(
-                    cursor: SystemMouseCursors.click, // Pointer cursor
-                    child: GestureDetector(
-                      onTap: () {
-                        setState(() => _orderType = 'Limit');
-                        _calculateOrderFees();
-                      },
-                      child: Container(
-                        padding: const EdgeInsets.symmetric(vertical: 8), // Reduced to match buy/sell area
-                        decoration: BoxDecoration(
-                          color: Colors.transparent,
-                        ),
-                        child: Text(
-                          'Limit order',
-                          textAlign: TextAlign.center,
-                          style: TextStyle(
-                            color: _orderType == 'Limit'
-                                ? (_isBuySelected
-                                    ? const Color(0xFF00D4AA) // Cyan for buy
-                                    : const Color(0xFFFF4081)) // Pink for sell
-                                : (isDarkTheme ? Colors.grey[400] : Colors.grey[600]),
-                            fontWeight: FontWeight.w500,
-                            fontSize: 14, // Reduced to match buy/sell area
-                          ),
-                        ),
-                      ),
-                    ),
+                  child: _HoverOrderTypeButton(
+                    text: 'Limit order',
+                    isSelected: _orderType == 'Limit',
+                    isBuySelected: _isBuySelected,
+                    isDarkTheme: isDarkTheme,
+                    onTap: () {
+                      setState(() => _orderType = 'Limit');
+                      _calculateOrderFees();
+                    },
                   ),
                 ),
                 Expanded(
-                  child: MouseRegion(
-                    cursor: SystemMouseCursors.click, // Pointer cursor
-                    child: GestureDetector(
-                      onTap: () {
-                        setState(() => _orderType = 'Market');
-                        _calculateOrderFees();
-                      },
-                      child: Container(
-                        padding: const EdgeInsets.symmetric(vertical: 8), // Reduced to match buy/sell area
-                        decoration: BoxDecoration(
-                          color: Colors.transparent,
-                        ),
-                        child: Text(
-                          'Market order',
-                          textAlign: TextAlign.center,
-                          style: TextStyle(
-                            color: _orderType == 'Market'
-                                ? (_isBuySelected
-                                    ? const Color(0xFF00D4AA) // Cyan for buy
-                                    : const Color(0xFFFF4081)) // Pink for sell
-                                : (isDarkTheme ? Colors.grey[400] : Colors.grey[600]),
-                            fontWeight: FontWeight.w500,
-                            fontSize: 14, // Reduced to match buy/sell area
-                          ),
-                        ),
-                      ),
-                    ),
+                  child: _HoverOrderTypeButton(
+                    text: 'Market order',
+                    isSelected: _orderType == 'Market',
+                    isBuySelected: _isBuySelected,
+                    isDarkTheme: isDarkTheme,
+                    onTap: () {
+                      setState(() => _orderType = 'Market');
+                      _calculateOrderFees();
+                    },
                   ),
                 ),
               ],
@@ -5343,85 +5247,61 @@ class _TradingPageState extends State<TradingPage> {
                 ),
               ),
               Expanded(
-                child: Container(
-                  decoration: BoxDecoration(
-                    color: isDarkTheme ? const Color(0xFF2d2d2d) : Colors.grey[200],
-                    borderRadius: BorderRadius.circular(8),
-                  ),
-                  child: Row(
-                    children: [
-                      Expanded(
-                        child: TextField(
-                          controller: _quantityController,
-                          keyboardType: TextInputType.number,
-                          style: TextStyle(
-                            color: isDarkTheme ? Colors.white : Colors.black,
-                            fontSize: 14,
-                          ),
-                          decoration: InputDecoration(
-                            hintText: '0',
-                            hintStyle: TextStyle(
-                              color: isDarkTheme ? Colors.grey[500] : Colors.grey[400],
-                            ),
-                            border: InputBorder.none,
-                            isDense: true,
-                            contentPadding: const EdgeInsets.symmetric(horizontal: 12, vertical: 4),
-                          ),
-                        ),
-                      ),
-                      Container(
-                        padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 8),
-                        child: Row(
-                          mainAxisSize: MainAxisSize.min,
-                          children: [
-                            // Show Max button only for Sell orders (when _isBuySelected is false)
-                            if (!_isBuySelected) ...[
-                              MouseRegion(
-                                cursor: SystemMouseCursors.click, // Pointer cursor for Max button
-                                child: GestureDetector(
-                                  onTap: () {
-                                    // Set quantity to maximum available amount
-                                    setState(() {
-                                      _quantityController.text = _availableBalance;
-                                    });
-                                  },
-                                  child: Container(
-                                    child: Text(
-                                      'Max',
-                                      style: TextStyle(
-                                        color: const Color(0xFFFF4081), // Pink for sell
-                                        fontSize: 12,
-                                        fontWeight: FontWeight.w600,
-                                      ),
-                                    ),
+                child: _HoverInputField(
+                  controller: _quantityController,
+                  hintText: '0',
+                  isDarkTheme: isDarkTheme,
+                  suffixWidget: Container(
+                    padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 8),
+                    child: Row(
+                      mainAxisSize: MainAxisSize.min,
+                      children: [
+                        // Show Max button only for Sell orders (when _isBuySelected is false)
+                        if (!_isBuySelected) ...[
+                          MouseRegion(
+                            cursor: SystemMouseCursors.click, // Pointer cursor for Max button
+                            child: GestureDetector(
+                              onTap: () {
+                                // Set quantity to maximum available amount
+                                setState(() {
+                                  _quantityController.text = _availableBalance;
+                                });
+                              },
+                              child: Container(
+                                child: Text(
+                                  'Max',
+                                  style: TextStyle(
+                                    color: const Color(0xFFFF4081), // Pink for sell
+                                    fontSize: 12,
+                                    fontWeight: FontWeight.w600,
                                   ),
                                 ),
                               ),
-                              const SizedBox(width: 8),
-                            ],
-                            _assets.isEmpty
-                                ? SizedBox(
-                                    width: 14,
-                                    height: 14,
-                                    child: CircularProgressIndicator(
-                                      strokeWidth: 1.5,
-                                      valueColor: AlwaysStoppedAnimation<Color>(
-                                        isDarkTheme ? Colors.white : Colors.black,
-                                      ),
-                                    ),
-                                  )
-                                : Text(
-                                    _getSelectedAssetSymbol(),
-                                    style: TextStyle(
-                                      color: isDarkTheme ? Colors.white : Colors.black,
-                                      fontSize: 12,
-                                      fontWeight: FontWeight.w500,
-                                    ),
+                            ),
+                          ),
+                          const SizedBox(width: 8),
+                        ],
+                        _assets.isEmpty
+                            ? SizedBox(
+                                width: 14,
+                                height: 14,
+                                child: CircularProgressIndicator(
+                                  strokeWidth: 1.5,
+                                  valueColor: AlwaysStoppedAnimation<Color>(
+                                    isDarkTheme ? Colors.white : Colors.black,
                                   ),
-                          ],
-                        ),
-                      ),
-                    ],
+                                ),
+                              )
+                            : Text(
+                                _getSelectedAssetSymbol(),
+                                style: TextStyle(
+                                  color: isDarkTheme ? Colors.white : Colors.black,
+                                  fontSize: 12,
+                                  fontWeight: FontWeight.w500,
+                                ),
+                              ),
+                      ],
+                    ),
                   ),
                 ),
               ),
@@ -5445,44 +5325,20 @@ class _TradingPageState extends State<TradingPage> {
                   ),
                 ),
                 Expanded(
-                  child: Container(
-                    decoration: BoxDecoration(
-                      color: isDarkTheme ? const Color(0xFF2d2d2d) : Colors.grey[200],
-                      borderRadius: BorderRadius.circular(8),
-                    ),
-                    child: Row(
-                      children: [
-                        Expanded(
-                          child: TextField(
-                            controller: _priceController,
-                            keyboardType: TextInputType.number,
-                            style: TextStyle(
-                              color: isDarkTheme ? Colors.white : Colors.black,
-                              fontSize: 14,
-                            ),
-                            decoration: InputDecoration(
-                              hintText: '0',
-                              hintStyle: TextStyle(
-                                color: isDarkTheme ? Colors.grey[500] : Colors.grey[400],
-                              ),
-                              border: InputBorder.none,
-                              isDense: true,
-                              contentPadding: const EdgeInsets.symmetric(horizontal: 12, vertical: 4),
-                            ),
-                          ),
+                  child: _HoverInputField(
+                    controller: _priceController,
+                    hintText: '0',
+                    isDarkTheme: isDarkTheme,
+                    suffixWidget: Container(
+                      padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 6),
+                      child: Text(
+                        '\$',
+                        style: TextStyle(
+                          color: isDarkTheme ? Colors.white : Colors.black,
+                          fontSize: 14,
+                          fontWeight: FontWeight.w500,
                         ),
-                        Container(
-                          padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 6),
-                          child: Text(
-                            '\$',
-                            style: TextStyle(
-                              color: isDarkTheme ? Colors.white : Colors.black,
-                              fontSize: 14,
-                              fontWeight: FontWeight.w500,
-                            ),
-                          ),
-                        ),
-                      ],
+                      ),
                     ),
                   ),
                 ),
@@ -5505,13 +5361,10 @@ class _TradingPageState extends State<TradingPage> {
                   ),
                 ),
                 Expanded(
-                  child: Container(
-                    decoration: BoxDecoration(
-                      color: isDarkTheme ? const Color(0xFF2d2d2d) : Colors.grey[200],
-                      borderRadius: BorderRadius.circular(8),
-                    ),
+                  child: _HoverDropdownField(
+                    isDarkTheme: isDarkTheme,
                     child: Padding(
-                      padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 6),
+                      padding: const EdgeInsets.symmetric(horizontal: 4, vertical: 2),
                       child: DropdownButtonHideUnderline(
                         child: DropdownButton<String>(
                           value: _expiryPeriod,
@@ -5856,5 +5709,279 @@ class SimpleLinePainter extends CustomPainter {
   @override
   bool shouldRepaint(covariant CustomPainter oldDelegate) {
     return true;
+  }
+}
+
+class _HoverButton extends StatefulWidget {
+  final String text;
+  final Color color;
+  final VoidCallback onTap;
+
+  const _HoverButton({
+    required this.text,
+    required this.color,
+    required this.onTap,
+  });
+
+  @override
+  State<_HoverButton> createState() => _HoverButtonState();
+}
+
+class _HoverButtonState extends State<_HoverButton> {
+  bool _isHovered = false;
+
+  @override
+  Widget build(BuildContext context) {
+    return MouseRegion(
+      cursor: SystemMouseCursors.click,
+      onEnter: (_) => setState(() => _isHovered = true),
+      onExit: (_) => setState(() => _isHovered = false),
+      child: InkWell(
+        onTap: widget.onTap,
+        child: Container(
+          padding: const EdgeInsets.symmetric(horizontal: 2, vertical: 2),
+          decoration: BoxDecoration(
+            color: widget.color.withOpacity(_isHovered ? 0.8 : 0.1),
+            borderRadius: BorderRadius.circular(3),
+            border: Border.all(color: widget.color, width: 0.5),
+          ),
+          child: Text(
+            widget.text,
+            style: TextStyle(
+              color: _isHovered ? Colors.white : widget.color,
+              fontSize: 9,
+              fontWeight: FontWeight.bold,
+            ),
+            textAlign: TextAlign.center,
+          ),
+        ),
+      ),
+    );
+  }
+}
+
+class _HoverTradeButton extends StatefulWidget {
+  final String text;
+  final bool isSelected;
+  final Color selectedColor;
+  final bool isDarkTheme;
+  final VoidCallback onTap;
+
+  const _HoverTradeButton({
+    required this.text,
+    required this.isSelected,
+    required this.selectedColor,
+    required this.isDarkTheme,
+    required this.onTap,
+  });
+
+  @override
+  State<_HoverTradeButton> createState() => _HoverTradeButtonState();
+}
+
+class _HoverTradeButtonState extends State<_HoverTradeButton> {
+  bool _isHovered = false;
+
+  @override
+  Widget build(BuildContext context) {
+    return MouseRegion(
+      cursor: SystemMouseCursors.click,
+      onEnter: (_) => setState(() => _isHovered = true),
+      onExit: (_) => setState(() => _isHovered = false),
+      child: GestureDetector(
+        onTap: widget.onTap,
+        child: Container(
+          padding: const EdgeInsets.symmetric(vertical: 8),
+          decoration: BoxDecoration(
+            color: widget.isSelected
+                ? widget.selectedColor
+                : Colors.transparent,
+            borderRadius: BorderRadius.circular(20),
+          ),
+          child: Text(
+            widget.text,
+            textAlign: TextAlign.center,
+            style: TextStyle(
+              color: widget.isSelected
+                  ? Colors.white
+                  : (_isHovered
+                      ? widget.selectedColor
+                      : (widget.isDarkTheme ? Colors.grey[400] : Colors.grey[600])),
+              fontWeight: FontWeight.w600,
+              fontSize: 14,
+            ),
+          ),
+        ),
+      ),
+    );
+  }
+}
+
+class _HoverOrderTypeButton extends StatefulWidget {
+  final String text;
+  final bool isSelected;
+  final bool isBuySelected;
+  final bool isDarkTheme;
+  final VoidCallback onTap;
+
+  const _HoverOrderTypeButton({
+    required this.text,
+    required this.isSelected,
+    required this.isBuySelected,
+    required this.isDarkTheme,
+    required this.onTap,
+  });
+
+  @override
+  State<_HoverOrderTypeButton> createState() => _HoverOrderTypeButtonState();
+}
+
+class _HoverOrderTypeButtonState extends State<_HoverOrderTypeButton> {
+  bool _isHovered = false;
+
+  Color get _selectedColor => widget.isBuySelected
+      ? const Color(0xFF00D4AA)  // Cyan for buy
+      : const Color(0xFFFF4081); // Pink for sell
+
+  @override
+  Widget build(BuildContext context) {
+    return MouseRegion(
+      cursor: SystemMouseCursors.click,
+      onEnter: (_) => setState(() => _isHovered = true),
+      onExit: (_) => setState(() => _isHovered = false),
+      child: GestureDetector(
+        onTap: widget.onTap,
+        child: Container(
+          padding: const EdgeInsets.symmetric(vertical: 8),
+          decoration: BoxDecoration(
+            color: Colors.transparent,
+          ),
+          child: Text(
+            widget.text,
+            textAlign: TextAlign.center,
+            style: TextStyle(
+              color: widget.isSelected
+                  ? _selectedColor
+                  : (_isHovered
+                      ? _selectedColor
+                      : (widget.isDarkTheme ? Colors.grey[400] : Colors.grey[600])),
+              fontWeight: FontWeight.w500,
+              fontSize: 14,
+            ),
+          ),
+        ),
+      ),
+    );
+  }
+}
+
+class _HoverInputField extends StatefulWidget {
+  final TextEditingController controller;
+  final String hintText;
+  final bool isDarkTheme;
+  final Widget? suffixWidget;
+
+  const _HoverInputField({
+    required this.controller,
+    required this.hintText,
+    required this.isDarkTheme,
+    this.suffixWidget,
+  });
+
+  @override
+  State<_HoverInputField> createState() => _HoverInputFieldState();
+}
+
+class _HoverInputFieldState extends State<_HoverInputField> {
+  bool _isHovered = false;
+
+  @override
+  Widget build(BuildContext context) {
+    final backgroundColor = widget.isDarkTheme ? const Color(0xFF2d2d2d) : Colors.grey[200]!;
+    final borderColor = _isHovered
+        ? (widget.isDarkTheme ? Colors.grey[500]! : Colors.grey[400]!)
+        : backgroundColor;
+
+    return MouseRegion(
+      onEnter: (_) => setState(() => _isHovered = true),
+      onExit: (_) => setState(() => _isHovered = false),
+      child: Container(
+        decoration: BoxDecoration(
+          color: backgroundColor,
+          borderRadius: BorderRadius.circular(8),
+          border: Border.all(
+            color: borderColor,
+            width: 1,
+          ),
+        ),
+        child: Row(
+          children: [
+            Expanded(
+              child: TextField(
+                controller: widget.controller,
+                keyboardType: TextInputType.number,
+                style: TextStyle(
+                  color: widget.isDarkTheme ? Colors.white : Colors.black,
+                  fontSize: 14,
+                ),
+                decoration: InputDecoration(
+                  hintText: widget.hintText,
+                  hintStyle: TextStyle(
+                    color: widget.isDarkTheme ? Colors.grey[500] : Colors.grey[400],
+                  ),
+                  border: InputBorder.none,
+                  isDense: true,
+                  contentPadding: const EdgeInsets.symmetric(horizontal: 12, vertical: 4),
+                ),
+              ),
+            ),
+            if (widget.suffixWidget != null) widget.suffixWidget!,
+          ],
+        ),
+      ),
+    );
+  }
+}
+
+class _HoverDropdownField extends StatefulWidget {
+  final bool isDarkTheme;
+  final Widget child;
+
+  const _HoverDropdownField({
+    required this.isDarkTheme,
+    required this.child,
+  });
+
+  @override
+  State<_HoverDropdownField> createState() => _HoverDropdownFieldState();
+}
+
+class _HoverDropdownFieldState extends State<_HoverDropdownField> {
+  bool _isHovered = false;
+
+  @override
+  Widget build(BuildContext context) {
+    final backgroundColor = widget.isDarkTheme ? const Color(0xFF2d2d2d) : Colors.grey[200]!;
+    final borderColor = _isHovered
+        ? (widget.isDarkTheme ? Colors.grey[500]! : Colors.grey[400]!)
+        : backgroundColor;
+
+    return MouseRegion(
+      onEnter: (_) => setState(() => _isHovered = true),
+      onExit: (_) => setState(() => _isHovered = false),
+      child: Container(
+        height: 35,
+        padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
+        decoration: BoxDecoration(
+          color: backgroundColor,
+          borderRadius: BorderRadius.circular(8),
+          border: Border.all(
+            color: borderColor,
+            width: 1,
+          ),
+        ),
+        child: widget.child,
+      ),
+    );
   }
 }
