@@ -1247,7 +1247,7 @@ class _TradingPageState extends State<TradingPage> {
         ScaffoldMessenger.of(context).showSnackBar(
           SnackBar(
             content: Text('Order $participantOrderId cancelled successfully!'),
-            backgroundColor: const Color(0xFF00D4AA),
+            backgroundColor: Colors.green,
             duration: const Duration(seconds: 3),
           ),
         );
@@ -1259,7 +1259,7 @@ class _TradingPageState extends State<TradingPage> {
         ScaffoldMessenger.of(context).showSnackBar(
           SnackBar(
             content: Text('Failed to cancel order: $errorMsg'),
-            backgroundColor: const Color(0xFFFF4081),
+            backgroundColor: Colors.red,
             duration: const Duration(seconds: 5),
           ),
         );
@@ -1271,7 +1271,7 @@ class _TradingPageState extends State<TradingPage> {
       ScaffoldMessenger.of(context).showSnackBar(
         SnackBar(
           content: Text('Error cancelling order: $e'),
-          backgroundColor: const Color(0xFFFF4081),
+          backgroundColor: Colors.red,
           duration: const Duration(seconds: 5),
         ),
       );
@@ -1451,7 +1451,7 @@ class _TradingPageState extends State<TradingPage> {
         ScaffoldMessenger.of(context).showSnackBar(
           const SnackBar(
             content: Text('Please provide new quantity, price, or expiration time'),
-            backgroundColor: Color(0xFFFF4081),
+            backgroundColor: Colors.red,
           ),
         );
         return;
@@ -1493,7 +1493,7 @@ class _TradingPageState extends State<TradingPage> {
         ScaffoldMessenger.of(context).showSnackBar(
           SnackBar(
             content: Text('Order $participantOrderId replaced successfully!'),
-            backgroundColor: const Color(0xFF00D4AA),
+            backgroundColor: Colors.green,
             duration: const Duration(seconds: 3),
           ),
         );
@@ -1505,7 +1505,7 @@ class _TradingPageState extends State<TradingPage> {
         ScaffoldMessenger.of(context).showSnackBar(
           SnackBar(
             content: Text('Failed to replace order: $errorMsg'),
-            backgroundColor: const Color(0xFFFF4081),
+            backgroundColor: Colors.red,
             duration: const Duration(seconds: 5),
           ),
         );
@@ -1517,7 +1517,7 @@ class _TradingPageState extends State<TradingPage> {
       ScaffoldMessenger.of(context).showSnackBar(
         SnackBar(
           content: Text('Error replacing order: $e'),
-          backgroundColor: const Color(0xFFFF4081),
+          backgroundColor: Colors.red,
           duration: const Duration(seconds: 5),
         ),
       );
@@ -4643,7 +4643,7 @@ class _TradingPageState extends State<TradingPage> {
         case 'Filled': return Colors.green;
         case 'Cancelled': return Colors.red;
         case 'Expired': return Colors.orange;
-        case 'Active': return Colors.blue;
+        case 'Active': return const Color(0xFF000080);
         default: return isDarkTheme ? Colors.white : Colors.black;
       }
     }
@@ -4694,7 +4694,7 @@ class _TradingPageState extends State<TradingPage> {
                 Expanded(
                   child: _HoverButton(
                     text: 'Cancel',
-                    color: const Color(0xFFFF4081),
+                    color: Colors.red,
                     onTap: () {
                       _cancelOrder(order['participantOrderId']?.toString() ?? '');
                     },
@@ -5018,7 +5018,7 @@ class _TradingPageState extends State<TradingPage> {
         case 'Filled': return Colors.green;
         case 'Cancelled': return Colors.red;
         case 'Expired': return Colors.orange;
-        case 'Active': return Colors.blue;
+        case 'Active': return const Color(0xFF000080);
         default: return isDarkTheme ? Colors.white : Colors.black;
       }
     }
@@ -5490,7 +5490,7 @@ class _TradingPageState extends State<TradingPage> {
             content: Text(
               '$side order submitted successfully!\nExecution ID: $orderId',
             ),
-            backgroundColor: const Color(0xFF00D4AA),
+            backgroundColor: Colors.green,
             duration: Duration(seconds: 5),
           ),
         );

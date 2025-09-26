@@ -1202,7 +1202,7 @@ class _BalancePageState extends State<BalancePage> {
                 );
               },
               style: ElevatedButton.styleFrom(
-                backgroundColor: const Color(0xFFFF4081),
+                backgroundColor: Colors.red,
               ),
               child: const Text(
                 'Withdraw',
