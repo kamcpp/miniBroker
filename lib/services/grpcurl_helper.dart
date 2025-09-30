@@ -2226,4 +2226,94 @@ class GrpcurlHelper {
       };
     }
   }
+
+  /// Get Instrument Trades using grpcurl
+  static Future<Map<String, dynamic>> getInstrumentTrades({
+    required String instrumentId,
+    int pageNumber = 1,
+    int pageSize = 15,
+    DateTime? fromDate,
+    DateTime? toDate,
+  }) async {
+    final responseData = <String, dynamic>{
+      'success': false,
+      'output': {},
+      'requestTime': _toUnixTimestamp(DateTime.now()).toString(),
+      'serverType': 'real_grpc',
+    };
+
+    try {
+      print('📊 Getting instrument trades for: $instrumentId from real server...');
+
+      // Check server reachability first
+      if (!await _isServerReachable()) {
+        responseData['output'] = {'error': 'Server not reachable'};
+        responseData['serverType'] = 'unreachable';
+        return responseData;
+      }
+
+      final grpcurlPath = await _findGrpcurlPath();
+      if (grpcurlPath == null) {
+        responseData['output'] = {'error': 'grpcurl not found'};
+        responseData['serverType'] = 'grpcurl-not-found';
+        return responseData;
+      }
+
+      final inputParams = {
+        'proposed_execution_id': 'get_trades_${DateTime.now().millisecondsSinceEpoch}',
+        'pagination': {
+          'page_nr': pageNumber,
+          'page_size': pageSize,
+          'page_token': '',
+        },
+        'instrument_id_and_symbol_regexes': [instrumentId],
+        'trade_query_filter': {
+          'side': 'ORDER_SIDE__BOTH',
+        },
+        'aux_data': {
+          'client_version': '1.0.0',
+          'request_source': 'mini-Broker',
+          'user_timezone': 'UTC',
+        },
+      };
+
+      print('📨 GetInstrumentTrades request: ${jsonEncode(inputParams)}');
+
+      final result = await Process.run(
+        grpcurlPath,
+        [
+          '-plaintext',
+          '-d', jsonEncode(inputParams),
+          '$_host:$_port',
+          'qomet.agora.daemons.prtagent.v1.InstrumentService/GetInstrumentTrades'
+        ],
+        environment: {'PATH': '/usr/local/bin:/opt/homebrew/bin:${Platform.environment['PATH']}'},
+      ).timeout(const Duration(seconds: 10));
+
+      if (result.exitCode == 0) {
+        final responseJson = jsonDecode(result.stdout);
+        responseData['success'] = true;
+        responseData['output'] = responseJson;
+        print('✅ GetInstrumentTrades successful');
+      } else {
+        responseData['output'] = {
+          'error': 'gRPC call failed',
+          'stderr': result.stderr.toString(),
+          'stdout': result.stdout.toString(),
+          'exit_code': result.exitCode,
+        };
+        print('❌ GetInstrumentTrades failed: ${result.stderr}');
+      }
+
+      return responseData;
+    } catch (e) {
+      print('❌ GetInstrumentTrades exception: $e');
+      return {
+        'success': false,
+        'output': {'error': 'Exception occurred', 'details': e.toString()},
+        'requestTime': _toUnixTimestamp(DateTime.now()).toString(),
+        'serverType': 'exception',
+      };
+    }
+  }
 }

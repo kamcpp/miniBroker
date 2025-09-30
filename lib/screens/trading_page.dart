@@ -25,172 +25,155 @@ class TradingPage extends StatefulWidget {
 }
 
 class _TradingPageState extends State<TradingPage> {
-  Future<void> _fetchTradeHistoryForAsset(String symbol, {int page = 1, bool append = false}) async {
-  print('[TradeHistory] Fetching for symbol: $symbol, page: $page');
-  print('[TradeHistory] Asset list: ${_assets.map((a) => a['symbol']).toList()}');
-    
-    if (!append) {
-      setState(() {
-        _isLoadingTradeHistory = true;
-        _currentTradeHistoryPage = page;
-      });
-    }
-    
+  Future<void> _fetchTradeHistoryForAsset(String symbol, {int pageSize = 15}) async {
+    print('[TradeHistory] Fetching for symbol: $symbol, pageSize: $pageSize');
+
+    setState(() {
+      _isLoadingTradeHistory = pageSize == 15; // Loading initial data
+      _isLoadingMoreTradeHistory = pageSize > 15; // Loading more data
+    });
+
     // Find the asset data for this symbol
     final asset = _assets.firstWhere(
       (asset) => asset['symbol'] == symbol,
       orElse: () {
         print('[TradeHistory] Asset not found for symbol: $symbol');
         setState(() {
-          _tradeHistory = [
-            {
-              'price': '-',
-              'quantity': '-',
-              'time': 'No trades available for this asset.'
-            }
-          ];
+          _tradeHistory = [];
           _isLoadingTradeHistory = false;
+          _isLoadingMoreTradeHistory = false;
         });
         return <String, dynamic>{};
       },
     );
-    final exchangePairId = asset['exchangePairId']?.toString() ?? '';
-  final quoteTokenDecimal = asset != null ? int.tryParse(asset['quoteTokenDecimal']?.toString() ?? '0') ?? 0 : 0;
-  print('[TradeHistory] exchangePairId: $exchangePairId, quoteTokenDecimal: $quoteTokenDecimal');
-    if (exchangePairId.isEmpty) {
+
+    if (asset.isEmpty) {
+      print('[TradeHistory] Asset is empty for symbol: $symbol');
+      return;
+    }
+
+    final instrumentIid = asset['iid']?.toString() ?? '';
+    print('[TradeHistory] instrumentIid: $instrumentIid');
+
+    if (instrumentIid.isEmpty) {
       setState(() {
-        _tradeHistory = [
-          {
-            'price': '-',
-            'quantity': '-',
-            'time': 'No trades available for this asset.'
-          }
-        ];
+        _tradeHistory = [];
         _isLoadingTradeHistory = false;
+        _isLoadingMoreTradeHistory = false;
       });
       return;
     }
+
     try {
-      // Prepare payload for POST request
-      final orderbook = asset['orderbook']?.toString() ?? '';
-      final payload = {
-        "account": "",
-        "page": page,
-        "page_size": _tradeHistoryPageSize,
-        "chain_id": "131074",
-        "orderbook": orderbook,
-        "pair_id": exchangePairId
-      };
-      print('[TradeHistory] API POST: https://brokerage-api-stage.tokenise.io/api/services/app/Agora/OrderbookTrades');
-      print('[TradeHistory] Payload: ' + json.encode(payload));
-      final apiCallStart = DateTime.now();
-      final response = await http.post(
-        Uri.parse('https://brokerage-api-stage.tokenise.io/api/services/app/Agora/OrderbookTrades'),
-        headers: {
-          'Content-Type': 'application/json',
-          'Accept': 'application/json',
-        },
-        body: json.encode(payload),
-      ).timeout(const Duration(seconds: 10));
-        // Debug info logged below
-      final apiCallEnd = DateTime.now();
-      print('[TradeHistory] API call duration: ${apiCallEnd.difference(apiCallStart).inMilliseconds} ms');
-      if (response.statusCode == 200) {
-  print('[TradeHistory] API response received at: ${DateTime.now()}');
-  print('[TradeHistory] API response: ${response.body}');
-        final Map<String, dynamic> jsonData = json.decode(response.body);
-        if (jsonData['success'] == true && jsonData['result'] != null) {
-          print('[TradeHistory] API result: ${jsonData['result']}');
-          final result = jsonData['result'];
-          if (result is Map && result.containsKey('trades') && result['trades'] is List) {
-            final List<dynamic> trades = result['trades'];
-            final List<Map<String, dynamic>> parsedTrades = trades.map<Map<String, dynamic>>((trade) {
-              print('[TradeHistory] Raw trade: $trade');
-              final priceRaw = trade['price'];
-              final quantityRaw = trade['quantity'];
-              final timestampRaw = trade['timestamp'];
-              final buyRaw = trade['buy'];
-              final price = priceRaw != null ? double.tryParse(priceRaw.toString()) ?? 0.0 : 0.0;
-                final quantityDouble = quantityRaw != null ? double.tryParse(quantityRaw.toString()) ?? 0.0 : 0.0;
-                final quantity = (quantityDouble % 1 == 0)
-                    ? quantityDouble.toInt().toString()
-                    : quantityDouble.toString();
-              final time = (() {
-                if (timestampRaw == null) return '';
-                final tsInt = int.tryParse(timestampRaw.toString());
-                if (tsInt == null) return '';
-                final dt = DateTime.fromMillisecondsSinceEpoch(tsInt * 1000).toLocal();
-                // Format: Aug 12 2025 13:48:27
-                final months = [
-                  'Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun',
-                  'Jul', 'Aug', 'Sep', 'Oct', 'Nov', 'Dec'
-                ];
-                final monthStr = months[dt.month - 1];
-                final dayStr = dt.day.toString().padLeft(2, '0');
-                final yearStr = dt.year.toString();
-                final hourStr = dt.hour.toString().padLeft(2, '0');
-                final minStr = dt.minute.toString().padLeft(2, '0');
-                final secStr = dt.second.toString().padLeft(2, '0');
-                return '$monthStr $dayStr $yearStr $hourStr:$minStr:$secStr';
-              })();
-              final priceColor = buyRaw == true ? Color(0xFF00D4AA) : Color(0xFFFF4081);
-              final normalizedPrice = price / pow(10, quoteTokenDecimal);
-              return {
-                'price': normalizedPrice,
-                  'quantity': quantity,
-                'time': time,
-                'priceColor': priceColor,
-              };
-            }).toList();
-            setState(() {
-              if (append) {
-                _tradeHistory.addAll(parsedTrades);
+      // Call GetInstrumentTrades gRPC function
+      final result = await GrpcurlHelper.getInstrumentTrades(
+        instrumentId: instrumentIid,
+        pageNumber: 1, // Always page 1
+        pageSize: pageSize,
+      );
+
+      List<Map<String, dynamic>> parsedTrades = [];
+
+      if (result['success'] == true && result['output'] != null) {
+        final output = result['output'] as Map<String, dynamic>;
+        print('[TradeHistory] gRPC response: $output');
+
+        // Extract trades from the response
+        final trades = output['trades'] as List<dynamic>? ?? [];
+        print('[TradeHistory] Found ${trades.length} trades');
+
+        parsedTrades = trades.map<Map<String, dynamic>>((trade) {
+          final tradeMap = trade as Map<String, dynamic>;
+          final priceValue = tradeMap['price'];
+          final quantityValue = tradeMap['quantity'];
+          final timestampValue = tradeMap['timestamp'];
+          final isBuy = tradeMap['isBuy'] ?? tradeMap['is_buy'] ?? false;
+
+          // Parse price and quantity
+          final price = priceValue is String
+              ? double.tryParse(priceValue) ?? 0.0
+              : (priceValue is num ? priceValue.toDouble() : 0.0);
+          final quantity = quantityValue is String
+              ? double.tryParse(quantityValue) ?? 0.0
+              : (quantityValue is num ? quantityValue.toDouble() : 0.0);
+
+          // Format timestamp
+          final time = (() {
+            if (timestampValue == null) return '';
+            try {
+              DateTime dt;
+              if (timestampValue is String) {
+                // Try parsing ISO format
+                dt = DateTime.parse(timestampValue);
+              } else if (timestampValue is int) {
+                dt = DateTime.fromMillisecondsSinceEpoch(timestampValue * 1000);
               } else {
-                _tradeHistory = parsedTrades;
+                return '';
               }
-              _hasMoreTradeHistory = parsedTrades.length == _tradeHistoryPageSize;
-              _isLoadingTradeHistory = false;
-              print('[TradeHistory] Parsed trades: $_tradeHistory');
-            });
-          } else {
-            setState(() {
-              if (!append) {
-                _tradeHistory = [
-                  {
-                    'price': '-',
-                    'quantity': '-',
-                    'time': 'No trades available for this asset.'
-                  }
-                ];
-              }
-              _hasMoreTradeHistory = false;
-              _isLoadingTradeHistory = false;
-            });
-          }
-        }
+              // Format: Aug 12 2025 13:48:27
+              final months = [
+                'Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun',
+                'Jul', 'Aug', 'Sep', 'Oct', 'Nov', 'Dec'
+              ];
+              final monthStr = months[dt.month - 1];
+              final dayStr = dt.day.toString().padLeft(2, '0');
+              final yearStr = dt.year.toString();
+              final hourStr = dt.hour.toString().padLeft(2, '0');
+              final minStr = dt.minute.toString().padLeft(2, '0');
+              final secStr = dt.second.toString().padLeft(2, '0');
+              return '$monthStr $dayStr $yearStr $hourStr:$minStr:$secStr';
+            } catch (e) {
+              print('[TradeHistory] Error parsing timestamp: $e');
+              return '';
+            }
+          })();
+
+          final priceColor = isBuy ? const Color(0xFF00D4AA) : const Color(0xFFFF4081);
+
+          return {
+            'price': price,
+            'quantity': quantity.toString(),
+            'time': time,
+            'priceColor': priceColor,
+          };
+        }).toList();
+      } else {
+        print('[TradeHistory] gRPC call failed. Response: $result');
+      }
+
+      if (mounted) {
+        setState(() {
+          _tradeHistory = List.from(parsedTrades); // Force UI update
+          _tradeHistoryPageSize = pageSize; // Update current page size
+          _hasMoreTradeHistory = true; // Always show "Show More" button
+          _isLoadingTradeHistory = false;
+          _isLoadingMoreTradeHistory = false;
+          print('[TradeHistory] Updated with ${_tradeHistory.length} trades');
+        });
       }
     } catch (e) {
       print('❌ Error fetching trade history for $symbol: $e');
-      setState(() {
-        if (!append) {
+      if (mounted) {
+        setState(() {
           _tradeHistory = [];
-        }
-        _isLoadingTradeHistory = false;
-      });
+          _isLoadingTradeHistory = false;
+          _isLoadingMoreTradeHistory = false;
+        });
+      }
     }
   }
   
   void _loadMoreTradeHistory() {
-    if (!_isLoadingTradeHistory && _hasMoreTradeHistory && _selectedSymbol.isNotEmpty) {
-      _fetchTradeHistoryForAsset(_selectedSymbol, page: _currentTradeHistoryPage + 1, append: true);
-      _currentTradeHistoryPage++;
+    if (!_isLoadingMoreTradeHistory && _hasMoreTradeHistory && _selectedSymbol.isNotEmpty) {
+      print('[TradeHistory] Loading more - increasing page size from $_tradeHistoryPageSize to ${_tradeHistoryPageSize + 10}');
+      _fetchTradeHistoryForAsset(_selectedSymbol, pageSize: _tradeHistoryPageSize + 10);
     }
   }
-  
+
   void _resetAndFetchTradeHistory(String symbol) {
-    _currentTradeHistoryPage = 1;
+    _tradeHistoryPageSize = 15;
     _hasMoreTradeHistory = true;
-    _fetchTradeHistoryForAsset(symbol, page: 1, append: false);
+    _fetchTradeHistoryForAsset(symbol, pageSize: 15);
   }
 
   /// Fetch supported currencies from the server
@@ -507,7 +490,7 @@ class _TradingPageState extends State<TradingPage> {
           
           // Load trade history and orderbook for the first asset
           if (_selectedSymbol.isNotEmpty) {
-            _fetchTradeHistoryForAsset(_selectedSymbol, page: 1, append: false);
+            _fetchTradeHistoryForAsset(_selectedSymbol, pageSize: 15);
             _fetchOrderbookData(_selectedSymbol);
           }
         }
@@ -655,10 +638,11 @@ class _TradingPageState extends State<TradingPage> {
   bool _isLoadingSupportedCurrencies = false;
   
   // Trade history pagination
-  int _currentTradeHistoryPage = 0;
-  int _tradeHistoryPageSize = 0;
+  int _currentTradeHistoryPage = 1;
+  int _tradeHistoryPageSize = 15; // Start with 15, then increase by 10 (15, 25, 35, ...)
   bool _hasMoreTradeHistory = true;
   bool _isLoadingTradeHistory = false;
+  bool _isLoadingMoreTradeHistory = false;
   final TextEditingController _quantityController = TextEditingController();
   final TextEditingController _priceController = TextEditingController();
   final TextEditingController _orderIdController = TextEditingController();
@@ -4090,7 +4074,7 @@ class _TradingPageState extends State<TradingPage> {
                   mainAxisAlignment: MainAxisAlignment.spaceBetween,
                   children: [
                     SizedBox(
-                      width: 50,
+                      width: 75,
                       child: Text(
                         'Price',
                         style: TextStyle(
@@ -4140,7 +4124,7 @@ class _TradingPageState extends State<TradingPage> {
               itemCount: _tradeHistory.length + (_hasMoreTradeHistory ? 1 : 0),
               itemBuilder: (context, index) {
                 if (index == _tradeHistory.length) {
-                  // Load more button
+                  // Show more button
                   return Container(
                     margin: const EdgeInsets.symmetric(vertical: 8),
                     child: _isLoadingTradeHistory
@@ -4154,7 +4138,7 @@ class _TradingPageState extends State<TradingPage> {
                         : TextButton(
                             onPressed: _loadMoreTradeHistory,
                             child: Text(
-                              'Load More',
+                              '+ Show More',
                               style: TextStyle(
                                 color: isDarkTheme ? Colors.blue[300] : Colors.blue,
                                 fontSize: 14,
@@ -4167,8 +4151,8 @@ class _TradingPageState extends State<TradingPage> {
                 final trade = _tradeHistory[index];
                 Color priceColor = trade['priceColor'] ?? (isDarkTheme ? Colors.white : Colors.black);
                 return Container(
-                  margin: const EdgeInsets.only(bottom: 8),
-                  padding: const EdgeInsets.symmetric(vertical: 8, horizontal: 4),
+                  margin: const EdgeInsets.only(bottom: 4),
+                  padding: const EdgeInsets.symmetric(vertical: 4, horizontal: 4),
                   decoration: BoxDecoration(
                     color: Colors.transparent,
                   ),
@@ -4176,13 +4160,13 @@ class _TradingPageState extends State<TradingPage> {
                     mainAxisAlignment: MainAxisAlignment.spaceBetween,
                     children: [
                       SizedBox(
-                        width: 50,
+                        width: 75,
                         child: Text(
                           trade['price'].toString(),
                           style: TextStyle(
-                            color: priceColor,
+                            color: isDarkTheme ? Colors.white : Colors.black,
                             fontWeight: FontWeight.bold,
-                            fontSize: 15,
+                            fontSize: 13,
                           ),
                           textAlign: TextAlign.left,
                         ),
@@ -4193,7 +4177,7 @@ class _TradingPageState extends State<TradingPage> {
                           trade['quantity'].toString(),
                           style: TextStyle(
                             color: isDarkTheme ? Colors.white : Colors.black,
-                            fontSize: 15,
+                            fontSize: 13,
                           ),
                           textAlign: TextAlign.center,
                         ),
@@ -4203,7 +4187,7 @@ class _TradingPageState extends State<TradingPage> {
                           trade['time'].toString(),
                           style: TextStyle(
                             color: Colors.grey,
-                            fontSize: 14,
+                            fontSize: 13,
                           ),
                           textAlign: TextAlign.right,
                         ),
