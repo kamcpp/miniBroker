@@ -2136,4 +2136,94 @@ class GrpcurlHelper {
       };
     }
   }
+
+  /// Get Orderbook using grpcurl
+  static Future<Map<String, dynamic>> getOrderbook({
+    required String instrumentIid,
+    required String side, // "ORDER_SIDE__BUY" or "ORDER_SIDE__SELL"
+    int pageNumber = 1,
+    int pageSize = 5,
+  }) async {
+    final responseData = <String, dynamic>{
+      'success': false,
+      'output': {},
+      'requestTime': _toUnixTimestamp(DateTime.now()).toString(),
+      'serverType': 'real_grpc',
+    };
+
+    try {
+      print('📊 Getting orderbook for instrument: $instrumentIid, side: $side from real server...');
+
+      // Check server reachability first
+      if (!await _isServerReachable()) {
+        responseData['output'] = {'error': 'Server not reachable'};
+        responseData['serverType'] = 'unreachable';
+        return responseData;
+      }
+
+      final grpcurlPath = await _findGrpcurlPath();
+      if (grpcurlPath == null) {
+        responseData['output'] = {'error': 'grpcurl not found'};
+        responseData['serverType'] = 'grpcurl-not-found';
+        return responseData;
+      }
+
+      final inputParams = {
+        'proposed_execution_id': 'get_orderbook_${DateTime.now().millisecondsSinceEpoch}',
+        'pagination': {
+          'page_nr': pageNumber,
+          'page_size': pageSize,
+          'page_token': '',
+        },
+        'instrument_iid': instrumentIid,
+        'orderbook_query_filter': {
+          'aggregated': false,
+          'side': side,
+          'include_my_orders': true,
+        },
+        'aux_data': {
+          'request_source': 'mini-Broker',
+          'user_timezone': 'UTC',
+        },
+      };
+
+      print('📨 GetOrderbook request: ${jsonEncode(inputParams)}');
+
+      final result = await Process.run(
+        grpcurlPath,
+        [
+          '-plaintext',
+          '-d', jsonEncode(inputParams),
+          '$_host:$_port',
+          'qomet.agora.daemons.prtagent.v1.TradingService/GetOrderbook'
+        ],
+        environment: {'PATH': '/usr/local/bin:/opt/homebrew/bin:${Platform.environment['PATH']}'},
+      ).timeout(const Duration(seconds: 10));
+
+      if (result.exitCode == 0) {
+        final responseJson = jsonDecode(result.stdout);
+        responseData['success'] = true;
+        responseData['output'] = responseJson;
+        print('✅ GetOrderbook successful');
+      } else {
+        responseData['output'] = {
+          'error': 'gRPC call failed',
+          'stderr': result.stderr.toString(),
+          'stdout': result.stdout.toString(),
+          'exit_code': result.exitCode,
+        };
+        print('❌ GetOrderbook failed: ${result.stderr}');
+      }
+
+      return responseData;
+    } catch (e) {
+      print('❌ GetOrderbook exception: $e');
+      return {
+        'success': false,
+        'output': {'error': 'Exception occurred', 'details': e.toString()},
+        'requestTime': _toUnixTimestamp(DateTime.now()).toString(),
+        'serverType': 'exception',
+      };
+    }
+  }
 }

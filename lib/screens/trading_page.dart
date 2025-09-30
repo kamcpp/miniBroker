@@ -787,7 +787,9 @@ class _TradingPageState extends State<TradingPage> {
   // Orderbook pagination
   int _currentSellOrdersPage = 1;
   int _currentBuyOrdersPage = 1;
-  int _orderbookPageSize = 4;
+  int _orderbookPageSize = 5;
+  int _currentSellOrdersPageSize = 5; // Track current page size for sell orders
+  int _currentBuyOrdersPageSize = 5;  // Track current page size for buy orders
   bool _hasMoreSellOrders = true;
   bool _hasMoreBuyOrders = true;
   int _totalSellOrdersPages = 1;
@@ -2021,25 +2023,27 @@ class _TradingPageState extends State<TradingPage> {
   
   Future<void> _fetchOrderbookData(String symbol) async {
     print('📊 Fetching orderbook data for symbol: $symbol');
-    
+
     // Reset pagination when fetching new symbol
     _currentSellOrdersPage = 1;
     _currentBuyOrdersPage = 1;
+    _currentSellOrdersPageSize = 5;
+    _currentBuyOrdersPageSize = 5;
     _hasMoreSellOrders = true;
     _hasMoreBuyOrders = true;
     _totalSellOrdersPages = 1;
     _totalBuyOrdersPages = 1;
-    
+
     // Fetch both sell and buy orders in parallel for faster loading
     await Future.wait([
-      _fetchSellOrders(symbol, page: 1, append: false),
-      _fetchBuyOrders(symbol, page: 1, append: false),
+      _fetchSellOrders(symbol, pageSize: 5, append: false),
+      _fetchBuyOrders(symbol, pageSize: 5, append: false),
     ]);
   }
   
-  Future<void> _fetchSellOrders(String symbol, {int page = 1, bool append = false}) async {
-    print('📊 Fetching sell orders for symbol: $symbol, page: $page');
-    
+  Future<void> _fetchSellOrders(String symbol, {int pageSize = 5, bool append = false}) async {
+    print('📊 Fetching sell orders for symbol: $symbol, pageSize: $pageSize');
+
     // Find the asset data for this symbol
     final asset = _assets.firstWhere(
       (asset) => asset['symbol'] == symbol,
@@ -2058,23 +2062,20 @@ class _TradingPageState extends State<TradingPage> {
       return;
     }
 
-    final orderbook = asset['orderbook']?.toString() ?? '';
-    final exchangePairId = asset['exchangePairId']?.toString() ?? '';
-    final quoteTokenDecimal = int.tryParse(asset['quoteTokenDecimal']?.toString() ?? '0') ?? 0;
+    final instrumentIid = asset['iid']?.toString() ?? '';
 
-    print('[Orderbook-Sell] $symbol: orderbook="$orderbook", exchangePairId="$exchangePairId"');
+    print('[Orderbook-Sell] $symbol: instrumentIid="$instrumentIid"');
 
-    if (orderbook.isEmpty || exchangePairId.isEmpty) {
-      print('❌ Missing required fields for sell orders $symbol - no orderbook data available');
+    if (instrumentIid.isEmpty) {
+      print('❌ Missing instrument IID for sell orders $symbol - no orderbook data available');
       setState(() {
         if (!append) _sellOrders = [];
-        _hasMoreSellOrders = false; // No more data to load
-        _totalSellOrdersPages = 1; // Reset total pages
+        _hasMoreSellOrders = false;
         _isLoadingSellOrders = false;
       });
       return;
     }
-    
+
     if (!append) {
       setState(() {
         _isLoadingSellOrders = true;
@@ -2084,90 +2085,79 @@ class _TradingPageState extends State<TradingPage> {
         _isLoadingMoreSellOrders = true;
       });
     }
-    
+
     try {
-      final response = await http.post(
-        Uri.parse('https://brokerage-api-stage.tokenise.io/api/services/app/Agora/OrderbookQueue'),
-        headers: {
-          'Content-Type': 'application/json',
-          'Accept': 'application/json',
-        },
-        body: json.encode({
-          "page": page,
-          "page_size": _orderbookPageSize,
-          "chain_id": "131074",
-          "orderbook": orderbook,
-          "pair_id": exchangePairId,
-          "queue_id": "bids"
-        }),
-      ).timeout(const Duration(seconds: 10));
-      
+      // Call GetOrderbook gRPC function
+      final result = await GrpcurlHelper.getOrderbook(
+        instrumentIid: instrumentIid,
+        side: 'ORDER_SIDE__SELL',
+        pageNumber: 1,  // Always page 1
+        pageSize: pageSize,  // Increase page size instead
+      );
+
       List<Map<String, dynamic>> sellOrders = [];
-      
-      if (response.statusCode == 200) {
-        final Map<String, dynamic> bidsData = json.decode(response.body);
-        print('[Orderbook-Sell] $symbol API response: ${response.body}');
-        
-        if (bidsData['success'] == true && bidsData['result'] != null) {
-          final result = bidsData['result'];
-          print('[Orderbook-Sell] $symbol result structure: ${result.keys}');
-          
-          if (result is Map && result.containsKey('orders') && result['orders'] is List) {
-            final List<dynamic> orders = result['orders'];
-            print('[Orderbook-Sell] $symbol found ${orders.length} orders');
-            sellOrders = orders.map<Map<String, dynamic>>((order) {
-              final priceRaw = order['price'];
-              final quantityRaw = order['quantity'];
-              
-              final price = priceRaw != null ? double.tryParse(priceRaw.toString()) ?? 0.0 : 0.0;
-              final quantity = quantityRaw != null ? double.tryParse(quantityRaw.toString()) ?? 0.0 : 0.0;
-              
-              // Normalize price using quoteTokenDecimal
-              final normalizedPrice = price / pow(10, quoteTokenDecimal);
-              
-              return {
-                'price': normalizedPrice,
-                'quantity': quantity,
-              };
-            }).toList();
-          } else {
-            print('[Orderbook-Sell] $symbol: No orders field found or orders is not a list. Result: $result');
-          }
-        } else {
-          print('[Orderbook-Sell] $symbol: API response not successful or result is null. Response: $bidsData');
-        }
+
+      if (result['success'] == true && result['output'] != null) {
+        final output = result['output'] as Map<String, dynamic>;
+        print('[Orderbook-Sell] $symbol gRPC response: $output');
+
+        // Extract sell_list from the response
+        final sellList = output['sellList'] as Map<String, dynamic>? ?? {};
+        final orders = sellList['orders'] as List<dynamic>? ?? [];
+
+        print('[Orderbook-Sell] $symbol found ${orders.length} orders');
+
+        sellOrders = orders.map<Map<String, dynamic>>((order) {
+          final orderMap = order as Map<String, dynamic>;
+          final priceValue = orderMap['price'];
+          final quantityValue = orderMap['quantity'];
+
+          // Parse price and quantity
+          final price = priceValue is String
+              ? double.tryParse(priceValue) ?? 0.0
+              : (priceValue is num ? priceValue.toDouble() : 0.0);
+          final quantity = quantityValue is String
+              ? double.tryParse(quantityValue) ?? 0.0
+              : (quantityValue is num ? quantityValue.toDouble() : 0.0);
+
+          // Calculate total (price * quantity)
+          final total = price * quantity;
+
+          print('[Orderbook-Sell] Mapping order: price=$price, quantity=$quantity, total=$total');
+
+          return {
+            'price': price,
+            'quantity': quantity,
+            'total': total,
+          };
+        }).toList();
+
+        print('[Orderbook-Sell] ✅ Mapped ${sellOrders.length} sell orders');
+        print('[Orderbook-Sell] First order: ${sellOrders.isNotEmpty ? sellOrders[0] : "none"}');
       } else {
-        print('❌ Sell orders API error: ${response.statusCode} - ${response.body}');
+        print('[Orderbook-Sell] $symbol: gRPC call failed. Response: $result');
       }
-      
+
       setState(() {
-        if (append) {
-          _sellOrders.addAll(sellOrders);
-        } else {
-          _sellOrders = sellOrders;
-        }
-        _hasMoreSellOrders = sellOrders.length == _orderbookPageSize;
-        _currentSellOrdersPage = page;
-        
-        // Calculate total pages for pagination
-        if (!_hasMoreSellOrders) {
-          _totalSellOrdersPages = page;
-        } else {
-          // If we have more orders, estimate total pages (will be updated as user navigates)
-          _totalSellOrdersPages = page + 1;
-        }
-        
+        _sellOrders = sellOrders;  // Always replace with new data
+        print('[Orderbook-Sell] setState called: _sellOrders now has ${_sellOrders.length} orders');
+        print('[Orderbook-Sell] _sellOrders content: $_sellOrders');
+        print('[Orderbook-Sell] Requested pageSize: $pageSize, Got: ${sellOrders.length}');
+
+        _currentSellOrdersPageSize = pageSize;  // Update current page size
+        _hasMoreSellOrders = true;  // Always show "Show More" button
+
         if (!append) _isLoadingSellOrders = false;
         if (append) _isLoadingMoreSellOrders = false;
       });
-      
+
     } catch (e) {
       print('❌ Error fetching sell orders for $symbol: $e');
       setState(() {
         if (!append) {
           _sellOrders = [];
-          _hasMoreSellOrders = false; // No more data to load due to error
-          _totalSellOrdersPages = 1; // Reset total pages
+          _hasMoreSellOrders = false;
+          _totalSellOrdersPages = 1;
           _isLoadingSellOrders = false;
         } else {
           _isLoadingMoreSellOrders = false;
@@ -2176,9 +2166,9 @@ class _TradingPageState extends State<TradingPage> {
     }
   }
   
-  Future<void> _fetchBuyOrders(String symbol, {int page = 1, bool append = false}) async {
-    print('📊 Fetching buy orders for symbol: $symbol, page: $page');
-    
+  Future<void> _fetchBuyOrders(String symbol, {int pageSize = 5, bool append = false}) async {
+    print('📊 Fetching buy orders for symbol: $symbol, pageSize: $pageSize');
+
     // Find the asset data for this symbol
     final asset = _assets.firstWhere(
       (asset) => asset['symbol'] == symbol,
@@ -2197,23 +2187,20 @@ class _TradingPageState extends State<TradingPage> {
       return;
     }
 
-    final orderbook = asset['orderbook']?.toString() ?? '';
-    final exchangePairId = asset['exchangePairId']?.toString() ?? '';
-    final quoteTokenDecimal = int.tryParse(asset['quoteTokenDecimal']?.toString() ?? '0') ?? 0;
+    final instrumentIid = asset['iid']?.toString() ?? '';
 
-    print('[Orderbook-Buy] $symbol: orderbook="$orderbook", exchangePairId="$exchangePairId"');
+    print('[Orderbook-Buy] $symbol: instrumentIid="$instrumentIid"');
 
-    if (orderbook.isEmpty || exchangePairId.isEmpty) {
-      print('❌ Missing required fields for buy orders $symbol - no orderbook data available');
+    if (instrumentIid.isEmpty) {
+      print('❌ Missing instrument IID for buy orders $symbol - no orderbook data available');
       setState(() {
         if (!append) _buyOrders = [];
-        _hasMoreBuyOrders = false; // No more data to load
-        _totalBuyOrdersPages = 1; // Reset total pages
+        _hasMoreBuyOrders = false;
         _isLoadingBuyOrders = false;
       });
       return;
     }
-    
+
     if (!append) {
       setState(() {
         _isLoadingBuyOrders = true;
@@ -2223,90 +2210,79 @@ class _TradingPageState extends State<TradingPage> {
         _isLoadingMoreBuyOrders = true;
       });
     }
-    
+
     try {
-      final response = await http.post(
-        Uri.parse('https://brokerage-api-stage.tokenise.io/api/services/app/Agora/OrderbookQueue'),
-        headers: {
-          'Content-Type': 'application/json',
-          'Accept': 'application/json',
-        },
-        body: json.encode({
-          "page": page,
-          "page_size": _orderbookPageSize,
-          "chain_id": "131074",
-          "orderbook": orderbook,
-          "pair_id": exchangePairId,
-          "queue_id": "asks"
-        }),
-      ).timeout(const Duration(seconds: 10));
-      
+      // Call GetOrderbook gRPC function
+      final result = await GrpcurlHelper.getOrderbook(
+        instrumentIid: instrumentIid,
+        side: 'ORDER_SIDE__BUY',
+        pageNumber: 1,  // Always page 1
+        pageSize: pageSize,  // Increase page size instead
+      );
+
       List<Map<String, dynamic>> buyOrders = [];
-      
-      if (response.statusCode == 200) {
-        final Map<String, dynamic> asksData = json.decode(response.body);
-        print('[Orderbook-Buy] $symbol API response: ${response.body}');
-        
-        if (asksData['success'] == true && asksData['result'] != null) {
-          final result = asksData['result'];
-          print('[Orderbook-Buy] $symbol result structure: ${result.keys}');
-          
-          if (result is Map && result.containsKey('orders') && result['orders'] is List) {
-            final List<dynamic> orders = result['orders'];
-            print('[Orderbook-Buy] $symbol found ${orders.length} orders');
-            buyOrders = orders.map<Map<String, dynamic>>((order) {
-              final priceRaw = order['price'];
-              final quantityRaw = order['quantity'];
-              
-              final price = priceRaw != null ? double.tryParse(priceRaw.toString()) ?? 0.0 : 0.0;
-              final quantity = quantityRaw != null ? double.tryParse(quantityRaw.toString()) ?? 0.0 : 0.0;
-              
-              // Normalize price using quoteTokenDecimal
-              final normalizedPrice = price / pow(10, quoteTokenDecimal);
-              
-              return {
-                'price': normalizedPrice,
-                'quantity': quantity,
-              };
-            }).toList();
-          } else {
-            print('[Orderbook-Buy] $symbol: No orders field found or orders is not a list. Result: $result');
-          }
-        } else {
-          print('[Orderbook-Buy] $symbol: API response not successful or result is null. Response: $asksData');
-        }
+
+      if (result['success'] == true && result['output'] != null) {
+        final output = result['output'] as Map<String, dynamic>;
+        print('[Orderbook-Buy] $symbol gRPC response: $output');
+
+        // Extract buy_list from the response
+        final buyList = output['buyList'] as Map<String, dynamic>? ?? {};
+        final orders = buyList['orders'] as List<dynamic>? ?? [];
+
+        print('[Orderbook-Buy] $symbol found ${orders.length} orders');
+
+        buyOrders = orders.map<Map<String, dynamic>>((order) {
+          final orderMap = order as Map<String, dynamic>;
+          final priceValue = orderMap['price'];
+          final quantityValue = orderMap['quantity'];
+
+          // Parse price and quantity
+          final price = priceValue is String
+              ? double.tryParse(priceValue) ?? 0.0
+              : (priceValue is num ? priceValue.toDouble() : 0.0);
+          final quantity = quantityValue is String
+              ? double.tryParse(quantityValue) ?? 0.0
+              : (quantityValue is num ? quantityValue.toDouble() : 0.0);
+
+          // Calculate total (price * quantity)
+          final total = price * quantity;
+
+          print('[Orderbook-Buy] Mapping order: price=$price, quantity=$quantity, total=$total');
+
+          return {
+            'price': price,
+            'quantity': quantity,
+            'total': total,
+          };
+        }).toList();
+
+        print('[Orderbook-Buy] ✅ Mapped ${buyOrders.length} buy orders');
+        print('[Orderbook-Buy] First order: ${buyOrders.isNotEmpty ? buyOrders[0] : "none"}');
       } else {
-        print('❌ Buy orders API error: ${response.statusCode} - ${response.body}');
+        print('[Orderbook-Buy] $symbol: gRPC call failed. Response: $result');
       }
-      
+
       setState(() {
-        if (append) {
-          _buyOrders.addAll(buyOrders);
-        } else {
-          _buyOrders = buyOrders;
-        }
-        _hasMoreBuyOrders = buyOrders.length == _orderbookPageSize;
-        _currentBuyOrdersPage = page;
-        
-        // Calculate total pages for pagination
-        if (!_hasMoreBuyOrders) {
-          _totalBuyOrdersPages = page;
-        } else {
-          // If we have more orders, estimate total pages (will be updated as user navigates)
-          _totalBuyOrdersPages = page + 1;
-        }
-        
+        _buyOrders = buyOrders;  // Always replace with new data
+        print('[Orderbook-Buy] setState called: _buyOrders now has ${_buyOrders.length} orders');
+        print('[Orderbook-Buy] _buyOrders content: $_buyOrders');
+        print('[Orderbook-Buy] Requested pageSize: $pageSize, Got: ${buyOrders.length}');
+
+        _currentBuyOrdersPageSize = pageSize;  // Update current page size
+        _hasMoreBuyOrders = true;  // Always show "Show More" button
+
         if (!append) _isLoadingBuyOrders = false;
         if (append) _isLoadingMoreBuyOrders = false;
       });
-      
+
     } catch (e) {
       print('❌ Error fetching buy orders for $symbol: $e');
       setState(() {
         if (!append) {
           _buyOrders = [];
-          _hasMoreBuyOrders = false; // No more data to load due to error
-          _totalBuyOrdersPages = 1; // Reset total pages
+          _hasMoreBuyOrders = false;
+          _totalBuyOrdersPages = 1;
           _isLoadingBuyOrders = false;
         } else {
           _isLoadingMoreBuyOrders = false;
@@ -2317,13 +2293,13 @@ class _TradingPageState extends State<TradingPage> {
   
   void _goToSellOrdersPage(int page) {
     if (page >= 1 && page <= _totalSellOrdersPages && page != _currentSellOrdersPage && _selectedSymbol.isNotEmpty) {
-      _fetchSellOrders(_selectedSymbol, page: page, append: false);
+      _fetchSellOrders(_selectedSymbol, pageSize: _currentSellOrdersPageSize, append: false);
     }
   }
-  
+
   void _goToBuyOrdersPage(int page) {
     if (page >= 1 && page <= _totalBuyOrdersPages && page != _currentBuyOrdersPage && _selectedSymbol.isNotEmpty) {
-      _fetchBuyOrders(_selectedSymbol, page: page, append: false);
+      _fetchBuyOrders(_selectedSymbol, pageSize: _currentBuyOrdersPageSize, append: false);
     }
   }
   
@@ -4396,21 +4372,30 @@ class _TradingPageState extends State<TradingPage> {
   }
 
   Widget _buildOrderbookSide(bool isDarkTheme, String side) {
-    // Sample orderbook data - replace with real data
-    final sampleOrders = List.generate(10, (index) {
-      final price = side == 'sell' ? 100.0 + index : 100.0 - index;
-      final quantity = (index + 1) * 10.0;
-      return {
-        'price': price.toStringAsFixed(2),
-        'quantity': quantity.toStringAsFixed(0),
-        'total': (price * quantity).toStringAsFixed(2),
-      };
-    });
+    // Use real data from _sellOrders and _buyOrders
+    final orders = side == 'sell' ? _sellOrders : _buyOrders;
+    final isLoading = side == 'sell' ? _isLoadingSellOrders : _isLoadingBuyOrders;
+
+    if (isLoading) {
+      return const Center(child: CircularProgressIndicator());
+    }
+
+    if (orders.isEmpty) {
+      return Center(
+        child: Text(
+          'No ${side} orders',
+          style: TextStyle(
+            color: isDarkTheme ? Colors.grey[400] : Colors.grey[600],
+            fontSize: 14,
+          ),
+        ),
+      );
+    }
 
     return ListView.builder(
-      itemCount: sampleOrders.length,
+      itemCount: orders.length,
       itemBuilder: (context, index) {
-        final order = sampleOrders[index];
+        final order = orders[index];
         final color = side == 'sell' ? const Color(0xFFFF4081) : const Color(0xFF00D4AA);
 
         return Container(
@@ -4419,7 +4404,7 @@ class _TradingPageState extends State<TradingPage> {
             children: [
               Expanded(
                 child: Text(
-                  order['price']!,
+                  _formatPrice(order['price']),
                   style: TextStyle(
                     color: color,
                     fontSize: 13,
@@ -4430,7 +4415,7 @@ class _TradingPageState extends State<TradingPage> {
               ),
               Expanded(
                 child: Text(
-                  order['quantity']!,
+                  order['quantity'].toString(),
                   style: TextStyle(
                     color: isDarkTheme ? Colors.white : Colors.black,
                     fontSize: 13,
@@ -4440,7 +4425,7 @@ class _TradingPageState extends State<TradingPage> {
               ),
               Expanded(
                 child: Text(
-                  order['total']!,
+                  _formatPrice(order['total'] ?? 0.0),
                   style: TextStyle(
                     color: isDarkTheme ? Colors.grey[300] : Colors.grey[600],
                     fontSize: 13,
@@ -4457,6 +4442,14 @@ class _TradingPageState extends State<TradingPage> {
 
   /// Build Show More button for orderbook sections
   Widget _buildShowMoreButton(bool isDarkTheme, String side) {
+    final hasMore = side == 'sell' ? _hasMoreSellOrders : _hasMoreBuyOrders;
+    final isLoadingMore = side == 'sell' ? _isLoadingMoreSellOrders : _isLoadingMoreBuyOrders;
+    final currentPageSize = side == 'sell' ? _currentSellOrdersPageSize : _currentBuyOrdersPageSize;
+
+    if (!hasMore) {
+      return const SizedBox.shrink();
+    }
+
     return Padding(
       padding: const EdgeInsets.only(top: 8),
       child: StatefulBuilder(
@@ -4468,39 +4461,49 @@ class _TradingPageState extends State<TradingPage> {
             onEnter: (_) => setState(() => isHovered = true),
             onExit: (_) => setState(() => isHovered = false),
             child: GestureDetector(
-              onTap: () {
-                print('Show more ${side} orders clicked');
-                // TODO: Implement show more functionality
+              onTap: isLoadingMore ? null : () {
+                print('Show more ${side} orders clicked - increasing page size from $currentPageSize to ${currentPageSize + 5}');
+                if (side == 'sell') {
+                  _fetchSellOrders(_selectedSymbol, pageSize: currentPageSize + 5, append: true);
+                } else {
+                  _fetchBuyOrders(_selectedSymbol, pageSize: currentPageSize + 5, append: true);
+                }
               },
-              child: AnimatedContainer(
-                duration: const Duration(milliseconds: 200),
-                padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
-                decoration: BoxDecoration(
-                  color: isHovered
-                      ? Colors.blue.withOpacity(0.1)
-                      : Colors.transparent,
-                  borderRadius: BorderRadius.circular(4),
-                ),
-                child: Row(
-                  mainAxisSize: MainAxisSize.min,
-                  children: [
-                    Icon(
-                      Icons.add,
-                      color: isHovered ? Colors.blue[700] : Colors.blue,
-                      size: 16,
-                    ),
-                    const SizedBox(width: 4),
-                    Text(
-                      'Show More',
-                      style: TextStyle(
-                        color: isHovered ? Colors.blue[700] : Colors.blue,
-                        fontSize: 14,
-                        fontWeight: FontWeight.w500,
+              child: isLoadingMore
+                  ? const SizedBox(
+                      width: 20,
+                      height: 20,
+                      child: CircularProgressIndicator(strokeWidth: 2),
+                    )
+                  : AnimatedContainer(
+                      duration: const Duration(milliseconds: 200),
+                      padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
+                      decoration: BoxDecoration(
+                        color: isHovered
+                            ? Colors.blue.withOpacity(0.1)
+                            : Colors.transparent,
+                        borderRadius: BorderRadius.circular(4),
+                      ),
+                      child: Row(
+                        mainAxisSize: MainAxisSize.min,
+                        children: [
+                          Icon(
+                            Icons.add,
+                            color: isHovered ? Colors.blue[700] : Colors.blue,
+                            size: 16,
+                          ),
+                          const SizedBox(width: 4),
+                          Text(
+                            'Show More',
+                            style: TextStyle(
+                              color: isHovered ? Colors.blue[700] : Colors.blue,
+                              fontSize: 14,
+                              fontWeight: FontWeight.w500,
+                            ),
+                          ),
+                        ],
                       ),
                     ),
-                  ],
-                ),
-              ),
             ),
           );
         },
@@ -5113,7 +5116,7 @@ class _TradingPageState extends State<TradingPage> {
                         children: [
                           Expanded(
                             child: Text(
-                              'price',
+                              'Price',
                               style: TextStyle(
                                 fontSize: 14,
                                 color: _isDarkTheme ? Colors.grey[400] : Colors.grey[600],
@@ -5123,6 +5126,16 @@ class _TradingPageState extends State<TradingPage> {
                           Expanded(
                             child: Text(
                               'Quantity',
+                              textAlign: TextAlign.center,
+                              style: TextStyle(
+                                fontSize: 14,
+                                color: _isDarkTheme ? Colors.grey[400] : Colors.grey[600],
+                              ),
+                            ),
+                          ),
+                          Expanded(
+                            child: Text(
+                              'Total',
                               textAlign: TextAlign.right,
                               style: TextStyle(
                                 fontSize: 14,
@@ -5177,6 +5190,16 @@ class _TradingPageState extends State<TradingPage> {
                                                   Expanded(
                                                     child: Text(
                                                       order['quantity'].toString(),
+                                                      textAlign: TextAlign.center,
+                                                      style: TextStyle(
+                                                        fontSize: 14,
+                                                        color: _isDarkTheme ? Colors.white : Colors.black,
+                                                      ),
+                                                    ),
+                                                  ),
+                                                  Expanded(
+                                                    child: Text(
+                                                      _formatPrice(order['total'] ?? 0.0),
                                                       textAlign: TextAlign.right,
                                                       style: TextStyle(
                                                         fontSize: 14,
@@ -5204,7 +5227,7 @@ class _TradingPageState extends State<TradingPage> {
                                                 )
                                               : TextButton(
                                                   onPressed: () {
-                                                    _fetchSellOrders(_selectedSymbol, page: _currentSellOrdersPage + 1, append: true);
+                                                    _fetchSellOrders(_selectedSymbol, pageSize: _currentSellOrdersPageSize + 5, append: true);
                                                   },
                                                   child: Text(
                                                     'Load More',
@@ -5242,7 +5265,7 @@ class _TradingPageState extends State<TradingPage> {
                         children: [
                           Expanded(
                             child: Text(
-                              'price',
+                              'Price',
                               style: TextStyle(
                                 fontSize: 14,
                                 color: _isDarkTheme ? Colors.grey[400] : Colors.grey[600],
@@ -5252,6 +5275,16 @@ class _TradingPageState extends State<TradingPage> {
                           Expanded(
                             child: Text(
                               'Quantity',
+                              textAlign: TextAlign.center,
+                              style: TextStyle(
+                                fontSize: 14,
+                                color: _isDarkTheme ? Colors.grey[400] : Colors.grey[600],
+                              ),
+                            ),
+                          ),
+                          Expanded(
+                            child: Text(
+                              'Total',
                               textAlign: TextAlign.right,
                               style: TextStyle(
                                 fontSize: 14,
@@ -5306,6 +5339,16 @@ class _TradingPageState extends State<TradingPage> {
                                                   Expanded(
                                                     child: Text(
                                                       order['quantity'].toString(),
+                                                      textAlign: TextAlign.center,
+                                                      style: TextStyle(
+                                                        fontSize: 14,
+                                                        color: _isDarkTheme ? Colors.white : Colors.black,
+                                                      ),
+                                                    ),
+                                                  ),
+                                                  Expanded(
+                                                    child: Text(
+                                                      _formatPrice(order['total'] ?? 0.0),
                                                       textAlign: TextAlign.right,
                                                       style: TextStyle(
                                                         fontSize: 14,
@@ -5333,7 +5376,7 @@ class _TradingPageState extends State<TradingPage> {
                                                 )
                                               : TextButton(
                                                   onPressed: () {
-                                                    _fetchBuyOrders(_selectedSymbol, page: _currentBuyOrdersPage + 1, append: true);
+                                                    _fetchBuyOrders(_selectedSymbol, pageSize: _currentBuyOrdersPageSize + 5, append: true);
                                                   },
                                                   child: Text(
                                                     'Load More',
