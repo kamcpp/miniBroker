@@ -681,7 +681,7 @@ class _TradingPageState extends State<TradingPage> {
   // Panel height variables for resizable horizontal sections
   double _orderbookHeight = 150.0; // Default orderbook height
   bool _isDraggingHorizontal = false;
-  double _marketOverviewHeight = 190.0; // Increased by 1.1x (215 * 1.1 = 236.5)
+  double _marketOverviewHeight = 200.0; // Increased to accommodate Market and Venue dropdowns
   bool _isDraggingMarketOverview = false; // State for market splitter
 
   // Bottom section width split (Orders vs Orderbook)
@@ -3303,61 +3303,112 @@ class _TradingPageState extends State<TradingPage> {
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
-          Text(
-            'Market',
-            style: TextStyle(
-              fontSize: 18,
-              fontWeight: FontWeight.bold,
-              color: _isDarkTheme ? Colors.white : Colors.black,
-            ),
-          ),
-          const SizedBox(height: 10), // Space between title and dropdown
-          
-          // Market Dropdown
-          _HoverDropdownField(
-            isDarkTheme: _isDarkTheme,
-            child: DropdownButtonHideUnderline(
-              child: DropdownButton<Map<String, String>>(
-                value: _markets.isEmpty 
-                    ? null 
-                    : (_markets.any((market) => market['id'] == _selectedMarket['id']) 
-                        ? _selectedMarket 
-                        : _markets.isNotEmpty ? _markets.first : null),
-                isExpanded: true,
-                onChanged: _markets.isEmpty ? null : (Map<String, String>? newValue) async {
-                  if (newValue != null) {
-                    setState(() {
-                      _selectedMarket = newValue;
-                    });
-                    // Load instruments for the selected market first
-                    await _fetchMarketInstruments(newValue['id']!);
-                    // Update portfolio for sell orders if currently in sell mode
-                    // Use the newValue market ID to ensure we're using the correct market
-                    if (!_isBuySelected) {
-                      await _fetchAccountMarketPortfolioForMarket(newValue['id']!);
-                    }
-                  }
-                },
-                dropdownColor: _isDarkTheme ? const Color(0xFF1e1e1e) : Colors.white,
-                style: TextStyle(
-                  color: _isDarkTheme ? Colors.white : Colors.black,
-                  fontSize: 14,
+          // Market Row - Label and Dropdown on same line
+          Row(
+            children: [
+              SizedBox(
+                width: 60,
+                child: Text(
+                  'Market',
+                  style: TextStyle(
+                    fontSize: 14,
+                    fontWeight: FontWeight.w500,
+                    color: _isDarkTheme ? Colors.white : Colors.black,
+                  ),
                 ),
-                items: _markets.isEmpty 
-                    ? [DropdownMenuItem<Map<String, String>>(
-                        value: {'id': '', 'description': '', 'display': ''},
-                        child: Text(_isLoadingMarkets ? 'Loading markets...' : 'No markets available'),
-                      )]
-                    : _markets.map<DropdownMenuItem<Map<String, String>>>((market) {
-                        return DropdownMenuItem<Map<String, String>>(
-                          value: market,
-                          child: Text(market['display'] ?? market['id']!),
+              ),
+              Expanded(
+                child: _HoverDropdownField(
+                  isDarkTheme: _isDarkTheme,
+                  child: DropdownButtonHideUnderline(
+                    child: DropdownButton<Map<String, String>>(
+                      value: _markets.isEmpty
+                          ? null
+                          : (_markets.any((market) => market['id'] == _selectedMarket['id'])
+                              ? _selectedMarket
+                              : _markets.isNotEmpty ? _markets.first : null),
+                      isExpanded: true,
+                      onChanged: _markets.isEmpty ? null : (Map<String, String>? newValue) async {
+                        if (newValue != null) {
+                          setState(() {
+                            _selectedMarket = newValue;
+                          });
+                          // Load instruments for the selected market first
+                          await _fetchMarketInstruments(newValue['id']!);
+                          // Update portfolio for sell orders if currently in sell mode
+                          // Use the newValue market ID to ensure we're using the correct market
+                          if (!_isBuySelected) {
+                            await _fetchAccountMarketPortfolioForMarket(newValue['id']!);
+                          }
+                        }
+                      },
+                      dropdownColor: _isDarkTheme ? const Color(0xFF1e1e1e) : Colors.white,
+                      style: TextStyle(
+                        color: _isDarkTheme ? Colors.white : Colors.black,
+                        fontSize: 14,
+                      ),
+                      items: _markets.isEmpty
+                          ? [DropdownMenuItem<Map<String, String>>(
+                              value: {'id': '', 'description': '', 'display': ''},
+                              child: Text(_isLoadingMarkets ? 'Loading markets...' : 'No markets available'),
+                            )]
+                          : _markets.map<DropdownMenuItem<Map<String, String>>>((market) {
+                              return DropdownMenuItem<Map<String, String>>(
+                                value: market,
+                                child: Text(market['display'] ?? market['id']!),
+                              );
+                            }).toList(),
+                    ),
+                  ),
+                ),
+              ),
+            ],
+          ),
+
+          const SizedBox(height: 10), // Space between rows
+
+          // Venue Row - Label and Dropdown on same line
+          Row(
+            children: [
+              SizedBox(
+                width: 60,
+                child: Text(
+                  'Venue',
+                  style: TextStyle(
+                    fontSize: 14,
+                    fontWeight: FontWeight.w500,
+                    color: _isDarkTheme ? Colors.white : Colors.black,
+                  ),
+                ),
+              ),
+              Expanded(
+                child: _HoverDropdownField(
+                  isDarkTheme: _isDarkTheme,
+                  child: DropdownButtonHideUnderline(
+                    child: DropdownButton<String>(
+                      value: 'All Venues', // Placeholder - will need to implement venue logic
+                      isExpanded: true,
+                      onChanged: (String? newValue) {
+                        // TODO: Implement venue selection logic
+                      },
+                      dropdownColor: _isDarkTheme ? const Color(0xFF1e1e1e) : Colors.white,
+                      style: TextStyle(
+                        color: _isDarkTheme ? Colors.white : Colors.black,
+                        fontSize: 14,
+                      ),
+                      items: ['All Venues'].map<DropdownMenuItem<String>>((String value) {
+                        return DropdownMenuItem<String>(
+                          value: value,
+                          child: Text(value),
                         );
                       }).toList(),
+                    ),
+                  ),
+                ),
               ),
-            ),
+            ],
           ),
-          
+
           const SizedBox(height: 10), // Space between dropdown and asset boxes
           Expanded(
             child: _isLoadingMarketInstruments 
@@ -3370,7 +3421,7 @@ class _TradingPageState extends State<TradingPage> {
                             _isDarkTheme ? Colors.white : const Color(0xFF1a1754),
                           ),
                         ),
-                        SizedBox(height: 16),
+                        SizedBox(height: 20),
                         Text(
                           'Loading...',
                           style: TextStyle(
@@ -3403,7 +3454,7 @@ class _TradingPageState extends State<TradingPage> {
                         ),
                       )
                 : SizedBox(
-                    height: 70, // Reduced from 200 to 100 for half-size boxes
+                    height: 70,
                     child: Stack(
                       children: [
                         // Main scrollable list
