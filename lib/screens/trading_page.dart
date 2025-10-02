@@ -370,9 +370,10 @@ class _TradingPageState extends State<TradingPage> {
         });
         
         print('✅ Loaded ${_markets.length} markets');
-        
-        // Load instruments for the first market if available
+
+        // Load venues and instruments for the first market if available
         if (_selectedMarket.isNotEmpty && _selectedMarket['id']!.isNotEmpty) {
+          await _fetchVenues(_selectedMarket['id']!);
           _fetchMarketInstruments(_selectedMarket['id']!);
         }
       } else {
@@ -385,6 +386,99 @@ class _TradingPageState extends State<TradingPage> {
       print('❌ Error fetching markets: $e');
       setState(() {
         _isLoadingMarkets = false;
+      });
+    }
+  }
+
+  /// Fetch venues for a specific market
+  Future<void> _fetchVenues(String marketId) async {
+    if (_isLoadingVenues) return;
+
+    setState(() {
+      _isLoadingVenues = true;
+    });
+
+    try {
+      print('🏟️ Fetching venues for market: $marketId...');
+
+      final result = await realGrpcClient.getVenueList(
+        marketId: marketId,
+      ).timeout(
+        const Duration(seconds: 10),
+        onTimeout: () {
+          print('⏰ GetVenueList timed out after 10 seconds');
+          return {
+            'success': false,
+            'output': {'error': 'Request timed out after 10 seconds'},
+          };
+        },
+      );
+
+      if (result['success'] == true && result['output'] != null) {
+        final output = result['output'];
+        final venues = output['venues'] as List<dynamic>? ?? [];
+
+        final venueData = <Map<String, String>>[];
+        final addedVenueIds = <String>{}; // Track added venue IDs to prevent duplicates
+
+        // Add "All Venues" option first
+        venueData.add({'id': '', 'display': 'All Venues'});
+        addedVenueIds.add(''); // Mark empty string as added
+
+        for (final venue in venues) {
+          if (venue is Map<String, dynamic>) {
+            // Extract value from identifiers
+            String venueValue = '';
+            final identifiers = venue['identifiers'] as List<dynamic>? ?? [];
+
+            for (final identifier in identifiers) {
+              if (identifier is Map<String, dynamic>) {
+                final ids = identifier['ids'] as List<dynamic>? ?? [];
+                if (ids.isNotEmpty && ids.first is Map<String, dynamic>) {
+                  venueValue = ids.first['value']?.toString() ?? '';
+                  if (venueValue.isNotEmpty) break;
+                }
+              }
+            }
+
+            // Fallback to displayName if value not found
+            final displayNames = venue['displayNames'] as Map<String, dynamic>? ?? {};
+            final displayName = displayNames['en']?.toString() ?? venueValue;
+
+            // Only add if venueValue is not empty and not already added
+            if (venueValue.isNotEmpty && !addedVenueIds.contains(venueValue)) {
+              venueData.add({
+                'id': venueValue,
+                'display': displayName.isNotEmpty ? displayName : venueValue,
+              });
+              addedVenueIds.add(venueValue); // Mark this venue ID as added
+            }
+          }
+        }
+
+        setState(() {
+          _venues = venueData;
+          if (_selectedVenue['id']!.isEmpty && _venues.isNotEmpty) {
+            _selectedVenue = _venues.first; // Default to "All Venues"
+          }
+          _isLoadingVenues = false;
+        });
+
+        print('✅ Loaded ${_venues.length} venues');
+      } else {
+        print('❌ Failed to fetch venues: ${result['output']}');
+        setState(() {
+          _venues = [{'id': '', 'display': 'All Venues'}];
+          _selectedVenue = _venues.first;
+          _isLoadingVenues = false;
+        });
+      }
+    } catch (e) {
+      print('❌ Error fetching venues: $e');
+      setState(() {
+        _venues = [{'id': '', 'display': 'All Venues'}];
+        _selectedVenue = _venues.first;
+        _isLoadingVenues = false;
       });
     }
   }
@@ -631,6 +725,11 @@ class _TradingPageState extends State<TradingPage> {
   Map<String, String> _selectedMarket = {};
   bool _isLoadingMarkets = false;
   bool _isLoadingMarketInstruments = false;
+
+  // Venue data
+  List<Map<String, String>> _venues = [];
+  Map<String, String> _selectedVenue = {'id': '', 'display': 'All Venues'};
+  bool _isLoadingVenues = false;
 
   // Supported currencies data
   List<Map<String, String>> _supportedCurrencies = [];
@@ -3332,8 +3431,13 @@ class _TradingPageState extends State<TradingPage> {
                         if (newValue != null) {
                           setState(() {
                             _selectedMarket = newValue;
+                            // Clear venue dropdown items before fetching new venues
+                            _venues = [{'id': '', 'display': 'All Venues'}];
+                            _selectedVenue = _venues.first;
                           });
-                          // Load instruments for the selected market first
+                          // Load venues for the selected market
+                          await _fetchVenues(newValue['id']!);
+                          // Load instruments for the selected market
                           await _fetchMarketInstruments(newValue['id']!);
                           // Update portfolio for sell orders if currently in sell mode
                           // Use the newValue market ID to ensure we're using the correct market
@@ -3385,23 +3489,38 @@ class _TradingPageState extends State<TradingPage> {
                 child: _HoverDropdownField(
                   isDarkTheme: _isDarkTheme,
                   child: DropdownButtonHideUnderline(
-                    child: DropdownButton<String>(
-                      value: 'All Venues', // Placeholder - will need to implement venue logic
+                    child: DropdownButton<Map<String, String>>(
+                      value: _venues.isEmpty
+                          ? null
+                          : (_venues.any((venue) => venue['id'] == _selectedVenue['id'])
+                              ? _selectedVenue
+                              : _venues.isNotEmpty ? _venues.first : null),
                       isExpanded: true,
-                      onChanged: (String? newValue) {
-                        // TODO: Implement venue selection logic
+                      onChanged: _venues.isEmpty ? null : (Map<String, String>? newValue) {
+                        if (newValue != null) {
+                          setState(() {
+                            _selectedVenue = newValue;
+                          });
+                          // TODO: Filter instruments by venue if needed
+                          print('📍 Selected venue: ${newValue['display']} (${newValue['id']})');
+                        }
                       },
                       dropdownColor: _isDarkTheme ? const Color(0xFF1e1e1e) : Colors.white,
                       style: TextStyle(
                         color: _isDarkTheme ? Colors.white : Colors.black,
                         fontSize: 14,
                       ),
-                      items: ['All Venues'].map<DropdownMenuItem<String>>((String value) {
-                        return DropdownMenuItem<String>(
-                          value: value,
-                          child: Text(value),
-                        );
-                      }).toList(),
+                      items: _venues.isEmpty
+                          ? [DropdownMenuItem<Map<String, String>>(
+                              value: {'id': '', 'display': 'All Venues'},
+                              child: Text(_isLoadingVenues ? 'Loading venues...' : 'All Venues'),
+                            )]
+                          : _venues.map<DropdownMenuItem<Map<String, String>>>((venue) {
+                              return DropdownMenuItem<Map<String, String>>(
+                                value: venue,
+                                child: Text(venue['display'] ?? 'All Venues'),
+                              );
+                            }).toList(),
                     ),
                   ),
                 ),
@@ -6121,12 +6240,8 @@ class SimpleLinePainter extends CustomPainter {
   @override
   void paint(Canvas canvas, Size size) {
     if (data.isEmpty) {
-      print('❌ CustomPainter: No data to paint');
       return;
     }
-
-    print('🎨 CustomPainter: Painting chart with size: ${size.width}x${size.height}');
-    print('🎨 CustomPainter: Data points: ${data.length}');
 
     final lineColor = isDarkTheme ? Colors.blue[400]! : Colors.blue[600]!;
     final fillColor = lineColor.withOpacity(0.3);
@@ -6268,7 +6383,6 @@ class SimpleLinePainter extends CustomPainter {
         tp.paint(canvas, Offset(x, labelY));
       }
     }
-    print('🎨 CustomPainter: Chart painting completed');
   }
 
   bool _is1dPeriod() {

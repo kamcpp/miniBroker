@@ -1249,6 +1249,52 @@ class RealGrpcClient {
     }
   }
 
+  /// Real GetVenueList call to VenueService.GetVenueList using grpcurl
+  Future<Map<String, dynamic>> getVenueList({
+    String? marketId,
+    Duration? timeout,
+  }) async {
+    if (!_isConnected) {
+      return {
+        'input': {},
+        'output': {'error': 'Not connected to server'},
+        'requestTime': _toUnixTimestamp(DateTime.now()).toString(),
+        'serverType': 'disconnected',
+        'success': false,
+      };
+    }
+
+    try {
+      print('📋 Getting venue list from real server...');
+
+      final inputParams = {
+        'proposed_execution_id': 'get_venues_${DateTime.now().millisecondsSinceEpoch}',
+        if (marketId != null && marketId.isNotEmpty)
+          'market_id_or_symbol_regex': marketId,
+      };
+
+      final result = await GrpcurlHelper.getVenueList(
+        marketIdOrSymbolRegex: marketId,
+      );
+
+      return {
+        'input': inputParams,
+        'output': result['success'] ? result['output'] : {'error': result['error'] ?? 'Unknown error'},
+        'requestTime': _toUnixTimestamp(DateTime.now()).toString(),
+        'serverType': 'real_grpc',
+        'success': result['success'] ?? false,
+      };
+    } catch (e) {
+      return {
+        'input': {},
+        'output': {'error': 'Critical error: $e'},
+        'requestTime': _toUnixTimestamp(DateTime.now()).toString(),
+        'serverType': 'critical-error',
+        'success': false,
+      };
+    }
+  }
+
   /// Dispose and clean up resources
   void dispose() {
     disconnect();

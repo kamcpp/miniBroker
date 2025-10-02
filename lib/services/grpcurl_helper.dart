@@ -2342,4 +2342,108 @@ class GrpcurlHelper {
       };
     }
   }
+
+  /// Get Venue List using grpcurl
+  static Future<Map<String, dynamic>> getVenueList({
+    String? marketIdOrSymbolRegex,
+    int pageNumber = 0,
+    int pageSize = 0,
+  }) async {
+    final responseData = <String, dynamic>{
+      'success': false,
+      'output': {},
+      'requestTime': _toUnixTimestamp(DateTime.now()).toString(),
+      'serverType': 'real_grpc',
+    };
+
+    try {
+      print('📋 Getting venue list from real server...');
+
+      // Check server reachability first
+      if (!await _isServerReachable()) {
+        responseData['output'] = {'error': 'Server not reachable'};
+        responseData['serverType'] = 'unreachable';
+        return responseData;
+      }
+
+      final grpcurlPath = await _findGrpcurlPath();
+      if (grpcurlPath == null) {
+        responseData['output'] = {'error': 'grpcurl not found'};
+        responseData['serverType'] = 'grpcurl-not-found';
+        return responseData;
+      }
+
+      final inputParams = {
+        'proposed_execution_id': 'get_venue_list_${DateTime.now().millisecondsSinceEpoch}',
+        'pagination': {
+          'page_nr': pageNumber,
+          'page_size': pageSize,
+          'page_token': '',
+        },
+        if (marketIdOrSymbolRegex != null && marketIdOrSymbolRegex.isNotEmpty)
+          'market_id_or_symbol_regex': marketIdOrSymbolRegex,
+      };
+
+      // Log the full request
+      print('━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━');
+      print('📤 GetVenueList REQUEST:');
+      print('Service: qomet.agora.daemons.prtagent.v1.VenueService/GetVenueList');
+      print('Host: $_host:$_port');
+      print('Request Body:');
+      print(const JsonEncoder.withIndent('  ').convert(inputParams));
+      print('━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━');
+
+      final result = await Process.run(
+        grpcurlPath,
+        [
+          '-plaintext',
+          '-d', jsonEncode(inputParams),
+          '$_host:$_port',
+          'qomet.agora.daemons.prtagent.v1.VenueService/GetVenueList'
+        ],
+        environment: {'PATH': '/usr/local/bin:/opt/homebrew/bin:${Platform.environment['PATH']}'},
+      ).timeout(const Duration(seconds: 10));
+
+      if (result.exitCode == 0) {
+        final responseJson = jsonDecode(result.stdout);
+        responseData['success'] = true;
+        responseData['output'] = responseJson;
+
+        // Log the full response
+        print('━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━');
+        print('📥 GetVenueList RESPONSE:');
+        print('Status: SUCCESS');
+        print('Response Body:');
+        print(const JsonEncoder.withIndent('  ').convert(responseJson));
+        print('━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━');
+      } else {
+        responseData['output'] = {
+          'error': 'gRPC call failed',
+          'stderr': result.stderr.toString(),
+          'stdout': result.stdout.toString(),
+          'exit_code': result.exitCode,
+        };
+
+        // Log the error response
+        print('━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━');
+        print('📥 GetVenueList RESPONSE:');
+        print('Status: FAILED');
+        print('Exit Code: ${result.exitCode}');
+        print('STDERR: ${result.stderr}');
+        print('STDOUT: ${result.stdout}');
+        print('━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━');
+        print('❌ GetVenueList failed: ${result.stderr}');
+      }
+
+      return responseData;
+    } catch (e) {
+      print('❌ GetVenueList exception: $e');
+      return {
+        'success': false,
+        'output': {'error': 'Exception occurred', 'details': e.toString()},
+        'requestTime': _toUnixTimestamp(DateTime.now()).toString(),
+        'serverType': 'exception',
+      };
+    }
+  }
 }
