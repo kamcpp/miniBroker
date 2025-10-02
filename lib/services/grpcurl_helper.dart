@@ -1478,6 +1478,15 @@ class GrpcurlHelper {
         'market_id_or_symbol_regex': marketId,
       };
 
+      // Log the full request
+      print('━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━');
+      print('📤 GetInstrumentList REQUEST:');
+      print('Service: qomet.agora.daemons.prtagent.v1.InstrumentService/GetInstrumentList');
+      print('Host: $_host:$_port');
+      print('Request Body:');
+      print(const JsonEncoder.withIndent('  ').convert(inputParams));
+      print('━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━');
+
       final result = await Process.run(
         grpcurlPath,
         [
@@ -1493,6 +1502,14 @@ class GrpcurlHelper {
         final responseJson = jsonDecode(result.stdout);
         responseData['success'] = true;
         responseData['output'] = responseJson;
+
+        // Log the full response
+        print('━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━');
+        print('📥 GetInstrumentList RESPONSE:');
+        print('Status: SUCCESS');
+        print('Response Body:');
+        print(const JsonEncoder.withIndent('  ').convert(responseJson));
+        print('━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━');
         print('✅ GetMarketInstrumentList successful');
       } else {
         responseData['output'] = {
@@ -1501,6 +1518,15 @@ class GrpcurlHelper {
           'stdout': result.stdout.toString(),
           'exit_code': result.exitCode,
         };
+
+        // Log the error response
+        print('━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━');
+        print('📥 GetInstrumentList RESPONSE:');
+        print('Status: FAILED');
+        print('Exit Code: ${result.exitCode}');
+        print('STDERR: ${result.stderr}');
+        print('STDOUT: ${result.stdout}');
+        print('━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━');
         print('❌ GetMarketInstrumentList failed: ${result.stderr}');
       }
 
