@@ -1076,11 +1076,18 @@ class _TradingPageState extends State<TradingPage> {
   /// Fetch cash holdings for a specific account ID
   Future<void> _fetchCashHoldingsForAccount(String accountId) async {
     try {
+      // Get the selected currency code to pass to GetAccountCashHoldings
+      final selectedCurrencyCode = _selectedCurrency.isNotEmpty ? _selectedCurrency['code'] : 'USD';
+      final currencyCodes = selectedCurrencyCode != null && selectedCurrencyCode.isNotEmpty
+          ? [selectedCurrencyCode]
+          : <String>[];
+
+      print('📋 Fetching cash holdings for currency: $selectedCurrencyCode');
 
       // Fetch cash holdings with comprehensive crash protection
       final cashHoldingsResponse = await realGrpcClient.getAccountCashHoldings(
         accountId: accountId,
-        cashAssetIds: [],
+        cashAssetIds: currencyCodes,
       ).timeout(
         const Duration(seconds: 15),
         onTimeout: () => {
@@ -5778,13 +5785,15 @@ class _TradingPageState extends State<TradingPage> {
                               ? _selectedCurrency
                               : _supportedCurrencies.isNotEmpty ? _supportedCurrencies.first : null),
                       isExpanded: true,
-                      onChanged: _supportedCurrencies.isEmpty ? null : (Map<String, String>? newValue) {
+                      onChanged: _supportedCurrencies.isEmpty ? null : (Map<String, String>? newValue) async {
                         if (newValue != null) {
                           setState(() {
                             _selectedCurrency = newValue;
-                            // Update buying power from already-fetched cash holdings data
-                            _updateBuyingPowerFromCachedData();
                           });
+                          // Fetch fresh cash holdings for the new currency
+                          if (_cachedAccountId != null && _cachedAccountId!.isNotEmpty) {
+                            await _fetchCashHoldingsForAccount(_cachedAccountId!);
+                          }
                         }
                       },
                       dropdownColor: isDarkTheme ? const Color(0xFF1e1e1e) : Colors.white,
