@@ -760,6 +760,7 @@ class GrpcurlHelper {
     final request = {
       'proposed_execution_id': requestId,
       'account_iid': accountId,
+      'venue_iid': '',
     };
 
     try {
@@ -772,7 +773,7 @@ class GrpcurlHelper {
           return null;
         },
       );
-      
+
       if (grpcurlPath == null) {
         print('❌ No grpcurl path found for GetAccountInstrumentHoldings');
         return {
@@ -788,8 +789,14 @@ class GrpcurlHelper {
         };
       }
 
-      print('🔄 Making real grpcurl call to AccountService.GetAccountInstrumentHoldings using $grpcurlPath');
-      print('📨 Request: $request');
+      // Log the full request
+      print('━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━');
+      print('📤 GetAccountInstrumentHoldings REQUEST:');
+      print('Service: qomet.agora.daemons.prtagent.v1.AccountService.GetAccountInstrumentHoldings');
+      print('Host: $_host:$_port');
+      print('Request Body:');
+      print(const JsonEncoder.withIndent('  ').convert(request));
+      print('━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━');
 
       ProcessResult? result;
       try {
@@ -833,10 +840,18 @@ class GrpcurlHelper {
 
       if (result.exitCode == 0) {
         final responseJson = result.stdout.toString().trim();
-        print('📬 Raw server response: $responseJson');
-        
+
         try {
           final parsedResponse = jsonDecode(responseJson) as Map<String, dynamic>;
+
+          // Log the full response
+          print('━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━');
+          print('📥 GetAccountInstrumentHoldings RESPONSE:');
+          print('Status: SUCCESS');
+          print('Response Body:');
+          print(const JsonEncoder.withIndent('  ').convert(parsedResponse));
+          print('━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━');
+
           return {
             'input': request,
             'output': parsedResponse,
@@ -845,6 +860,13 @@ class GrpcurlHelper {
             'success': true,
           };
         } catch (e) {
+          print('━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━');
+          print('📥 GetAccountInstrumentHoldings RESPONSE:');
+          print('Status: JSON PARSE ERROR');
+          print('Raw Response: $responseJson');
+          print('Error: $e');
+          print('━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━');
+
           return {
             'input': request,
             'output': {
@@ -858,8 +880,15 @@ class GrpcurlHelper {
         }
       } else {
         final error = result.stderr.toString();
-        print('❌ grpcurl error: $error');
-        
+
+        print('━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━');
+        print('📥 GetAccountInstrumentHoldings RESPONSE:');
+        print('Status: FAILED');
+        print('Exit Code: ${result.exitCode}');
+        print('STDERR: $error');
+        print('STDOUT: ${result.stdout}');
+        print('━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━');
+
         return {
           'input': request,
           'output': {
@@ -894,7 +923,7 @@ class GrpcurlHelper {
     List<String>? cashAssetIds,
   }) async {
     final requestId = 'get_account_cash_holdings_${DateTime.now().millisecondsSinceEpoch}';
-    
+
     final request = {
       'proposed_execution_id': requestId,
       'account_iid': accountId,
@@ -911,7 +940,7 @@ class GrpcurlHelper {
           return null;
         },
       );
-      
+
       if (grpcurlPath == null) {
         print('❌ No grpcurl path found for GetAccountCashHoldings');
         return {
@@ -927,8 +956,14 @@ class GrpcurlHelper {
         };
       }
 
-      print('🔄 Making real grpcurl call to AccountService.GetAccountCashHoldings using $grpcurlPath');
-      print('📨 Request: $request');
+      // Log the full request
+      print('━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━');
+      print('📤 GetAccountCashHoldings REQUEST:');
+      print('Service: qomet.agora.daemons.prtagent.v1.AccountService.GetAccountCashHoldings');
+      print('Host: $_host:$_port');
+      print('Request Body:');
+      print(const JsonEncoder.withIndent('  ').convert(request));
+      print('━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━');
 
       ProcessResult? result;
       try {
@@ -972,10 +1007,18 @@ class GrpcurlHelper {
 
       if (result.exitCode == 0) {
         final responseJson = result.stdout.toString().trim();
-        print('📬 Raw server response: $responseJson');
-        
+
         try {
           final parsedResponse = jsonDecode(responseJson) as Map<String, dynamic>;
+
+          // Log the full response
+          print('━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━');
+          print('📥 GetAccountCashHoldings RESPONSE:');
+          print('Status: SUCCESS');
+          print('Response Body:');
+          print(const JsonEncoder.withIndent('  ').convert(parsedResponse));
+          print('━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━');
+
           return {
             'input': request,
             'output': parsedResponse,
@@ -984,6 +1027,13 @@ class GrpcurlHelper {
             'success': true,
           };
         } catch (e) {
+          print('━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━');
+          print('📥 GetAccountCashHoldings RESPONSE:');
+          print('Status: JSON PARSE ERROR');
+          print('Raw Response: $responseJson');
+          print('Error: $e');
+          print('━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━');
+
           return {
             'input': request,
             'output': {
@@ -997,8 +1047,15 @@ class GrpcurlHelper {
         }
       } else {
         final error = result.stderr.toString();
-        print('❌ grpcurl error: $error');
-        
+
+        print('━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━');
+        print('📥 GetAccountCashHoldings RESPONSE:');
+        print('Status: FAILED');
+        print('Exit Code: ${result.exitCode}');
+        print('STDERR: $error');
+        print('STDOUT: ${result.stdout}');
+        print('━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━');
+
         return {
           'input': request,
           'output': {
