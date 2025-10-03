@@ -555,9 +555,6 @@ class RealGrpcClient {
         };
       });
 
-      print('📬 Real Server GetAccountInstrumentHoldings Response: ${response['output']}');
-      print('✅ Real GetAccountInstrumentHoldings completed');
-
       // Update connection state based on response
       if (response['success'] == true) {
         _isConnected = true;
@@ -671,9 +668,6 @@ class RealGrpcClient {
           'success': false,
         };
       });
-
-      print('📬 Real Server GetAccountCashHoldings Response: ${response['output']}');
-      print('✅ Real GetAccountCashHoldings completed');
 
       // Update connection state based on response
       if (response['success'] == true) {
