@@ -1090,6 +1090,179 @@ class GrpcurlHelper {
     }
   }
 
+  /// Deposit cash to an account using grpcurl
+  static Future<Map<String, dynamic>> depositCash({
+    required String accountId,
+    required String currencyCode,
+    required String amount,
+    Map<String, String>? auxData,
+  }) async {
+    final requestId = 'deposit_cash_${DateTime.now().millisecondsSinceEpoch}';
+
+    final request = {
+      'proposed_execution_id': requestId,
+      'account_iid': accountId,
+      'currency_code': currencyCode,
+      'amount': amount,
+      'aux_data': auxData ?? {
+        'source': 'flutter_app',
+        'transaction_type': 'deposit',
+      },
+    };
+
+    try {
+      // Find the working grpcurl path with aggressive timeout to prevent hanging
+      print('🔍 Looking for grpcurl executable for DepositCash...');
+      final grpcurlPath = await _findGrpcurlPath().timeout(
+        const Duration(milliseconds: 500),
+        onTimeout: () {
+          print('⏰ grpcurl path finder timed out for DepositCash');
+          return null;
+        },
+      );
+
+      if (grpcurlPath == null) {
+        print('❌ No grpcurl path found for DepositCash');
+        return {
+          'input': request,
+          'output': {
+            'error': 'grpcurl command not available in standalone app',
+            'message': 'The standalone macOS app cannot access grpcurl due to sandbox restrictions. This feature works when running with "flutter run --debug" but not in built apps.',
+            'suggestion': 'Use "echo "1" | flutter run --debug" to test this functionality',
+          },
+          'requestTime': _toUnixTimestamp(DateTime.now()).toString(),
+          'serverType': 'grpcurl-sandbox-restricted',
+          'success': false,
+        };
+      }
+
+      // Log the full request
+      print('━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━');
+      print('📤 DepositCash REQUEST:');
+      print('Service: qomet.agora.daemons.prtagent.v1.AccountService.DepositCash');
+      print('Host: $_host:$_port');
+      print('Request Body:');
+      print(const JsonEncoder.withIndent('  ').convert(request));
+      print('━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━');
+
+      ProcessResult? result;
+      try {
+        result = await Process.run(
+          grpcurlPath,
+          ['-plaintext', '-d', jsonEncode(request), '$_host:$_port', 'qomet.agora.daemons.prtagent.v1.AccountService.DepositCash'],
+        ).timeout(
+          const Duration(seconds: 10),
+          onTimeout: () {
+            print('⏰ grpcurl DepositCash Process.run timed out after 10 seconds');
+            throw TimeoutException('grpcurl depositCash timed out', const Duration(seconds: 10));
+          },
+        );
+      } on TimeoutException catch (e) {
+        print('⏰ DepositCash timeout: ${e.message}');
+        return {
+          'input': request,
+          'output': {
+            'error': 'Request timed out',
+            'message': 'The deposit cash request timed out after 10 seconds. Check if server is running on localhost:50051.',
+          },
+          'requestTime': _toUnixTimestamp(DateTime.now()).toString(),
+          'serverType': 'timeout',
+          'success': false,
+        };
+      } catch (e) {
+        print('❌ Process.run failed for depositCash in sandboxed app: ${e.runtimeType}: ${e.toString()}');
+        return {
+          'input': request,
+          'output': {
+            'error': 'Process execution failed in sandboxed app',
+            'message': 'The macOS app sandbox prevents external process execution. This is a security restriction.',
+            'details': e.toString(),
+          },
+          'requestTime': _toUnixTimestamp(DateTime.now()).toString(),
+          'serverType': 'sandbox-restricted',
+          'success': false,
+        };
+      }
+
+      if (result.exitCode == 0) {
+        final responseJson = result.stdout.toString().trim();
+
+        try {
+          final parsedResponse = jsonDecode(responseJson) as Map<String, dynamic>;
+
+          // Log the full response
+          print('━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━');
+          print('📥 DepositCash RESPONSE:');
+          print('Status: SUCCESS');
+          print('Response Body:');
+          print(const JsonEncoder.withIndent('  ').convert(parsedResponse));
+          print('━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━');
+
+          return {
+            'input': request,
+            'output': parsedResponse,
+            'requestTime': _toUnixTimestamp(DateTime.now()).toString(),
+            'serverType': 'simprtagent-real-grpcurl',
+            'success': true,
+          };
+        } catch (e) {
+          print('━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━');
+          print('📥 DepositCash RESPONSE:');
+          print('Status: JSON PARSE ERROR');
+          print('Raw Response: $responseJson');
+          print('Error: $e');
+          print('━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━');
+
+          return {
+            'input': request,
+            'output': {
+              'raw_response': responseJson,
+              'parse_error': e.toString(),
+            },
+            'requestTime': _toUnixTimestamp(DateTime.now()).toString(),
+            'serverType': 'simprtagent-real-grpcurl',
+            'success': false,
+          };
+        }
+      } else {
+        final error = result.stderr.toString();
+
+        print('━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━');
+        print('📥 DepositCash RESPONSE:');
+        print('Status: FAILED');
+        print('Exit Code: ${result.exitCode}');
+        print('STDERR: $error');
+        print('STDOUT: ${result.stdout}');
+        print('━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━');
+
+        return {
+          'input': request,
+          'output': {
+            'error': error,
+            'exit_code': result.exitCode,
+          },
+          'requestTime': _toUnixTimestamp(DateTime.now()).toString(),
+          'serverType': 'simprtagent-real-grpcurl',
+          'success': false,
+        };
+      }
+    } catch (e) {
+      print('❌ Failed to execute grpcurl for depositCash: $e');
+      return {
+        'input': request,
+        'output': {
+          'error': 'grpcurl command execution failed in standalone app',
+          'message': 'The standalone macOS app cannot execute grpcurl due to sandbox restrictions. This feature works when running with "flutter run --debug" but may fail in built apps.',
+          'suggestion': 'Use "echo "1" | flutter run --debug" to test this functionality',
+          'details': e.toString(),
+        },
+        'requestTime': _toUnixTimestamp(DateTime.now()).toString(),
+        'serverType': 'grpcurl-unavailable',
+        'success': false,
+      };
+    }
+  }
+
   /// List available services using grpcurl
   static Future<List<String>> listServices() async {
     try {

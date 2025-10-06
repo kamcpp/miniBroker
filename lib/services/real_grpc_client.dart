@@ -706,6 +706,129 @@ class RealGrpcClient {
     }
   }
 
+  /// Deposit cash to an account
+  Future<Map<String, dynamic>> depositCash({
+    required String accountId,
+    required String currencyCode,
+    required String amount,
+    Map<String, String>? auxData,
+    Duration? timeout,
+  }) async {
+    // Always test connectivity first to prevent crashes
+    print('🔍 Testing server connectivity before DepositCash...');
+    final isServerReachable = await testServerConnectivity();
+
+    if (!isServerReachable) {
+      _isConnected = false; // Update connection state
+      return {
+        'input': {
+          'proposed_execution_id': 'deposit_cash_${DateTime.now().millisecondsSinceEpoch}',
+          'account_iid': accountId,
+          'currency_code': currencyCode,
+          'amount': amount,
+        },
+        'output': {
+          'error': 'Server not reachable',
+          'message': 'Cannot connect to the gRPC server at $_host:$_port. Please check if the server is running.',
+        },
+        'requestTime': _toUnixTimestamp(DateTime.now()).toString(),
+        'serverType': 'not-reachable',
+        'success': false,
+      };
+    }
+
+    // Update connection state if server is reachable
+    if (!_isConnected) {
+      _isConnected = true;
+      print('✅ Server connection restored');
+    }
+
+    try {
+      print('💰 DepositCash called - attempting to deposit $amount $currencyCode to account $accountId');
+
+      // Try to call the real server with grpcurl, with comprehensive crash protection
+      final response = await GrpcurlHelper.depositCash(
+        accountId: accountId,
+        currencyCode: currencyCode,
+        amount: amount,
+        auxData: auxData,
+      ).timeout(
+        const Duration(seconds: 15),
+        onTimeout: () {
+          print('⏰ DepositCash request timed out');
+          return {
+            'input': {
+              'proposed_execution_id': 'deposit_cash_${DateTime.now().millisecondsSinceEpoch}',
+              'account_iid': accountId,
+              'currency_code': currencyCode,
+              'amount': amount,
+            },
+            'output': {
+              'error': 'Request timed out',
+              'message': 'The deposit cash request timed out after 15 seconds. Check if server is running properly.',
+            },
+            'requestTime': _toUnixTimestamp(DateTime.now()).toString(),
+            'serverType': 'timeout',
+            'success': false,
+          };
+        },
+      ).catchError((error) {
+        print('❌ DepositCash error caught: $error');
+        return {
+          'input': {
+            'proposed_execution_id': 'deposit_cash_${DateTime.now().millisecondsSinceEpoch}',
+            'account_iid': accountId,
+            'currency_code': currencyCode,
+            'amount': amount,
+          },
+          'output': {
+            'error': 'DepositCash execution failed',
+            'message': 'Failed to execute DepositCash: ${error.toString()}',
+          },
+          'requestTime': _toUnixTimestamp(DateTime.now()).toString(),
+          'serverType': 'execution-error',
+          'success': false,
+        };
+      });
+
+      // Update connection state based on response
+      if (response['success'] == true) {
+        _isConnected = true;
+      } else {
+        // Test connectivity again if request failed
+        final stillReachable = await testServerConnectivity();
+        _isConnected = stillReachable;
+      }
+
+      return response;
+    } catch (e, stackTrace) {
+      print('❌ Critical error in DepositCash: $e');
+      print('❌ Stack trace: $stackTrace');
+
+      // Test connectivity to update state
+      final stillReachable = await testServerConnectivity();
+      _isConnected = stillReachable;
+
+      // Return error response instead of throwing exception to prevent app crash
+      return {
+        'input': {
+          'proposed_execution_id': 'deposit_cash_${DateTime.now().millisecondsSinceEpoch}',
+          'account_iid': accountId,
+          'currency_code': currencyCode,
+          'amount': amount,
+        },
+        'output': {
+          'error': 'Critical DepositCash error',
+          'message': 'A critical error occurred during DepositCash: ${e.toString()}',
+          'details': stackTrace.toString(),
+        },
+        'requestTime': _toUnixTimestamp(DateTime.now()).toString(),
+        'serverType': 'critical-error',
+        'success': false,
+      };
+    }
+  }
+
   /// Get participant info - shows info about connection to real server
   Future<Map<String, dynamic>> getParticipantInfo({Duration? timeout}) async {
     if (!_isConnected) {

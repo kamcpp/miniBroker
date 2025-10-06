@@ -1100,15 +1100,108 @@ class _BalancePageState extends State<BalancePage> {
               ),
             ),
             ElevatedButton(
-              onPressed: () {
-                // Here you would implement the actual add cash functionality
+              onPressed: () async {
+                final amount = amountController.text.trim();
+
+                // Validate amount
+                if (amount.isEmpty) {
+                  Navigator.of(context).pop();
+                  ScaffoldMessenger.of(context).showSnackBar(
+                    const SnackBar(
+                      content: Text('Please enter an amount'),
+                      backgroundColor: Colors.red,
+                    ),
+                  );
+                  return;
+                }
+
+                final parsedAmount = double.tryParse(amount);
+                if (parsedAmount == null || parsedAmount <= 0) {
+                  Navigator.of(context).pop();
+                  ScaffoldMessenger.of(context).showSnackBar(
+                    const SnackBar(
+                      content: Text('Please enter a valid positive amount'),
+                      backgroundColor: Colors.red,
+                    ),
+                  );
+                  return;
+                }
+
+                // Check if we have account ID and currency
+                if (_cachedAccountId == null || _cachedAccountId!.isEmpty) {
+                  Navigator.of(context).pop();
+                  ScaffoldMessenger.of(context).showSnackBar(
+                    const SnackBar(
+                      content: Text('Account not found. Please try again.'),
+                      backgroundColor: Colors.red,
+                    ),
+                  );
+                  return;
+                }
+
+                if (_selectedCurrency.isEmpty || _selectedCurrency['code'] == null) {
+                  Navigator.of(context).pop();
+                  ScaffoldMessenger.of(context).showSnackBar(
+                    const SnackBar(
+                      content: Text('Please select a currency'),
+                      backgroundColor: Colors.red,
+                    ),
+                  );
+                  return;
+                }
+
                 Navigator.of(context).pop();
+
+                // Show loading indicator
                 ScaffoldMessenger.of(context).showSnackBar(
-                  SnackBar(
-                    content: Text('Add Cash functionality not yet implemented'),
-                    backgroundColor: Colors.orange,
+                  const SnackBar(
+                    content: Text('Depositing cash...'),
+                    duration: Duration(seconds: 2),
                   ),
                 );
+
+                // Call DepositCash API
+                try {
+                  final response = await realGrpcClient.depositCash(
+                    accountId: _cachedAccountId!,
+                    currencyCode: _selectedCurrency['code']!,
+                    amount: amount,
+                  );
+
+                  if (mounted) {
+                    if (response['success'] == true) {
+                      ScaffoldMessenger.of(context).showSnackBar(
+                        SnackBar(
+                          content: Text('Successfully deposited $amount ${_selectedCurrency['symbol']}'),
+                          backgroundColor: Colors.green,
+                        ),
+                      );
+
+                      // Refresh balance
+                      _fetchCashHoldingsForCurrency(_selectedCurrency['asset_id']!);
+                    } else {
+                      final errorMessage = response['output']?['error'] ??
+                                         response['output']?['message'] ??
+                                         'Failed to deposit cash';
+                      ScaffoldMessenger.of(context).showSnackBar(
+                        SnackBar(
+                          content: Text('Deposit failed: $errorMessage'),
+                          backgroundColor: Colors.red,
+                          duration: const Duration(seconds: 5),
+                        ),
+                      );
+                    }
+                  }
+                } catch (e) {
+                  if (mounted) {
+                    ScaffoldMessenger.of(context).showSnackBar(
+                      SnackBar(
+                        content: Text('Error: ${e.toString()}'),
+                        backgroundColor: Colors.red,
+                      ),
+                    );
+                  }
+                }
               },
               style: ElevatedButton.styleFrom(
                 backgroundColor: const Color(0xFF4CAF50),
