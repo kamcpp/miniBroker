@@ -1,17 +1,18 @@
 import 'dart:async';
 import 'dart:convert';
 import 'dart:io';
+import '../config/app_config.dart';
 
 /// Helper class to make gRPC calls using system grpcurl command
 /// This ensures we get real responses from your server
 class GrpcurlHelper {
-  
+
   /// Convert DateTime to Unix timestamp (seconds since epoch)
   static int _toUnixTimestamp(DateTime dateTime) {
     return dateTime.millisecondsSinceEpoch ~/ 1000;
   }
-  static const String _host = 'localhost';
-  static const int _port = 50051;
+  static String get _host => AppConfig.grpcHost;
+  static int get _port => AppConfig.grpcPort;
   
   // Prevent concurrent operations to avoid race conditions and crashes
   static bool _isPingInProgress = false;
@@ -260,7 +261,7 @@ class GrpcurlHelper {
           'input': request,
           'output': {
             'error': 'Request timed out',
-            'message': 'The ping request timed out after 3 seconds. Check if server is running on localhost:50051.',
+            'message': 'The ping request timed out after 3 seconds. Check if server is running on ${AppConfig.grpcServerAddress}.',
           },
           'requestTime': _toUnixTimestamp(DateTime.now()).toString(),
           'serverType': 'timeout',
@@ -456,7 +457,7 @@ class GrpcurlHelper {
           'input': request,
           'output': {
             'error': 'Request timed out',
-            'message': 'The new account request timed out after 10 seconds. Check if server is running on localhost:50051.',
+            'message': 'The new account request timed out after 10 seconds. Check if server is running on ${AppConfig.grpcServerAddress}.',
           },
           'requestTime': _toUnixTimestamp(DateTime.now()).toString(),
           'serverType': 'timeout',
@@ -676,7 +677,7 @@ class GrpcurlHelper {
           'input': request,
           'output': {
             'error': 'Request timed out',
-            'message': 'The account list request timed out after 3 seconds. Check if server is running on localhost:50051.',
+            'message': 'The account list request timed out after 3 seconds. Check if server is running on ${AppConfig.grpcServerAddress}.',
           },
           'requestTime': _toUnixTimestamp(DateTime.now()).toString(),
           'serverType': 'timeout',
@@ -822,7 +823,7 @@ class GrpcurlHelper {
           'input': request,
           'output': {
             'error': 'Request timed out',
-            'message': 'The account instrument holdings request timed out after 5 seconds. Check if server is running on localhost:50051.',
+            'message': 'The account instrument holdings request timed out after 5 seconds. Check if server is running on ${AppConfig.grpcServerAddress}.',
           },
           'requestTime': _toUnixTimestamp(DateTime.now()).toString(),
           'serverType': 'timeout',
@@ -989,7 +990,7 @@ class GrpcurlHelper {
           'input': request,
           'output': {
             'error': 'Request timed out',
-            'message': 'The account cash holdings request timed out after 5 seconds. Check if server is running on localhost:50051.',
+            'message': 'The account cash holdings request timed out after 5 seconds. Check if server is running on ${AppConfig.grpcServerAddress}.',
           },
           'requestTime': _toUnixTimestamp(DateTime.now()).toString(),
           'serverType': 'timeout',
@@ -1163,7 +1164,7 @@ class GrpcurlHelper {
           'input': request,
           'output': {
             'error': 'Request timed out',
-            'message': 'The deposit cash request timed out after 10 seconds. Check if server is running on localhost:50051.',
+            'message': 'The deposit cash request timed out after 10 seconds. Check if server is running on ${AppConfig.grpcServerAddress}.',
           },
           'requestTime': _toUnixTimestamp(DateTime.now()).toString(),
           'serverType': 'timeout',
@@ -1336,7 +1337,7 @@ class GrpcurlHelper {
           'input': request,
           'output': {
             'error': 'Request timed out',
-            'message': 'The withdraw cash request timed out after 10 seconds. Check if server is running on localhost:50051.',
+            'message': 'The withdraw cash request timed out after 10 seconds. Check if server is running on ${AppConfig.grpcServerAddress}.',
           },
           'requestTime': _toUnixTimestamp(DateTime.now()).toString(),
           'serverType': 'timeout',

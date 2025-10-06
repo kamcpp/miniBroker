@@ -1,22 +1,23 @@
 import 'dart:convert';
 import 'dart:io';
 import 'grpcurl_helper.dart';
+import '../config/app_config.dart';
 
 /// Real gRPC client that uses grpcurl to communicate with the actual simprtagent server
 class RealGrpcClient {
-  
+
   /// Convert DateTime to Unix timestamp (seconds since epoch)
   static int _toUnixTimestamp(DateTime dateTime) {
     return dateTime.millisecondsSinceEpoch ~/ 1000;
   }
   bool _isConnected = false;
-  String? _host;
-  int? _port;
+  String _host = AppConfig.grpcHost;
+  int _port = AppConfig.grpcPort;
 
   // Getters
   bool get isConnected => _isConnected;
-  String? get currentHost => _host;
-  int? get currentPort => _port;
+  String get currentHost => _host;
+  int get currentPort => _port;
 
   /// Connect to the actual gRPC server using grpcurl
   Future<void> connect({
@@ -97,10 +98,8 @@ class RealGrpcClient {
   /// Test if server is reachable via socket connection
   Future<bool> testServerConnectivity() async {
     try {
-      if (_host == null || _port == null) return false;
-      
       print('🔌 Testing socket connection to $_host:$_port...');
-      final socket = await Socket.connect(_host!, _port!, timeout: const Duration(seconds: 2));
+      final socket = await Socket.connect(_host, _port, timeout: const Duration(seconds: 2));
       await socket.close();
       print('✅ Server is reachable via socket connection');
       return true;
@@ -1012,14 +1011,14 @@ class RealGrpcClient {
     if (_isConnected) {
       try {
         _isConnected = false;
-        _host = null;
-        _port = null;
+        _host = AppConfig.grpcHost;
+        _port = AppConfig.grpcPort;
         print('🔌 Disconnected from real gRPC server');
       } catch (e) {
         print('⚠️ Error during disconnect: $e');
         _isConnected = false;
-        _host = null;
-        _port = null;
+        _host = AppConfig.grpcHost;
+        _port = AppConfig.grpcPort;
       }
     }
   }
@@ -1448,7 +1447,7 @@ class RealGrpcClient {
     try {
       // Ensure connection
       if (!isConnected) {
-        await connect(host: _host ?? 'localhost', port: _port ?? 50051);
+        await connect(host: _host, port: _port);
       }
 
       final result = await GrpcurlHelper.createOrder(

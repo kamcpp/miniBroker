@@ -7,6 +7,7 @@ import 'screens/login_page.dart';
 import 'services/auth_service.dart';
 import 'services/theme_service.dart';
 import 'services/real_grpc_client.dart';
+import 'config/app_config.dart';
 
 void main() {
   // Add comprehensive error handling to catch ALL unhandled exceptions
@@ -191,8 +192,8 @@ class _AppInitializerState extends State<AppInitializer> with SingleTickerProvid
   Future<void> _initializeGrpcConnection() async {
     try {
       await realGrpcClient.connect(
-        host: 'localhost',
-        port: 50051,
+        host: AppConfig.grpcHost,
+        port: AppConfig.grpcPort,
         useSecure: false,
       );
       print('✅ Real gRPC client connected to simprtagent server');

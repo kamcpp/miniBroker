@@ -1,6 +1,7 @@
 import 'dart:async';
 import 'dart:io';
 import 'package:flutter/material.dart';
+import '../config/app_config.dart';
 
 /// Singleton connectivity manager with caching and debouncing
 class ConnectivityChecker {
@@ -18,9 +19,9 @@ class ConnectivityChecker {
   // Debounce duration - wait 2 seconds between checks
   static const Duration _debounceTimeout = Duration(seconds: 2);
 
-  // Server configuration
-  static const String _host = 'localhost';
-  static const int _port = 50051;
+  // Server configuration from centralized config
+  static String get _host => AppConfig.grpcHost;
+  static int get _port => AppConfig.grpcPort;
 
   /// Lightweight connectivity check using socket connection only
   Future<bool> _testConnection() async {

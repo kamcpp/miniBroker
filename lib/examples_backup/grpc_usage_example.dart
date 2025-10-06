@@ -8,6 +8,7 @@ import 'package:mini_broker/services/agent_service.dart';
 import 'package:mini_broker/services/market_service.dart';
 import 'package:mini_broker/services/instrument_service.dart';
 import 'package:mini_broker/generated/qomet/agora/daemons/prtagent/v1/common.pb.dart';
+import 'package:mini_broker/config/app_config.dart';
 
 class TradingExample {
   /// Example: Connect to the trading server and perform basic operations
@@ -16,9 +17,9 @@ class TradingExample {
       // 1. Connect to the gRPC server
       print('🔄 Connecting to trading server...');
       await grpcClient.connect(
-        host: 'localhost', // Replace with your server host
-        port: 50051,       // Simulated participant agent port
-        useSecure: false,  // Set to true for production
+        host: AppConfig.grpcHost, // Centralized config - see lib/config/app_config.dart
+        port: AppConfig.grpcPort, // Centralized config - see lib/config/app_config.dart
+        useSecure: false,         // Set to true for production
         timeout: Duration(seconds: 10),
       );
       
@@ -71,8 +72,8 @@ class TradingExample {
   static Future<void> accountManagementExample() async {
     try {
       await grpcClient.connect(
-        host: 'localhost',
-        port: 50051,
+        host: AppConfig.grpcHost,
+        port: AppConfig.grpcPort,
         useSecure: false,
       );
 
@@ -126,8 +127,8 @@ class TradingExample {
   static Future<void> marketDataExample() async {
     try {
       await grpcClient.connect(
-        host: 'localhost',
-        port: 50051,
+        host: AppConfig.grpcHost,
+        port: AppConfig.grpcPort,
         useSecure: false,
       );
 
@@ -183,8 +184,8 @@ class TradingExample {
   static Future<void> orderManagementExample() async {
     try {
       await grpcClient.connect(
-        host: 'localhost',
-        port: 50051,
+        host: AppConfig.grpcHost,
+        port: AppConfig.grpcPort,
         useSecure: false,
       );
 
@@ -254,8 +255,8 @@ class TradingExample {
   static Future<void> eventStreamingExample() async {
     try {
       await grpcClient.connect(
-        host: 'localhost',
-        port: 50051,
+        host: AppConfig.grpcHost,
+        port: AppConfig.grpcPort,
         useSecure: false,
       );
 

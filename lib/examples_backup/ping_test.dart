@@ -3,6 +3,7 @@
 
 import 'package:mini_broker/services/grpc_client.dart';
 import 'package:mini_broker/services/agent_service.dart';
+import 'package:mini_broker/config/app_config.dart';
 
 class PingTest {
   /// Simple ping test to verify gRPC connection
@@ -94,11 +95,11 @@ Future<void> runPingTests() async {
     await PingTest.testPingConnection();
     print('✅ Test 1 passed!\n');
     
-    // Test 2: Custom connection ping (example with localhost)
+    // Test 2: Custom connection ping (using centralized config)
     print('=== Test 2: Custom Connection Ping ===');
     await PingTest.testPingWithCustomConnection(
-      host: 'localhost',
-      port: 9090,
+      host: AppConfig.grpcHost,
+      port: AppConfig.grpcPort,
       useSecure: false,
     );
     print('✅ Test 2 passed!\n');
