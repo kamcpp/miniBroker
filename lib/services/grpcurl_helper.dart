@@ -396,11 +396,14 @@ class GrpcurlHelper {
     String? auxData,
   }) async {
     final requestId = 'new_account_${DateTime.now().millisecondsSinceEpoch}';
-    
+
     final request = {
       'proposed_execution_id': requestId,
       'external_account_id': externalAccountId,
-      'aux_data': auxData ?? 'Created from Flutter signup',
+      'aux_data': {
+        'source': 'flutter_app',
+        'created_at': auxData ?? 'Created from Flutter signup',
+      },
     };
 
     try {
@@ -434,9 +437,12 @@ class GrpcurlHelper {
 
       ProcessResult? result;
       try {
+        final jsonRequest = jsonEncode(request);
+        print('📤 JSON payload: $jsonRequest');
+
         result = await Process.run(
           grpcurlPath,
-          ['-plaintext', '-d', jsonEncode(request), '$_host:$_port', 'qomet.agora.daemons.prtagent.v1.AccountService.NewAccount'],
+          ['-plaintext', '-d', jsonRequest, '$_host:$_port', 'qomet.agora.daemons.prtagent.v1.AccountService.NewAccount'],
         ).timeout(
           const Duration(seconds: 10),
           onTimeout: () {

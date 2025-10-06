@@ -115,32 +115,52 @@ class AuthService extends ChangeNotifier {
       
       // Create new user in local database first
       final success = await _databaseHelper.createUser(user, password);
-      
+
       if (success) {
-        // Try to create account on server as well (but don't fail signup if server is down)
+        // Try to create account on server as well
         try {
           print('🌐 Creating server account for user: $user');
           final serverResponse = await realGrpcClient.newAccount(
             externalAccountId: user.toLowerCase().trim(),
             auxData: 'Created from Flutter app signup - ${_toUnixTimestamp(DateTime.now()).toString()}',
           );
-          
+
           if (serverResponse['success'] == true) {
-            final newAccountId = serverResponse['output']['newAccountId'] ?? 
+            final newAccountId = serverResponse['output']['newAccountId'] ??
                                 serverResponse['output']['new_account_id'];
             print('✅ Server account created successfully: $newAccountId');
-            
+
             // TODO: Store the server account ID in local database if needed
             // This could be used to link local user with server account
           } else {
-            print('⚠️ Server account creation failed, but local signup succeeded: ${serverResponse['output']}');
-            // Continue with signup - server failure shouldn't block user registration
+            // Server account creation failed - extract error message
+            final errorOutput = serverResponse['output'];
+            String errorMessage = 'Server account creation failed';
+
+            if (errorOutput != null) {
+              if (errorOutput['error'] != null) {
+                errorMessage = errorOutput['error'].toString();
+              } else if (errorOutput['message'] != null) {
+                errorMessage = errorOutput['message'].toString();
+              }
+            }
+
+            print('❌ Server account creation failed: $errorMessage');
+
+            // Delete the local user since server account creation failed
+            await _databaseHelper.deleteUser(user);
+
+            throw 'Server account creation failed: $errorMessage';
           }
         } catch (e) {
-          print('⚠️ Server account creation failed with exception, but local signup succeeded: $e');
-          // Continue with signup - server failure shouldn't block user registration
+          print('❌ Server account creation failed with exception: $e');
+
+          // Delete the local user since server account creation failed
+          await _databaseHelper.deleteUser(user);
+
+          rethrow;
         }
-        
+
         // Don't auto-login - user should login manually
         return true;
       }
