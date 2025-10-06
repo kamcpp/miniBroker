@@ -1102,11 +1102,13 @@ class _BalancePageState extends State<BalancePage> {
             ElevatedButton(
               onPressed: () async {
                 final amount = amountController.text.trim();
+                final scaffoldMessenger = ScaffoldMessenger.of(context);
+                final navigator = Navigator.of(context);
 
                 // Validate amount
                 if (amount.isEmpty) {
-                  Navigator.of(context).pop();
-                  ScaffoldMessenger.of(context).showSnackBar(
+                  navigator.pop();
+                  scaffoldMessenger.showSnackBar(
                     const SnackBar(
                       content: Text('Please enter an amount'),
                       backgroundColor: Colors.red,
@@ -1117,8 +1119,8 @@ class _BalancePageState extends State<BalancePage> {
 
                 final parsedAmount = double.tryParse(amount);
                 if (parsedAmount == null || parsedAmount <= 0) {
-                  Navigator.of(context).pop();
-                  ScaffoldMessenger.of(context).showSnackBar(
+                  navigator.pop();
+                  scaffoldMessenger.showSnackBar(
                     const SnackBar(
                       content: Text('Please enter a valid positive amount'),
                       backgroundColor: Colors.red,
@@ -1129,8 +1131,8 @@ class _BalancePageState extends State<BalancePage> {
 
                 // Check if we have account ID and currency
                 if (_cachedAccountId == null || _cachedAccountId!.isEmpty) {
-                  Navigator.of(context).pop();
-                  ScaffoldMessenger.of(context).showSnackBar(
+                  navigator.pop();
+                  scaffoldMessenger.showSnackBar(
                     const SnackBar(
                       content: Text('Account not found. Please try again.'),
                       backgroundColor: Colors.red,
@@ -1140,8 +1142,8 @@ class _BalancePageState extends State<BalancePage> {
                 }
 
                 if (_selectedCurrency.isEmpty || _selectedCurrency['code'] == null) {
-                  Navigator.of(context).pop();
-                  ScaffoldMessenger.of(context).showSnackBar(
+                  navigator.pop();
+                  scaffoldMessenger.showSnackBar(
                     const SnackBar(
                       content: Text('Please select a currency'),
                       backgroundColor: Colors.red,
@@ -1150,10 +1152,10 @@ class _BalancePageState extends State<BalancePage> {
                   return;
                 }
 
-                Navigator.of(context).pop();
+                navigator.pop();
 
                 // Show loading indicator
-                ScaffoldMessenger.of(context).showSnackBar(
+                scaffoldMessenger.showSnackBar(
                   const SnackBar(
                     content: Text('Depositing cash...'),
                     duration: Duration(seconds: 2),
@@ -1170,7 +1172,7 @@ class _BalancePageState extends State<BalancePage> {
 
                   if (mounted) {
                     if (response['success'] == true) {
-                      ScaffoldMessenger.of(context).showSnackBar(
+                      scaffoldMessenger.showSnackBar(
                         SnackBar(
                           content: Text('Successfully deposited $amount ${_selectedCurrency['symbol']}'),
                           backgroundColor: Colors.green,
@@ -1183,7 +1185,7 @@ class _BalancePageState extends State<BalancePage> {
                       final errorMessage = response['output']?['error'] ??
                                          response['output']?['message'] ??
                                          'Failed to deposit cash';
-                      ScaffoldMessenger.of(context).showSnackBar(
+                      scaffoldMessenger.showSnackBar(
                         SnackBar(
                           content: Text('Deposit failed: $errorMessage'),
                           backgroundColor: Colors.red,
@@ -1194,7 +1196,7 @@ class _BalancePageState extends State<BalancePage> {
                   }
                 } catch (e) {
                   if (mounted) {
-                    ScaffoldMessenger.of(context).showSnackBar(
+                    scaffoldMessenger.showSnackBar(
                       SnackBar(
                         content: Text('Error: ${e.toString()}'),
                         backgroundColor: Colors.red,
@@ -1284,15 +1286,124 @@ class _BalancePageState extends State<BalancePage> {
               ),
             ),
             ElevatedButton(
-              onPressed: () {
-                // Here you would implement the actual withdraw cash functionality
-                Navigator.of(context).pop();
-                ScaffoldMessenger.of(context).showSnackBar(
-                  SnackBar(
-                    content: Text('Withdraw Cash functionality not yet implemented'),
-                    backgroundColor: Colors.orange,
+              onPressed: () async {
+                final amount = amountController.text.trim();
+                final scaffoldMessenger = ScaffoldMessenger.of(context);
+                final navigator = Navigator.of(context);
+
+                // Validate amount
+                if (amount.isEmpty) {
+                  navigator.pop();
+                  scaffoldMessenger.showSnackBar(
+                    const SnackBar(
+                      content: Text('Please enter an amount'),
+                      backgroundColor: Colors.red,
+                    ),
+                  );
+                  return;
+                }
+
+                final parsedAmount = double.tryParse(amount);
+                if (parsedAmount == null || parsedAmount <= 0) {
+                  navigator.pop();
+                  scaffoldMessenger.showSnackBar(
+                    const SnackBar(
+                      content: Text('Please enter a valid positive amount'),
+                      backgroundColor: Colors.red,
+                    ),
+                  );
+                  return;
+                }
+
+                // Check if amount exceeds available balance
+                final availableBalance = double.tryParse(_buyingPower) ?? 0.0;
+                if (parsedAmount > availableBalance) {
+                  navigator.pop();
+                  scaffoldMessenger.showSnackBar(
+                    SnackBar(
+                      content: Text('Insufficient balance. Available: $_buyingPower ${_selectedCurrency['symbol']}'),
+                      backgroundColor: Colors.red,
+                      duration: const Duration(seconds: 4),
+                    ),
+                  );
+                  return;
+                }
+
+                // Check if we have account ID and currency
+                if (_cachedAccountId == null || _cachedAccountId!.isEmpty) {
+                  navigator.pop();
+                  scaffoldMessenger.showSnackBar(
+                    const SnackBar(
+                      content: Text('Account not found. Please try again.'),
+                      backgroundColor: Colors.red,
+                    ),
+                  );
+                  return;
+                }
+
+                if (_selectedCurrency.isEmpty || _selectedCurrency['code'] == null) {
+                  navigator.pop();
+                  scaffoldMessenger.showSnackBar(
+                    const SnackBar(
+                      content: Text('Please select a currency'),
+                      backgroundColor: Colors.red,
+                    ),
+                  );
+                  return;
+                }
+
+                navigator.pop();
+
+                // Show loading indicator
+                scaffoldMessenger.showSnackBar(
+                  const SnackBar(
+                    content: Text('Withdrawing cash...'),
+                    duration: Duration(seconds: 2),
                   ),
                 );
+
+                // Call WithdrawCash API
+                try {
+                  final response = await realGrpcClient.withdrawCash(
+                    accountId: _cachedAccountId!,
+                    currencyCode: _selectedCurrency['code']!,
+                    amount: amount,
+                  );
+
+                  if (mounted) {
+                    if (response['success'] == true) {
+                      scaffoldMessenger.showSnackBar(
+                        SnackBar(
+                          content: Text('Successfully withdrew $amount ${_selectedCurrency['symbol']}'),
+                          backgroundColor: Colors.green,
+                        ),
+                      );
+
+                      // Refresh balance
+                      _fetchCashHoldingsForCurrency(_selectedCurrency['asset_id']!);
+                    } else {
+                      final errorMessage = response['output']?['error'] ??
+                                         response['output']?['message'] ??
+                                         'Failed to withdraw cash';
+                      scaffoldMessenger.showSnackBar(
+                        SnackBar(
+                          content: Text('Withdrawal failed: $errorMessage'),
+                          backgroundColor: Colors.red,
+                          duration: const Duration(seconds: 5),
+                        ),
+                      );
+                    }
+                  }
+                } catch (e) {
+                  if (mounted) {
+                    scaffoldMessenger.showSnackBar(
+                      SnackBar(
+                        content: Text('Error: ${e.toString()}'),
+                        backgroundColor: Colors.red,
+                      ),
+                    );
+                  }
+                }
               },
               style: ElevatedButton.styleFrom(
                 backgroundColor: Colors.red,
