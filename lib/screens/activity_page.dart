@@ -1387,15 +1387,45 @@ class _ActivityPageState extends State<ActivityPage> {
                                 iconDisabledColor: isDarkTheme ? Colors.grey[600] : Colors.grey[400],
                                 items: [
                                   DropdownMenuItem(value: null, child: Text('All Markets', style: TextStyle(color: isDarkTheme ? Colors.white : Colors.black))),
-                                  ..._availableMarkets.map<DropdownMenuItem<String?>>((market) => 
-                                    DropdownMenuItem<String?>(
-                                      value: (market['identifiers'] as List?)?.first ?? market['id'] ?? '',
+                                  ..._availableMarkets.map<DropdownMenuItem<String?>>((market) {
+                                    // Extract identifier string from nested structure
+                                    String marketId = '';
+                                    final identifiers = market['identifiers'] as List?;
+                                    if (identifiers != null && identifiers.isNotEmpty) {
+                                      final firstIdentifier = identifiers.first;
+                                      if (firstIdentifier is Map) {
+                                        marketId = firstIdentifier['value']?.toString() ?? firstIdentifier['id']?.toString() ?? '';
+                                      } else if (firstIdentifier is String) {
+                                        marketId = firstIdentifier;
+                                      }
+                                    }
+                                    if (marketId.isEmpty) {
+                                      marketId = market['id']?.toString() ?? '';
+                                    }
+
+                                    // Extract name string from nested structure
+                                    String marketName = 'Unknown';
+                                    final names = market['names'] as List?;
+                                    if (names != null && names.isNotEmpty) {
+                                      final firstName = names.first;
+                                      if (firstName is Map) {
+                                        marketName = firstName['value']?.toString() ?? firstName['name']?.toString() ?? 'Unknown';
+                                      } else if (firstName is String) {
+                                        marketName = firstName;
+                                      }
+                                    }
+                                    if (marketName == 'Unknown') {
+                                      marketName = market['name']?.toString() ?? 'Unknown';
+                                    }
+
+                                    return DropdownMenuItem<String?>(
+                                      value: marketId,
                                       child: Text(
-                                        (market['names'] as List?)?.first ?? market['name'] ?? 'Unknown',
+                                        marketName,
                                         style: TextStyle(color: isDarkTheme ? Colors.white : Colors.black)
                                       )
-                                    )
-                                  ).toList(),
+                                    );
+                                  }).toList(),
                                 ],
                                 onChanged: (value) {
                                   setState(() {
@@ -2176,15 +2206,45 @@ class _ActivityPageState extends State<ActivityPage> {
                                 iconDisabledColor: isDarkTheme ? Colors.grey[600] : Colors.grey[400],
                                 items: [
                                   DropdownMenuItem(value: null, child: Text('All Markets', style: TextStyle(color: isDarkTheme ? Colors.white : Colors.black))),
-                                  ..._availableMarkets.map<DropdownMenuItem<String?>>((market) => 
-                                    DropdownMenuItem<String?>(
-                                      value: (market['identifiers'] as List?)?.first ?? market['id'] ?? '',
+                                  ..._availableMarkets.map<DropdownMenuItem<String?>>((market) {
+                                    // Extract identifier string from nested structure
+                                    String marketId = '';
+                                    final identifiers = market['identifiers'] as List?;
+                                    if (identifiers != null && identifiers.isNotEmpty) {
+                                      final firstIdentifier = identifiers.first;
+                                      if (firstIdentifier is Map) {
+                                        marketId = firstIdentifier['value']?.toString() ?? firstIdentifier['id']?.toString() ?? '';
+                                      } else if (firstIdentifier is String) {
+                                        marketId = firstIdentifier;
+                                      }
+                                    }
+                                    if (marketId.isEmpty) {
+                                      marketId = market['id']?.toString() ?? '';
+                                    }
+
+                                    // Extract name string from nested structure
+                                    String marketName = 'Unknown';
+                                    final names = market['names'] as List?;
+                                    if (names != null && names.isNotEmpty) {
+                                      final firstName = names.first;
+                                      if (firstName is Map) {
+                                        marketName = firstName['value']?.toString() ?? firstName['name']?.toString() ?? 'Unknown';
+                                      } else if (firstName is String) {
+                                        marketName = firstName;
+                                      }
+                                    }
+                                    if (marketName == 'Unknown') {
+                                      marketName = market['name']?.toString() ?? 'Unknown';
+                                    }
+
+                                    return DropdownMenuItem<String?>(
+                                      value: marketId,
                                       child: Text(
-                                        (market['names'] as List?)?.first ?? market['name'] ?? 'Unknown',
+                                        marketName,
                                         style: TextStyle(color: isDarkTheme ? Colors.white : Colors.black)
                                       )
-                                    )
-                                  ).toList(),
+                                    );
+                                  }).toList(),
                                 ],
                                 onChanged: (value) {
                                   setState(() {
