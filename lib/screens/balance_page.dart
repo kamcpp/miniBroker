@@ -97,9 +97,9 @@ class _BalancePageState extends State<BalancePage> {
           _supportedCurrencies = currencyData;
           if (_selectedCurrency.isEmpty && _supportedCurrencies.isNotEmpty) {
             _selectedCurrency = _supportedCurrencies.first;
-            // Fetch cash holdings for the initially selected currency using asset_id
+            // Fetch cash holdings for the initially selected currency
             WidgetsBinding.instance.addPostFrameCallback((_) {
-              _fetchCashHoldingsForCurrency(_selectedCurrency['asset_id']!);
+              _fetchCashHoldings();
             });
           }
           _isLoadingSupportedCurrencies = false;
