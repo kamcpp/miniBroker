@@ -11,14 +11,14 @@ import 'activity_page.dart';
 import 'profile_page.dart';
 import 'users_admin_page.dart';
 
-class BalancePage extends StatefulWidget {
-  const BalancePage({super.key});
+class CashManagementPage extends StatefulWidget {
+  const CashManagementPage({super.key});
 
   @override
-  State<BalancePage> createState() => _BalancePageState();
+  State<CashManagementPage> createState() => _CashManagementPageState();
 }
 
-class _BalancePageState extends State<BalancePage> {
+class _CashManagementPageState extends State<CashManagementPage> {
   Map<String, dynamic>? _accountListData;
   bool _isLoadingCashHoldings = false;
   String _buyingPower = '0';
@@ -35,7 +35,7 @@ class _BalancePageState extends State<BalancePage> {
 
     // Check server connectivity when page opens
     WidgetsBinding.instance.addPostFrameCallback((_) {
-      ConnectivityChecker.checkAndShowErrorIfNeeded(context, 'Balance');
+      ConnectivityChecker.checkAndShowErrorIfNeeded(context, 'Cash Management');
     });
 
     // Initialize data
@@ -410,7 +410,7 @@ class _BalancePageState extends State<BalancePage> {
                 child: Column(
                   crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
-                    // Balance Section
+                    // Cash Management Section
                     Expanded(
                       child: Container(
                         padding: const EdgeInsets.all(20),
@@ -429,7 +429,7 @@ class _BalancePageState extends State<BalancePage> {
                           crossAxisAlignment: CrossAxisAlignment.start,
                           children: [
                             Text(
-                              'Balance',
+                              'Cash Management',
                               style: TextStyle(
                                 fontSize: 20,
                                 fontWeight: FontWeight.bold,
@@ -676,7 +676,7 @@ class _BalancePageState extends State<BalancePage> {
                   ),
                 ),
 
-              // Balance Button (current page)
+              // Cash Management Button (current page)
               MouseRegion(
                 cursor: SystemMouseCursors.click,
                 child: Container(
@@ -695,7 +695,7 @@ class _BalancePageState extends State<BalancePage> {
                     ),
                   ),
                   child: Text(
-                    'Balance',
+                    'Cash Management',
                     style: TextStyle(
                       fontSize: 13,
                       fontWeight: FontWeight.w600,
@@ -844,7 +844,7 @@ class _BalancePageState extends State<BalancePage> {
           IconButton(
             onPressed: () async {
               try {
-                print('🚪 Balance page logout initiated...');
+                print('🚪 Cash Management page logout initiated...');
                 await authService.logout();
                 print('✅ Logout completed, should redirect to login');
 
@@ -955,11 +955,11 @@ class _BalancePageState extends State<BalancePage> {
 
         const SizedBox(height: 30),
 
-        // Total Balance
+        // Available
         Row(
           children: [
             Text(
-              'Total Balance: ',
+              'Available: ',
               style: TextStyle(
                 fontSize: 14, // Same as Currency title
                 color: isDarkTheme ? Colors.grey[400] : Colors.grey[600], // Same as Currency title

@@ -7,7 +7,7 @@ import '../services/real_grpc_client.dart';
 import '../services/database_helper.dart';
 import '../utils/connectivity_checker.dart';
 import 'trading_page.dart';
-import 'balance_page.dart';
+import 'Cash_management_page.dart';
 import 'activity_page.dart';
 import 'profile_page.dart';
 import 'users_admin_page.dart';
@@ -509,14 +509,14 @@ class _PortfolioPageState extends State<PortfolioPage> {
                 ),
               ),
 
-              // Balance Button
+              // Cash Management Button
               MouseRegion(
                 cursor: SystemMouseCursors.click,
                 child: GestureDetector(
                   onTap: () {
                     Navigator.of(context).push(
                       PageRouteBuilder(
-                        pageBuilder: (context, animation, secondaryAnimation) => const BalancePage(),
+                        pageBuilder: (context, animation, secondaryAnimation) => const CashManagementPage(),
                         transitionDuration: Duration.zero,
                         reverseTransitionDuration: Duration.zero,
                       ),
@@ -546,7 +546,7 @@ class _PortfolioPageState extends State<PortfolioPage> {
                           ),
                         ),
                         child: const Text(
-                          'Balance',
+                          'Cash Management',
                           style: TextStyle(
                             fontSize: 13,
                             fontWeight: FontWeight.w500,
