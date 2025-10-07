@@ -1,4 +1,5 @@
 import 'dart:async';
+import 'dart:io';
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 import 'screens/trading_page.dart';
@@ -8,6 +9,7 @@ import 'services/auth_service.dart';
 import 'services/theme_service.dart';
 import 'services/real_grpc_client.dart';
 import 'config/app_config.dart';
+import 'utils/config_validator.dart';
 
 void main() {
   // Add comprehensive error handling to catch ALL unhandled exceptions
@@ -176,12 +178,25 @@ class _AppInitializerState extends State<AppInitializer> with SingleTickerProvid
 
   Future<void> _initializeApp(AuthService authService) async {
     try {
+      // FIRST: Validate that the config file exists
+      final configValidation = ConfigValidator.validateConfig();
+
+      if (!configValidation.isValid) {
+        // Show error dialog and stop initialization
+        if (mounted) {
+          WidgetsBinding.instance.addPostFrameCallback((_) {
+            _showConfigErrorDialog(configValidation.errorMessage ?? 'Configuration file missing');
+          });
+        }
+        throw Exception('Configuration file validation failed');
+      }
+
       // Initialize authentication service
       await authService.init();
-      
+
       // Initialize gRPC connection (re-enabled with fixes)
       await _initializeGrpcConnection();
-      
+
       // Add any other initialization here if needed
       await Future.delayed(const Duration(milliseconds: 500)); // Brief delay for smooth UX
     } catch (e) {
@@ -202,5 +217,69 @@ class _AppInitializerState extends State<AppInitializer> with SingleTickerProvid
       // Continue with app initialization even if gRPC connection fails
       // The app can still function with local features
     }
+  }
+
+  /// Show error dialog when config file is missing
+  void _showConfigErrorDialog(String errorMessage) {
+    showDialog(
+      context: context,
+      barrierDismissible: false, // User cannot dismiss this dialog
+      builder: (BuildContext context) {
+        return AlertDialog(
+          backgroundColor: const Color(0xFF2A2A2A),
+          title: Row(
+            children: [
+              Icon(
+                Icons.error_outline,
+                color: Colors.red[400],
+                size: 32,
+              ),
+              const Expanded(
+                child: Text(
+                  'Configuration Error',
+                  style: TextStyle(
+                    color: Colors.white,
+                    fontWeight: FontWeight.bold,
+                    fontSize: 18,
+                  ),
+                ),
+              ),
+            ],
+          ),
+          content: Column(
+            mainAxisSize: MainAxisSize.min,
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              Text(
+                errorMessage,
+                style: const TextStyle(
+                  color: Colors.white,
+                  fontSize: 14,
+                ),
+              ),
+            ],
+          ),
+          actions: [
+            ElevatedButton(
+              onPressed: () {
+                // Exit the application
+                exit(0);
+              },
+              style: ElevatedButton.styleFrom(
+                backgroundColor: Colors.red[700],
+                foregroundColor: Colors.white,
+                padding: const EdgeInsets.symmetric(horizontal: 24, vertical: 12),
+              ),
+              child: const Text(
+                'Exit Application',
+                style: TextStyle(
+                  fontWeight: FontWeight.bold,
+                ),
+              ),
+            ),
+          ],
+        );
+      },
+    );
   }
 }
