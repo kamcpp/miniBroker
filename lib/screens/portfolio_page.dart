@@ -281,7 +281,7 @@ class _PortfolioPageState extends State<PortfolioPage> {
                           crossAxisAlignment: CrossAxisAlignment.start,
                           children: [
                             Text(
-                              'Holdings',
+                              'Instruments Holdings',
                               style: TextStyle(
                                 fontSize: 20,
                                 fontWeight: FontWeight.bold,

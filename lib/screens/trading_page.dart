@@ -5899,66 +5899,69 @@ class _TradingPageState extends State<TradingPage> {
           const SizedBox(height: 16), // Reduced space after order type
 
           // Available Balance / Buying Power Row Layout
-          Row(
-            children: [
-              Text(
-                _isBuySelected ? 'Available to Invest' : 'Available',
-                style: TextStyle(
-                  fontSize: 14,
-                  color: isDarkTheme ? Colors.grey[400] : Colors.grey[600],
+          SizedBox(
+            height: 24,
+            child: Row(
+              children: [
+                Text(
+                  _isBuySelected ? 'Available to Invest' : 'Available',
+                  style: TextStyle(
+                    fontSize: 14,
+                    color: isDarkTheme ? Colors.grey[400] : Colors.grey[600],
+                  ),
                 ),
-              ),
-              const SizedBox(width: 12),
-              Expanded(
-                child: Row(
-                  children: [
-                    _isLoadingCashHoldings
-                        ? SizedBox(
-                            width: 20,
-                            height: 20,
-                            child: CircularProgressIndicator(
-                              strokeWidth: 2,
-                              valueColor: AlwaysStoppedAnimation<Color>(
-                                isDarkTheme ? Colors.white : Colors.black,
-                              ),
-                            ),
-                          )
-                        : Text(
-                            _isBuySelected
-                                ? '$_buyingPower ${_selectedCurrency['symbol'] ?? ''}'
-                                : _availableBalance,
-                            style: TextStyle(
-                              fontSize: 18,
-                              fontWeight: FontWeight.w600,
-                              color: isDarkTheme ? Colors.white : Colors.black,
-                            ),
-                          ),
-                    const SizedBox(width: 4),
-                    (!_isBuySelected && _assets.isEmpty)
-                        ? SizedBox(
-                            width: 14,
-                            height: 14,
-                            child: CircularProgressIndicator(
-                              strokeWidth: 1.5,
-                              valueColor: AlwaysStoppedAnimation<Color>(
-                                isDarkTheme ? Colors.white : Colors.black,
-                              ),
-                            ),
-                          )
-                        : (!_isBuySelected
-                            ? Text(
-                                _getSelectedAssetSymbol(),
-                                style: TextStyle(
-                                  fontSize: 18,
-                                  fontWeight: FontWeight.w600,
-                                  color: isDarkTheme ? Colors.white : Colors.black,
+                const SizedBox(width: 12),
+                Expanded(
+                  child: Row(
+                    children: [
+                      _isLoadingCashHoldings
+                          ? SizedBox(
+                              width: 20,
+                              height: 20,
+                              child: CircularProgressIndicator(
+                                strokeWidth: 2,
+                                valueColor: AlwaysStoppedAnimation<Color>(
+                                  isDarkTheme ? Colors.white : Colors.black,
                                 ),
-                              )
-                            : SizedBox.shrink()),
-                  ],
+                              ),
+                            )
+                          : Text(
+                              _isBuySelected
+                                  ? '$_buyingPower ${_selectedCurrency['symbol'] ?? ''}'
+                                  : _availableBalance,
+                              style: TextStyle(
+                                fontSize: 18,
+                                fontWeight: FontWeight.w600,
+                                color: isDarkTheme ? Colors.white : Colors.black,
+                              ),
+                            ),
+                      const SizedBox(width: 4),
+                      (!_isBuySelected && _assets.isEmpty)
+                          ? SizedBox(
+                              width: 14,
+                              height: 14,
+                              child: CircularProgressIndicator(
+                                strokeWidth: 1.5,
+                                valueColor: AlwaysStoppedAnimation<Color>(
+                                  isDarkTheme ? Colors.white : Colors.black,
+                                ),
+                              ),
+                            )
+                          : (!_isBuySelected
+                              ? Text(
+                                  _getSelectedAssetSymbol(),
+                                  style: TextStyle(
+                                    fontSize: 18,
+                                    fontWeight: FontWeight.w600,
+                                    color: isDarkTheme ? Colors.white : Colors.black,
+                                  ),
+                                )
+                              : SizedBox.shrink()),
+                    ],
+                  ),
                 ),
-              ),
-            ],
+              ],
+            ),
           ),
 
           const SizedBox(height: 8),
@@ -5982,7 +5985,8 @@ class _TradingPageState extends State<TradingPage> {
                   hintText: '0',
                   isDarkTheme: isDarkTheme,
                   suffixWidget: Container(
-                    padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 8),
+                    height: 30,
+                    padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 6),
                     child: Row(
                       mainAxisSize: MainAxisSize.min,
                       children: [
@@ -5997,14 +6001,12 @@ class _TradingPageState extends State<TradingPage> {
                                   _quantityController.text = _availableBalance;
                                 });
                               },
-                              child: Container(
-                                child: Text(
-                                  'Max',
-                                  style: TextStyle(
-                                    color: const Color(0xFFFF4081), // Pink for sell
-                                    fontSize: 12,
-                                    fontWeight: FontWeight.w600,
-                                  ),
+                              child: Text(
+                                'Max',
+                                style: TextStyle(
+                                  color: const Color(0xFFFF4081), // Pink for sell
+                                  fontSize: 14,
+                                  fontWeight: FontWeight.w600,
                                 ),
                               ),
                             ),
@@ -6026,7 +6028,7 @@ class _TradingPageState extends State<TradingPage> {
                                 _getSelectedAssetSymbol(),
                                 style: TextStyle(
                                   color: isDarkTheme ? Colors.white : Colors.black,
-                                  fontSize: 12,
+                                  fontSize: 14,
                                   fontWeight: FontWeight.w500,
                                 ),
                               ),

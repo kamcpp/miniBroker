@@ -902,7 +902,7 @@ class _CashManagementPageState extends State<CashManagementPage> {
                 color: isDarkTheme ? Colors.grey[400] : Colors.grey[600],
               ),
             ),
-            const SizedBox(width: 30),
+            const SizedBox(width: 10),
             Container(
               padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
               width: 180,
@@ -956,36 +956,39 @@ class _CashManagementPageState extends State<CashManagementPage> {
         const SizedBox(height: 30),
 
         // Available
-        Row(
-          children: [
-            Text(
-              'Available: ',
-              style: TextStyle(
-                fontSize: 14, // Same as Currency title
-                color: isDarkTheme ? Colors.grey[400] : Colors.grey[600], // Same as Currency title
+        SizedBox(
+          height: 24,
+          child: Row(
+            children: [
+              Text(
+                'Available: ',
+                style: TextStyle(
+                  fontSize: 14, // Same as Currency title
+                  color: isDarkTheme ? Colors.grey[400] : Colors.grey[600], // Same as Currency title
+                ),
               ),
-            ),
-            const SizedBox(width: 10),
-            _isLoadingCashHoldings
-                ? SizedBox(
-                    width: 16,
-                    height: 16,
-                    child: CircularProgressIndicator(
-                      strokeWidth: 1.5,
-                      valueColor: AlwaysStoppedAnimation<Color>(
-                        isDarkTheme ? Colors.white : Colors.black,
+              const SizedBox(width: 10),
+              _isLoadingCashHoldings
+                  ? SizedBox(
+                      width: 16,
+                      height: 16,
+                      child: CircularProgressIndicator(
+                        strokeWidth: 1.5,
+                        valueColor: AlwaysStoppedAnimation<Color>(
+                          isDarkTheme ? Colors.white : Colors.black,
+                        ),
+                      ),
+                    )
+                  : Text(
+                      '$_buyingPower ${_selectedCurrency['symbol'] ?? ''}',
+                      style: TextStyle(
+                        fontSize: 18,
+                        fontWeight: FontWeight.w600,
+                        color: isDarkTheme ? Colors.white : Colors.black,
                       ),
                     ),
-                  )
-                : Text(
-                    '$_buyingPower ${_selectedCurrency['symbol'] ?? ''}',
-                    style: TextStyle(
-                      fontSize: 18,
-                      fontWeight: FontWeight.w600,
-                      color: isDarkTheme ? Colors.white : Colors.black,
-                    ),
-                  ),
-          ],
+            ],
+          ),
         ),
 
         const SizedBox(height: 40),
