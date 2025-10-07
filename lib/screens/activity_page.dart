@@ -130,10 +130,10 @@ class _ActivityPageState extends State<ActivityPage> {
     WidgetsBinding.instance.addPostFrameCallback((_) {
       ConnectivityChecker.checkAndShowErrorIfNeeded(context, 'Activity');
     });
-    
-    // Fetch both orders and trades when page loads
-    _fetchActivityData();
-    
+
+    // Only fetch orders on page load (default tab is Orders)
+    _fetchOrders();
+
     // Load dropdown data
     _fetchMarketList();
     // Asset list will be fetched when market is selected
@@ -594,6 +594,21 @@ class _ActivityPageState extends State<ActivityPage> {
     print('🏁 _fetchTrades() completed');
   }
 
+  /// Fetch settlements (wrapper method to get account ID first)
+  Future<void> _fetchSettlements() async {
+    // Get account ID
+    final accountId = await _getAccountId();
+    if (accountId == null || accountId.isEmpty) {
+      setState(() {
+        _isLoadingSettlements = false;
+        _settlementsError = 'No account ID found for logged-in user';
+        _settlements = [];
+      });
+      return;
+    }
+    await _fetchSettlementsWithAccountId(accountId);
+  }
+
   /// Fetch settlements using GetAccountSettlements function (with provided account ID)
   Future<void> _fetchSettlementsWithAccountId(String accountId) async {
     setState(() {
@@ -708,6 +723,21 @@ class _ActivityPageState extends State<ActivityPage> {
         });
       }
     }
+  }
+
+  /// Fetch transactions (wrapper method to get account ID first)
+  Future<void> _fetchTransactions() async {
+    // Get account ID
+    final accountId = await _getAccountId();
+    if (accountId == null || accountId.isEmpty) {
+      setState(() {
+        _isLoadingTransactions = false;
+        _transactionsError = 'No account ID found for logged-in user';
+        _transactions = [];
+      });
+      return;
+    }
+    await _fetchTransactionsWithAccountId(accountId);
   }
 
   /// Fetch transactions using GetAccountTransactions function (with provided account ID)
@@ -916,7 +946,25 @@ class _ActivityPageState extends State<ActivityPage> {
     }
   }
 
-  /// Apply filter changes and refresh data
+  /// Fetch data for the currently active tab
+  void _fetchDataForActiveTab() {
+    switch (_selectedTabIndex) {
+      case 0: // Orders tab
+        _fetchOrders();
+        break;
+      case 1: // Trades tab
+        _fetchTrades();
+        break;
+      case 2: // Settlements tab
+        _fetchSettlements();
+        break;
+      case 3: // Transactions tab
+        _fetchTransactions();
+        break;
+    }
+  }
+
+  /// Apply filter changes and refresh data for active tab only
   void _applyFilters() {
     setState(() {
       // Apply temporary filter state to actual filter state
@@ -926,9 +974,8 @@ class _ActivityPageState extends State<ActivityPage> {
       _selectedTradesAsset = _tempSelectedTradesAsset;
     });
 
-    // Refresh data with new filters
-    _fetchOrders();
-    _fetchTrades();
+    // Refresh data only for the active tab
+    _fetchDataForActiveTab();
   }
 
   /// Clear all orders filters
@@ -2678,6 +2725,8 @@ class _ActivityPageState extends State<ActivityPage> {
               setState(() {
                 _selectedTabIndex = index;
               });
+              // Fetch data for the newly selected tab
+              _fetchDataForActiveTab();
             },
             child: Container(
               padding: EdgeInsets.symmetric(
