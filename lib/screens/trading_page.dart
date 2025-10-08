@@ -788,7 +788,7 @@ class _TradingPageState extends State<TradingPage> {
   bool _isDraggingBottomSplit = false;
 
   // Top/Bottom section height split
-  double _topSectionRatio = 0.67; // 67% for top, 33% for bottom
+  double _topSectionRatio = 0.72; // 72% for top, 28% for bottom - ensures Buy Order button is visible
   bool _isDraggingTopBottomSplit = false;
 
   // Activity section tabs
