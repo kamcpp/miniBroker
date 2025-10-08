@@ -2705,7 +2705,8 @@ class _TradingPageState extends State<TradingPage> {
                                 builder: (context, constraints) {
                                   final maxMiddleHeight = constraints.maxHeight;
                                   final minMarketOverviewHeight = 150.0;
-                                  final maxMarketOverviewHeight = maxMiddleHeight - 100; // Leave space for chart
+                                  final minChartHeight = 100.0;
+                                  final maxMarketOverviewHeight = (maxMiddleHeight - minChartHeight).clamp(minMarketOverviewHeight, double.infinity);
 
                                   // Constrain market height
                                   _marketOverviewHeight = _marketOverviewHeight.clamp(minMarketOverviewHeight, maxMarketOverviewHeight);
@@ -3305,18 +3306,6 @@ class _TradingPageState extends State<TradingPage> {
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
-          // Panel Title
-          Text(
-            'Trade',
-            style: TextStyle(
-              fontSize: 18,
-              fontWeight: FontWeight.bold,
-              color: _isDarkTheme ? Colors.white : Colors.black,
-            ),
-          ),
-
-          const SizedBox(height: 16),
-
           // Trade Orders Tabs Section
           Expanded(
             child: _buildTradeOrdersTabs(_isDarkTheme),
