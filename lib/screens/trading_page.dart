@@ -498,8 +498,8 @@ class _TradingPageState extends State<TradingPage> {
       
       final result = await realGrpcClient.getMarketInstrumentList(
         marketId: marketId,
-        pageNumber: 1,
-        pageSize: 100, // Get more instruments
+        pageNumber: 0,
+        pageSize: 0,
       ).timeout(
         const Duration(seconds: 10),
         onTimeout: () {
@@ -1911,7 +1911,7 @@ class _TradingPageState extends State<TradingPage> {
       final result = await GrpcurlHelper.getHistoricalOhlcData(
         symbol: symbol,
         period: _selectedTimePeriod,
-        pageSize: 100,
+        pageSize: 0,
       );
 
       if (result['success'] == true && result['output'] != null) {
