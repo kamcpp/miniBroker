@@ -1,14 +1,13 @@
-// This is a generated file - do not edit.
 //
-// Generated from filter.proto.
-
-// @dart = 3.3
+//  Generated code. Do not modify.
+//  source: filter.proto
+//
+// @dart = 2.12
 
 // ignore_for_file: annotate_overrides, camel_case_types, comment_references
-// ignore_for_file: constant_identifier_names
-// ignore_for_file: curly_braces_in_flow_control_structures
-// ignore_for_file: deprecated_member_use_from_same_package, library_prefixes
-// ignore_for_file: non_constant_identifier_names, unused_import
+// ignore_for_file: constant_identifier_names, library_prefixes
+// ignore_for_file: non_constant_identifier_names, prefer_final_fields
+// ignore_for_file: unnecessary_import, unnecessary_this, unused_import
 
 import 'dart:convert' as $convert;
 import 'dart:core' as $core;
@@ -18,30 +17,9 @@ import 'dart:typed_data' as $typed_data;
 const OrderQueryFilter$json = {
   '1': 'OrderQueryFilter',
   '2': [
-    {
-      '1': 'from_dt',
-      '3': 1,
-      '4': 1,
-      '5': 11,
-      '6': '.qomet.agora.daemons.prtagent.v1.DateTime',
-      '10': 'fromDt'
-    },
-    {
-      '1': 'to_dt',
-      '3': 2,
-      '4': 1,
-      '5': 11,
-      '6': '.qomet.agora.daemons.prtagent.v1.DateTime',
-      '10': 'toDt'
-    },
-    {
-      '1': 'side',
-      '3': 3,
-      '4': 1,
-      '5': 14,
-      '6': '.qomet.agora.daemons.prtagent.v1.OrderSide',
-      '10': 'side'
-    },
+    {'1': 'from_dt', '3': 1, '4': 1, '5': 11, '6': '.qomet.agora.daemons.prtagent.v1.DateTime', '10': 'fromDt'},
+    {'1': 'to_dt', '3': 2, '4': 1, '5': 11, '6': '.qomet.agora.daemons.prtagent.v1.DateTime', '10': 'toDt'},
+    {'1': 'side', '3': 3, '4': 1, '5': 14, '6': '.qomet.agora.daemons.prtagent.v1.OrderSide', '10': 'side'},
     {'1': 'order_types', '3': 4, '4': 3, '5': 9, '10': 'orderTypes'},
     {'1': 'price_min', '3': 5, '4': 1, '5': 9, '10': 'priceMin'},
     {'1': 'price_max', '3': 6, '4': 1, '5': 9, '10': 'priceMax'},
@@ -68,35 +46,14 @@ final $typed_data.Uint8List orderQueryFilterDescriptor = $convert.base64Decode(
 const TradeQueryFilter$json = {
   '1': 'TradeQueryFilter',
   '2': [
-    {
-      '1': 'from_dt',
-      '3': 1,
-      '4': 1,
-      '5': 11,
-      '6': '.qomet.agora.daemons.prtagent.v1.DateTime',
-      '10': 'fromDt'
-    },
-    {
-      '1': 'to_dt',
-      '3': 2,
-      '4': 1,
-      '5': 11,
-      '6': '.qomet.agora.daemons.prtagent.v1.DateTime',
-      '10': 'toDt'
-    },
+    {'1': 'from_dt', '3': 1, '4': 1, '5': 11, '6': '.qomet.agora.daemons.prtagent.v1.DateTime', '10': 'fromDt'},
+    {'1': 'to_dt', '3': 2, '4': 1, '5': 11, '6': '.qomet.agora.daemons.prtagent.v1.DateTime', '10': 'toDt'},
     {'1': 'price_min', '3': 3, '4': 1, '5': 9, '10': 'priceMin'},
     {'1': 'price_max', '3': 4, '4': 1, '5': 9, '10': 'priceMax'},
     {'1': 'volume_min', '3': 5, '4': 1, '5': 9, '10': 'volumeMin'},
     {'1': 'volume_max', '3': 6, '4': 1, '5': 9, '10': 'volumeMax'},
     {'1': 'trade_types', '3': 7, '4': 3, '5': 9, '10': 'tradeTypes'},
-    {
-      '1': 'side',
-      '3': 8,
-      '4': 1,
-      '5': 14,
-      '6': '.qomet.agora.daemons.prtagent.v1.OrderSide',
-      '10': 'side'
-    },
+    {'1': 'side', '3': 8, '4': 1, '5': 14, '6': '.qomet.agora.daemons.prtagent.v1.OrderSide', '10': 'side'},
   ],
 };
 
@@ -114,38 +71,11 @@ final $typed_data.Uint8List tradeQueryFilterDescriptor = $convert.base64Decode(
 const SettlementQueryFilter$json = {
   '1': 'SettlementQueryFilter',
   '2': [
-    {
-      '1': 'from_dt',
-      '3': 1,
-      '4': 1,
-      '5': 11,
-      '6': '.qomet.agora.daemons.prtagent.v1.DateTime',
-      '10': 'fromDt'
-    },
-    {
-      '1': 'to_dt',
-      '3': 2,
-      '4': 1,
-      '5': 11,
-      '6': '.qomet.agora.daemons.prtagent.v1.DateTime',
-      '10': 'toDt'
-    },
-    {
-      '1': 'status',
-      '3': 3,
-      '4': 1,
-      '5': 14,
-      '6': '.qomet.agora.daemons.prtagent.v1.ConfirmationStatus',
-      '10': 'status'
-    },
+    {'1': 'from_dt', '3': 1, '4': 1, '5': 11, '6': '.qomet.agora.daemons.prtagent.v1.DateTime', '10': 'fromDt'},
+    {'1': 'to_dt', '3': 2, '4': 1, '5': 11, '6': '.qomet.agora.daemons.prtagent.v1.DateTime', '10': 'toDt'},
+    {'1': 'status', '3': 3, '4': 1, '5': 14, '6': '.qomet.agora.daemons.prtagent.v1.ConfirmationStatus', '10': 'status'},
     {'1': 'settlement_types', '3': 4, '4': 3, '5': 9, '10': 'settlementTypes'},
-    {
-      '1': 'asset_id_or_name_regexes',
-      '3': 5,
-      '4': 3,
-      '5': 9,
-      '10': 'assetIdOrNameRegexes'
-    },
+    {'1': 'asset_id_or_name_regexes', '3': 5, '4': 3, '5': 9, '10': 'assetIdOrNameRegexes'},
     {'1': 'amount_min', '3': 6, '4': 1, '5': 9, '10': 'amountMin'},
     {'1': 'amount_max', '3': 7, '4': 1, '5': 9, '10': 'amountMax'},
   ],
@@ -167,25 +97,12 @@ const OrderbookQueryFilter$json = {
   '1': 'OrderbookQueryFilter',
   '2': [
     {'1': 'aggregated', '3': 1, '4': 1, '5': 8, '10': 'aggregated'},
-    {
-      '1': 'side',
-      '3': 2,
-      '4': 1,
-      '5': 14,
-      '6': '.qomet.agora.daemons.prtagent.v1.OrderSide',
-      '10': 'side'
-    },
+    {'1': 'side', '3': 2, '4': 1, '5': 14, '6': '.qomet.agora.daemons.prtagent.v1.OrderSide', '10': 'side'},
     {'1': 'depth', '3': 3, '4': 1, '5': 13, '10': 'depth'},
     {'1': 'price_min', '3': 4, '4': 1, '5': 9, '10': 'priceMin'},
     {'1': 'price_max', '3': 5, '4': 1, '5': 9, '10': 'priceMax'},
     {'1': 'include_my_orders', '3': 6, '4': 1, '5': 8, '10': 'includeMyOrders'},
-    {
-      '1': 'group_by_price_increment',
-      '3': 7,
-      '4': 1,
-      '5': 9,
-      '10': 'groupByPriceIncrement'
-    },
+    {'1': 'group_by_price_increment', '3': 7, '4': 1, '5': 9, '10': 'groupByPriceIncrement'},
   ],
 };
 
@@ -202,22 +119,8 @@ final $typed_data.Uint8List orderbookQueryFilterDescriptor = $convert.base64Deco
 const OrderList$json = {
   '1': 'OrderList',
   '2': [
-    {
-      '1': 'pagination_info',
-      '3': 1,
-      '4': 1,
-      '5': 11,
-      '6': '.qomet.agora.daemons.prtagent.v1.PaginationInfo',
-      '10': 'paginationInfo'
-    },
-    {
-      '1': 'orders',
-      '3': 2,
-      '4': 3,
-      '5': 11,
-      '6': '.qomet.agora.daemons.prtagent.v1.Order',
-      '10': 'orders'
-    },
+    {'1': 'pagination_info', '3': 1, '4': 1, '5': 11, '6': '.qomet.agora.daemons.prtagent.v1.PaginationInfo', '10': 'paginationInfo'},
+    {'1': 'orders', '3': 2, '4': 3, '5': 11, '6': '.qomet.agora.daemons.prtagent.v1.Order', '10': 'orders'},
   ],
 };
 
@@ -226,3 +129,4 @@ final $typed_data.Uint8List orderListDescriptor = $convert.base64Decode(
     'CglPcmRlckxpc3QSWAoPcGFnaW5hdGlvbl9pbmZvGAEgASgLMi8ucW9tZXQuYWdvcmEuZGFlbW'
     '9ucy5wcnRhZ2VudC52MS5QYWdpbmF0aW9uSW5mb1IOcGFnaW5hdGlvbkluZm8SPgoGb3JkZXJz'
     'GAIgAygLMiYucW9tZXQuYWdvcmEuZGFlbW9ucy5wcnRhZ2VudC52MS5PcmRlclIGb3JkZXJz');
+

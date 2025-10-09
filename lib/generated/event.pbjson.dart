@@ -1,14 +1,13 @@
-// This is a generated file - do not edit.
 //
-// Generated from event.proto.
-
-// @dart = 3.3
+//  Generated code. Do not modify.
+//  source: event.proto
+//
+// @dart = 2.12
 
 // ignore_for_file: annotate_overrides, camel_case_types, comment_references
-// ignore_for_file: constant_identifier_names
-// ignore_for_file: curly_braces_in_flow_control_structures
-// ignore_for_file: deprecated_member_use_from_same_package, library_prefixes
-// ignore_for_file: non_constant_identifier_names, unused_import
+// ignore_for_file: constant_identifier_names, library_prefixes
+// ignore_for_file: non_constant_identifier_names, prefer_final_fields
+// ignore_for_file: unnecessary_import, unnecessary_this, unused_import
 
 import 'dart:convert' as $convert;
 import 'dart:core' as $core;
@@ -74,31 +73,10 @@ final $typed_data.Uint8List executionUpdateEventTypeEnumDescriptor = $convert.ba
 const EventSubscriptionParams$json = {
   '1': 'EventSubscriptionParams',
   '2': [
-    {
-      '1': 'proposed_subscription_id',
-      '3': 1,
-      '4': 1,
-      '5': 9,
-      '10': 'proposedSubscriptionId'
-    },
+    {'1': 'proposed_subscription_id', '3': 1, '4': 1, '5': 9, '10': 'proposedSubscriptionId'},
     {'1': 'topics', '3': 2, '4': 3, '5': 9, '10': 'topics'},
-    {
-      '1': 'subscribed_event_types',
-      '3': 3,
-      '4': 3,
-      '5': 14,
-      '6': '.qomet.agora.daemons.prtagent.v1.EventTypeEnum',
-      '10': 'subscribedEventTypes'
-    },
-    {
-      '1': 'aux_data',
-      '3': 105,
-      '4': 3,
-      '5': 11,
-      '6':
-          '.qomet.agora.daemons.prtagent.v1.EventSubscriptionParams.AuxDataEntry',
-      '10': 'auxData'
-    },
+    {'1': 'subscribed_event_types', '3': 3, '4': 3, '5': 14, '6': '.qomet.agora.daemons.prtagent.v1.EventTypeEnum', '10': 'subscribedEventTypes'},
+    {'1': 'aux_data', '3': 105, '4': 3, '5': 11, '6': '.qomet.agora.daemons.prtagent.v1.EventSubscriptionParams.AuxDataEntry', '10': 'auxData'},
   ],
   '3': [EventSubscriptionParams_AuxDataEntry$json],
 };
@@ -127,14 +105,7 @@ final $typed_data.Uint8List eventSubscriptionParamsDescriptor = $convert.base64D
 const BlobEvent$json = {
   '1': 'BlobEvent',
   '2': [
-    {
-      '1': 'data',
-      '3': 1,
-      '4': 1,
-      '5': 11,
-      '6': '.qomet.agora.daemons.prtagent.v1.Blob',
-      '10': 'data'
-    },
+    {'1': 'data', '3': 1, '4': 1, '5': 11, '6': '.qomet.agora.daemons.prtagent.v1.Blob', '10': 'data'},
   ],
 };
 
@@ -148,50 +119,19 @@ const ExecutionUpdateEvent$json = {
   '1': 'ExecutionUpdateEvent',
   '2': [
     {'1': 'ref_execution_id', '3': 1, '4': 1, '5': 9, '10': 'refExecutionId'},
-    {
-      '1': 'event_type',
-      '3': 2,
-      '4': 1,
-      '5': 14,
-      '6': '.qomet.agora.daemons.prtagent.v1.ExecutionUpdateEventTypeEnum',
-      '10': 'eventType'
-    },
+    {'1': 'event_type', '3': 2, '4': 1, '5': 14, '6': '.qomet.agora.daemons.prtagent.v1.ExecutionUpdateEventTypeEnum', '10': 'eventType'},
     {'1': 'flow_instance_id', '3': 3, '4': 1, '5': 9, '10': 'flowInstanceId'},
     {'1': 'flow_execution_id', '3': 4, '4': 1, '5': 9, '10': 'flowExecutionId'},
     {'1': 'total_nr_of_steps', '3': 5, '4': 1, '5': 9, '10': 'totalNrOfSteps'},
     {'1': 'current_step_nr', '3': 6, '4': 1, '5': 9, '10': 'currentStepNr'},
     {'1': 'step_description', '3': 7, '4': 1, '5': 9, '10': 'stepDescription'},
-    {
-      '1': 'progress_percentage',
-      '3': 8,
-      '4': 1,
-      '5': 9,
-      '10': 'progressPercentage'
-    },
+    {'1': 'progress_percentage', '3': 8, '4': 1, '5': 9, '10': 'progressPercentage'},
     {'1': 'msg', '3': 9, '4': 1, '5': 9, '10': 'msg'},
-    {
-      '1': 'labels',
-      '3': 103,
-      '4': 3,
-      '5': 11,
-      '6': '.qomet.agora.daemons.prtagent.v1.ExecutionUpdateEvent.LabelsEntry',
-      '10': 'labels'
-    },
+    {'1': 'labels', '3': 103, '4': 3, '5': 11, '6': '.qomet.agora.daemons.prtagent.v1.ExecutionUpdateEvent.LabelsEntry', '10': 'labels'},
     {'1': 'tags', '3': 104, '4': 3, '5': 9, '10': 'tags'},
-    {
-      '1': 'metadata',
-      '3': 105,
-      '4': 3,
-      '5': 11,
-      '6':
-          '.qomet.agora.daemons.prtagent.v1.ExecutionUpdateEvent.MetadataEntry',
-      '10': 'metadata'
-    },
+    {'1': 'metadata', '3': 105, '4': 3, '5': 11, '6': '.qomet.agora.daemons.prtagent.v1.ExecutionUpdateEvent.MetadataEntry', '10': 'metadata'},
   ],
-  '3': [
-    ExecutionUpdateEvent_LabelsEntry$json,
-    ExecutionUpdateEvent_MetadataEntry$json
-  ],
+  '3': [ExecutionUpdateEvent_LabelsEntry$json, ExecutionUpdateEvent_MetadataEntry$json],
 };
 
 @$core.Deprecated('Use executionUpdateEventDescriptor instead')
@@ -236,229 +176,33 @@ const ExecutionResponseEvent$json = {
   '1': 'ExecutionResponseEvent',
   '2': [
     {'1': 'ref_execution_id', '3': 1, '4': 1, '5': 9, '10': 'refExecutionId'},
-    {
-      '1': 'get_account_list',
-      '3': 201,
-      '4': 1,
-      '5': 11,
-      '6': '.qomet.agora.daemons.prtagent.v1.GetAccountListResponse',
-      '9': 0,
-      '10': 'getAccountList'
-    },
-    {
-      '1': 'get_account_info_batch',
-      '3': 202,
-      '4': 1,
-      '5': 11,
-      '6': '.qomet.agora.daemons.prtagent.v1.GetAccountInfoBatchResponse',
-      '9': 0,
-      '10': 'getAccountInfoBatch'
-    },
-    {
-      '1': 'get_account_instrument_holdings',
-      '3': 203,
-      '4': 1,
-      '5': 11,
-      '6':
-          '.qomet.agora.daemons.prtagent.v1.GetAccountInstrumentHoldingsResponse',
-      '9': 0,
-      '10': 'getAccountInstrumentHoldings'
-    },
-    {
-      '1': 'get_account_cash_holdings',
-      '3': 204,
-      '4': 1,
-      '5': 11,
-      '6': '.qomet.agora.daemons.prtagent.v1.GetAccountCashHoldingsResponse',
-      '9': 0,
-      '10': 'getAccountCashHoldings'
-    },
-    {
-      '1': 'get_account_orders',
-      '3': 205,
-      '4': 1,
-      '5': 11,
-      '6': '.qomet.agora.daemons.prtagent.v1.GetAccountOrdersResponse',
-      '9': 0,
-      '10': 'getAccountOrders'
-    },
-    {
-      '1': 'get_account_trades',
-      '3': 206,
-      '4': 1,
-      '5': 11,
-      '6': '.qomet.agora.daemons.prtagent.v1.GetAccountTradesResponse',
-      '9': 0,
-      '10': 'getAccountTrades'
-    },
-    {
-      '1': 'get_account_settlements',
-      '3': 207,
-      '4': 1,
-      '5': 11,
-      '6': '.qomet.agora.daemons.prtagent.v1.GetAccountSettlementsResponse',
-      '9': 0,
-      '10': 'getAccountSettlements'
-    },
-    {
-      '1': 'get_account_transactions',
-      '3': 208,
-      '4': 1,
-      '5': 11,
-      '6': '.qomet.agora.daemons.prtagent.v1.GetAccountTransactionsResponse',
-      '9': 0,
-      '10': 'getAccountTransactions'
-    },
-    {
-      '1': 'get_instrument_list',
-      '3': 301,
-      '4': 1,
-      '5': 11,
-      '6': '.qomet.agora.daemons.prtagent.v1.GetInstrumentListResponse',
-      '9': 0,
-      '10': 'getInstrumentList'
-    },
-    {
-      '1': 'get_instrument_info_batch',
-      '3': 302,
-      '4': 1,
-      '5': 11,
-      '6': '.qomet.agora.daemons.prtagent.v1.GetInstrumentInfoBatchResponse',
-      '9': 0,
-      '10': 'getInstrumentInfoBatch'
-    },
-    {
-      '1': 'get_instrument_orders',
-      '3': 303,
-      '4': 1,
-      '5': 11,
-      '6': '.qomet.agora.daemons.prtagent.v1.GetInstrumentOrdersResponse',
-      '9': 0,
-      '10': 'getInstrumentOrders'
-    },
-    {
-      '1': 'get_instrument_trades',
-      '3': 304,
-      '4': 1,
-      '5': 11,
-      '6': '.qomet.agora.daemons.prtagent.v1.GetInstrumentTradesResponse',
-      '9': 0,
-      '10': 'getInstrumentTrades'
-    },
-    {
-      '1': 'get_instrument_settlements',
-      '3': 305,
-      '4': 1,
-      '5': 11,
-      '6': '.qomet.agora.daemons.prtagent.v1.GetInstrumentSettlementsResponse',
-      '9': 0,
-      '10': 'getInstrumentSettlements'
-    },
-    {
-      '1': 'get_market_list',
-      '3': 401,
-      '4': 1,
-      '5': 11,
-      '6': '.qomet.agora.daemons.prtagent.v1.GetMarketListResponse',
-      '9': 0,
-      '10': 'getMarketList'
-    },
-    {
-      '1': 'get_market_calendar',
-      '3': 402,
-      '4': 1,
-      '5': 11,
-      '6': '.qomet.agora.daemons.prtagent.v1.GetMarketCalendarResponse',
-      '9': 0,
-      '10': 'getMarketCalendar'
-    },
-    {
-      '1': 'get_venue_list',
-      '3': 501,
-      '4': 1,
-      '5': 11,
-      '6': '.qomet.agora.daemons.prtagent.v1.GetVenueListResponse',
-      '9': 0,
-      '10': 'getVenueList'
-    },
-    {
-      '1': 'get_venue_calendar',
-      '3': 503,
-      '4': 1,
-      '5': 11,
-      '6': '.qomet.agora.daemons.prtagent.v1.GetVenueCalendarResponse',
-      '9': 0,
-      '10': 'getVenueCalendar'
-    },
-    {
-      '1': 'get_order_fees',
-      '3': 601,
-      '4': 1,
-      '5': 11,
-      '6': '.qomet.agora.daemons.prtagent.v1.GetOrderFeesResponse',
-      '9': 0,
-      '10': 'getOrderFees'
-    },
-    {
-      '1': 'get_participant_info',
-      '3': 701,
-      '4': 1,
-      '5': 11,
-      '6': '.qomet.agora.daemons.prtagent.v1.GetParticipantInfoResponse',
-      '9': 0,
-      '10': 'getParticipantInfo'
-    },
-    {
-      '1': 'get_participant_orders',
-      '3': 702,
-      '4': 1,
-      '5': 11,
-      '6': '.qomet.agora.daemons.prtagent.v1.GetParticipantOrdersResponse',
-      '9': 0,
-      '10': 'getParticipantOrders'
-    },
-    {
-      '1': 'get_participant_trades',
-      '3': 703,
-      '4': 1,
-      '5': 11,
-      '6': '.qomet.agora.daemons.prtagent.v1.GetParticipantTradesResponse',
-      '9': 0,
-      '10': 'getParticipantTrades'
-    },
-    {
-      '1': 'get_participant_settlements',
-      '3': 704,
-      '4': 1,
-      '5': 11,
-      '6': '.qomet.agora.daemons.prtagent.v1.GetParticipantSettlementsResponse',
-      '9': 0,
-      '10': 'getParticipantSettlements'
-    },
-    {
-      '1': 'labels',
-      '3': 103,
-      '4': 3,
-      '5': 11,
-      '6':
-          '.qomet.agora.daemons.prtagent.v1.ExecutionResponseEvent.LabelsEntry',
-      '10': 'labels'
-    },
+    {'1': 'get_account_list', '3': 201, '4': 1, '5': 11, '6': '.qomet.agora.daemons.prtagent.v1.GetAccountListResponse', '9': 0, '10': 'getAccountList'},
+    {'1': 'get_account_info_batch', '3': 202, '4': 1, '5': 11, '6': '.qomet.agora.daemons.prtagent.v1.GetAccountInfoBatchResponse', '9': 0, '10': 'getAccountInfoBatch'},
+    {'1': 'get_account_instrument_holdings', '3': 203, '4': 1, '5': 11, '6': '.qomet.agora.daemons.prtagent.v1.GetAccountInstrumentHoldingsResponse', '9': 0, '10': 'getAccountInstrumentHoldings'},
+    {'1': 'get_account_cash_holdings', '3': 204, '4': 1, '5': 11, '6': '.qomet.agora.daemons.prtagent.v1.GetAccountCashHoldingsResponse', '9': 0, '10': 'getAccountCashHoldings'},
+    {'1': 'get_account_orders', '3': 205, '4': 1, '5': 11, '6': '.qomet.agora.daemons.prtagent.v1.GetAccountOrdersResponse', '9': 0, '10': 'getAccountOrders'},
+    {'1': 'get_account_trades', '3': 206, '4': 1, '5': 11, '6': '.qomet.agora.daemons.prtagent.v1.GetAccountTradesResponse', '9': 0, '10': 'getAccountTrades'},
+    {'1': 'get_account_settlements', '3': 207, '4': 1, '5': 11, '6': '.qomet.agora.daemons.prtagent.v1.GetAccountSettlementsResponse', '9': 0, '10': 'getAccountSettlements'},
+    {'1': 'get_account_transactions', '3': 208, '4': 1, '5': 11, '6': '.qomet.agora.daemons.prtagent.v1.GetAccountTransactionsResponse', '9': 0, '10': 'getAccountTransactions'},
+    {'1': 'get_instrument_list', '3': 301, '4': 1, '5': 11, '6': '.qomet.agora.daemons.prtagent.v1.GetInstrumentListResponse', '9': 0, '10': 'getInstrumentList'},
+    {'1': 'get_instrument_info_batch', '3': 302, '4': 1, '5': 11, '6': '.qomet.agora.daemons.prtagent.v1.GetInstrumentInfoBatchResponse', '9': 0, '10': 'getInstrumentInfoBatch'},
+    {'1': 'get_instrument_orders', '3': 303, '4': 1, '5': 11, '6': '.qomet.agora.daemons.prtagent.v1.GetInstrumentOrdersResponse', '9': 0, '10': 'getInstrumentOrders'},
+    {'1': 'get_instrument_trades', '3': 304, '4': 1, '5': 11, '6': '.qomet.agora.daemons.prtagent.v1.GetInstrumentTradesResponse', '9': 0, '10': 'getInstrumentTrades'},
+    {'1': 'get_instrument_settlements', '3': 305, '4': 1, '5': 11, '6': '.qomet.agora.daemons.prtagent.v1.GetInstrumentSettlementsResponse', '9': 0, '10': 'getInstrumentSettlements'},
+    {'1': 'get_market_list', '3': 401, '4': 1, '5': 11, '6': '.qomet.agora.daemons.prtagent.v1.GetMarketListResponse', '9': 0, '10': 'getMarketList'},
+    {'1': 'get_market_calendar', '3': 402, '4': 1, '5': 11, '6': '.qomet.agora.daemons.prtagent.v1.GetMarketCalendarResponse', '9': 0, '10': 'getMarketCalendar'},
+    {'1': 'get_venue_list', '3': 501, '4': 1, '5': 11, '6': '.qomet.agora.daemons.prtagent.v1.GetVenueListResponse', '9': 0, '10': 'getVenueList'},
+    {'1': 'get_venue_calendar', '3': 503, '4': 1, '5': 11, '6': '.qomet.agora.daemons.prtagent.v1.GetVenueCalendarResponse', '9': 0, '10': 'getVenueCalendar'},
+    {'1': 'get_order_fees', '3': 601, '4': 1, '5': 11, '6': '.qomet.agora.daemons.prtagent.v1.GetOrderFeesResponse', '9': 0, '10': 'getOrderFees'},
+    {'1': 'get_participant_info', '3': 701, '4': 1, '5': 11, '6': '.qomet.agora.daemons.prtagent.v1.GetParticipantInfoResponse', '9': 0, '10': 'getParticipantInfo'},
+    {'1': 'get_participant_orders', '3': 702, '4': 1, '5': 11, '6': '.qomet.agora.daemons.prtagent.v1.GetParticipantOrdersResponse', '9': 0, '10': 'getParticipantOrders'},
+    {'1': 'get_participant_trades', '3': 703, '4': 1, '5': 11, '6': '.qomet.agora.daemons.prtagent.v1.GetParticipantTradesResponse', '9': 0, '10': 'getParticipantTrades'},
+    {'1': 'get_participant_settlements', '3': 704, '4': 1, '5': 11, '6': '.qomet.agora.daemons.prtagent.v1.GetParticipantSettlementsResponse', '9': 0, '10': 'getParticipantSettlements'},
+    {'1': 'labels', '3': 103, '4': 3, '5': 11, '6': '.qomet.agora.daemons.prtagent.v1.ExecutionResponseEvent.LabelsEntry', '10': 'labels'},
     {'1': 'tags', '3': 104, '4': 3, '5': 9, '10': 'tags'},
-    {
-      '1': 'metadata',
-      '3': 105,
-      '4': 3,
-      '5': 11,
-      '6':
-          '.qomet.agora.daemons.prtagent.v1.ExecutionResponseEvent.MetadataEntry',
-      '10': 'metadata'
-    },
+    {'1': 'metadata', '3': 105, '4': 3, '5': 11, '6': '.qomet.agora.daemons.prtagent.v1.ExecutionResponseEvent.MetadataEntry', '10': 'metadata'},
   ],
-  '3': [
-    ExecutionResponseEvent_LabelsEntry$json,
-    ExecutionResponseEvent_MetadataEntry$json
-  ],
+  '3': [ExecutionResponseEvent_LabelsEntry$json, ExecutionResponseEvent_MetadataEntry$json],
   '8': [
     {'1': 'response'},
   ],
@@ -547,97 +291,20 @@ const Event$json = {
   '2': [
     {'1': 'id', '3': 1, '4': 1, '5': 9, '10': 'id'},
     {'1': 'hash', '3': 2, '4': 1, '5': 9, '10': 'hash'},
-    {
-      '1': 'ref_subscription_id',
-      '3': 3,
-      '4': 1,
-      '5': 9,
-      '10': 'refSubscriptionId'
-    },
+    {'1': 'ref_subscription_id', '3': 3, '4': 1, '5': 9, '10': 'refSubscriptionId'},
     {'1': 'topic', '3': 4, '4': 1, '5': 9, '10': 'topic'},
-    {
-      '1': 'generated_at_dt',
-      '3': 5,
-      '4': 1,
-      '5': 11,
-      '6': '.qomet.agora.daemons.prtagent.v1.DateTime',
-      '10': 'generatedAtDt'
-    },
-    {
-      '1': 'type',
-      '3': 6,
-      '4': 1,
-      '5': 14,
-      '6': '.qomet.agora.daemons.prtagent.v1.EventTypeEnum',
-      '10': 'type'
-    },
-    {
-      '1': 'blob',
-      '3': 7,
-      '4': 1,
-      '5': 11,
-      '6': '.qomet.agora.daemons.prtagent.v1.BlobEvent',
-      '9': 0,
-      '10': 'blob'
-    },
-    {
-      '1': 'execution_update',
-      '3': 8,
-      '4': 1,
-      '5': 11,
-      '6': '.qomet.agora.daemons.prtagent.v1.ExecutionUpdateEvent',
-      '9': 0,
-      '10': 'executionUpdate'
-    },
-    {
-      '1': 'execution_response',
-      '3': 9,
-      '4': 1,
-      '5': 11,
-      '6': '.qomet.agora.daemons.prtagent.v1.ExecutionResponseEvent',
-      '9': 0,
-      '10': 'executionResponse'
-    },
-    {
-      '1': 'display_names',
-      '3': 101,
-      '4': 3,
-      '5': 11,
-      '6': '.qomet.agora.daemons.prtagent.v1.Event.DisplayNamesEntry',
-      '10': 'displayNames'
-    },
-    {
-      '1': 'descriptions',
-      '3': 102,
-      '4': 3,
-      '5': 11,
-      '6': '.qomet.agora.daemons.prtagent.v1.Event.DescriptionsEntry',
-      '10': 'descriptions'
-    },
-    {
-      '1': 'labels',
-      '3': 103,
-      '4': 3,
-      '5': 11,
-      '6': '.qomet.agora.daemons.prtagent.v1.Event.LabelsEntry',
-      '10': 'labels'
-    },
+    {'1': 'generated_at_dt', '3': 5, '4': 1, '5': 11, '6': '.qomet.agora.daemons.prtagent.v1.DateTime', '10': 'generatedAtDt'},
+    {'1': 'type', '3': 6, '4': 1, '5': 14, '6': '.qomet.agora.daemons.prtagent.v1.EventTypeEnum', '10': 'type'},
+    {'1': 'blob', '3': 7, '4': 1, '5': 11, '6': '.qomet.agora.daemons.prtagent.v1.BlobEvent', '9': 0, '10': 'blob'},
+    {'1': 'execution_update', '3': 8, '4': 1, '5': 11, '6': '.qomet.agora.daemons.prtagent.v1.ExecutionUpdateEvent', '9': 0, '10': 'executionUpdate'},
+    {'1': 'execution_response', '3': 9, '4': 1, '5': 11, '6': '.qomet.agora.daemons.prtagent.v1.ExecutionResponseEvent', '9': 0, '10': 'executionResponse'},
+    {'1': 'display_names', '3': 101, '4': 3, '5': 11, '6': '.qomet.agora.daemons.prtagent.v1.Event.DisplayNamesEntry', '10': 'displayNames'},
+    {'1': 'descriptions', '3': 102, '4': 3, '5': 11, '6': '.qomet.agora.daemons.prtagent.v1.Event.DescriptionsEntry', '10': 'descriptions'},
+    {'1': 'labels', '3': 103, '4': 3, '5': 11, '6': '.qomet.agora.daemons.prtagent.v1.Event.LabelsEntry', '10': 'labels'},
     {'1': 'tags', '3': 104, '4': 3, '5': 9, '10': 'tags'},
-    {
-      '1': 'metadata',
-      '3': 105,
-      '4': 3,
-      '5': 11,
-      '6': '.qomet.agora.daemons.prtagent.v1.Event.MetadataEntry',
-      '10': 'metadata'
-    },
+    {'1': 'metadata', '3': 105, '4': 3, '5': 11, '6': '.qomet.agora.daemons.prtagent.v1.Event.MetadataEntry', '10': 'metadata'},
   ],
-  '3': [
-    Event_DisplayNamesEntry$json,
-    Event_DescriptionsEntry$json,
-    Event_LabelsEntry$json,
-    Event_MetadataEntry$json
-  ],
+  '3': [Event_DisplayNamesEntry$json, Event_DescriptionsEntry$json, Event_LabelsEntry$json, Event_MetadataEntry$json],
   '8': [
     {'1': 'carrying_object'},
   ],
@@ -707,3 +374,4 @@ final $typed_data.Uint8List eventDescriptor = $convert.base64Decode(
     'kYASABKAlSA2tleRIUCgV2YWx1ZRgCIAEoCVIFdmFsdWU6AjgBGjsKDU1ldGFkYXRhRW50cnkS'
     'EAoDa2V5GAEgASgJUgNrZXkSFAoFdmFsdWUYAiABKAlSBXZhbHVlOgI4AUIRCg9jYXJyeWluZ1'
     '9vYmplY3Q=');
+

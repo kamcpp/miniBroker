@@ -1,14 +1,13 @@
-// This is a generated file - do not edit.
 //
-// Generated from agent.proto.
-
-// @dart = 3.3
+//  Generated code. Do not modify.
+//  source: agent.proto
+//
+// @dart = 2.12
 
 // ignore_for_file: annotate_overrides, camel_case_types, comment_references
-// ignore_for_file: constant_identifier_names
-// ignore_for_file: curly_braces_in_flow_control_structures
-// ignore_for_file: deprecated_member_use_from_same_package, library_prefixes
-// ignore_for_file: non_constant_identifier_names, unused_import
+// ignore_for_file: constant_identifier_names, library_prefixes
+// ignore_for_file: non_constant_identifier_names, prefer_final_fields
+// ignore_for_file: unnecessary_import, unnecessary_this, unused_import
 
 import 'dart:convert' as $convert;
 import 'dart:core' as $core;
@@ -18,20 +17,8 @@ import 'dart:typed_data' as $typed_data;
 const PingRequest$json = {
   '1': 'PingRequest',
   '2': [
-    {
-      '1': 'proposed_execution_id',
-      '3': 1,
-      '4': 1,
-      '5': 9,
-      '10': 'proposedExecutionId'
-    },
-    {
-      '1': 'string_to_be_ponged',
-      '3': 2,
-      '4': 1,
-      '5': 9,
-      '10': 'stringToBePonged'
-    },
+    {'1': 'proposed_execution_id', '3': 1, '4': 1, '5': 9, '10': 'proposedExecutionId'},
+    {'1': 'string_to_be_ponged', '3': 2, '4': 1, '5': 9, '10': 'stringToBePonged'},
   ],
 };
 
@@ -59,30 +46,9 @@ final $typed_data.Uint8List pingResponseDescriptor = $convert.base64Decode(
 const GetSupportedCurrenciesRequest$json = {
   '1': 'GetSupportedCurrenciesRequest',
   '2': [
-    {
-      '1': 'proposed_execution_id',
-      '3': 1,
-      '4': 1,
-      '5': 9,
-      '10': 'proposedExecutionId'
-    },
-    {
-      '1': 'pagination',
-      '3': 2,
-      '4': 1,
-      '5': 11,
-      '6': '.qomet.agora.daemons.prtagent.v1.PaginationParams',
-      '10': 'pagination'
-    },
-    {
-      '1': 'aux_data',
-      '3': 105,
-      '4': 3,
-      '5': 11,
-      '6':
-          '.qomet.agora.daemons.prtagent.v1.GetSupportedCurrenciesRequest.AuxDataEntry',
-      '10': 'auxData'
-    },
+    {'1': 'proposed_execution_id', '3': 1, '4': 1, '5': 9, '10': 'proposedExecutionId'},
+    {'1': 'pagination', '3': 2, '4': 1, '5': 11, '6': '.qomet.agora.daemons.prtagent.v1.PaginationParams', '10': 'pagination'},
+    {'1': 'aux_data', '3': 105, '4': 3, '5': 11, '6': '.qomet.agora.daemons.prtagent.v1.GetSupportedCurrenciesRequest.AuxDataEntry', '10': 'auxData'},
   ],
   '3': [GetSupportedCurrenciesRequest_AuxDataEntry$json],
 };
@@ -111,31 +77,9 @@ const GetSupportedCurrenciesResponse$json = {
   '1': 'GetSupportedCurrenciesResponse',
   '2': [
     {'1': 'ref_execution_id', '3': 1, '4': 1, '5': 9, '10': 'refExecutionId'},
-    {
-      '1': 'pagination_info',
-      '3': 2,
-      '4': 1,
-      '5': 11,
-      '6': '.qomet.agora.daemons.prtagent.v1.PaginationInfo',
-      '10': 'paginationInfo'
-    },
-    {
-      '1': 'currencies',
-      '3': 3,
-      '4': 3,
-      '5': 11,
-      '6': '.qomet.agora.daemons.prtagent.v1.Asset',
-      '10': 'currencies'
-    },
-    {
-      '1': 'metadata',
-      '3': 105,
-      '4': 3,
-      '5': 11,
-      '6':
-          '.qomet.agora.daemons.prtagent.v1.GetSupportedCurrenciesResponse.MetadataEntry',
-      '10': 'metadata'
-    },
+    {'1': 'pagination_info', '3': 2, '4': 1, '5': 11, '6': '.qomet.agora.daemons.prtagent.v1.PaginationInfo', '10': 'paginationInfo'},
+    {'1': 'currencies', '3': 3, '4': 3, '5': 11, '6': '.qomet.agora.daemons.prtagent.v1.Asset', '10': 'currencies'},
+    {'1': 'metadata', '3': 105, '4': 3, '5': 11, '6': '.qomet.agora.daemons.prtagent.v1.GetSupportedCurrenciesResponse.MetadataEntry', '10': 'metadata'},
   ],
   '3': [GetSupportedCurrenciesResponse_MetadataEntry$json],
 };
@@ -160,3 +104,4 @@ final $typed_data.Uint8List getSupportedCurrenciesResponseDescriptor = $convert.
     'BydGFnZW50LnYxLkdldFN1cHBvcnRlZEN1cnJlbmNpZXNSZXNwb25zZS5NZXRhZGF0YUVudHJ5'
     'UghtZXRhZGF0YRo7Cg1NZXRhZGF0YUVudHJ5EhAKA2tleRgBIAEoCVIDa2V5EhQKBXZhbHVlGA'
     'IgASgJUgV2YWx1ZToCOAE=');
+

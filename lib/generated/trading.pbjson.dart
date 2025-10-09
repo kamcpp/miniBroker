@@ -1,14 +1,13 @@
-// This is a generated file - do not edit.
 //
-// Generated from trading.proto.
-
-// @dart = 3.3
+//  Generated code. Do not modify.
+//  source: trading.proto
+//
+// @dart = 2.12
 
 // ignore_for_file: annotate_overrides, camel_case_types, comment_references
-// ignore_for_file: constant_identifier_names
-// ignore_for_file: curly_braces_in_flow_control_structures
-// ignore_for_file: deprecated_member_use_from_same_package, library_prefixes
-// ignore_for_file: non_constant_identifier_names, unused_import
+// ignore_for_file: constant_identifier_names, library_prefixes
+// ignore_for_file: non_constant_identifier_names, prefer_final_fields
+// ignore_for_file: unnecessary_import, unnecessary_this, unused_import
 
 import 'dart:convert' as $convert;
 import 'dart:core' as $core;
@@ -18,14 +17,7 @@ import 'dart:typed_data' as $typed_data;
 const InstrumentQuote$json = {
   '1': 'InstrumentQuote',
   '2': [
-    {
-      '1': 'instrument',
-      '3': 1,
-      '4': 1,
-      '5': 11,
-      '6': '.qomet.agora.daemons.prtagent.v1.Instrument',
-      '10': 'instrument'
-    },
+    {'1': 'instrument', '3': 1, '4': 1, '5': 11, '6': '.qomet.agora.daemons.prtagent.v1.Instrument', '10': 'instrument'},
     {'1': 'amount', '3': 2, '4': 1, '5': 9, '10': 'amount'},
   ],
 };
@@ -41,23 +33,8 @@ const InstrumentQuoteResponse$json = {
   '1': 'InstrumentQuoteResponse',
   '2': [
     {'1': 'ref_execution_id', '3': 1, '4': 1, '5': 9, '10': 'refExecutionId'},
-    {
-      '1': 'quote',
-      '3': 3,
-      '4': 1,
-      '5': 11,
-      '6': '.qomet.agora.daemons.prtagent.v1.InstrumentQuote',
-      '10': 'quote'
-    },
-    {
-      '1': 'metadata',
-      '3': 105,
-      '4': 3,
-      '5': 11,
-      '6':
-          '.qomet.agora.daemons.prtagent.v1.InstrumentQuoteResponse.MetadataEntry',
-      '10': 'metadata'
-    },
+    {'1': 'quote', '3': 3, '4': 1, '5': 11, '6': '.qomet.agora.daemons.prtagent.v1.InstrumentQuote', '10': 'quote'},
+    {'1': 'metadata', '3': 105, '4': 3, '5': 11, '6': '.qomet.agora.daemons.prtagent.v1.InstrumentQuoteResponse.MetadataEntry', '10': 'metadata'},
   ],
   '3': [InstrumentQuoteResponse_MetadataEntry$json],
 };
@@ -85,22 +62,8 @@ final $typed_data.Uint8List instrumentQuoteResponseDescriptor = $convert.base64D
 const OhlcData$json = {
   '1': 'OhlcData',
   '2': [
-    {
-      '1': 'instrument',
-      '3': 3,
-      '4': 1,
-      '5': 11,
-      '6': '.qomet.agora.daemons.prtagent.v1.Instrument',
-      '10': 'instrument'
-    },
-    {
-      '1': 'duration',
-      '3': 4,
-      '4': 1,
-      '5': 11,
-      '6': '.qomet.agora.daemons.prtagent.v1.Duration',
-      '10': 'duration'
-    },
+    {'1': 'instrument', '3': 3, '4': 1, '5': 11, '6': '.qomet.agora.daemons.prtagent.v1.Instrument', '10': 'instrument'},
+    {'1': 'duration', '3': 4, '4': 1, '5': 11, '6': '.qomet.agora.daemons.prtagent.v1.Duration', '10': 'duration'},
     {'1': 'open', '3': 5, '4': 1, '5': 9, '10': 'open'},
     {'1': 'high', '3': 6, '4': 1, '5': 9, '10': 'high'},
     {'1': 'low', '3': 7, '4': 1, '5': 9, '10': 'low'},
@@ -122,22 +85,8 @@ const OhlcDataResponse$json = {
   '1': 'OhlcDataResponse',
   '2': [
     {'1': 'ref_execution_id', '3': 1, '4': 1, '5': 9, '10': 'refExecutionId'},
-    {
-      '1': 'ohlc_data',
-      '3': 3,
-      '4': 1,
-      '5': 11,
-      '6': '.qomet.agora.daemons.prtagent.v1.OhlcData',
-      '10': 'ohlcData'
-    },
-    {
-      '1': 'metadata',
-      '3': 105,
-      '4': 3,
-      '5': 11,
-      '6': '.qomet.agora.daemons.prtagent.v1.OhlcDataResponse.MetadataEntry',
-      '10': 'metadata'
-    },
+    {'1': 'ohlc_data', '3': 3, '4': 1, '5': 11, '6': '.qomet.agora.daemons.prtagent.v1.OhlcData', '10': 'ohlcData'},
+    {'1': 'metadata', '3': 105, '4': 3, '5': 11, '6': '.qomet.agora.daemons.prtagent.v1.OhlcDataResponse.MetadataEntry', '10': 'metadata'},
   ],
   '3': [OhlcDataResponse_MetadataEntry$json],
 };
@@ -165,29 +114,9 @@ final $typed_data.Uint8List ohlcDataResponseDescriptor = $convert.base64Decode(
 const GetLatestQuoteRequest$json = {
   '1': 'GetLatestQuoteRequest',
   '2': [
-    {
-      '1': 'proposed_execution_id',
-      '3': 1,
-      '4': 1,
-      '5': 9,
-      '10': 'proposedExecutionId'
-    },
-    {
-      '1': 'instrument_id_and_symbol_regexes',
-      '3': 2,
-      '4': 3,
-      '5': 9,
-      '10': 'instrumentIdAndSymbolRegexes'
-    },
-    {
-      '1': 'aux_data',
-      '3': 105,
-      '4': 3,
-      '5': 11,
-      '6':
-          '.qomet.agora.daemons.prtagent.v1.GetLatestQuoteRequest.AuxDataEntry',
-      '10': 'auxData'
-    },
+    {'1': 'proposed_execution_id', '3': 1, '4': 1, '5': 9, '10': 'proposedExecutionId'},
+    {'1': 'instrument_id_and_symbol_regexes', '3': 2, '4': 3, '5': 9, '10': 'instrumentIdAndSymbolRegexes'},
+    {'1': 'aux_data', '3': 105, '4': 3, '5': 11, '6': '.qomet.agora.daemons.prtagent.v1.GetLatestQuoteRequest.AuxDataEntry', '10': 'auxData'},
   ],
   '3': [GetLatestQuoteRequest_AuxDataEntry$json],
 };
@@ -215,13 +144,7 @@ final $typed_data.Uint8List getLatestQuoteRequestDescriptor = $convert.base64Dec
 const LiveQuoteFetchParams$json = {
   '1': 'LiveQuoteFetchParams',
   '2': [
-    {
-      '1': 'update_interval_ms',
-      '3': 1,
-      '4': 1,
-      '5': 13,
-      '10': 'updateIntervalMs'
-    },
+    {'1': 'update_interval_ms', '3': 1, '4': 1, '5': 13, '10': 'updateIntervalMs'},
     {'1': 'max_duration_ms', '3': 2, '4': 1, '5': 13, '10': 'maxDurationMs'},
     {'1': 'include_depth', '3': 3, '4': 1, '5': 8, '10': 'includeDepth'},
     {'1': 'depth_levels', '3': 4, '4': 1, '5': 13, '10': 'depthLevels'},
@@ -240,37 +163,10 @@ final $typed_data.Uint8List liveQuoteFetchParamsDescriptor = $convert.base64Deco
 const FetchLiveQuoteRequest$json = {
   '1': 'FetchLiveQuoteRequest',
   '2': [
-    {
-      '1': 'proposed_execution_id',
-      '3': 1,
-      '4': 1,
-      '5': 9,
-      '10': 'proposedExecutionId'
-    },
-    {
-      '1': 'instrument_id_and_symbol_regexes',
-      '3': 2,
-      '4': 3,
-      '5': 9,
-      '10': 'instrumentIdAndSymbolRegexes'
-    },
-    {
-      '1': 'fetch_params',
-      '3': 3,
-      '4': 1,
-      '5': 11,
-      '6': '.qomet.agora.daemons.prtagent.v1.LiveQuoteFetchParams',
-      '10': 'fetchParams'
-    },
-    {
-      '1': 'aux_data',
-      '3': 105,
-      '4': 3,
-      '5': 11,
-      '6':
-          '.qomet.agora.daemons.prtagent.v1.FetchLiveQuoteRequest.AuxDataEntry',
-      '10': 'auxData'
-    },
+    {'1': 'proposed_execution_id', '3': 1, '4': 1, '5': 9, '10': 'proposedExecutionId'},
+    {'1': 'instrument_id_and_symbol_regexes', '3': 2, '4': 3, '5': 9, '10': 'instrumentIdAndSymbolRegexes'},
+    {'1': 'fetch_params', '3': 3, '4': 1, '5': 11, '6': '.qomet.agora.daemons.prtagent.v1.LiveQuoteFetchParams', '10': 'fetchParams'},
+    {'1': 'aux_data', '3': 105, '4': 3, '5': 11, '6': '.qomet.agora.daemons.prtagent.v1.FetchLiveQuoteRequest.AuxDataEntry', '10': 'auxData'},
   ],
   '3': [FetchLiveQuoteRequest_AuxDataEntry$json],
 };
@@ -300,47 +196,11 @@ final $typed_data.Uint8List fetchLiveQuoteRequestDescriptor = $convert.base64Dec
 const GetHistoricalQuoteRequest$json = {
   '1': 'GetHistoricalQuoteRequest',
   '2': [
-    {
-      '1': 'proposed_execution_id',
-      '3': 1,
-      '4': 1,
-      '5': 9,
-      '10': 'proposedExecutionId'
-    },
-    {
-      '1': 'pagination',
-      '3': 2,
-      '4': 1,
-      '5': 11,
-      '6': '.qomet.agora.daemons.prtagent.v1.PaginationParams',
-      '10': 'pagination'
-    },
-    {
-      '1': 'instrument_id_and_symbol_regexes',
-      '3': 3,
-      '4': 3,
-      '5': 9,
-      '10': 'instrumentIdAndSymbolRegexes'
-    },
-    {
-      '1': 'duration',
-      '3': 4,
-      '4': 1,
-      '5': 11,
-      '6': '.qomet.agora.daemons.prtagent.v1.Duration',
-      '9': 0,
-      '10': 'duration',
-      '17': true
-    },
-    {
-      '1': 'aux_data',
-      '3': 105,
-      '4': 3,
-      '5': 11,
-      '6':
-          '.qomet.agora.daemons.prtagent.v1.GetHistoricalQuoteRequest.AuxDataEntry',
-      '10': 'auxData'
-    },
+    {'1': 'proposed_execution_id', '3': 1, '4': 1, '5': 9, '10': 'proposedExecutionId'},
+    {'1': 'pagination', '3': 2, '4': 1, '5': 11, '6': '.qomet.agora.daemons.prtagent.v1.PaginationParams', '10': 'pagination'},
+    {'1': 'instrument_id_and_symbol_regexes', '3': 3, '4': 3, '5': 9, '10': 'instrumentIdAndSymbolRegexes'},
+    {'1': 'duration', '3': 4, '4': 1, '5': 11, '6': '.qomet.agora.daemons.prtagent.v1.Duration', '9': 0, '10': 'duration', '17': true},
+    {'1': 'aux_data', '3': 105, '4': 3, '5': 11, '6': '.qomet.agora.daemons.prtagent.v1.GetHistoricalQuoteRequest.AuxDataEntry', '10': 'auxData'},
   ],
   '3': [GetHistoricalQuoteRequest_AuxDataEntry$json],
   '8': [
@@ -375,31 +235,9 @@ const GetHistoricalQuoteResponse$json = {
   '1': 'GetHistoricalQuoteResponse',
   '2': [
     {'1': 'ref_execution_id', '3': 1, '4': 1, '5': 9, '10': 'refExecutionId'},
-    {
-      '1': 'pagination_info',
-      '3': 2,
-      '4': 1,
-      '5': 11,
-      '6': '.qomet.agora.daemons.prtagent.v1.PaginationInfo',
-      '10': 'paginationInfo'
-    },
-    {
-      '1': 'quotes',
-      '3': 3,
-      '4': 3,
-      '5': 11,
-      '6': '.qomet.agora.daemons.prtagent.v1.InstrumentQuote',
-      '10': 'quotes'
-    },
-    {
-      '1': 'metadata',
-      '3': 105,
-      '4': 3,
-      '5': 11,
-      '6':
-          '.qomet.agora.daemons.prtagent.v1.GetHistoricalQuoteResponse.MetadataEntry',
-      '10': 'metadata'
-    },
+    {'1': 'pagination_info', '3': 2, '4': 1, '5': 11, '6': '.qomet.agora.daemons.prtagent.v1.PaginationInfo', '10': 'paginationInfo'},
+    {'1': 'quotes', '3': 3, '4': 3, '5': 11, '6': '.qomet.agora.daemons.prtagent.v1.InstrumentQuote', '10': 'quotes'},
+    {'1': 'metadata', '3': 105, '4': 3, '5': 11, '6': '.qomet.agora.daemons.prtagent.v1.GetHistoricalQuoteResponse.MetadataEntry', '10': 'metadata'},
   ],
   '3': [GetHistoricalQuoteResponse_MetadataEntry$json],
 };
@@ -429,23 +267,11 @@ final $typed_data.Uint8List getHistoricalQuoteResponseDescriptor = $convert.base
 const LiveOhlcDataFetchParams$json = {
   '1': 'LiveOhlcDataFetchParams',
   '2': [
-    {
-      '1': 'update_interval_ms',
-      '3': 1,
-      '4': 1,
-      '5': 13,
-      '10': 'updateIntervalMs'
-    },
+    {'1': 'update_interval_ms', '3': 1, '4': 1, '5': 13, '10': 'updateIntervalMs'},
     {'1': 'max_duration_ms', '3': 2, '4': 1, '5': 13, '10': 'maxDurationMs'},
     {'1': 'period', '3': 3, '4': 1, '5': 9, '10': 'period'},
     {'1': 'include_volume', '3': 4, '4': 1, '5': 8, '10': 'includeVolume'},
-    {
-      '1': 'include_indicators',
-      '3': 5,
-      '4': 1,
-      '5': 8,
-      '10': 'includeIndicators'
-    },
+    {'1': 'include_indicators', '3': 5, '4': 1, '5': 8, '10': 'includeIndicators'},
   ],
 };
 
@@ -460,37 +286,10 @@ final $typed_data.Uint8List liveOhlcDataFetchParamsDescriptor = $convert.base64D
 const FetchLiveOhlcDataRequest$json = {
   '1': 'FetchLiveOhlcDataRequest',
   '2': [
-    {
-      '1': 'proposed_execution_id',
-      '3': 1,
-      '4': 1,
-      '5': 9,
-      '10': 'proposedExecutionId'
-    },
-    {
-      '1': 'instrument_id_and_symbol_regexes',
-      '3': 2,
-      '4': 3,
-      '5': 9,
-      '10': 'instrumentIdAndSymbolRegexes'
-    },
-    {
-      '1': 'fetch_params',
-      '3': 3,
-      '4': 1,
-      '5': 11,
-      '6': '.qomet.agora.daemons.prtagent.v1.LiveOhlcDataFetchParams',
-      '10': 'fetchParams'
-    },
-    {
-      '1': 'aux_data',
-      '3': 105,
-      '4': 3,
-      '5': 11,
-      '6':
-          '.qomet.agora.daemons.prtagent.v1.FetchLiveOhlcDataRequest.AuxDataEntry',
-      '10': 'auxData'
-    },
+    {'1': 'proposed_execution_id', '3': 1, '4': 1, '5': 9, '10': 'proposedExecutionId'},
+    {'1': 'instrument_id_and_symbol_regexes', '3': 2, '4': 3, '5': 9, '10': 'instrumentIdAndSymbolRegexes'},
+    {'1': 'fetch_params', '3': 3, '4': 1, '5': 11, '6': '.qomet.agora.daemons.prtagent.v1.LiveOhlcDataFetchParams', '10': 'fetchParams'},
+    {'1': 'aux_data', '3': 105, '4': 3, '5': 11, '6': '.qomet.agora.daemons.prtagent.v1.FetchLiveOhlcDataRequest.AuxDataEntry', '10': 'auxData'},
   ],
   '3': [FetchLiveOhlcDataRequest_AuxDataEntry$json],
 };
@@ -520,49 +319,13 @@ final $typed_data.Uint8List fetchLiveOhlcDataRequestDescriptor = $convert.base64
 const GetHistoricalOhlcDataRequest$json = {
   '1': 'GetHistoricalOhlcDataRequest',
   '2': [
-    {
-      '1': 'proposed_execution_id',
-      '3': 1,
-      '4': 1,
-      '5': 9,
-      '10': 'proposedExecutionId'
-    },
-    {
-      '1': 'pagination',
-      '3': 2,
-      '4': 1,
-      '5': 11,
-      '6': '.qomet.agora.daemons.prtagent.v1.PaginationParams',
-      '10': 'pagination'
-    },
-    {
-      '1': 'instrument_id_and_symbol_regexes',
-      '3': 3,
-      '4': 3,
-      '5': 9,
-      '10': 'instrumentIdAndSymbolRegexes'
-    },
-    {
-      '1': 'duration',
-      '3': 4,
-      '4': 1,
-      '5': 11,
-      '6': '.qomet.agora.daemons.prtagent.v1.Duration',
-      '9': 0,
-      '10': 'duration',
-      '17': true
-    },
+    {'1': 'proposed_execution_id', '3': 1, '4': 1, '5': 9, '10': 'proposedExecutionId'},
+    {'1': 'pagination', '3': 2, '4': 1, '5': 11, '6': '.qomet.agora.daemons.prtagent.v1.PaginationParams', '10': 'pagination'},
+    {'1': 'instrument_id_and_symbol_regexes', '3': 3, '4': 3, '5': 9, '10': 'instrumentIdAndSymbolRegexes'},
+    {'1': 'duration', '3': 4, '4': 1, '5': 11, '6': '.qomet.agora.daemons.prtagent.v1.Duration', '9': 0, '10': 'duration', '17': true},
     {'1': 'period', '3': 5, '4': 1, '5': 9, '10': 'period'},
     {'1': 'include_volume', '3': 6, '4': 1, '5': 8, '10': 'includeVolume'},
-    {
-      '1': 'aux_data',
-      '3': 105,
-      '4': 3,
-      '5': 11,
-      '6':
-          '.qomet.agora.daemons.prtagent.v1.GetHistoricalOhlcDataRequest.AuxDataEntry',
-      '10': 'auxData'
-    },
+    {'1': 'aux_data', '3': 105, '4': 3, '5': 11, '6': '.qomet.agora.daemons.prtagent.v1.GetHistoricalOhlcDataRequest.AuxDataEntry', '10': 'auxData'},
   ],
   '3': [GetHistoricalOhlcDataRequest_AuxDataEntry$json],
   '8': [
@@ -598,31 +361,9 @@ const GetHistoricalOhlcDataResponse$json = {
   '1': 'GetHistoricalOhlcDataResponse',
   '2': [
     {'1': 'ref_execution_id', '3': 1, '4': 1, '5': 9, '10': 'refExecutionId'},
-    {
-      '1': 'pagination_info',
-      '3': 2,
-      '4': 1,
-      '5': 11,
-      '6': '.qomet.agora.daemons.prtagent.v1.PaginationInfo',
-      '10': 'paginationInfo'
-    },
-    {
-      '1': 'ohlc_datas',
-      '3': 3,
-      '4': 3,
-      '5': 11,
-      '6': '.qomet.agora.daemons.prtagent.v1.OhlcData',
-      '10': 'ohlcDatas'
-    },
-    {
-      '1': 'metadata',
-      '3': 105,
-      '4': 3,
-      '5': 11,
-      '6':
-          '.qomet.agora.daemons.prtagent.v1.GetHistoricalOhlcDataResponse.MetadataEntry',
-      '10': 'metadata'
-    },
+    {'1': 'pagination_info', '3': 2, '4': 1, '5': 11, '6': '.qomet.agora.daemons.prtagent.v1.PaginationInfo', '10': 'paginationInfo'},
+    {'1': 'ohlc_datas', '3': 3, '4': 3, '5': 11, '6': '.qomet.agora.daemons.prtagent.v1.OhlcData', '10': 'ohlcDatas'},
+    {'1': 'metadata', '3': 105, '4': 3, '5': 11, '6': '.qomet.agora.daemons.prtagent.v1.GetHistoricalOhlcDataResponse.MetadataEntry', '10': 'metadata'},
   ],
   '3': [GetHistoricalOhlcDataResponse_MetadataEntry$json],
 };
@@ -661,13 +402,7 @@ const FeeStructure$json = {
     {'1': 'currency', '3': 8, '4': 1, '5': 9, '10': 'currency'},
     {'1': 'fee_tier', '3': 9, '4': 1, '5': 9, '10': 'feeTier'},
     {'1': 'discount_rate', '3': 10, '4': 1, '5': 9, '10': 'discountRate'},
-    {
-      '1': 'total_estimated_fee',
-      '3': 11,
-      '4': 1,
-      '5': 9,
-      '10': 'totalEstimatedFee'
-    },
+    {'1': 'total_estimated_fee', '3': 11, '4': 1, '5': 9, '10': 'totalEstimatedFee'},
   ],
 };
 
@@ -685,50 +420,18 @@ final $typed_data.Uint8List feeStructureDescriptor = $convert.base64Decode(
 const GetOrderFeesRequest$json = {
   '1': 'GetOrderFeesRequest',
   '2': [
-    {
-      '1': 'proposed_execution_id',
-      '3': 1,
-      '4': 1,
-      '5': 9,
-      '10': 'proposedExecutionId'
-    },
+    {'1': 'proposed_execution_id', '3': 1, '4': 1, '5': 9, '10': 'proposedExecutionId'},
     {'1': 'account_iid', '3': 2, '4': 1, '5': 9, '10': 'accountIid'},
-    {
-      '1': 'fee_payer_account_iid',
-      '3': 3,
-      '4': 1,
-      '5': 9,
-      '10': 'feePayerAccountIid'
-    },
-    {
-      '1': 'instrument_listing_iid',
-      '3': 4,
-      '4': 1,
-      '5': 9,
-      '10': 'instrumentListingIid'
-    },
+    {'1': 'fee_payer_account_iid', '3': 3, '4': 1, '5': 9, '10': 'feePayerAccountIid'},
+    {'1': 'instrument_listing_iid', '3': 4, '4': 1, '5': 9, '10': 'instrumentListingIid'},
     {'1': 'order_type', '3': 5, '4': 1, '5': 9, '10': 'orderType'},
-    {
-      '1': 'side',
-      '3': 6,
-      '4': 1,
-      '5': 14,
-      '6': '.qomet.agora.daemons.prtagent.v1.OrderSide',
-      '10': 'side'
-    },
+    {'1': 'side', '3': 6, '4': 1, '5': 14, '6': '.qomet.agora.daemons.prtagent.v1.OrderSide', '10': 'side'},
     {'1': 'quantity', '3': 7, '4': 1, '5': 9, '10': 'quantity'},
     {'1': 'price', '3': 8, '4': 1, '5': 9, '10': 'price'},
     {'1': 'time_in_force', '3': 9, '4': 1, '5': 9, '10': 'timeInForce'},
     {'1': 'is_post_only', '3': 10, '4': 1, '5': 8, '10': 'isPostOnly'},
     {'1': 'is_reduce_only', '3': 11, '4': 1, '5': 8, '10': 'isReduceOnly'},
-    {
-      '1': 'aux_data',
-      '3': 105,
-      '4': 3,
-      '5': 11,
-      '6': '.qomet.agora.daemons.prtagent.v1.GetOrderFeesRequest.AuxDataEntry',
-      '10': 'auxData'
-    },
+    {'1': 'aux_data', '3': 105, '4': 3, '5': 11, '6': '.qomet.agora.daemons.prtagent.v1.GetOrderFeesRequest.AuxDataEntry', '10': 'auxData'},
   ],
   '3': [GetOrderFeesRequest_AuxDataEntry$json],
 };
@@ -763,55 +466,15 @@ const GetOrderFeesResponse$json = {
   '1': 'GetOrderFeesResponse',
   '2': [
     {'1': 'ref_execution_id', '3': 1, '4': 1, '5': 9, '10': 'refExecutionId'},
-    {
-      '1': 'fee_structure',
-      '3': 2,
-      '4': 1,
-      '5': 11,
-      '6': '.qomet.agora.daemons.prtagent.v1.FeeStructure',
-      '10': 'feeStructure'
-    },
+    {'1': 'fee_structure', '3': 2, '4': 1, '5': 11, '6': '.qomet.agora.daemons.prtagent.v1.FeeStructure', '10': 'feeStructure'},
     {'1': 'fee_notes', '3': 3, '4': 3, '5': 9, '10': 'feeNotes'},
-    {
-      '1': 'fee_valid_until_dt',
-      '3': 4,
-      '4': 1,
-      '5': 11,
-      '6': '.qomet.agora.daemons.prtagent.v1.DateTime',
-      '10': 'feeValidUntilDt'
-    },
+    {'1': 'fee_valid_until_dt', '3': 4, '4': 1, '5': 11, '6': '.qomet.agora.daemons.prtagent.v1.DateTime', '10': 'feeValidUntilDt'},
     {'1': 'msg', '3': 5, '4': 1, '5': 9, '10': 'msg'},
-    {
-      '1': 'fee_breakdown',
-      '3': 6,
-      '4': 3,
-      '5': 11,
-      '6':
-          '.qomet.agora.daemons.prtagent.v1.GetOrderFeesResponse.FeeBreakdownEntry',
-      '10': 'feeBreakdown'
-    },
-    {
-      '1': 'alternative_fee_options',
-      '3': 7,
-      '4': 3,
-      '5': 11,
-      '6': '.qomet.agora.daemons.prtagent.v1.FeeStructure',
-      '10': 'alternativeFeeOptions'
-    },
-    {
-      '1': 'metadata',
-      '3': 8,
-      '4': 3,
-      '5': 11,
-      '6':
-          '.qomet.agora.daemons.prtagent.v1.GetOrderFeesResponse.MetadataEntry',
-      '10': 'metadata'
-    },
+    {'1': 'fee_breakdown', '3': 6, '4': 3, '5': 11, '6': '.qomet.agora.daemons.prtagent.v1.GetOrderFeesResponse.FeeBreakdownEntry', '10': 'feeBreakdown'},
+    {'1': 'alternative_fee_options', '3': 7, '4': 3, '5': 11, '6': '.qomet.agora.daemons.prtagent.v1.FeeStructure', '10': 'alternativeFeeOptions'},
+    {'1': 'metadata', '3': 8, '4': 3, '5': 11, '6': '.qomet.agora.daemons.prtagent.v1.GetOrderFeesResponse.MetadataEntry', '10': 'metadata'},
   ],
-  '3': [
-    GetOrderFeesResponse_FeeBreakdownEntry$json,
-    GetOrderFeesResponse_MetadataEntry$json
-  ],
+  '3': [GetOrderFeesResponse_FeeBreakdownEntry$json, GetOrderFeesResponse_MetadataEntry$json],
 };
 
 @$core.Deprecated('Use getOrderFeesResponseDescriptor instead')
@@ -854,64 +517,18 @@ final $typed_data.Uint8List getOrderFeesResponseDescriptor = $convert.base64Deco
 const CreateOrderAsyncRequest$json = {
   '1': 'CreateOrderAsyncRequest',
   '2': [
-    {
-      '1': 'proposed_execution_id',
-      '3': 1,
-      '4': 1,
-      '5': 9,
-      '10': 'proposedExecutionId'
-    },
+    {'1': 'proposed_execution_id', '3': 1, '4': 1, '5': 9, '10': 'proposedExecutionId'},
     {'1': 'account_iid', '3': 2, '4': 1, '5': 9, '10': 'accountIid'},
-    {
-      '1': 'fee_payer_account_iid',
-      '3': 3,
-      '4': 1,
-      '5': 9,
-      '10': 'feePayerAccountIid'
-    },
-    {
-      '1': 'instrument_listing_iid',
-      '3': 4,
-      '4': 1,
-      '5': 9,
-      '10': 'instrumentListingIid'
-    },
+    {'1': 'fee_payer_account_iid', '3': 3, '4': 1, '5': 9, '10': 'feePayerAccountIid'},
+    {'1': 'instrument_listing_iid', '3': 4, '4': 1, '5': 9, '10': 'instrumentListingIid'},
     {'1': 'order_type', '3': 5, '4': 1, '5': 9, '10': 'orderType'},
-    {
-      '1': 'side',
-      '3': 6,
-      '4': 1,
-      '5': 14,
-      '6': '.qomet.agora.daemons.prtagent.v1.OrderSide',
-      '10': 'side'
-    },
+    {'1': 'side', '3': 6, '4': 1, '5': 14, '6': '.qomet.agora.daemons.prtagent.v1.OrderSide', '10': 'side'},
     {'1': 'quantity', '3': 7, '4': 1, '5': 9, '10': 'quantity'},
     {'1': 'price', '3': 8, '4': 1, '5': 9, '10': 'price'},
     {'1': 'time_in_force', '3': 9, '4': 1, '5': 9, '10': 'timeInForce'},
-    {
-      '1': 'expire_dt',
-      '3': 10,
-      '4': 1,
-      '5': 11,
-      '6': '.qomet.agora.daemons.prtagent.v1.DateTime',
-      '10': 'expireDt'
-    },
-    {
-      '1': 'participant_order_iid',
-      '3': 11,
-      '4': 1,
-      '5': 9,
-      '10': 'participantOrderIid'
-    },
-    {
-      '1': 'aux_data',
-      '3': 105,
-      '4': 3,
-      '5': 11,
-      '6':
-          '.qomet.agora.daemons.prtagent.v1.CreateOrderAsyncRequest.AuxDataEntry',
-      '10': 'auxData'
-    },
+    {'1': 'expire_dt', '3': 10, '4': 1, '5': 11, '6': '.qomet.agora.daemons.prtagent.v1.DateTime', '10': 'expireDt'},
+    {'1': 'participant_order_iid', '3': 11, '4': 1, '5': 9, '10': 'participantOrderIid'},
+    {'1': 'aux_data', '3': 105, '4': 3, '5': 11, '6': '.qomet.agora.daemons.prtagent.v1.CreateOrderAsyncRequest.AuxDataEntry', '10': 'auxData'},
   ],
   '3': [CreateOrderAsyncRequest_AuxDataEntry$json],
 };
@@ -946,47 +563,14 @@ final $typed_data.Uint8List createOrderAsyncRequestDescriptor = $convert.base64D
 const ReplaceOrderAsyncRequest$json = {
   '1': 'ReplaceOrderAsyncRequest',
   '2': [
-    {
-      '1': 'proposed_execution_id',
-      '3': 1,
-      '4': 1,
-      '5': 9,
-      '10': 'proposedExecutionId'
-    },
-    {
-      '1': 'old_participant_order_id',
-      '3': 2,
-      '4': 1,
-      '5': 9,
-      '10': 'oldParticipantOrderId'
-    },
-    {
-      '1': 'new_participant_order_id',
-      '3': 3,
-      '4': 1,
-      '5': 9,
-      '10': 'newParticipantOrderId'
-    },
+    {'1': 'proposed_execution_id', '3': 1, '4': 1, '5': 9, '10': 'proposedExecutionId'},
+    {'1': 'old_participant_order_id', '3': 2, '4': 1, '5': 9, '10': 'oldParticipantOrderId'},
+    {'1': 'new_participant_order_id', '3': 3, '4': 1, '5': 9, '10': 'newParticipantOrderId'},
     {'1': 'new_quantity', '3': 4, '4': 1, '5': 9, '10': 'newQuantity'},
     {'1': 'new_price', '3': 5, '4': 1, '5': 9, '10': 'newPrice'},
-    {
-      '1': 'new_expire_time',
-      '3': 6,
-      '4': 1,
-      '5': 11,
-      '6': '.qomet.agora.daemons.prtagent.v1.Time',
-      '10': 'newExpireTime'
-    },
+    {'1': 'new_expire_time', '3': 6, '4': 1, '5': 11, '6': '.qomet.agora.daemons.prtagent.v1.Time', '10': 'newExpireTime'},
     {'1': 'reason', '3': 7, '4': 1, '5': 9, '10': 'reason'},
-    {
-      '1': 'aux_data',
-      '3': 105,
-      '4': 3,
-      '5': 11,
-      '6':
-          '.qomet.agora.daemons.prtagent.v1.ReplaceOrderAsyncRequest.AuxDataEntry',
-      '10': 'auxData'
-    },
+    {'1': 'aux_data', '3': 105, '4': 3, '5': 11, '6': '.qomet.agora.daemons.prtagent.v1.ReplaceOrderAsyncRequest.AuxDataEntry', '10': 'auxData'},
   ],
   '3': [ReplaceOrderAsyncRequest_AuxDataEntry$json],
 };
@@ -1018,30 +602,10 @@ final $typed_data.Uint8List replaceOrderAsyncRequestDescriptor = $convert.base64
 const CancelOrderAsyncRequest$json = {
   '1': 'CancelOrderAsyncRequest',
   '2': [
-    {
-      '1': 'proposed_execution_id',
-      '3': 1,
-      '4': 1,
-      '5': 9,
-      '10': 'proposedExecutionId'
-    },
-    {
-      '1': 'participant_order_id',
-      '3': 2,
-      '4': 1,
-      '5': 9,
-      '10': 'participantOrderId'
-    },
+    {'1': 'proposed_execution_id', '3': 1, '4': 1, '5': 9, '10': 'proposedExecutionId'},
+    {'1': 'participant_order_id', '3': 2, '4': 1, '5': 9, '10': 'participantOrderId'},
     {'1': 'reason', '3': 3, '4': 1, '5': 9, '10': 'reason'},
-    {
-      '1': 'aux_data',
-      '3': 105,
-      '4': 3,
-      '5': 11,
-      '6':
-          '.qomet.agora.daemons.prtagent.v1.CancelOrderAsyncRequest.AuxDataEntry',
-      '10': 'auxData'
-    },
+    {'1': 'aux_data', '3': 105, '4': 3, '5': 11, '6': '.qomet.agora.daemons.prtagent.v1.CancelOrderAsyncRequest.AuxDataEntry', '10': 'auxData'},
   ],
   '3': [CancelOrderAsyncRequest_AuxDataEntry$json],
 };
@@ -1069,38 +633,11 @@ final $typed_data.Uint8List cancelOrderAsyncRequestDescriptor = $convert.base64D
 const GetOrderbookRequest$json = {
   '1': 'GetOrderbookRequest',
   '2': [
-    {
-      '1': 'proposed_execution_id',
-      '3': 1,
-      '4': 1,
-      '5': 9,
-      '10': 'proposedExecutionId'
-    },
-    {
-      '1': 'pagination',
-      '3': 2,
-      '4': 1,
-      '5': 11,
-      '6': '.qomet.agora.daemons.prtagent.v1.PaginationParams',
-      '10': 'pagination'
-    },
+    {'1': 'proposed_execution_id', '3': 1, '4': 1, '5': 9, '10': 'proposedExecutionId'},
+    {'1': 'pagination', '3': 2, '4': 1, '5': 11, '6': '.qomet.agora.daemons.prtagent.v1.PaginationParams', '10': 'pagination'},
     {'1': 'instrument_iid', '3': 3, '4': 1, '5': 9, '10': 'instrumentIid'},
-    {
-      '1': 'orderbook_query_filter',
-      '3': 4,
-      '4': 1,
-      '5': 11,
-      '6': '.qomet.agora.daemons.prtagent.v1.OrderbookQueryFilter',
-      '10': 'orderbookQueryFilter'
-    },
-    {
-      '1': 'aux_data',
-      '3': 105,
-      '4': 3,
-      '5': 11,
-      '6': '.qomet.agora.daemons.prtagent.v1.GetOrderbookRequest.AuxDataEntry',
-      '10': 'auxData'
-    },
+    {'1': 'orderbook_query_filter', '3': 4, '4': 1, '5': 11, '6': '.qomet.agora.daemons.prtagent.v1.OrderbookQueryFilter', '10': 'orderbookQueryFilter'},
+    {'1': 'aux_data', '3': 105, '4': 3, '5': 11, '6': '.qomet.agora.daemons.prtagent.v1.GetOrderbookRequest.AuxDataEntry', '10': 'auxData'},
   ],
   '3': [GetOrderbookRequest_AuxDataEntry$json],
 };
@@ -1132,47 +669,11 @@ const GetOrderbookResponse$json = {
   '1': 'GetOrderbookResponse',
   '2': [
     {'1': 'ref_execution_id', '3': 1, '4': 1, '5': 9, '10': 'refExecutionId'},
-    {
-      '1': 'generated_at_dt',
-      '3': 2,
-      '4': 1,
-      '5': 11,
-      '6': '.qomet.agora.daemons.prtagent.v1.DateTime',
-      '10': 'generatedAtDt'
-    },
-    {
-      '1': 'instrument',
-      '3': 3,
-      '4': 1,
-      '5': 11,
-      '6': '.qomet.agora.daemons.prtagent.v1.Instrument',
-      '10': 'instrument'
-    },
-    {
-      '1': 'buy_list',
-      '3': 4,
-      '4': 1,
-      '5': 11,
-      '6': '.qomet.agora.daemons.prtagent.v1.OrderList',
-      '10': 'buyList'
-    },
-    {
-      '1': 'sell_list',
-      '3': 5,
-      '4': 1,
-      '5': 11,
-      '6': '.qomet.agora.daemons.prtagent.v1.OrderList',
-      '10': 'sellList'
-    },
-    {
-      '1': 'metadata',
-      '3': 105,
-      '4': 3,
-      '5': 11,
-      '6':
-          '.qomet.agora.daemons.prtagent.v1.GetOrderbookResponse.MetadataEntry',
-      '10': 'metadata'
-    },
+    {'1': 'generated_at_dt', '3': 2, '4': 1, '5': 11, '6': '.qomet.agora.daemons.prtagent.v1.DateTime', '10': 'generatedAtDt'},
+    {'1': 'instrument', '3': 3, '4': 1, '5': 11, '6': '.qomet.agora.daemons.prtagent.v1.Instrument', '10': 'instrument'},
+    {'1': 'buy_list', '3': 4, '4': 1, '5': 11, '6': '.qomet.agora.daemons.prtagent.v1.OrderList', '10': 'buyList'},
+    {'1': 'sell_list', '3': 5, '4': 1, '5': 11, '6': '.qomet.agora.daemons.prtagent.v1.OrderList', '10': 'sellList'},
+    {'1': 'metadata', '3': 105, '4': 3, '5': 11, '6': '.qomet.agora.daemons.prtagent.v1.GetOrderbookResponse.MetadataEntry', '10': 'metadata'},
   ],
   '3': [GetOrderbookResponse_MetadataEntry$json],
 };
@@ -1199,3 +700,4 @@ final $typed_data.Uint8List getOrderbookResponseDescriptor = $convert.base64Deco
     '5xb21ldC5hZ29yYS5kYWVtb25zLnBydGFnZW50LnYxLkdldE9yZGVyYm9va1Jlc3BvbnNlLk1l'
     'dGFkYXRhRW50cnlSCG1ldGFkYXRhGjsKDU1ldGFkYXRhRW50cnkSEAoDa2V5GAEgASgJUgNrZX'
     'kSFAoFdmFsdWUYAiABKAlSBXZhbHVlOgI4AQ==');
+

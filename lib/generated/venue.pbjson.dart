@@ -1,14 +1,13 @@
-// This is a generated file - do not edit.
 //
-// Generated from venue.proto.
-
-// @dart = 3.3
+//  Generated code. Do not modify.
+//  source: venue.proto
+//
+// @dart = 2.12
 
 // ignore_for_file: annotate_overrides, camel_case_types, comment_references
-// ignore_for_file: constant_identifier_names
-// ignore_for_file: curly_braces_in_flow_control_structures
-// ignore_for_file: deprecated_member_use_from_same_package, library_prefixes
-// ignore_for_file: non_constant_identifier_names, unused_import
+// ignore_for_file: constant_identifier_names, library_prefixes
+// ignore_for_file: non_constant_identifier_names, prefer_final_fields
+// ignore_for_file: unnecessary_import, unnecessary_this, unused_import
 
 import 'dart:convert' as $convert;
 import 'dart:core' as $core;
@@ -18,43 +17,11 @@ import 'dart:typed_data' as $typed_data;
 const GetVenueListRequest$json = {
   '1': 'GetVenueListRequest',
   '2': [
-    {
-      '1': 'proposed_execution_id',
-      '3': 1,
-      '4': 1,
-      '5': 9,
-      '10': 'proposedExecutionId'
-    },
-    {
-      '1': 'pagination',
-      '3': 2,
-      '4': 1,
-      '5': 11,
-      '6': '.qomet.agora.daemons.prtagent.v1.PaginationParams',
-      '10': 'pagination'
-    },
-    {
-      '1': 'market_id_or_symbol_regex',
-      '3': 3,
-      '4': 1,
-      '5': 9,
-      '10': 'marketIdOrSymbolRegex'
-    },
-    {
-      '1': 'venue_id_or_symbol_regex',
-      '3': 4,
-      '4': 1,
-      '5': 9,
-      '10': 'venueIdOrSymbolRegex'
-    },
-    {
-      '1': 'aux_data',
-      '3': 105,
-      '4': 3,
-      '5': 11,
-      '6': '.qomet.agora.daemons.prtagent.v1.GetVenueListRequest.AuxDataEntry',
-      '10': 'auxData'
-    },
+    {'1': 'proposed_execution_id', '3': 1, '4': 1, '5': 9, '10': 'proposedExecutionId'},
+    {'1': 'pagination', '3': 2, '4': 1, '5': 11, '6': '.qomet.agora.daemons.prtagent.v1.PaginationParams', '10': 'pagination'},
+    {'1': 'market_id_or_symbol_regex', '3': 3, '4': 1, '5': 9, '10': 'marketIdOrSymbolRegex'},
+    {'1': 'venue_id_or_symbol_regex', '3': 4, '4': 1, '5': 9, '10': 'venueIdOrSymbolRegex'},
+    {'1': 'aux_data', '3': 105, '4': 3, '5': 11, '6': '.qomet.agora.daemons.prtagent.v1.GetVenueListRequest.AuxDataEntry', '10': 'auxData'},
   ],
   '3': [GetVenueListRequest_AuxDataEntry$json],
 };
@@ -85,31 +52,9 @@ const GetVenueListResponse$json = {
   '1': 'GetVenueListResponse',
   '2': [
     {'1': 'ref_execution_id', '3': 1, '4': 1, '5': 9, '10': 'refExecutionId'},
-    {
-      '1': 'pagination',
-      '3': 2,
-      '4': 1,
-      '5': 11,
-      '6': '.qomet.agora.daemons.prtagent.v1.PaginationInfo',
-      '10': 'pagination'
-    },
-    {
-      '1': 'venues',
-      '3': 3,
-      '4': 3,
-      '5': 11,
-      '6': '.qomet.agora.daemons.prtagent.v1.Venue',
-      '10': 'venues'
-    },
-    {
-      '1': 'metadata',
-      '3': 105,
-      '4': 3,
-      '5': 11,
-      '6':
-          '.qomet.agora.daemons.prtagent.v1.GetVenueListResponse.MetadataEntry',
-      '10': 'metadata'
-    },
+    {'1': 'pagination', '3': 2, '4': 1, '5': 11, '6': '.qomet.agora.daemons.prtagent.v1.PaginationInfo', '10': 'pagination'},
+    {'1': 'venues', '3': 3, '4': 3, '5': 11, '6': '.qomet.agora.daemons.prtagent.v1.Venue', '10': 'venues'},
+    {'1': 'metadata', '3': 105, '4': 3, '5': 11, '6': '.qomet.agora.daemons.prtagent.v1.GetVenueListResponse.MetadataEntry', '10': 'metadata'},
   ],
   '3': [GetVenueListResponse_MetadataEntry$json],
 };
@@ -138,23 +83,9 @@ final $typed_data.Uint8List getVenueListResponseDescriptor = $convert.base64Deco
 const GetVenueCalendarRequest$json = {
   '1': 'GetVenueCalendarRequest',
   '2': [
-    {
-      '1': 'proposed_execution_id',
-      '3': 1,
-      '4': 1,
-      '5': 9,
-      '10': 'proposedExecutionId'
-    },
+    {'1': 'proposed_execution_id', '3': 1, '4': 1, '5': 9, '10': 'proposedExecutionId'},
     {'1': 'venue_iid', '3': 2, '4': 1, '5': 9, '10': 'venueIid'},
-    {
-      '1': 'aux_data',
-      '3': 105,
-      '4': 3,
-      '5': 11,
-      '6':
-          '.qomet.agora.daemons.prtagent.v1.GetVenueCalendarRequest.AuxDataEntry',
-      '10': 'auxData'
-    },
+    {'1': 'aux_data', '3': 105, '4': 3, '5': 11, '6': '.qomet.agora.daemons.prtagent.v1.GetVenueCalendarRequest.AuxDataEntry', '10': 'auxData'},
   ],
   '3': [GetVenueCalendarRequest_AuxDataEntry$json],
 };
@@ -182,23 +113,8 @@ const GetVenueCalendarResponse$json = {
   '1': 'GetVenueCalendarResponse',
   '2': [
     {'1': 'ref_execution_id', '3': 1, '4': 1, '5': 9, '10': 'refExecutionId'},
-    {
-      '1': 'calendar',
-      '3': 2,
-      '4': 1,
-      '5': 11,
-      '6': '.qomet.agora.daemons.prtagent.v1.VenueCalendar',
-      '10': 'calendar'
-    },
-    {
-      '1': 'metadata',
-      '3': 105,
-      '4': 3,
-      '5': 11,
-      '6':
-          '.qomet.agora.daemons.prtagent.v1.GetVenueCalendarResponse.MetadataEntry',
-      '10': 'metadata'
-    },
+    {'1': 'calendar', '3': 2, '4': 1, '5': 11, '6': '.qomet.agora.daemons.prtagent.v1.VenueCalendar', '10': 'calendar'},
+    {'1': 'metadata', '3': 105, '4': 3, '5': 11, '6': '.qomet.agora.daemons.prtagent.v1.GetVenueCalendarResponse.MetadataEntry', '10': 'metadata'},
   ],
   '3': [GetVenueCalendarResponse_MetadataEntry$json],
 };
@@ -221,3 +137,4 @@ final $typed_data.Uint8List getVenueCalendarResponseDescriptor = $convert.base64
     '9tZXQuYWdvcmEuZGFlbW9ucy5wcnRhZ2VudC52MS5HZXRWZW51ZUNhbGVuZGFyUmVzcG9uc2Uu'
     'TWV0YWRhdGFFbnRyeVIIbWV0YWRhdGEaOwoNTWV0YWRhdGFFbnRyeRIQCgNrZXkYASABKAlSA2'
     'tleRIUCgV2YWx1ZRgCIAEoCVIFdmFsdWU6AjgB');
+

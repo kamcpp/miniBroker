@@ -6,10 +6,12 @@ import 'dart:ui';
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 import 'package:http/http.dart' as http;
+import 'package:candlesticks/candlesticks.dart';
 import '../services/auth_service.dart';
 import '../services/theme_service.dart';
 import '../services/real_grpc_client.dart';
 import '../services/grpcurl_helper.dart';
+import '../services/chart_service.dart';
 import '../utils/connectivity_checker.dart';
 import 'portfolio_page.dart';
 import 'Cash_management_page.dart';
@@ -567,7 +569,7 @@ class _TradingPageState extends State<TradingPage> {
             _selectedSymbol = _assets.first['symbol'];
             // Load chart immediately when symbol is first set
             WidgetsBinding.instance.addPostFrameCallback((_) {
-              _fetchChartData(_selectedSymbol);
+              _loadChartData(_selectedSymbol);
             });
           }
           _isLoadingMarketInstruments = false;
@@ -853,11 +855,13 @@ class _TradingPageState extends State<TradingPage> {
   bool _isLoadingMoreOrders = false;
   bool _isLoadingMoreHistory = false;
 
-  // Chart data variables
-  Map<String, List<Map<String, dynamic>>> _chartData = {}; // Cache chart data by symbol
+  // Chart data variables using candlesticks package
+  List<Candle> _candles = [];
   bool _isLoadingChart = false;
   String _chartError = '';
-  String _selectedTimePeriod = '1m'; // Default to 1 month
+  String _selectedTimePeriod = '1h'; // Default period
+  ChartService? _chartService;
+  StreamSubscription? _liveOhlcSubscription;
   
   // Orderbook data variables
   List<Map<String, dynamic>> _sellOrders = [];
@@ -918,7 +922,7 @@ class _TradingPageState extends State<TradingPage> {
       // Fetch trade history, orderbook, and chart for default symbol when page is shown and assets are loaded
       WidgetsBinding.instance.addPostFrameCallback((_) {
         if (_selectedSymbol.isNotEmpty) {
-          _fetchChartData(_selectedSymbol);
+          _loadChartData(_selectedSymbol);
           _resetAndFetchTradeHistory(_selectedSymbol);
           _fetchOrderbookData(_selectedSymbol);
         }
@@ -1825,7 +1829,7 @@ class _TradingPageState extends State<TradingPage> {
               WidgetsBinding.instance.addPostFrameCallback((_) {
                 Future.delayed(const Duration(milliseconds: 500), () {
                   if (mounted) {
-                    _fetchChartData(_selectedSymbol);
+                    _loadChartData(_selectedSymbol);
                     _resetAndFetchTradeHistory(_selectedSymbol);
                     _fetchOrderbookData(_selectedSymbol);
                   }
@@ -1885,7 +1889,7 @@ class _TradingPageState extends State<TradingPage> {
             _selectedSymbol = _assets.first['symbol'];
             // Load chart immediately when symbol is first set
             WidgetsBinding.instance.addPostFrameCallback((_) {
-              _fetchChartData(_selectedSymbol);
+              _loadChartData(_selectedSymbol);
             });
           }
         }
@@ -1893,222 +1897,118 @@ class _TradingPageState extends State<TradingPage> {
     }
   }
   
-  Future<void> _fetchChartData(String symbol) async {
-    print('🔍 DEBUG: Starting _fetchChartData for symbol: $symbol, period: $_selectedTimePeriod');
-    
-    // Create unique key that includes time period
-    final chartKey = '${symbol}_$_selectedTimePeriod';
-    
-    // Skip if we already have chart data for this symbol and time period
-    if (_chartData.containsKey(chartKey)) {
-      print('📊 Chart data already cached for $symbol ($_selectedTimePeriod)');
-      return;
-    }
-    
-    // Find the asset data for this symbol
-    final asset = _assets.firstWhere(
-      (asset) => asset['symbol'] == symbol,
-      orElse: () => {},
-    );
+  /// Load chart data using gRPC GetHistoricalOhlcData
+  Future<void> _loadChartData(String symbol) async {
+    print('📊 Loading chart data for $symbol, period: $_selectedTimePeriod');
 
-    print('🔍 DEBUG: Found asset: $asset');
-
-    if (asset.isEmpty) {
-      print('❌ Asset not found for symbol: $symbol');
-      setState(() {
-        _chartError = 'Asset not found for symbol: $symbol';
-      });
-      return;
-    }
-
-    final orderbook = asset['orderbook']?.toString() ?? '';
-    final exchangePairId = asset['exchangePairId']?.toString() ?? '';
-    // Get quoteTokenDecimal for normalization
-    final quoteTokenDecimal = int.tryParse(asset['quoteTokenDecimal']?.toString() ?? '0') ?? 0;
-
-    print('🔍 DEBUG: orderbook="$orderbook", exchangePairId="$exchangePairId", quoteTokenDecimal=$quoteTokenDecimal');
-
-    if (orderbook.isEmpty || exchangePairId.isEmpty) {
-      print('❌ Missing required fields for $symbol: orderbook="$orderbook", exchangePairId="$exchangePairId"');
-      // For testing - create fake chart data if API fields are missing
-      print('🧪 Creating test chart data for $symbol ($_selectedTimePeriod)');
-      setState(() {
-        _isLoadingChart = false;
-        _chartError = '';
-        _chartData[chartKey] = _generateTestChartData();
-      });
-      return;
-    }
-    
     setState(() {
       _isLoadingChart = true;
       _chartError = '';
     });
-    
+
     try {
-      print('📊 Fetching chart data for symbol: $symbol');
-      
-      // Calculate timestamps based on selected time period
-      final now = DateTime.now();
-      DateTime startDate;
-      int intervalMinutes;
-      
-      switch (_selectedTimePeriod) {
-        case '1d':
-          startDate = now.subtract(const Duration(days: 1));
-          intervalMinutes = 60; // 1 hour candles
-          break;
-        case '7d':
-          startDate = now.subtract(const Duration(days: 7));
-          intervalMinutes = 240; // 4 hour candles
-          break;
-        case '1m':
-          startDate = now.subtract(const Duration(days: 30));
-          intervalMinutes = 1440; // Daily candles
-          break;
-        case 'all':
-          startDate = now.subtract(const Duration(days: 365));
-          intervalMinutes = 10080; // Weekly candles
-          break;
-        default:
-          startDate = now.subtract(const Duration(days: 30));
-          intervalMinutes = 1440;
-      }
-      
-      final fromTs = (startDate.millisecondsSinceEpoch / 1000).floor();
-      final toTs = (now.millisecondsSinceEpoch / 1000).floor();
-      
-      final requestBody = {
-        "chain_id": "131074",
-        "from_ts": fromTs,
-        "interval_minutes": intervalMinutes,
-        "orderbook": orderbook,
-        "pair_id": exchangePairId,
-        "to_ts": toTs,
-      };
-      
-      print('📊 Chart request for $symbol: $requestBody');
-      
-      final response = await http.post(
-        Uri.parse('https://brokerage-api-stage.tokenise.io/api/services/app/Agora/Ohlc'),
-        headers: {
-          'Content-Type': 'application/json',
-          'Accept': 'text/plain',
-          'X-XSRF-TOKEN': 'null',
-        },
-        body: json.encode(requestBody),
-      ).timeout(
-        const Duration(seconds: 15),
-        onTimeout: () {
-          throw TimeoutException('Chart API request timed out', const Duration(seconds: 15));
-        },
+      // Call gRPC GetHistoricalOhlcData using grpcurl
+      final result = await GrpcurlHelper.getHistoricalOhlcData(
+        symbol: symbol,
+        period: _selectedTimePeriod,
+        pageSize: 100,
       );
-      
-      if (response.statusCode == 200) {
-        final Map<String, dynamic> jsonData = json.decode(response.body);
-        
-        print('🔍 DEBUG: API Response: $jsonData');
-        
-        if (jsonData['success'] == true && jsonData['result'] != null) {
-          // Check if result is a List or contains a List
-          dynamic resultData = jsonData['result'];
-          List<dynamic> ohlcData = [];
-          
-          if (resultData is List) {
-            ohlcData = resultData;
-          } else if (resultData is Map && resultData.containsKey('data')) {
-            // Some APIs wrap the array in a 'data' field
-            if (resultData['data'] is List) {
-              ohlcData = resultData['data'];
-            }
-          } else {
-            throw Exception('API result is not in expected format: ${resultData.runtimeType}');
-          }
-          
-          print('✅ Received ${ohlcData.length} chart data points for $symbol');
-          
-          // Convert to chart format
-          final List<Map<String, dynamic>> chartPoints = [];
-          
-          for (var point in ohlcData) {
-            try {
-              if (point is Map<String, dynamic>) {
-                final decimalDiv = quoteTokenDecimal > 0 ? pow(10, quoteTokenDecimal).toDouble() : 1.0;
-                chartPoints.add({
-                  'timestamp': (point['timestamp'] ?? 0).toInt(),
-                  'open': _safeToDouble(point['open']) / decimalDiv,
-                  'high': _safeToDouble(point['high']) / decimalDiv,
-                  'low': _safeToDouble(point['low']) / decimalDiv,
-                  'close': _safeToDouble(point['close']) / decimalDiv,
-                  'volume': _safeToDouble(point['volume']),
-                });
+
+      if (result['success'] == true && result['output'] != null) {
+        final output = result['output'] as Map<String, dynamic>;
+        final ohlcDataList = output['ohlcDatas'] as List<dynamic>? ?? [];
+
+        print('━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━');
+        print('📊 CHART DATA PROCESSING for $symbol:');
+        print('✅ Received ${ohlcDataList.length} OHLC data points from server');
+        print('━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━');
+
+        // Convert to Candle objects
+        final List<Candle> candles = [];
+        for (var ohlcData in ohlcDataList) {
+          try {
+            final ohlcMap = ohlcData as Map<String, dynamic>;
+
+            // Parse timestamp from duration
+            DateTime timestamp = DateTime.now();
+            if (ohlcMap.containsKey('duration')) {
+              final duration = ohlcMap['duration'] as Map<String, dynamic>?;
+              if (duration != null && duration.containsKey('startDt')) {
+                final startDt = duration['startDt'] as Map<String, dynamic>?;
+                if (startDt != null && startDt.containsKey('date')) {
+                  final date = startDt['date'] as Map<String, dynamic>?;
+                  if (date != null) {
+                    final year = date['year'] ?? 0;
+                    final month = date['month'] ?? 1;
+                    final day = date['day'] ?? 1;
+                    int hour = 0;
+                    int minute = 0;
+
+                    if (startDt.containsKey('time')) {
+                      final time = startDt['time'] as Map<String, dynamic>?;
+                      if (time != null && time.containsKey('hms')) {
+                        final hms = time['hms'] as Map<String, dynamic>?;
+                        if (hms != null) {
+                          hour = hms['hour'] ?? 0;
+                          minute = hms['minute'] ?? 0;
+                        }
+                      }
+                    }
+
+                    timestamp = DateTime(year, month, day, hour, minute);
+                  }
+                }
               }
-            } catch (e) {
-              print('⚠️ Skipping invalid data point: $point, error: $e');
             }
+
+            final candle = Candle(
+              date: timestamp,
+              open: double.tryParse(ohlcMap['open']?.toString() ?? '0') ?? 0.0,
+              high: double.tryParse(ohlcMap['high']?.toString() ?? '0') ?? 0.0,
+              low: double.tryParse(ohlcMap['low']?.toString() ?? '0') ?? 0.0,
+              close: double.tryParse(ohlcMap['close']?.toString() ?? '0') ?? 0.0,
+              volume: double.tryParse(ohlcMap['volume']?.toString() ?? '0') ?? 0.0,
+            );
+
+            candles.add(candle);
+          } catch (e) {
+            print('⚠️ Error parsing OHLC data point: $e');
           }
-          
-          setState(() {
-            _chartData[chartKey] = chartPoints;
-            _isLoadingChart = false;
-          });
-          
-          print('🎉 Successfully loaded chart data for $symbol ($_selectedTimePeriod) with ${chartPoints.length} points');
-        } else {
-          throw Exception('Chart API response indicates failure: ${jsonData['error'] ?? 'Unknown error'}');
         }
+
+        // Sort by date (newest first for candlesticks package)
+        candles.sort((a, b) => b.date.compareTo(a.date));
+
+        print('━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━');
+        print('📊 CHART CONVERSION RESULT:');
+        print('✅ Successfully converted ${candles.length} candles for $symbol');
+
+        if (candles.isEmpty) {
+          print('⚠️  WARNING: NO CANDLES CONVERTED! Chart will show empty.');
+        } else if (candles.length < 2) {
+          print('⚠️  WARNING: Only ${candles.length} candle(s) available - need at least 2 for chart!');
+          print('   Sample candle: Open=${candles[0].open}, High=${candles[0].high}, Low=${candles[0].low}, Close=${candles[0].close}, Volume=${candles[0].volume}, Date=${candles[0].date}');
+        } else {
+          print('✅ Chart ready with ${candles.length} candles');
+          print('   First candle: Open=${candles[0].open}, High=${candles[0].high}, Low=${candles[0].low}, Close=${candles[0].close}, Date=${candles[0].date}');
+          print('   Last candle: Open=${candles.last.open}, High=${candles.last.high}, Low=${candles.last.low}, Close=${candles.last.close}, Date=${candles.last.date}');
+        }
+        print('━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━');
+
+        setState(() {
+          _candles = candles;
+          _isLoadingChart = false;
+        });
       } else {
-        throw Exception('Chart API HTTP ${response.statusCode}: ${response.reasonPhrase}');
+        throw Exception('Failed to fetch chart data: ${result['error'] ?? 'Unknown error'}');
       }
-      
     } catch (e) {
-      print('❌ Error fetching chart data for $symbol: $e');
-      
-      // Fallback to test data for now
-      print('🧪 Falling back to test chart data for $symbol ($_selectedTimePeriod)');
+      print('❌ Error loading chart data: $e');
       setState(() {
+        _chartError = 'Failed to load chart data: $e';
         _isLoadingChart = false;
-        _chartError = '';
-        _chartData[chartKey] = _generateTestChartData();
-      });
-      
-      if (mounted) {
-        ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(
-            content: Text('⚠️ Using test data for $symbol chart'),
-            backgroundColor: Colors.blue,
-            duration: const Duration(seconds: 2),
-          ),
-        );
-      }
-    }
-  }
-  
-  List<Map<String, dynamic>> _generateTestChartData() {
-    final List<Map<String, dynamic>> testData = [];
-    final basePrice = 670.0; // Start with a realistic price like in your image
-    final now = DateTime.now();
-    
-    for (int i = 0; i < 42; i++) { // Generate 42 data points like in your image
-      final date = now.subtract(Duration(days: 41 - i));
-      // Create some realistic price movement
-      final randomVariation = (i * 0.5) + (DateTime.now().millisecond % 20) - 10;
-      final price = basePrice + randomVariation;
-      
-      testData.add({
-        'timestamp': date.millisecondsSinceEpoch ~/ 1000,
-        'open': price - 1,
-        'high': price + 2,
-        'low': price - 3,
-        'close': price,
-        'volume': 1000.0 + (i * 100),
       });
     }
-    
-    print('🧪 Generated ${testData.length} test chart data points');
-    print('🧪 Price range: ${testData.map((d) => d['close']).reduce((a, b) => a < b ? a : b)} - ${testData.map((d) => d['close']).reduce((a, b) => a > b ? a : b)}');
-    
-    return testData;
   }
   
   Future<void> _fetchOrderbookData(String symbol) async {
@@ -2532,6 +2432,7 @@ class _TradingPageState extends State<TradingPage> {
     _connectionStatusSubscription?.cancel();
     _logonStatusSubscription?.cancel();
     _securityRequestTimeout?.cancel();
+    _liveOhlcSubscription?.cancel();
     _quantityController.dispose();
     _priceController.dispose();
     _orderIdController.dispose();
@@ -2555,7 +2456,7 @@ class _TradingPageState extends State<TradingPage> {
       });
 
   // Fetch chart data for newly selected symbol
-  _fetchChartData(_assets[newIndex]['symbol']);
+  _loadChartData(_assets[newIndex]['symbol']);
   // Fetch trade history for newly selected symbol
   _resetAndFetchTradeHistory(_assets[newIndex]['symbol']);
   // Fetch orderbook data for newly selected symbol
@@ -2581,7 +2482,7 @@ class _TradingPageState extends State<TradingPage> {
       });
 
   // Fetch chart data for newly selected symbol
-  _fetchChartData(_assets[newIndex]['symbol']);
+  _loadChartData(_assets[newIndex]['symbol']);
   // Fetch trade history for newly selected symbol
   _resetAndFetchTradeHistory(_assets[newIndex]['symbol']);
   // Fetch orderbook data for newly selected symbol
@@ -3592,7 +3493,7 @@ class _TradingPageState extends State<TradingPage> {
                                     setState(() {
                                       _selectedSymbol = asset['symbol'];
                                     });
-                                    _fetchChartData(asset['symbol']);
+                                    _loadChartData(asset['symbol']);
                                     _resetAndFetchTradeHistory(asset['symbol']);
                                     _fetchOrderbookData(asset['symbol']);
                                     _calculateOrderFees();
@@ -3835,7 +3736,7 @@ class _TradingPageState extends State<TradingPage> {
             ),
             const SizedBox(height: 16),
             ElevatedButton(
-              onPressed: () => _fetchChartData(_selectedSymbol),
+              onPressed: () => _loadChartData(_selectedSymbol),
               child: const Text('Retry'),
             ),
           ],
@@ -3843,9 +3744,7 @@ class _TradingPageState extends State<TradingPage> {
       );
     }
 
-    final chartKey = '${_selectedSymbol}_$_selectedTimePeriod';
-    final chartData = _chartData[chartKey];
-    if (chartData == null || chartData.isEmpty) {
+    if (_candles.isEmpty) {
       return Center(
         child: Column(
           mainAxisAlignment: MainAxisAlignment.center,
@@ -3874,12 +3773,7 @@ class _TradingPageState extends State<TradingPage> {
             ),
             const SizedBox(height: 16),
             ElevatedButton(
-              onPressed: () {
-                // Clear cached data to force refresh
-                final chartKey = '${_selectedSymbol}_$_selectedTimePeriod';
-                _chartData.remove(chartKey);
-                _fetchChartData(_selectedSymbol);
-              },
+              onPressed: () => _loadChartData(_selectedSymbol),
               child: const Text('Load Chart'),
             ),
           ],
@@ -3887,57 +3781,27 @@ class _TradingPageState extends State<TradingPage> {
       );
     }
 
-    // Display simple line chart
-    return _buildSimpleLineChart(chartData, isDarkTheme);
-  }
-
-  Widget _buildSimpleLineChart(List<Map<String, dynamic>> data, bool isDarkTheme) {
-    if (data.isEmpty) {
-      print('❌ Chart data is empty');
-      return const SizedBox();
-    }
-
-    print('📊 Building chart with ${data.length} data points');
-    print('📊 Sample data point: ${data.first}');
-
-    // Find min/max values for scaling using _safeToDouble
-    double minPrice = double.infinity;
-    double maxPrice = double.negativeInfinity;
-    
-    for (final point in data) {
-      final low = _safeToDouble(point['low']);
-      final close = _safeToDouble(point['close']);
-      if (low < minPrice) minPrice = low;
-      if (close > maxPrice) maxPrice = close;
-    }
-    
-    double priceRange = maxPrice - minPrice;
-    if (priceRange == 0) priceRange = 1; // Avoid division by zero
-    
-    print('📊 Price range: $minPrice - $maxPrice (range: $priceRange)');
-
+    // Display candlestick chart
     return Padding(
       padding: const EdgeInsets.all(16.0),
       child: Column(
-        crossAxisAlignment: CrossAxisAlignment.center,
+        crossAxisAlignment: CrossAxisAlignment.start,
         children: [
-          // Symbol and price on one centered line
+          // Symbol and current price
           Row(
-            mainAxisAlignment: MainAxisAlignment.start,
-            crossAxisAlignment: CrossAxisAlignment.start,
+            mainAxisAlignment: MainAxisAlignment.spaceBetween,
             children: [
               Text(
-                '$_selectedSymbol',
+                _selectedSymbol,
                 style: TextStyle(
                   fontSize: 22,
                   fontWeight: FontWeight.bold,
                   color: isDarkTheme ? Colors.white : Colors.black,
                 ),
               ),
-              const SizedBox(width: 16),
-              if (data.isNotEmpty)
+              if (_candles.isNotEmpty)
                 Text(
-                  '\$${_safeToDouble(data.last['close']).toStringAsFixed(2)}',
+                  '\$${_candles.first.close.toStringAsFixed(2)}',
                   style: TextStyle(
                     fontSize: 22,
                     fontWeight: FontWeight.bold,
@@ -3947,52 +3811,46 @@ class _TradingPageState extends State<TradingPage> {
             ],
           ),
           const SizedBox(height: 16),
-          // Chart with scale and min/max lines
+          // Candlestick chart
           Expanded(
-            child: Container(
-              width: double.infinity,
-              height: 200, // Set a minimum height
-              child: Row(
-                children: [
-                  // Main chart area
-                  Expanded(
-                    child: CustomPaint(
-                      size: const Size(double.infinity, 200),
-                      painter: SimpleLinePainter(
-                        data: data,
-                        minPrice: minPrice,
-                        maxPrice: maxPrice,
-                        isDarkTheme: isDarkTheme,
-                      ),
-                    ),
-                  ),
-                  // Price scale on the right
-                  Container(
-                    width: 60,
-                    child: _buildPriceScale(minPrice, maxPrice, isDarkTheme),
-                  ),
-                ],
-              ),
-            ),
+            child: _isLoadingChart
+                ? const Center(child: CircularProgressIndicator())
+                : _chartError.isNotEmpty
+                    ? Center(
+                        child: Text(
+                          _chartError,
+                          style: const TextStyle(color: Colors.red),
+                        ),
+                      )
+                    : _candles.length < 2
+                        ? Center(
+                            child: Text(
+                              'Insufficient data to display chart\n(${_candles.length} candles available, minimum 2 required)',
+                              textAlign: TextAlign.center,
+                              style: TextStyle(
+                                color: isDarkTheme ? Colors.white70 : Colors.black54,
+                              ),
+                            ),
+                          )
+                        : Candlesticks(
+                            candles: _candles,
+                          ),
           ),
-          
-          const SizedBox(height: 8),
-          
-          // Time period buttons at the bottom
-          Container(
-            margin: const EdgeInsets.only(top: 12),
-            child: Row(
-              mainAxisAlignment: MainAxisAlignment.center,
-              children: [
-                _buildTimePeriodButton('1d', isDarkTheme),
-                const SizedBox(width: 4),
-                _buildTimePeriodButton('7d', isDarkTheme),
-                const SizedBox(width: 4),
-                _buildTimePeriodButton('1m', isDarkTheme),
-                const SizedBox(width: 4),
-                _buildTimePeriodButton('all', isDarkTheme),
-              ],
-            ),
+          const SizedBox(height: 16),
+          // Time period buttons
+          Row(
+            mainAxisAlignment: MainAxisAlignment.center,
+            children: [
+              _buildTimePeriodButton('1m', isDarkTheme),
+              const SizedBox(width: 4),
+              _buildTimePeriodButton('5m', isDarkTheme),
+              const SizedBox(width: 4),
+              _buildTimePeriodButton('15m', isDarkTheme),
+              const SizedBox(width: 4),
+              _buildTimePeriodButton('1h', isDarkTheme),
+              const SizedBox(width: 4),
+              _buildTimePeriodButton('1d', isDarkTheme),
+            ],
           ),
         ],
       ),
@@ -4008,10 +3866,8 @@ class _TradingPageState extends State<TradingPage> {
           setState(() {
             _selectedTimePeriod = period;
           });
-          // Clear cache and fetch new data
-          final chartKey = '${_selectedSymbol}_$period';
-          _chartData.remove(chartKey);
-          _fetchChartData(_selectedSymbol);
+          // Load new data for selected period
+          _loadChartData(_selectedSymbol);
         },
         child: Container(
           padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
@@ -4033,58 +3889,6 @@ class _TradingPageState extends State<TradingPage> {
           ),
         ),
       ),
-    );
-  }
-
-  Widget _buildPriceScale(double minPrice, double maxPrice, bool isDarkTheme) {
-    if (minPrice == maxPrice) {
-      // Only show one label if min and max are equal
-      return Column(
-        mainAxisAlignment: MainAxisAlignment.center,
-        crossAxisAlignment: CrossAxisAlignment.end,
-        children: [
-          Text(
-            '\$${minPrice.toStringAsFixed(2)}',
-            style: TextStyle(
-              fontSize: 10,
-              color: Colors.green,
-              fontWeight: FontWeight.bold,
-            ),
-          ),
-        ],
-      );
-    }
-    final labelCount = 5;
-    final labels = <double>[];
-    for (int i = 0; i < labelCount; i++) {
-      // Linear interpolation between min and max, so top is max, bottom is min, never exceeding max
-      double value = minPrice + (maxPrice - minPrice) * (labelCount - 1 - i) / (labelCount - 1);
-      labels.add(value);
-    }
-    return Column(
-      mainAxisAlignment: MainAxisAlignment.spaceBetween,
-      crossAxisAlignment: CrossAxisAlignment.end,
-      children: labels.map((price) {
-        Color priceColor;
-        if (price.toStringAsFixed(2) == maxPrice.toStringAsFixed(2)) {
-          priceColor = Colors.green;
-        } else if (price.toStringAsFixed(2) == minPrice.toStringAsFixed(2)) {
-          priceColor = Colors.red;
-        } else {
-          priceColor = isDarkTheme ? Colors.grey[400]! : Colors.grey[600]!;
-        }
-        return Padding(
-          padding: const EdgeInsets.symmetric(vertical: 2),
-          child: Text(
-            '\$${price.toStringAsFixed(2)}',
-            style: TextStyle(
-              fontSize: 10,
-              color: priceColor,
-              fontWeight: (priceColor == const Color(0xFF00D4AA) || priceColor == const Color(0xFFFF4081)) ? FontWeight.bold : FontWeight.normal,
-            ),
-          ),
-        );
-      }).toList(),
     );
   }
 
@@ -6223,206 +6027,7 @@ class _TradingPageState extends State<TradingPage> {
   }
 }
 
-// Custom painter for simple line chart
-class SimpleLinePainter extends CustomPainter {
-  final List<Map<String, dynamic>> data;
-  final double minPrice;
-  final double maxPrice;
-  final bool isDarkTheme;
-
-  SimpleLinePainter({
-    required this.data,
-    required this.minPrice,
-    required this.maxPrice,
-    required this.isDarkTheme,
-  });
-
-  @override
-  void paint(Canvas canvas, Size size) {
-    if (data.isEmpty) {
-      return;
-    }
-
-    final lineColor = isDarkTheme ? Colors.blue[400]! : Colors.blue[600]!;
-    final fillColor = lineColor.withOpacity(0.3);
-
-    // Paint for the line
-    final linePaint = Paint()
-      ..color = lineColor
-      ..strokeWidth = 2.0
-      ..style = PaintingStyle.stroke;
-
-    // Paint for the fill
-    final fillPaint = Paint()
-      ..color = fillColor
-      ..style = PaintingStyle.fill;
-
-    final linePath = Path();
-    final fillPath = Path();
-    double minYPrice = minPrice;
-    double maxYPrice = maxPrice;
-    // If only one price, show a range around it (±2%)
-    if ((maxPrice - minPrice).abs() < 1e-6) {
-      minYPrice = minPrice * 0.98;
-      maxYPrice = maxPrice * 1.02;
-    }
-    final priceRange = maxYPrice - minYPrice;
-    if (priceRange <= 0) {
-      minYPrice -= 1;
-      maxYPrice += 1;
-    }
-    // Create paths for line and fill
-    for (int i = 0; i < data.length; i++) {
-      final x = (i / (data.length - 1)) * size.width;
-      final closePrice = _safeToDouble(data[i]['close']);
-      final normalizedPrice = (closePrice - minYPrice) / priceRange;
-      final y = size.height - (normalizedPrice * size.height);
-      if (i == 0) {
-        linePath.moveTo(x, y);
-        fillPath.moveTo(x, size.height); // Start fill from bottom
-        fillPath.lineTo(x, y);
-      } else {
-        linePath.lineTo(x, y);
-        fillPath.lineTo(x, y);
-      }
-    }
-    // Complete the fill path
-    fillPath.lineTo(size.width, size.height);
-    fillPath.close();
-    // Draw fill first, then line
-    canvas.drawPath(fillPath, fillPaint);
-    canvas.drawPath(linePath, linePaint);
-
-    // Draw min/max lines and spots only if maxPrice != minPrice
-    if ((maxPrice - minPrice).abs() > 1e-6) {
-      final minMaxPaint = Paint()
-        ..strokeWidth = 1.0
-        ..style = PaintingStyle.stroke;
-      // Find max and min points
-      int maxIdx = 0;
-      int minIdx = 0;
-      double maxVal = _safeToDouble(data[0]['close']);
-      double minVal = _safeToDouble(data[0]['close']);
-      for (int i = 1; i < data.length; i++) {
-        double val = _safeToDouble(data[i]['close']);
-        if (val > maxVal) {
-          maxVal = val;
-          maxIdx = i;
-        }
-        if (val < minVal) {
-          minVal = val;
-          minIdx = i;
-        }
-      }
-      // Calculate positions
-      final maxX = (maxIdx / (data.length - 1)) * size.width;
-      final maxYSpot = size.height - ((maxVal - minYPrice) / priceRange * size.height);
-      final minX = (minIdx / (data.length - 1)) * size.width;
-      final minYSpot = size.height - ((minVal - minYPrice) / priceRange * size.height);
-      // Draw max spot (green)
-      final spotRadius = 6.0;
-      final spotPaintMax = Paint()..color = Colors.green;
-      canvas.drawCircle(Offset(maxX, maxYSpot), spotRadius, spotPaintMax);
-      // Draw min spot (red)
-      final spotPaintMin = Paint()..color = Colors.red;
-      canvas.drawCircle(Offset(minX, minYSpot), spotRadius, spotPaintMin);
-      // Max line at maxYSpot
-      canvas.drawLine(
-        Offset(0, maxYSpot),
-        Offset(size.width, maxYSpot),
-        minMaxPaint..color = Colors.green,
-      );
-      // Min line at minYSpot
-      canvas.drawLine(
-        Offset(0, minYSpot),
-        Offset(size.width, minYSpot),
-        minMaxPaint..color = Colors.red,
-      );
-    }
-
-    // Draw subtle grid lines
-    final gridPaint = Paint()
-      ..color = (isDarkTheme ? Colors.grey[700]! : Colors.grey[300]!).withOpacity(0.3)
-      ..strokeWidth = 0.5;
-
-    // Horizontal grid lines (fewer lines, more subtle)
-    for (int i = 1; i <= 3; i++) {
-      final y = (i / 4) * size.height;
-      canvas.drawLine(
-        Offset(0, y),
-        Offset(size.width, y),
-        gridPaint,
-      );
-    }
-
-    // Draw horizontal date scale
-    if (data.isNotEmpty) {
-      final labelStyle = TextStyle(
-        color: isDarkTheme ? Colors.white : Colors.black,
-        fontSize: 10,
-      );
-      final labelHeight = 16.0;
-      final labelY = size.height + 2;
-      int labelCount = 6;
-      for (int i = 0; i < labelCount; i++) {
-        final dataIdx = ((i / (labelCount - 1)) * (data.length - 1)).round();
-        final point = data[dataIdx];
-        final ts = point['timestamp'] ?? 0;
-        DateTime dt = DateTime.fromMillisecondsSinceEpoch(ts * 1000);
-        String label;
-        if (_is1dPeriod()) {
-          label = _formatHour(dt);
-        } else {
-          label = _formatDay(dt);
-        }
-        final tp = TextPainter(
-          text: TextSpan(text: label, style: labelStyle),
-          textDirection: TextDirection.ltr,
-        )..layout();
-        final x = (dataIdx / (data.length - 1)) * size.width - tp.width / 2;
-        tp.paint(canvas, Offset(x, labelY));
-      }
-    }
-  }
-
-  bool _is1dPeriod() {
-    // You may want to pass the period as a parameter, but for now infer from data
-    // If data covers less than 2 days, treat as intraday
-    if (data.length < 2) return true;
-    final first = DateTime.fromMillisecondsSinceEpoch((data.first['timestamp'] ?? 0) * 1000);
-    final last = DateTime.fromMillisecondsSinceEpoch((data.last['timestamp'] ?? 0) * 1000);
-    return last.difference(first).inDays < 2;
-  }
-
-  String _formatHour(DateTime dt) {
-    return '${dt.hour.toString().padLeft(2, '0')}:00';
-  }
-
-  String _formatDay(DateTime dt) {
-    return '${dt.day} ${_monthShort(dt.month)}';
-  }
-
-  String _monthShort(int m) {
-    const months = ['Jan','Feb','Mar','Apr','May','Jun','Jul','Aug','Sep','Oct','Nov','Dec'];
-    return months[m-1];
-  }
-
-  // Helper method to safely convert values to double
-  double _safeToDouble(dynamic value) {
-    if (value == null) return 0.0;
-    if (value is double) return value;
-    if (value is int) return value.toDouble();
-    if (value is String) {
-      return double.tryParse(value) ?? 0.0;
-    }
-    return 0.0;
-  }
-
-  @override
-  bool shouldRepaint(covariant CustomPainter oldDelegate) {
-    return true;
-  }
-}
+// Custom painter for simple line chart removed - now using Candlesticks widget
 
 class _HoverButton extends StatefulWidget {
   final String text;

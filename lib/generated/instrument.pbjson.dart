@@ -1,14 +1,13 @@
-// This is a generated file - do not edit.
 //
-// Generated from instrument.proto.
-
-// @dart = 3.3
+//  Generated code. Do not modify.
+//  source: instrument.proto
+//
+// @dart = 2.12
 
 // ignore_for_file: annotate_overrides, camel_case_types, comment_references
-// ignore_for_file: constant_identifier_names
-// ignore_for_file: curly_braces_in_flow_control_structures
-// ignore_for_file: deprecated_member_use_from_same_package, library_prefixes
-// ignore_for_file: non_constant_identifier_names, unused_import
+// ignore_for_file: constant_identifier_names, library_prefixes
+// ignore_for_file: non_constant_identifier_names, prefer_final_fields
+// ignore_for_file: unnecessary_import, unnecessary_this, unused_import
 
 import 'dart:convert' as $convert;
 import 'dart:core' as $core;
@@ -18,59 +17,13 @@ import 'dart:typed_data' as $typed_data;
 const GetInstrumentListRequest$json = {
   '1': 'GetInstrumentListRequest',
   '2': [
-    {
-      '1': 'proposed_execution_id',
-      '3': 1,
-      '4': 1,
-      '5': 9,
-      '10': 'proposedExecutionId'
-    },
-    {
-      '1': 'pagination',
-      '3': 2,
-      '4': 1,
-      '5': 11,
-      '6': '.qomet.agora.daemons.prtagent.v1.PaginationParams',
-      '10': 'pagination'
-    },
-    {
-      '1': 'market_id_or_symbol_regex',
-      '3': 3,
-      '4': 1,
-      '5': 9,
-      '10': 'marketIdOrSymbolRegex'
-    },
-    {
-      '1': 'venue_id_or_symbol_regex',
-      '3': 4,
-      '4': 1,
-      '5': 9,
-      '10': 'venueIdOrSymbolRegex'
-    },
-    {
-      '1': 'instrument_id_or_symbol_regex',
-      '3': 5,
-      '4': 1,
-      '5': 9,
-      '10': 'instrumentIdOrSymbolRegex'
-    },
-    {
-      '1': 'listing_types',
-      '3': 6,
-      '4': 3,
-      '5': 14,
-      '6': '.qomet.agora.daemons.prtagent.v1.InstrumentListingStatusEnum',
-      '10': 'listingTypes'
-    },
-    {
-      '1': 'aux_data',
-      '3': 105,
-      '4': 3,
-      '5': 11,
-      '6':
-          '.qomet.agora.daemons.prtagent.v1.GetInstrumentListRequest.AuxDataEntry',
-      '10': 'auxData'
-    },
+    {'1': 'proposed_execution_id', '3': 1, '4': 1, '5': 9, '10': 'proposedExecutionId'},
+    {'1': 'pagination', '3': 2, '4': 1, '5': 11, '6': '.qomet.agora.daemons.prtagent.v1.PaginationParams', '10': 'pagination'},
+    {'1': 'market_id_or_symbol_regex', '3': 3, '4': 1, '5': 9, '10': 'marketIdOrSymbolRegex'},
+    {'1': 'venue_id_or_symbol_regex', '3': 4, '4': 1, '5': 9, '10': 'venueIdOrSymbolRegex'},
+    {'1': 'instrument_id_or_symbol_regex', '3': 5, '4': 1, '5': 9, '10': 'instrumentIdOrSymbolRegex'},
+    {'1': 'listing_types', '3': 6, '4': 3, '5': 14, '6': '.qomet.agora.daemons.prtagent.v1.InstrumentListingStatusEnum', '10': 'listingTypes'},
+    {'1': 'aux_data', '3': 105, '4': 3, '5': 11, '6': '.qomet.agora.daemons.prtagent.v1.GetInstrumentListRequest.AuxDataEntry', '10': 'auxData'},
   ],
   '3': [GetInstrumentListRequest_AuxDataEntry$json],
 };
@@ -104,31 +57,9 @@ const GetInstrumentListResponse$json = {
   '1': 'GetInstrumentListResponse',
   '2': [
     {'1': 'ref_execution_id', '3': 1, '4': 1, '5': 9, '10': 'refExecutionId'},
-    {
-      '1': 'pagination_info',
-      '3': 2,
-      '4': 1,
-      '5': 11,
-      '6': '.qomet.agora.daemons.prtagent.v1.PaginationInfo',
-      '10': 'paginationInfo'
-    },
-    {
-      '1': 'instruments',
-      '3': 3,
-      '4': 3,
-      '5': 11,
-      '6': '.qomet.agora.daemons.prtagent.v1.Instrument',
-      '10': 'instruments'
-    },
-    {
-      '1': 'metadata',
-      '3': 105,
-      '4': 3,
-      '5': 11,
-      '6':
-          '.qomet.agora.daemons.prtagent.v1.GetInstrumentListResponse.MetadataEntry',
-      '10': 'metadata'
-    },
+    {'1': 'pagination_info', '3': 2, '4': 1, '5': 11, '6': '.qomet.agora.daemons.prtagent.v1.PaginationInfo', '10': 'paginationInfo'},
+    {'1': 'instruments', '3': 3, '4': 3, '5': 11, '6': '.qomet.agora.daemons.prtagent.v1.Instrument', '10': 'instruments'},
+    {'1': 'metadata', '3': 105, '4': 3, '5': 11, '6': '.qomet.agora.daemons.prtagent.v1.GetInstrumentListResponse.MetadataEntry', '10': 'metadata'},
   ],
   '3': [GetInstrumentListResponse_MetadataEntry$json],
 };
@@ -158,45 +89,11 @@ final $typed_data.Uint8List getInstrumentListResponseDescriptor = $convert.base6
 const GetInstrumentInfoBatchRequest$json = {
   '1': 'GetInstrumentInfoBatchRequest',
   '2': [
-    {
-      '1': 'proposed_execution_id',
-      '3': 1,
-      '4': 1,
-      '5': 9,
-      '10': 'proposedExecutionId'
-    },
-    {
-      '1': 'pagination',
-      '3': 2,
-      '4': 1,
-      '5': 11,
-      '6': '.qomet.agora.daemons.prtagent.v1.PaginationParams',
-      '10': 'pagination'
-    },
-    {
-      '1': 'instrument_id_and_symbol_regexes',
-      '3': 3,
-      '4': 3,
-      '5': 9,
-      '10': 'instrumentIdAndSymbolRegexes'
-    },
-    {
-      '1': 'listing_types',
-      '3': 4,
-      '4': 3,
-      '5': 14,
-      '6': '.qomet.agora.daemons.prtagent.v1.InstrumentListingStatusEnum',
-      '10': 'listingTypes'
-    },
-    {
-      '1': 'aux_data',
-      '3': 105,
-      '4': 3,
-      '5': 11,
-      '6':
-          '.qomet.agora.daemons.prtagent.v1.GetInstrumentInfoBatchRequest.AuxDataEntry',
-      '10': 'auxData'
-    },
+    {'1': 'proposed_execution_id', '3': 1, '4': 1, '5': 9, '10': 'proposedExecutionId'},
+    {'1': 'pagination', '3': 2, '4': 1, '5': 11, '6': '.qomet.agora.daemons.prtagent.v1.PaginationParams', '10': 'pagination'},
+    {'1': 'instrument_id_and_symbol_regexes', '3': 3, '4': 3, '5': 9, '10': 'instrumentIdAndSymbolRegexes'},
+    {'1': 'listing_types', '3': 4, '4': 3, '5': 14, '6': '.qomet.agora.daemons.prtagent.v1.InstrumentListingStatusEnum', '10': 'listingTypes'},
+    {'1': 'aux_data', '3': 105, '4': 3, '5': 11, '6': '.qomet.agora.daemons.prtagent.v1.GetInstrumentInfoBatchRequest.AuxDataEntry', '10': 'auxData'},
   ],
   '3': [GetInstrumentInfoBatchRequest_AuxDataEntry$json],
 };
@@ -229,31 +126,9 @@ const GetInstrumentInfoBatchResponse$json = {
   '1': 'GetInstrumentInfoBatchResponse',
   '2': [
     {'1': 'ref_execution_id', '3': 1, '4': 1, '5': 9, '10': 'refExecutionId'},
-    {
-      '1': 'pagination_info',
-      '3': 3,
-      '4': 1,
-      '5': 11,
-      '6': '.qomet.agora.daemons.prtagent.v1.PaginationInfo',
-      '10': 'paginationInfo'
-    },
-    {
-      '1': 'instruments',
-      '3': 4,
-      '4': 3,
-      '5': 11,
-      '6': '.qomet.agora.daemons.prtagent.v1.Instrument',
-      '10': 'instruments'
-    },
-    {
-      '1': 'metadata',
-      '3': 105,
-      '4': 3,
-      '5': 11,
-      '6':
-          '.qomet.agora.daemons.prtagent.v1.GetInstrumentInfoBatchResponse.MetadataEntry',
-      '10': 'metadata'
-    },
+    {'1': 'pagination_info', '3': 3, '4': 1, '5': 11, '6': '.qomet.agora.daemons.prtagent.v1.PaginationInfo', '10': 'paginationInfo'},
+    {'1': 'instruments', '3': 4, '4': 3, '5': 11, '6': '.qomet.agora.daemons.prtagent.v1.Instrument', '10': 'instruments'},
+    {'1': 'metadata', '3': 105, '4': 3, '5': 11, '6': '.qomet.agora.daemons.prtagent.v1.GetInstrumentInfoBatchResponse.MetadataEntry', '10': 'metadata'},
   ],
   '3': [GetInstrumentInfoBatchResponse_MetadataEntry$json],
 };
@@ -283,45 +158,11 @@ final $typed_data.Uint8List getInstrumentInfoBatchResponseDescriptor = $convert.
 const GetInstrumentOrdersRequest$json = {
   '1': 'GetInstrumentOrdersRequest',
   '2': [
-    {
-      '1': 'proposed_execution_id',
-      '3': 1,
-      '4': 1,
-      '5': 9,
-      '10': 'proposedExecutionId'
-    },
-    {
-      '1': 'pagination',
-      '3': 2,
-      '4': 1,
-      '5': 11,
-      '6': '.qomet.agora.daemons.prtagent.v1.PaginationParams',
-      '10': 'pagination'
-    },
-    {
-      '1': 'instrument_id_and_symbol_regexes',
-      '3': 3,
-      '4': 3,
-      '5': 9,
-      '10': 'instrumentIdAndSymbolRegexes'
-    },
-    {
-      '1': 'order_query_filter',
-      '3': 4,
-      '4': 1,
-      '5': 11,
-      '6': '.qomet.agora.daemons.prtagent.v1.OrderQueryFilter',
-      '10': 'orderQueryFilter'
-    },
-    {
-      '1': 'aux_data',
-      '3': 105,
-      '4': 3,
-      '5': 11,
-      '6':
-          '.qomet.agora.daemons.prtagent.v1.GetInstrumentOrdersRequest.AuxDataEntry',
-      '10': 'auxData'
-    },
+    {'1': 'proposed_execution_id', '3': 1, '4': 1, '5': 9, '10': 'proposedExecutionId'},
+    {'1': 'pagination', '3': 2, '4': 1, '5': 11, '6': '.qomet.agora.daemons.prtagent.v1.PaginationParams', '10': 'pagination'},
+    {'1': 'instrument_id_and_symbol_regexes', '3': 3, '4': 3, '5': 9, '10': 'instrumentIdAndSymbolRegexes'},
+    {'1': 'order_query_filter', '3': 4, '4': 1, '5': 11, '6': '.qomet.agora.daemons.prtagent.v1.OrderQueryFilter', '10': 'orderQueryFilter'},
+    {'1': 'aux_data', '3': 105, '4': 3, '5': 11, '6': '.qomet.agora.daemons.prtagent.v1.GetInstrumentOrdersRequest.AuxDataEntry', '10': 'auxData'},
   ],
   '3': [GetInstrumentOrdersRequest_AuxDataEntry$json],
 };
@@ -353,31 +194,9 @@ const GetInstrumentOrdersResponse$json = {
   '1': 'GetInstrumentOrdersResponse',
   '2': [
     {'1': 'ref_execution_id', '3': 1, '4': 1, '5': 9, '10': 'refExecutionId'},
-    {
-      '1': 'pagination_info',
-      '3': 2,
-      '4': 1,
-      '5': 11,
-      '6': '.qomet.agora.daemons.prtagent.v1.PaginationInfo',
-      '10': 'paginationInfo'
-    },
-    {
-      '1': 'orders',
-      '3': 3,
-      '4': 3,
-      '5': 11,
-      '6': '.qomet.agora.daemons.prtagent.v1.Order',
-      '10': 'orders'
-    },
-    {
-      '1': 'metadata',
-      '3': 105,
-      '4': 3,
-      '5': 11,
-      '6':
-          '.qomet.agora.daemons.prtagent.v1.GetInstrumentOrdersResponse.MetadataEntry',
-      '10': 'metadata'
-    },
+    {'1': 'pagination_info', '3': 2, '4': 1, '5': 11, '6': '.qomet.agora.daemons.prtagent.v1.PaginationInfo', '10': 'paginationInfo'},
+    {'1': 'orders', '3': 3, '4': 3, '5': 11, '6': '.qomet.agora.daemons.prtagent.v1.Order', '10': 'orders'},
+    {'1': 'metadata', '3': 105, '4': 3, '5': 11, '6': '.qomet.agora.daemons.prtagent.v1.GetInstrumentOrdersResponse.MetadataEntry', '10': 'metadata'},
   ],
   '3': [GetInstrumentOrdersResponse_MetadataEntry$json],
 };
@@ -407,45 +226,11 @@ final $typed_data.Uint8List getInstrumentOrdersResponseDescriptor = $convert.bas
 const GetInstrumentTradesRequest$json = {
   '1': 'GetInstrumentTradesRequest',
   '2': [
-    {
-      '1': 'proposed_execution_id',
-      '3': 1,
-      '4': 1,
-      '5': 9,
-      '10': 'proposedExecutionId'
-    },
-    {
-      '1': 'pagination',
-      '3': 2,
-      '4': 1,
-      '5': 11,
-      '6': '.qomet.agora.daemons.prtagent.v1.PaginationParams',
-      '10': 'pagination'
-    },
-    {
-      '1': 'instrument_id_and_symbol_regexes',
-      '3': 3,
-      '4': 3,
-      '5': 9,
-      '10': 'instrumentIdAndSymbolRegexes'
-    },
-    {
-      '1': 'trade_query_filter',
-      '3': 4,
-      '4': 1,
-      '5': 11,
-      '6': '.qomet.agora.daemons.prtagent.v1.TradeQueryFilter',
-      '10': 'tradeQueryFilter'
-    },
-    {
-      '1': 'aux_data',
-      '3': 105,
-      '4': 3,
-      '5': 11,
-      '6':
-          '.qomet.agora.daemons.prtagent.v1.GetInstrumentTradesRequest.AuxDataEntry',
-      '10': 'auxData'
-    },
+    {'1': 'proposed_execution_id', '3': 1, '4': 1, '5': 9, '10': 'proposedExecutionId'},
+    {'1': 'pagination', '3': 2, '4': 1, '5': 11, '6': '.qomet.agora.daemons.prtagent.v1.PaginationParams', '10': 'pagination'},
+    {'1': 'instrument_id_and_symbol_regexes', '3': 3, '4': 3, '5': 9, '10': 'instrumentIdAndSymbolRegexes'},
+    {'1': 'trade_query_filter', '3': 4, '4': 1, '5': 11, '6': '.qomet.agora.daemons.prtagent.v1.TradeQueryFilter', '10': 'tradeQueryFilter'},
+    {'1': 'aux_data', '3': 105, '4': 3, '5': 11, '6': '.qomet.agora.daemons.prtagent.v1.GetInstrumentTradesRequest.AuxDataEntry', '10': 'auxData'},
   ],
   '3': [GetInstrumentTradesRequest_AuxDataEntry$json],
 };
@@ -477,31 +262,9 @@ const GetInstrumentTradesResponse$json = {
   '1': 'GetInstrumentTradesResponse',
   '2': [
     {'1': 'ref_execution_id', '3': 1, '4': 1, '5': 9, '10': 'refExecutionId'},
-    {
-      '1': 'pagination_info',
-      '3': 2,
-      '4': 1,
-      '5': 11,
-      '6': '.qomet.agora.daemons.prtagent.v1.PaginationInfo',
-      '10': 'paginationInfo'
-    },
-    {
-      '1': 'trades',
-      '3': 3,
-      '4': 3,
-      '5': 11,
-      '6': '.qomet.agora.daemons.prtagent.v1.Trade',
-      '10': 'trades'
-    },
-    {
-      '1': 'metadata',
-      '3': 105,
-      '4': 3,
-      '5': 11,
-      '6':
-          '.qomet.agora.daemons.prtagent.v1.GetInstrumentTradesResponse.MetadataEntry',
-      '10': 'metadata'
-    },
+    {'1': 'pagination_info', '3': 2, '4': 1, '5': 11, '6': '.qomet.agora.daemons.prtagent.v1.PaginationInfo', '10': 'paginationInfo'},
+    {'1': 'trades', '3': 3, '4': 3, '5': 11, '6': '.qomet.agora.daemons.prtagent.v1.Trade', '10': 'trades'},
+    {'1': 'metadata', '3': 105, '4': 3, '5': 11, '6': '.qomet.agora.daemons.prtagent.v1.GetInstrumentTradesResponse.MetadataEntry', '10': 'metadata'},
   ],
   '3': [GetInstrumentTradesResponse_MetadataEntry$json],
 };
@@ -531,45 +294,11 @@ final $typed_data.Uint8List getInstrumentTradesResponseDescriptor = $convert.bas
 const GetInstrumentSettlementsRequest$json = {
   '1': 'GetInstrumentSettlementsRequest',
   '2': [
-    {
-      '1': 'proposed_execution_id',
-      '3': 1,
-      '4': 1,
-      '5': 9,
-      '10': 'proposedExecutionId'
-    },
-    {
-      '1': 'pagination',
-      '3': 2,
-      '4': 1,
-      '5': 11,
-      '6': '.qomet.agora.daemons.prtagent.v1.PaginationParams',
-      '10': 'pagination'
-    },
-    {
-      '1': 'instrument_id_and_symbol_regexes',
-      '3': 3,
-      '4': 3,
-      '5': 9,
-      '10': 'instrumentIdAndSymbolRegexes'
-    },
-    {
-      '1': 'settlement_query_filter',
-      '3': 4,
-      '4': 1,
-      '5': 11,
-      '6': '.qomet.agora.daemons.prtagent.v1.SettlementQueryFilter',
-      '10': 'settlementQueryFilter'
-    },
-    {
-      '1': 'aux_data',
-      '3': 105,
-      '4': 3,
-      '5': 11,
-      '6':
-          '.qomet.agora.daemons.prtagent.v1.GetInstrumentSettlementsRequest.AuxDataEntry',
-      '10': 'auxData'
-    },
+    {'1': 'proposed_execution_id', '3': 1, '4': 1, '5': 9, '10': 'proposedExecutionId'},
+    {'1': 'pagination', '3': 2, '4': 1, '5': 11, '6': '.qomet.agora.daemons.prtagent.v1.PaginationParams', '10': 'pagination'},
+    {'1': 'instrument_id_and_symbol_regexes', '3': 3, '4': 3, '5': 9, '10': 'instrumentIdAndSymbolRegexes'},
+    {'1': 'settlement_query_filter', '3': 4, '4': 1, '5': 11, '6': '.qomet.agora.daemons.prtagent.v1.SettlementQueryFilter', '10': 'settlementQueryFilter'},
+    {'1': 'aux_data', '3': 105, '4': 3, '5': 11, '6': '.qomet.agora.daemons.prtagent.v1.GetInstrumentSettlementsRequest.AuxDataEntry', '10': 'auxData'},
   ],
   '3': [GetInstrumentSettlementsRequest_AuxDataEntry$json],
 };
@@ -602,31 +331,9 @@ const GetInstrumentSettlementsResponse$json = {
   '1': 'GetInstrumentSettlementsResponse',
   '2': [
     {'1': 'ref_execution_id', '3': 1, '4': 1, '5': 9, '10': 'refExecutionId'},
-    {
-      '1': 'pagination_info',
-      '3': 2,
-      '4': 1,
-      '5': 11,
-      '6': '.qomet.agora.daemons.prtagent.v1.PaginationInfo',
-      '10': 'paginationInfo'
-    },
-    {
-      '1': 'settlements',
-      '3': 3,
-      '4': 3,
-      '5': 11,
-      '6': '.qomet.agora.daemons.prtagent.v1.Settlement',
-      '10': 'settlements'
-    },
-    {
-      '1': 'metadata',
-      '3': 105,
-      '4': 3,
-      '5': 11,
-      '6':
-          '.qomet.agora.daemons.prtagent.v1.GetInstrumentSettlementsResponse.MetadataEntry',
-      '10': 'metadata'
-    },
+    {'1': 'pagination_info', '3': 2, '4': 1, '5': 11, '6': '.qomet.agora.daemons.prtagent.v1.PaginationInfo', '10': 'paginationInfo'},
+    {'1': 'settlements', '3': 3, '4': 3, '5': 11, '6': '.qomet.agora.daemons.prtagent.v1.Settlement', '10': 'settlements'},
+    {'1': 'metadata', '3': 105, '4': 3, '5': 11, '6': '.qomet.agora.daemons.prtagent.v1.GetInstrumentSettlementsResponse.MetadataEntry', '10': 'metadata'},
   ],
   '3': [GetInstrumentSettlementsResponse_MetadataEntry$json],
 };
@@ -651,3 +358,4 @@ final $typed_data.Uint8List getInstrumentSettlementsResponseDescriptor = $conver
     '5kYWVtb25zLnBydGFnZW50LnYxLkdldEluc3RydW1lbnRTZXR0bGVtZW50c1Jlc3BvbnNlLk1l'
     'dGFkYXRhRW50cnlSCG1ldGFkYXRhGjsKDU1ldGFkYXRhRW50cnkSEAoDa2V5GAEgASgJUgNrZX'
     'kSFAoFdmFsdWUYAiABKAlSBXZhbHVlOgI4AQ==');
+

@@ -1,14 +1,13 @@
-// This is a generated file - do not edit.
 //
-// Generated from participant.proto.
-
-// @dart = 3.3
+//  Generated code. Do not modify.
+//  source: participant.proto
+//
+// @dart = 2.12
 
 // ignore_for_file: annotate_overrides, camel_case_types, comment_references
-// ignore_for_file: constant_identifier_names
-// ignore_for_file: curly_braces_in_flow_control_structures
-// ignore_for_file: deprecated_member_use_from_same_package, library_prefixes
-// ignore_for_file: non_constant_identifier_names, unused_import
+// ignore_for_file: constant_identifier_names, library_prefixes
+// ignore_for_file: non_constant_identifier_names, prefer_final_fields
+// ignore_for_file: unnecessary_import, unnecessary_this, unused_import
 
 import 'dart:convert' as $convert;
 import 'dart:core' as $core;
@@ -18,22 +17,8 @@ import 'dart:typed_data' as $typed_data;
 const GetParticipantInfoRequest$json = {
   '1': 'GetParticipantInfoRequest',
   '2': [
-    {
-      '1': 'proposed_execution_id',
-      '3': 1,
-      '4': 1,
-      '5': 9,
-      '10': 'proposedExecutionId'
-    },
-    {
-      '1': 'aux_data',
-      '3': 105,
-      '4': 3,
-      '5': 11,
-      '6':
-          '.qomet.agora.daemons.prtagent.v1.GetParticipantInfoRequest.AuxDataEntry',
-      '10': 'auxData'
-    },
+    {'1': 'proposed_execution_id', '3': 1, '4': 1, '5': 9, '10': 'proposedExecutionId'},
+    {'1': 'aux_data', '3': 105, '4': 3, '5': 11, '6': '.qomet.agora.daemons.prtagent.v1.GetParticipantInfoRequest.AuxDataEntry', '10': 'auxData'},
   ],
   '3': [GetParticipantInfoRequest_AuxDataEntry$json],
 };
@@ -61,23 +46,8 @@ const GetParticipantInfoResponse$json = {
   '1': 'GetParticipantInfoResponse',
   '2': [
     {'1': 'ref_execution_id', '3': 1, '4': 1, '5': 9, '10': 'refExecutionId'},
-    {
-      '1': 'participant',
-      '3': 2,
-      '4': 1,
-      '5': 11,
-      '6': '.qomet.agora.daemons.prtagent.v1.Participant',
-      '10': 'participant'
-    },
-    {
-      '1': 'metadata',
-      '3': 105,
-      '4': 3,
-      '5': 11,
-      '6':
-          '.qomet.agora.daemons.prtagent.v1.GetParticipantInfoResponse.MetadataEntry',
-      '10': 'metadata'
-    },
+    {'1': 'participant', '3': 2, '4': 1, '5': 11, '6': '.qomet.agora.daemons.prtagent.v1.Participant', '10': 'participant'},
+    {'1': 'metadata', '3': 105, '4': 3, '5': 11, '6': '.qomet.agora.daemons.prtagent.v1.GetParticipantInfoResponse.MetadataEntry', '10': 'metadata'},
   ],
   '3': [GetParticipantInfoResponse_MetadataEntry$json],
 };
@@ -105,90 +75,18 @@ final $typed_data.Uint8List getParticipantInfoResponseDescriptor = $convert.base
 const GetParticipantOrdersRequest$json = {
   '1': 'GetParticipantOrdersRequest',
   '2': [
-    {
-      '1': 'proposed_execution_id',
-      '3': 1,
-      '4': 1,
-      '5': 9,
-      '10': 'proposedExecutionId'
-    },
-    {
-      '1': 'pagination',
-      '3': 2,
-      '4': 1,
-      '5': 11,
-      '6': '.qomet.agora.daemons.prtagent.v1.PaginationParams',
-      '10': 'pagination'
-    },
-    {
-      '1': 'account_id_or_name_regexes',
-      '3': 3,
-      '4': 3,
-      '5': 9,
-      '10': 'accountIdOrNameRegexes'
-    },
-    {
-      '1': 'market_id_or_name_regexes',
-      '3': 4,
-      '4': 3,
-      '5': 9,
-      '10': 'marketIdOrNameRegexes'
-    },
-    {
-      '1': 'venue_id_or_symbol_regexes',
-      '3': 5,
-      '4': 3,
-      '5': 9,
-      '10': 'venueIdOrSymbolRegexes'
-    },
-    {
-      '1': 'participant_id_or_symbol_regexes',
-      '3': 6,
-      '4': 3,
-      '5': 9,
-      '10': 'participantIdOrSymbolRegexes'
-    },
-    {
-      '1': 'instrument_id_or_symbol_regexes',
-      '3': 7,
-      '4': 3,
-      '5': 9,
-      '10': 'instrumentIdOrSymbolRegexes'
-    },
-    {
-      '1': 'from_dt',
-      '3': 8,
-      '4': 1,
-      '5': 11,
-      '6': '.qomet.agora.daemons.prtagent.v1.DateTime',
-      '10': 'fromDt'
-    },
-    {
-      '1': 'to_dt',
-      '3': 9,
-      '4': 1,
-      '5': 11,
-      '6': '.qomet.agora.daemons.prtagent.v1.DateTime',
-      '10': 'toDt'
-    },
-    {
-      '1': 'side',
-      '3': 10,
-      '4': 1,
-      '5': 14,
-      '6': '.qomet.agora.daemons.prtagent.v1.OrderSide',
-      '10': 'side'
-    },
+    {'1': 'proposed_execution_id', '3': 1, '4': 1, '5': 9, '10': 'proposedExecutionId'},
+    {'1': 'pagination', '3': 2, '4': 1, '5': 11, '6': '.qomet.agora.daemons.prtagent.v1.PaginationParams', '10': 'pagination'},
+    {'1': 'account_id_or_name_regexes', '3': 3, '4': 3, '5': 9, '10': 'accountIdOrNameRegexes'},
+    {'1': 'market_id_or_name_regexes', '3': 4, '4': 3, '5': 9, '10': 'marketIdOrNameRegexes'},
+    {'1': 'venue_id_or_symbol_regexes', '3': 5, '4': 3, '5': 9, '10': 'venueIdOrSymbolRegexes'},
+    {'1': 'participant_id_or_symbol_regexes', '3': 6, '4': 3, '5': 9, '10': 'participantIdOrSymbolRegexes'},
+    {'1': 'instrument_id_or_symbol_regexes', '3': 7, '4': 3, '5': 9, '10': 'instrumentIdOrSymbolRegexes'},
+    {'1': 'from_dt', '3': 8, '4': 1, '5': 11, '6': '.qomet.agora.daemons.prtagent.v1.DateTime', '10': 'fromDt'},
+    {'1': 'to_dt', '3': 9, '4': 1, '5': 11, '6': '.qomet.agora.daemons.prtagent.v1.DateTime', '10': 'toDt'},
+    {'1': 'side', '3': 10, '4': 1, '5': 14, '6': '.qomet.agora.daemons.prtagent.v1.OrderSide', '10': 'side'},
     {'1': 'status_filters', '3': 11, '4': 3, '5': 8, '10': 'statusFilters'},
-    {
-      '1': 'aux_data',
-      '3': 105,
-      '4': 3,
-      '5': 11,
-      '6':
-          '.qomet.agora.daemons.prtagent.v1.GetParticipantOrdersRequest.AuxDataEntry',
-      '10': 'auxData'
-    },
+    {'1': 'aux_data', '3': 105, '4': 3, '5': 11, '6': '.qomet.agora.daemons.prtagent.v1.GetParticipantOrdersRequest.AuxDataEntry', '10': 'auxData'},
   ],
   '3': [GetParticipantOrdersRequest_AuxDataEntry$json],
 };
@@ -227,53 +125,13 @@ const GetParticipantOrdersResponse$json = {
   '1': 'GetParticipantOrdersResponse',
   '2': [
     {'1': 'ref_execution_id', '3': 1, '4': 1, '5': 9, '10': 'refExecutionId'},
-    {
-      '1': 'pagination_info',
-      '3': 2,
-      '4': 1,
-      '5': 11,
-      '6': '.qomet.agora.daemons.prtagent.v1.PaginationInfo',
-      '10': 'paginationInfo'
-    },
-    {
-      '1': 'generated_at_dt',
-      '3': 3,
-      '4': 1,
-      '5': 11,
-      '6': '.qomet.agora.daemons.prtagent.v1.DateTime',
-      '10': 'generatedAtDt'
-    },
-    {
-      '1': 'orders',
-      '3': 4,
-      '4': 3,
-      '5': 11,
-      '6': '.qomet.agora.daemons.prtagent.v1.Order',
-      '10': 'orders'
-    },
-    {
-      '1': 'account_summaries',
-      '3': 5,
-      '4': 3,
-      '5': 11,
-      '6':
-          '.qomet.agora.daemons.prtagent.v1.GetParticipantOrdersResponse.AccountSummariesEntry',
-      '10': 'accountSummaries'
-    },
-    {
-      '1': 'metadata',
-      '3': 105,
-      '4': 3,
-      '5': 11,
-      '6':
-          '.qomet.agora.daemons.prtagent.v1.GetParticipantOrdersResponse.MetadataEntry',
-      '10': 'metadata'
-    },
+    {'1': 'pagination_info', '3': 2, '4': 1, '5': 11, '6': '.qomet.agora.daemons.prtagent.v1.PaginationInfo', '10': 'paginationInfo'},
+    {'1': 'generated_at_dt', '3': 3, '4': 1, '5': 11, '6': '.qomet.agora.daemons.prtagent.v1.DateTime', '10': 'generatedAtDt'},
+    {'1': 'orders', '3': 4, '4': 3, '5': 11, '6': '.qomet.agora.daemons.prtagent.v1.Order', '10': 'orders'},
+    {'1': 'account_summaries', '3': 5, '4': 3, '5': 11, '6': '.qomet.agora.daemons.prtagent.v1.GetParticipantOrdersResponse.AccountSummariesEntry', '10': 'accountSummaries'},
+    {'1': 'metadata', '3': 105, '4': 3, '5': 11, '6': '.qomet.agora.daemons.prtagent.v1.GetParticipantOrdersResponse.MetadataEntry', '10': 'metadata'},
   ],
-  '3': [
-    GetParticipantOrdersResponse_AccountSummariesEntry$json,
-    GetParticipantOrdersResponse_MetadataEntry$json
-  ],
+  '3': [GetParticipantOrdersResponse_AccountSummariesEntry$json, GetParticipantOrdersResponse_MetadataEntry$json],
 };
 
 @$core.Deprecated('Use getParticipantOrdersResponseDescriptor instead')
@@ -316,89 +174,17 @@ final $typed_data.Uint8List getParticipantOrdersResponseDescriptor = $convert.ba
 const GetParticipantTradesRequest$json = {
   '1': 'GetParticipantTradesRequest',
   '2': [
-    {
-      '1': 'proposed_execution_id',
-      '3': 1,
-      '4': 1,
-      '5': 9,
-      '10': 'proposedExecutionId'
-    },
-    {
-      '1': 'pagination',
-      '3': 2,
-      '4': 1,
-      '5': 11,
-      '6': '.qomet.agora.daemons.prtagent.v1.PaginationParams',
-      '10': 'pagination'
-    },
-    {
-      '1': 'account_id_or_name_regexes',
-      '3': 3,
-      '4': 3,
-      '5': 9,
-      '10': 'accountIdOrNameRegexes'
-    },
-    {
-      '1': 'market_id_or_name_regexes',
-      '3': 4,
-      '4': 3,
-      '5': 9,
-      '10': 'marketIdOrNameRegexes'
-    },
-    {
-      '1': 'venue_id_or_symbol_regexes',
-      '3': 5,
-      '4': 3,
-      '5': 9,
-      '10': 'venueIdOrSymbolRegexes'
-    },
-    {
-      '1': 'participant_id_or_symbol_regexes',
-      '3': 6,
-      '4': 3,
-      '5': 9,
-      '10': 'participantIdOrSymbolRegexes'
-    },
-    {
-      '1': 'instrument_id_or_symbol_regexes',
-      '3': 7,
-      '4': 3,
-      '5': 9,
-      '10': 'instrumentIdOrSymbolRegexes'
-    },
-    {
-      '1': 'from_dt',
-      '3': 8,
-      '4': 1,
-      '5': 11,
-      '6': '.qomet.agora.daemons.prtagent.v1.DateTime',
-      '10': 'fromDt'
-    },
-    {
-      '1': 'to_dt',
-      '3': 9,
-      '4': 1,
-      '5': 11,
-      '6': '.qomet.agora.daemons.prtagent.v1.DateTime',
-      '10': 'toDt'
-    },
-    {
-      '1': 'side',
-      '3': 10,
-      '4': 1,
-      '5': 14,
-      '6': '.qomet.agora.daemons.prtagent.v1.OrderSide',
-      '10': 'side'
-    },
-    {
-      '1': 'aux_data',
-      '3': 105,
-      '4': 3,
-      '5': 11,
-      '6':
-          '.qomet.agora.daemons.prtagent.v1.GetParticipantTradesRequest.AuxDataEntry',
-      '10': 'auxData'
-    },
+    {'1': 'proposed_execution_id', '3': 1, '4': 1, '5': 9, '10': 'proposedExecutionId'},
+    {'1': 'pagination', '3': 2, '4': 1, '5': 11, '6': '.qomet.agora.daemons.prtagent.v1.PaginationParams', '10': 'pagination'},
+    {'1': 'account_id_or_name_regexes', '3': 3, '4': 3, '5': 9, '10': 'accountIdOrNameRegexes'},
+    {'1': 'market_id_or_name_regexes', '3': 4, '4': 3, '5': 9, '10': 'marketIdOrNameRegexes'},
+    {'1': 'venue_id_or_symbol_regexes', '3': 5, '4': 3, '5': 9, '10': 'venueIdOrSymbolRegexes'},
+    {'1': 'participant_id_or_symbol_regexes', '3': 6, '4': 3, '5': 9, '10': 'participantIdOrSymbolRegexes'},
+    {'1': 'instrument_id_or_symbol_regexes', '3': 7, '4': 3, '5': 9, '10': 'instrumentIdOrSymbolRegexes'},
+    {'1': 'from_dt', '3': 8, '4': 1, '5': 11, '6': '.qomet.agora.daemons.prtagent.v1.DateTime', '10': 'fromDt'},
+    {'1': 'to_dt', '3': 9, '4': 1, '5': 11, '6': '.qomet.agora.daemons.prtagent.v1.DateTime', '10': 'toDt'},
+    {'1': 'side', '3': 10, '4': 1, '5': 14, '6': '.qomet.agora.daemons.prtagent.v1.OrderSide', '10': 'side'},
+    {'1': 'aux_data', '3': 105, '4': 3, '5': 11, '6': '.qomet.agora.daemons.prtagent.v1.GetParticipantTradesRequest.AuxDataEntry', '10': 'auxData'},
   ],
   '3': [GetParticipantTradesRequest_AuxDataEntry$json],
 };
@@ -437,53 +223,13 @@ const GetParticipantTradesResponse$json = {
   '1': 'GetParticipantTradesResponse',
   '2': [
     {'1': 'ref_execution_id', '3': 1, '4': 1, '5': 9, '10': 'refExecutionId'},
-    {
-      '1': 'pagination_info',
-      '3': 2,
-      '4': 1,
-      '5': 11,
-      '6': '.qomet.agora.daemons.prtagent.v1.PaginationInfo',
-      '10': 'paginationInfo'
-    },
-    {
-      '1': 'generated_at_dt',
-      '3': 3,
-      '4': 1,
-      '5': 11,
-      '6': '.qomet.agora.daemons.prtagent.v1.DateTime',
-      '10': 'generatedAtDt'
-    },
-    {
-      '1': 'trades',
-      '3': 4,
-      '4': 3,
-      '5': 11,
-      '6': '.qomet.agora.daemons.prtagent.v1.Trade',
-      '10': 'trades'
-    },
-    {
-      '1': 'account_summaries',
-      '3': 5,
-      '4': 3,
-      '5': 11,
-      '6':
-          '.qomet.agora.daemons.prtagent.v1.GetParticipantTradesResponse.AccountSummariesEntry',
-      '10': 'accountSummaries'
-    },
-    {
-      '1': 'metadata',
-      '3': 105,
-      '4': 3,
-      '5': 11,
-      '6':
-          '.qomet.agora.daemons.prtagent.v1.GetParticipantTradesResponse.MetadataEntry',
-      '10': 'metadata'
-    },
+    {'1': 'pagination_info', '3': 2, '4': 1, '5': 11, '6': '.qomet.agora.daemons.prtagent.v1.PaginationInfo', '10': 'paginationInfo'},
+    {'1': 'generated_at_dt', '3': 3, '4': 1, '5': 11, '6': '.qomet.agora.daemons.prtagent.v1.DateTime', '10': 'generatedAtDt'},
+    {'1': 'trades', '3': 4, '4': 3, '5': 11, '6': '.qomet.agora.daemons.prtagent.v1.Trade', '10': 'trades'},
+    {'1': 'account_summaries', '3': 5, '4': 3, '5': 11, '6': '.qomet.agora.daemons.prtagent.v1.GetParticipantTradesResponse.AccountSummariesEntry', '10': 'accountSummaries'},
+    {'1': 'metadata', '3': 105, '4': 3, '5': 11, '6': '.qomet.agora.daemons.prtagent.v1.GetParticipantTradesResponse.MetadataEntry', '10': 'metadata'},
   ],
-  '3': [
-    GetParticipantTradesResponse_AccountSummariesEntry$json,
-    GetParticipantTradesResponse_MetadataEntry$json
-  ],
+  '3': [GetParticipantTradesResponse_AccountSummariesEntry$json, GetParticipantTradesResponse_MetadataEntry$json],
 };
 
 @$core.Deprecated('Use getParticipantTradesResponseDescriptor instead')
@@ -526,89 +272,17 @@ final $typed_data.Uint8List getParticipantTradesResponseDescriptor = $convert.ba
 const GetParticipantSettlementsRequest$json = {
   '1': 'GetParticipantSettlementsRequest',
   '2': [
-    {
-      '1': 'proposed_execution_id',
-      '3': 1,
-      '4': 1,
-      '5': 9,
-      '10': 'proposedExecutionId'
-    },
-    {
-      '1': 'pagination',
-      '3': 2,
-      '4': 1,
-      '5': 11,
-      '6': '.qomet.agora.daemons.prtagent.v1.PaginationParams',
-      '10': 'pagination'
-    },
-    {
-      '1': 'account_id_or_name_regexes',
-      '3': 3,
-      '4': 3,
-      '5': 9,
-      '10': 'accountIdOrNameRegexes'
-    },
-    {
-      '1': 'market_id_or_name_regexes',
-      '3': 4,
-      '4': 3,
-      '5': 9,
-      '10': 'marketIdOrNameRegexes'
-    },
-    {
-      '1': 'venue_id_or_symbol_regexes',
-      '3': 5,
-      '4': 3,
-      '5': 9,
-      '10': 'venueIdOrSymbolRegexes'
-    },
-    {
-      '1': 'participant_id_or_symbol_regexes',
-      '3': 6,
-      '4': 3,
-      '5': 9,
-      '10': 'participantIdOrSymbolRegexes'
-    },
-    {
-      '1': 'instrument_id_or_symbol_regexes',
-      '3': 7,
-      '4': 3,
-      '5': 9,
-      '10': 'instrumentIdOrSymbolRegexes'
-    },
-    {
-      '1': 'from_dt',
-      '3': 8,
-      '4': 1,
-      '5': 11,
-      '6': '.qomet.agora.daemons.prtagent.v1.DateTime',
-      '10': 'fromDt'
-    },
-    {
-      '1': 'to_dt',
-      '3': 9,
-      '4': 1,
-      '5': 11,
-      '6': '.qomet.agora.daemons.prtagent.v1.DateTime',
-      '10': 'toDt'
-    },
-    {
-      '1': 'status',
-      '3': 10,
-      '4': 1,
-      '5': 14,
-      '6': '.qomet.agora.daemons.prtagent.v1.ConfirmationStatus',
-      '10': 'status'
-    },
-    {
-      '1': 'aux_data',
-      '3': 105,
-      '4': 3,
-      '5': 11,
-      '6':
-          '.qomet.agora.daemons.prtagent.v1.GetParticipantSettlementsRequest.AuxDataEntry',
-      '10': 'auxData'
-    },
+    {'1': 'proposed_execution_id', '3': 1, '4': 1, '5': 9, '10': 'proposedExecutionId'},
+    {'1': 'pagination', '3': 2, '4': 1, '5': 11, '6': '.qomet.agora.daemons.prtagent.v1.PaginationParams', '10': 'pagination'},
+    {'1': 'account_id_or_name_regexes', '3': 3, '4': 3, '5': 9, '10': 'accountIdOrNameRegexes'},
+    {'1': 'market_id_or_name_regexes', '3': 4, '4': 3, '5': 9, '10': 'marketIdOrNameRegexes'},
+    {'1': 'venue_id_or_symbol_regexes', '3': 5, '4': 3, '5': 9, '10': 'venueIdOrSymbolRegexes'},
+    {'1': 'participant_id_or_symbol_regexes', '3': 6, '4': 3, '5': 9, '10': 'participantIdOrSymbolRegexes'},
+    {'1': 'instrument_id_or_symbol_regexes', '3': 7, '4': 3, '5': 9, '10': 'instrumentIdOrSymbolRegexes'},
+    {'1': 'from_dt', '3': 8, '4': 1, '5': 11, '6': '.qomet.agora.daemons.prtagent.v1.DateTime', '10': 'fromDt'},
+    {'1': 'to_dt', '3': 9, '4': 1, '5': 11, '6': '.qomet.agora.daemons.prtagent.v1.DateTime', '10': 'toDt'},
+    {'1': 'status', '3': 10, '4': 1, '5': 14, '6': '.qomet.agora.daemons.prtagent.v1.ConfirmationStatus', '10': 'status'},
+    {'1': 'aux_data', '3': 105, '4': 3, '5': 11, '6': '.qomet.agora.daemons.prtagent.v1.GetParticipantSettlementsRequest.AuxDataEntry', '10': 'auxData'},
   ],
   '3': [GetParticipantSettlementsRequest_AuxDataEntry$json],
 };
@@ -647,53 +321,13 @@ const GetParticipantSettlementsResponse$json = {
   '1': 'GetParticipantSettlementsResponse',
   '2': [
     {'1': 'ref_execution_id', '3': 1, '4': 1, '5': 9, '10': 'refExecutionId'},
-    {
-      '1': 'pagination_info',
-      '3': 2,
-      '4': 1,
-      '5': 11,
-      '6': '.qomet.agora.daemons.prtagent.v1.PaginationInfo',
-      '10': 'paginationInfo'
-    },
-    {
-      '1': 'generated_at_dt',
-      '3': 3,
-      '4': 1,
-      '5': 11,
-      '6': '.qomet.agora.daemons.prtagent.v1.DateTime',
-      '10': 'generatedAtDt'
-    },
-    {
-      '1': 'settlements',
-      '3': 4,
-      '4': 3,
-      '5': 11,
-      '6': '.qomet.agora.daemons.prtagent.v1.Settlement',
-      '10': 'settlements'
-    },
-    {
-      '1': 'account_summaries',
-      '3': 5,
-      '4': 3,
-      '5': 11,
-      '6':
-          '.qomet.agora.daemons.prtagent.v1.GetParticipantSettlementsResponse.AccountSummariesEntry',
-      '10': 'accountSummaries'
-    },
-    {
-      '1': 'metadata',
-      '3': 105,
-      '4': 3,
-      '5': 11,
-      '6':
-          '.qomet.agora.daemons.prtagent.v1.GetParticipantSettlementsResponse.MetadataEntry',
-      '10': 'metadata'
-    },
+    {'1': 'pagination_info', '3': 2, '4': 1, '5': 11, '6': '.qomet.agora.daemons.prtagent.v1.PaginationInfo', '10': 'paginationInfo'},
+    {'1': 'generated_at_dt', '3': 3, '4': 1, '5': 11, '6': '.qomet.agora.daemons.prtagent.v1.DateTime', '10': 'generatedAtDt'},
+    {'1': 'settlements', '3': 4, '4': 3, '5': 11, '6': '.qomet.agora.daemons.prtagent.v1.Settlement', '10': 'settlements'},
+    {'1': 'account_summaries', '3': 5, '4': 3, '5': 11, '6': '.qomet.agora.daemons.prtagent.v1.GetParticipantSettlementsResponse.AccountSummariesEntry', '10': 'accountSummaries'},
+    {'1': 'metadata', '3': 105, '4': 3, '5': 11, '6': '.qomet.agora.daemons.prtagent.v1.GetParticipantSettlementsResponse.MetadataEntry', '10': 'metadata'},
   ],
-  '3': [
-    GetParticipantSettlementsResponse_AccountSummariesEntry$json,
-    GetParticipantSettlementsResponse_MetadataEntry$json
-  ],
+  '3': [GetParticipantSettlementsResponse_AccountSummariesEntry$json, GetParticipantSettlementsResponse_MetadataEntry$json],
 };
 
 @$core.Deprecated('Use getParticipantSettlementsResponseDescriptor instead')
@@ -731,3 +365,4 @@ final $typed_data.Uint8List getParticipantSettlementsResponseDescriptor = $conve
     'YWRhdGFFbnRyeVIIbWV0YWRhdGEaQwoVQWNjb3VudFN1bW1hcmllc0VudHJ5EhAKA2tleRgBIA'
     'EoCVIDa2V5EhQKBXZhbHVlGAIgASgJUgV2YWx1ZToCOAEaOwoNTWV0YWRhdGFFbnRyeRIQCgNr'
     'ZXkYASABKAlSA2tleRIUCgV2YWx1ZRgCIAEoCVIFdmFsdWU6AjgB');
+

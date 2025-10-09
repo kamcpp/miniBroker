@@ -2856,4 +2856,125 @@ class GrpcurlHelper {
       };
     }
   }
+
+  /// Get historical OHLC data for a symbol
+  static Future<Map<String, dynamic>> getHistoricalOhlcData({
+    required String symbol,
+    required String period,
+    int? pageSize,
+  }) async {
+    try {
+      print('📊 Fetching historical OHLC data for $symbol, period: $period');
+
+      // Find grpcurl path
+      final grpcurlPath = await _findGrpcurlPath();
+      if (grpcurlPath == null) {
+        print('❌ grpcurl not found - cannot fetch OHLC data');
+        return {
+          'success': false,
+          'output': {'error': 'grpcurl not available'},
+          'requestTime': _toUnixTimestamp(DateTime.now()).toString(),
+          'serverType': 'grpcurl_unavailable',
+        };
+      }
+
+      // Build request
+      final requestData = {
+        'instrumentIdAndSymbolRegexes': [symbol],
+        'period': period,
+        'includeVolume': true,
+      };
+
+      if (pageSize != null) {
+        requestData['pagination'] = {
+          'pageSize': pageSize,
+        };
+      }
+
+      final requestJson = json.encode(requestData);
+
+      // Log the request
+      print('━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━');
+      print('📤 GetHistoricalOhlcData REQUEST:');
+      print('Symbol: $symbol');
+      print('Period: $period');
+      print('Page Size: $pageSize');
+      print('Request Body:');
+      print(const JsonEncoder.withIndent('  ').convert(requestData));
+      print('━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━');
+
+      // Execute grpcurl command
+      final result = await Process.run(
+        grpcurlPath,
+        [
+          '-plaintext',
+          '-d',
+          requestJson,
+          '$_host:$_port',
+          'qomet.agora.daemons.prtagent.v1.TradingService/GetHistoricalOhlcData',
+        ],
+        runInShell: false,
+      ).timeout(
+        const Duration(seconds: 10),
+        onTimeout: () {
+          throw TimeoutException('GetHistoricalOhlcData timed out');
+        },
+      );
+
+      final Map<String, dynamic> responseData = {
+        'success': result.exitCode == 0,
+        'output': result.exitCode == 0 ? json.decode(result.stdout) : {'error': result.stderr},
+        'requestTime': _toUnixTimestamp(DateTime.now()).toString(),
+        'serverType': 'real',
+      };
+
+      if (result.exitCode == 0) {
+        final responseJson = json.decode(result.stdout);
+        print('━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━');
+        print('📥 GetHistoricalOhlcData RESPONSE:');
+        print('Status: SUCCESS');
+        print('Exit Code: 0');
+
+        // Check if we have ohlcDatas
+        if (responseJson['ohlcDatas'] != null) {
+          final ohlcList = responseJson['ohlcDatas'] as List;
+          print('OHLC Data Count: ${ohlcList.length}');
+
+          // Print first few items as sample
+          if (ohlcList.isNotEmpty) {
+            print('\nSample OHLC Data (first 3):');
+            for (int i = 0; i < (ohlcList.length > 3 ? 3 : ohlcList.length); i++) {
+              print('  [$i]: ${const JsonEncoder.withIndent('    ').convert(ohlcList[i])}');
+            }
+          } else {
+            print('⚠️  WARNING: ohlcDatas array is EMPTY!');
+          }
+        } else {
+          print('⚠️  WARNING: No ohlcDatas field in response!');
+        }
+
+        print('\nFull Response:');
+        print(const JsonEncoder.withIndent('  ').convert(responseJson));
+        print('━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━');
+      } else {
+        print('━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━');
+        print('📥 GetHistoricalOhlcData RESPONSE:');
+        print('Status: FAILED');
+        print('Exit Code: ${result.exitCode}');
+        print('STDERR: ${result.stderr}');
+        print('STDOUT: ${result.stdout}');
+        print('━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━');
+      }
+
+      return responseData;
+    } catch (e) {
+      print('❌ GetHistoricalOhlcData exception: $e');
+      return {
+        'success': false,
+        'output': {'error': 'Exception occurred', 'details': e.toString()},
+        'requestTime': _toUnixTimestamp(DateTime.now()).toString(),
+        'serverType': 'exception',
+      };
+    }
+  }
 }

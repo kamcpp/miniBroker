@@ -1,14 +1,13 @@
-// This is a generated file - do not edit.
 //
-// Generated from market.proto.
-
-// @dart = 3.3
+//  Generated code. Do not modify.
+//  source: market.proto
+//
+// @dart = 2.12
 
 // ignore_for_file: annotate_overrides, camel_case_types, comment_references
-// ignore_for_file: constant_identifier_names
-// ignore_for_file: curly_braces_in_flow_control_structures
-// ignore_for_file: deprecated_member_use_from_same_package, library_prefixes
-// ignore_for_file: non_constant_identifier_names, unused_import
+// ignore_for_file: constant_identifier_names, library_prefixes
+// ignore_for_file: non_constant_identifier_names, prefer_final_fields
+// ignore_for_file: unnecessary_import, unnecessary_this, unused_import
 
 import 'dart:convert' as $convert;
 import 'dart:core' as $core;
@@ -18,36 +17,10 @@ import 'dart:typed_data' as $typed_data;
 const GetMarketListRequest$json = {
   '1': 'GetMarketListRequest',
   '2': [
-    {
-      '1': 'proposed_execution_id',
-      '3': 1,
-      '4': 1,
-      '5': 9,
-      '10': 'proposedExecutionId'
-    },
-    {
-      '1': 'pagination',
-      '3': 2,
-      '4': 1,
-      '5': 11,
-      '6': '.qomet.agora.daemons.prtagent.v1.PaginationParams',
-      '10': 'pagination'
-    },
-    {
-      '1': 'market_id_or_symbol_regex',
-      '3': 3,
-      '4': 1,
-      '5': 9,
-      '10': 'marketIdOrSymbolRegex'
-    },
-    {
-      '1': 'aux_data',
-      '3': 105,
-      '4': 3,
-      '5': 11,
-      '6': '.qomet.agora.daemons.prtagent.v1.GetMarketListRequest.AuxDataEntry',
-      '10': 'auxData'
-    },
+    {'1': 'proposed_execution_id', '3': 1, '4': 1, '5': 9, '10': 'proposedExecutionId'},
+    {'1': 'pagination', '3': 2, '4': 1, '5': 11, '6': '.qomet.agora.daemons.prtagent.v1.PaginationParams', '10': 'pagination'},
+    {'1': 'market_id_or_symbol_regex', '3': 3, '4': 1, '5': 9, '10': 'marketIdOrSymbolRegex'},
+    {'1': 'aux_data', '3': 105, '4': 3, '5': 11, '6': '.qomet.agora.daemons.prtagent.v1.GetMarketListRequest.AuxDataEntry', '10': 'auxData'},
   ],
   '3': [GetMarketListRequest_AuxDataEntry$json],
 };
@@ -77,31 +50,9 @@ const GetMarketListResponse$json = {
   '1': 'GetMarketListResponse',
   '2': [
     {'1': 'ref_execution_id', '3': 1, '4': 1, '5': 9, '10': 'refExecutionId'},
-    {
-      '1': 'pagination_info',
-      '3': 2,
-      '4': 1,
-      '5': 11,
-      '6': '.qomet.agora.daemons.prtagent.v1.PaginationInfo',
-      '10': 'paginationInfo'
-    },
-    {
-      '1': 'markets',
-      '3': 3,
-      '4': 3,
-      '5': 11,
-      '6': '.qomet.agora.daemons.prtagent.v1.Market',
-      '10': 'markets'
-    },
-    {
-      '1': 'metadata',
-      '3': 105,
-      '4': 3,
-      '5': 11,
-      '6':
-          '.qomet.agora.daemons.prtagent.v1.GetMarketListResponse.MetadataEntry',
-      '10': 'metadata'
-    },
+    {'1': 'pagination_info', '3': 2, '4': 1, '5': 11, '6': '.qomet.agora.daemons.prtagent.v1.PaginationInfo', '10': 'paginationInfo'},
+    {'1': 'markets', '3': 3, '4': 3, '5': 11, '6': '.qomet.agora.daemons.prtagent.v1.Market', '10': 'markets'},
+    {'1': 'metadata', '3': 105, '4': 3, '5': 11, '6': '.qomet.agora.daemons.prtagent.v1.GetMarketListResponse.MetadataEntry', '10': 'metadata'},
   ],
   '3': [GetMarketListResponse_MetadataEntry$json],
 };
@@ -130,23 +81,9 @@ final $typed_data.Uint8List getMarketListResponseDescriptor = $convert.base64Dec
 const GetMarketCalendarRequest$json = {
   '1': 'GetMarketCalendarRequest',
   '2': [
-    {
-      '1': 'proposed_execution_id',
-      '3': 1,
-      '4': 1,
-      '5': 9,
-      '10': 'proposedExecutionId'
-    },
+    {'1': 'proposed_execution_id', '3': 1, '4': 1, '5': 9, '10': 'proposedExecutionId'},
     {'1': 'market_id', '3': 2, '4': 1, '5': 9, '10': 'marketId'},
-    {
-      '1': 'aux_data',
-      '3': 105,
-      '4': 3,
-      '5': 11,
-      '6':
-          '.qomet.agora.daemons.prtagent.v1.GetMarketCalendarRequest.AuxDataEntry',
-      '10': 'auxData'
-    },
+    {'1': 'aux_data', '3': 105, '4': 3, '5': 11, '6': '.qomet.agora.daemons.prtagent.v1.GetMarketCalendarRequest.AuxDataEntry', '10': 'auxData'},
   ],
   '3': [GetMarketCalendarRequest_AuxDataEntry$json],
 };
@@ -174,23 +111,8 @@ const GetMarketCalendarResponse$json = {
   '1': 'GetMarketCalendarResponse',
   '2': [
     {'1': 'ref_execution_id', '3': 1, '4': 1, '5': 9, '10': 'refExecutionId'},
-    {
-      '1': 'calendar',
-      '3': 2,
-      '4': 1,
-      '5': 11,
-      '6': '.qomet.agora.daemons.prtagent.v1.MarketCalendar',
-      '10': 'calendar'
-    },
-    {
-      '1': 'metadata',
-      '3': 105,
-      '4': 3,
-      '5': 11,
-      '6':
-          '.qomet.agora.daemons.prtagent.v1.GetMarketCalendarResponse.MetadataEntry',
-      '10': 'metadata'
-    },
+    {'1': 'calendar', '3': 2, '4': 1, '5': 11, '6': '.qomet.agora.daemons.prtagent.v1.MarketCalendar', '10': 'calendar'},
+    {'1': 'metadata', '3': 105, '4': 3, '5': 11, '6': '.qomet.agora.daemons.prtagent.v1.GetMarketCalendarResponse.MetadataEntry', '10': 'metadata'},
   ],
   '3': [GetMarketCalendarResponse_MetadataEntry$json],
 };
@@ -213,3 +135,4 @@ final $typed_data.Uint8List getMarketCalendarResponseDescriptor = $convert.base6
     '5xb21ldC5hZ29yYS5kYWVtb25zLnBydGFnZW50LnYxLkdldE1hcmtldENhbGVuZGFyUmVzcG9u'
     'c2UuTWV0YWRhdGFFbnRyeVIIbWV0YWRhdGEaOwoNTWV0YWRhdGFFbnRyeRIQCgNrZXkYASABKA'
     'lSA2tleRIUCgV2YWx1ZRgCIAEoCVIFdmFsdWU6AjgB');
+
