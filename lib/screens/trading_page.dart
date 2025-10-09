@@ -3822,10 +3822,10 @@ class _TradingPageState extends State<TradingPage> {
                           style: const TextStyle(color: Colors.red),
                         ),
                       )
-                    : _candles.length < 2
+                    : _candles.length < 14
                         ? Center(
                             child: Text(
-                              'Insufficient data to display chart\n(${_candles.length} candles available, minimum 2 required)',
+                              'Insufficient data to display chart\n(${_candles.length} candles available, minimum 14 required)',
                               textAlign: TextAlign.center,
                               style: TextStyle(
                                 color: isDarkTheme ? Colors.white70 : Colors.black54,
