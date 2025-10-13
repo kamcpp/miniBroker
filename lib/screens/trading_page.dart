@@ -3661,15 +3661,9 @@ class _TradingPageState extends State<TradingPage> {
   Widget _buildChartSection(ThemeService themeService) {
     final _isDarkTheme = themeService.isDarkTheme;
     return Container(
-      padding: const EdgeInsets.all(20),
+      padding: const EdgeInsets.all(8),
       decoration: BoxDecoration(
         color: _isDarkTheme ? Colors.black : Colors.white,
-        border: Border(
-          bottom: BorderSide(
-            color: _isDarkTheme ? Colors.grey[700]! : Colors.grey[300]!,
-            width: 1,
-          ),
-        ),
       ),
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
@@ -3678,11 +3672,8 @@ class _TradingPageState extends State<TradingPage> {
             child: Container(
               width: double.infinity,
               decoration: BoxDecoration(
-                color: _isDarkTheme ? const Color(0xFF3d3d3d) : Colors.grey[50],
+                color: _isDarkTheme ? const Color(0xFF3d3d3d) : Colors.grey[200],
                 borderRadius: BorderRadius.circular(8),
-                border: Border.all(
-                  color: _isDarkTheme ? Colors.grey[600]! : Colors.grey[300]!,
-                ),
               ),
               child: _buildChartContent(_isDarkTheme),
             ),
@@ -3794,7 +3785,7 @@ class _TradingPageState extends State<TradingPage> {
               Text(
                 _selectedSymbol,
                 style: TextStyle(
-                  fontSize: 22,
+                  fontSize: 12,
                   fontWeight: FontWeight.bold,
                   color: isDarkTheme ? Colors.white : Colors.black,
                 ),
@@ -3803,7 +3794,7 @@ class _TradingPageState extends State<TradingPage> {
                 Text(
                   '\$${_candles.first.close.toStringAsFixed(2)}',
                   style: TextStyle(
-                    fontSize: 22,
+                    fontSize: 12,
                     fontWeight: FontWeight.bold,
                     color: isDarkTheme ? Colors.white : Colors.black,
                   ),
