@@ -861,7 +861,7 @@ class _TradingPageState extends State<TradingPage> {
   String _chartError = '';
   String _selectedTimePeriod = '1h'; // Default period
   ChartService? _chartService;
-  StreamSubscription? _liveOhlcSubscription;
+  Timer? _liveOhlcSubscription;
   int _chartRebuildKey = 0; // Key to force chart rebuild
   
   // Orderbook data variables
@@ -1902,6 +1902,9 @@ class _TradingPageState extends State<TradingPage> {
   Future<void> _loadChartData(String symbol) async {
     print('📊 Loading chart data for $symbol, period: $_selectedTimePeriod');
 
+    // Cancel existing live stream before loading new data
+    _liveOhlcSubscription?.cancel();
+
     setState(() {
       _isLoadingChart = true;
       _chartError = '';
@@ -2001,6 +2004,9 @@ class _TradingPageState extends State<TradingPage> {
           _isLoadingChart = false;
           _chartRebuildKey++; // Increment to force chart rebuild with new ScrollController
         });
+
+        // Start live OHLC stream for real-time updates
+        _startLiveOhlcStream(symbol, _selectedTimePeriod);
       } else {
         throw Exception('Failed to fetch chart data: ${result['error'] ?? 'Unknown error'}');
       }
@@ -2010,6 +2016,113 @@ class _TradingPageState extends State<TradingPage> {
         _chartError = 'Failed to load chart data: $e';
         _isLoadingChart = false;
       });
+    }
+  }
+
+  /// Start live OHLC data stream for real-time chart updates
+  void _startLiveOhlcStream(String symbol, String period) {
+    // Cancel existing subscription if any
+    _liveOhlcSubscription?.cancel();
+
+    print('📡 Starting live OHLC stream for $symbol, period: $period');
+
+    // Subscribe to live OHLC updates using grpcurl
+    _liveOhlcSubscription = _subscribeToLiveOhlcData(symbol, period);
+  }
+
+  /// Subscribe to FetchLiveOhlcData stream
+  Timer? _subscribeToLiveOhlcData(String symbol, String period) {
+    // Use grpcurl to call FetchLiveOhlcData (streaming RPC)
+    // For now, we'll poll periodically as grpcurl streaming is complex
+    // Alternative: Use real gRPC client for streaming
+
+    // TODO: Implement proper gRPC streaming
+    // For MVP, we can poll GetHistoricalOhlcData periodically
+    return Timer.periodic(const Duration(seconds: 5), (timer) {
+      if (!mounted) {
+        timer.cancel();
+        return;
+      }
+
+      // Refresh chart data every 5 seconds to get latest candle
+      _refreshLatestCandle(symbol);
+    });
+  }
+
+  /// Refresh only the latest candle to avoid full reload
+  Future<void> _refreshLatestCandle(String symbol) async {
+    try {
+      final result = await GrpcurlHelper.getHistoricalOhlcData(
+        symbol: symbol,
+        period: _selectedTimePeriod,
+        pageSize: 1, // Only get the latest candle
+      );
+
+      if (result['success'] == true && result['output'] != null) {
+        final output = result['output'] as Map<String, dynamic>;
+        final ohlcDataList = output['ohlcDatas'] as List<dynamic>? ?? [];
+
+        if (ohlcDataList.isNotEmpty && _candles.isNotEmpty) {
+          final ohlcMap = ohlcDataList[0] as Map<String, dynamic>;
+
+          // Parse timestamp from duration
+          DateTime timestamp = DateTime.now();
+          if (ohlcMap.containsKey('duration')) {
+            final duration = ohlcMap['duration'] as Map<String, dynamic>?;
+            if (duration != null && duration.containsKey('startDt')) {
+              final startDt = duration['startDt'] as Map<String, dynamic>?;
+              if (startDt != null && startDt.containsKey('date')) {
+                final date = startDt['date'] as Map<String, dynamic>?;
+                if (date != null) {
+                  final year = date['year'] ?? 0;
+                  final month = date['month'] ?? 1;
+                  final day = date['day'] ?? 1;
+                  int hour = 0;
+                  int minute = 0;
+
+                  if (startDt.containsKey('time')) {
+                    final time = startDt['time'] as Map<String, dynamic>?;
+                    if (time != null && time.containsKey('hms')) {
+                      final hms = time['hms'] as Map<String, dynamic>?;
+                      if (hms != null) {
+                        hour = hms['hour'] ?? 0;
+                        minute = hms['minute'] ?? 0;
+                      }
+                    }
+                  }
+
+                  timestamp = DateTime(year, month, day, hour, minute);
+                }
+              }
+            }
+          }
+
+          final newCandle = CandleData(
+            timestamp: timestamp.millisecondsSinceEpoch,
+            open: double.tryParse(ohlcMap['open']?.toString() ?? '0') ?? 0.0,
+            high: double.tryParse(ohlcMap['high']?.toString() ?? '0') ?? 0.0,
+            low: double.tryParse(ohlcMap['low']?.toString() ?? '0') ?? 0.0,
+            close: double.tryParse(ohlcMap['close']?.toString() ?? '0') ?? 0.0,
+            volume: double.tryParse(ohlcMap['volume']?.toString() ?? '0') ?? 0.0,
+          );
+
+          setState(() {
+            // Check if this is an update to the last candle or a new candle
+            if (_candles.last.timestamp == newCandle.timestamp) {
+              // Update existing candle (same time period)
+              _candles[_candles.length - 1] = newCandle;
+              print('🔄 Updated latest candle: Close=${newCandle.close}');
+            } else if (newCandle.timestamp > _candles.last.timestamp) {
+              // Add new candle
+              _candles.add(newCandle);
+              print('➕ Added new candle: Close=${newCandle.close}');
+            }
+          });
+        }
+      }
+    } catch (e) {
+      print('⚠️ Error refreshing latest candle: $e');
+      // Don't show error to user for live updates
     }
   }
   
@@ -3781,24 +3894,51 @@ class _TradingPageState extends State<TradingPage> {
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
           // Symbol and current price
-          Row(
-            mainAxisAlignment: MainAxisAlignment.spaceBetween,
+          Stack(
+            alignment: Alignment.center,
             children: [
-              Text(
-                _selectedSymbol,
-                style: TextStyle(
-                  fontSize: 12,
-                  fontWeight: FontWeight.bold,
-                  color: isDarkTheme ? Colors.white : Colors.black,
-                ),
-              ),
-              if (_candles.isNotEmpty)
-                Text(
-                  '\$${(_candles.last.close ?? 0).toStringAsFixed(2)}',
+              // Symbol at top-left
+              Align(
+                alignment: Alignment.centerLeft,
+                child: Text(
+                  _selectedSymbol,
                   style: TextStyle(
                     fontSize: 12,
                     fontWeight: FontWeight.bold,
                     color: isDarkTheme ? Colors.white : Colors.black,
+                  ),
+                ),
+              ),
+              // Last price at center
+              if (_candles.isNotEmpty)
+                RichText(
+                  text: TextSpan(
+                    children: [
+                      TextSpan(
+                        text: '(Last Price: ',
+                        style: TextStyle(
+                          fontSize: 12,
+                          fontWeight: FontWeight.bold,
+                          color: Colors.grey,
+                        ),
+                      ),
+                      TextSpan(
+                        text: '\$${(_candles.last.close ?? 0).toStringAsFixed(2)}',
+                        style: TextStyle(
+                          fontSize: 12,
+                          fontWeight: FontWeight.bold,
+                          color: isDarkTheme ? Colors.white : Colors.black,
+                        ),
+                      ),
+                      TextSpan(
+                        text: ')',
+                        style: TextStyle(
+                          fontSize: 12,
+                          fontWeight: FontWeight.bold,
+                          color: Colors.grey,
+                        ),
+                      ),
+                    ],
                   ),
                 ),
             ],
