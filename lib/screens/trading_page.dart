@@ -6,7 +6,7 @@ import 'dart:ui';
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 import 'package:http/http.dart' as http;
-import 'package:candlesticks/candlesticks.dart';
+import 'package:interactive_chart/interactive_chart.dart';
 import '../services/auth_service.dart';
 import '../services/theme_service.dart';
 import '../services/real_grpc_client.dart';
@@ -855,13 +855,14 @@ class _TradingPageState extends State<TradingPage> {
   bool _isLoadingMoreOrders = false;
   bool _isLoadingMoreHistory = false;
 
-  // Chart data variables using candlesticks package
-  List<Candle> _candles = [];
+  // Chart data variables using interactive_chart package
+  List<CandleData> _candles = [];
   bool _isLoadingChart = false;
   String _chartError = '';
   String _selectedTimePeriod = '1h'; // Default period
   ChartService? _chartService;
   StreamSubscription? _liveOhlcSubscription;
+  int _chartRebuildKey = 0; // Key to force chart rebuild
   
   // Orderbook data variables
   List<Map<String, dynamic>> _sellOrders = [];
@@ -1923,8 +1924,8 @@ class _TradingPageState extends State<TradingPage> {
         print('✅ Received ${ohlcDataList.length} OHLC data points from server');
         print('━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━');
 
-        // Convert to Candle objects
-        final List<Candle> candles = [];
+        // Convert to CandleData objects for interactive_chart package
+        final List<CandleData> candles = [];
         for (var ohlcData in ohlcDataList) {
           try {
             final ohlcMap = ohlcData as Map<String, dynamic>;
@@ -1961,8 +1962,8 @@ class _TradingPageState extends State<TradingPage> {
               }
             }
 
-            final candle = Candle(
-              date: timestamp,
+            final candle = CandleData(
+              timestamp: timestamp.millisecondsSinceEpoch,
               open: double.tryParse(ohlcMap['open']?.toString() ?? '0') ?? 0.0,
               high: double.tryParse(ohlcMap['high']?.toString() ?? '0') ?? 0.0,
               low: double.tryParse(ohlcMap['low']?.toString() ?? '0') ?? 0.0,
@@ -1976,8 +1977,8 @@ class _TradingPageState extends State<TradingPage> {
           }
         }
 
-        // Sort by date (newest first for candlesticks package)
-        candles.sort((a, b) => b.date.compareTo(a.date));
+        // Sort by timestamp (oldest first for interactive_chart package)
+        candles.sort((a, b) => a.timestamp.compareTo(b.timestamp));
 
         print('━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━');
         print('📊 CHART CONVERSION RESULT:');
@@ -1987,17 +1988,18 @@ class _TradingPageState extends State<TradingPage> {
           print('⚠️  WARNING: NO CANDLES CONVERTED! Chart will show empty.');
         } else if (candles.length < 2) {
           print('⚠️  WARNING: Only ${candles.length} candle(s) available - need at least 2 for chart!');
-          print('   Sample candle: Open=${candles[0].open}, High=${candles[0].high}, Low=${candles[0].low}, Close=${candles[0].close}, Volume=${candles[0].volume}, Date=${candles[0].date}');
+          print('   Sample candle: Open=${candles[0].open}, High=${candles[0].high}, Low=${candles[0].low}, Close=${candles[0].close}, Volume=${candles[0].volume}, Timestamp=${candles[0].timestamp}');
         } else {
           print('✅ Chart ready with ${candles.length} candles');
-          print('   First candle: Open=${candles[0].open}, High=${candles[0].high}, Low=${candles[0].low}, Close=${candles[0].close}, Date=${candles[0].date}');
-          print('   Last candle: Open=${candles.last.open}, High=${candles.last.high}, Low=${candles.last.low}, Close=${candles.last.close}, Date=${candles.last.date}');
+          print('   First candle: Open=${candles[0].open}, High=${candles[0].high}, Low=${candles[0].low}, Close=${candles[0].close}, Timestamp=${candles[0].timestamp}');
+          print('   Last candle: Open=${candles.last.open}, High=${candles.last.high}, Low=${candles.last.low}, Close=${candles.last.close}, Timestamp=${candles.last.timestamp}');
         }
         print('━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━');
 
         setState(() {
           _candles = candles;
           _isLoadingChart = false;
+          _chartRebuildKey++; // Increment to force chart rebuild with new ScrollController
         });
       } else {
         throw Exception('Failed to fetch chart data: ${result['error'] ?? 'Unknown error'}');
@@ -3792,7 +3794,7 @@ class _TradingPageState extends State<TradingPage> {
               ),
               if (_candles.isNotEmpty)
                 Text(
-                  '\$${_candles.first.close.toStringAsFixed(2)}',
+                  '\$${(_candles.last.close ?? 0).toStringAsFixed(2)}',
                   style: TextStyle(
                     fontSize: 12,
                     fontWeight: FontWeight.bold,
@@ -3813,18 +3815,30 @@ class _TradingPageState extends State<TradingPage> {
                           style: const TextStyle(color: Colors.red),
                         ),
                       )
-                    : _candles.length < 14
+                    : _candles.length < 2
                         ? Center(
                             child: Text(
-                              'Insufficient data to display chart\n(${_candles.length} candles available, minimum 14 required)',
+                              'Insufficient data to display chart\n(${_candles.length} candles available, minimum 2 required)',
                               textAlign: TextAlign.center,
                               style: TextStyle(
                                 color: isDarkTheme ? Colors.white70 : Colors.black54,
                               ),
                             ),
                           )
-                        : Candlesticks(
+                        : InteractiveChart(
                             candles: _candles,
+                            style: ChartStyle(
+                              priceGainColor: Colors.teal,
+                              priceLossColor: Colors.pink,
+                              volumeColor: Colors.teal.withOpacity(0.5),
+                              trendLineStyles: [],
+                              priceGridLineColor: isDarkTheme ? Colors.white10 : Colors.black12,
+                              priceLabelStyle: TextStyle(color: isDarkTheme ? Colors.white70 : Colors.black87),
+                              timeLabelStyle: TextStyle(color: isDarkTheme ? Colors.white70 : Colors.black87),
+                              selectionHighlightColor: Colors.blue.withOpacity(0.2),
+                              overlayBackgroundColor: isDarkTheme ? Colors.grey[850]! : Colors.white,
+                              overlayTextStyle: TextStyle(color: isDarkTheme ? Colors.white : Colors.black),
+                            ),
                           ),
           ),
           const SizedBox(height: 16),

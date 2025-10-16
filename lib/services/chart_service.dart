@@ -1,5 +1,5 @@
 import 'dart:async';
-import 'package:candlesticks/candlesticks.dart';
+import 'package:interactive_chart/interactive_chart.dart';
 import 'package:mini_broker/generated/trading.pbgrpc.dart' as trading_pb;
 import 'package:mini_broker/generated/common.pb.dart' as common_pb;
 
@@ -9,8 +9,8 @@ class ChartService {
 
   ChartService(this._tradingClient);
 
-  /// Convert proto OhlcData to Candle for the candlesticks package
-  Candle _convertToCandle(trading_pb.OhlcData ohlcData) {
+  /// Convert proto OhlcData to CandleData for the interactive_chart package
+  CandleData _convertToCandle(trading_pb.OhlcData ohlcData) {
     // Parse timestamp from duration
     DateTime timestamp = DateTime.now();
     if (ohlcData.hasDuration()) {
@@ -28,8 +28,8 @@ class ChartService {
       }
     }
 
-    return Candle(
-      date: timestamp,
+    return CandleData(
+      timestamp: timestamp.millisecondsSinceEpoch,
       open: double.tryParse(ohlcData.open) ?? 0.0,
       high: double.tryParse(ohlcData.high) ?? 0.0,
       low: double.tryParse(ohlcData.low) ?? 0.0,
@@ -39,7 +39,7 @@ class ChartService {
   }
 
   /// Fetch historical OHLC data for a symbol
-  Future<List<Candle>> getHistoricalOhlcData({
+  Future<List<CandleData>> getHistoricalOhlcData({
     required String symbol,
     required String period, // "1m", "5m", "15m", "1h", "1d"
     DateTime? startDate,
@@ -90,13 +90,13 @@ class ChartService {
 
       print('✅ Received ${response.ohlcDatas.length} OHLC data points');
 
-      // Convert to Candle objects
+      // Convert to CandleData objects
       final candles = response.ohlcDatas
           .map((ohlcData) => _convertToCandle(ohlcData))
           .toList();
 
-      // Sort by date (newest first for candlesticks package)
-      candles.sort((a, b) => b.date.compareTo(a.date));
+      // Sort by timestamp (oldest first for interactive_chart package)
+      candles.sort((a, b) => a.timestamp.compareTo(b.timestamp));
 
       return candles;
     } catch (e) {
@@ -106,7 +106,7 @@ class ChartService {
   }
 
   /// Stream live OHLC data updates
-  Stream<Candle> fetchLiveOhlcData({
+  Stream<CandleData> fetchLiveOhlcData({
     required String symbol,
     required String period,
     int? updateIntervalMs,
