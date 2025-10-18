@@ -23,9 +23,12 @@ fi
 # Check if protoc-gen-dart is installed
 if ! command -v protoc-gen-dart &> /dev/null; then
     echo -e "${YELLOW}Installing protoc-gen-dart plugin...${NC}"
-    dart pub global activate protoc_plugin
+    dart pub global activate protoc_plugin 21.1.2
     export PATH="$PATH":"$HOME/.pub-cache/bin"
 fi
+
+# Ensure we're using the correct version compatible with protobuf 3.x
+export PATH="$HOME/.pub-cache/bin:$PATH"
 
 # Create output directory
 OUTPUT_DIR="lib/generated"

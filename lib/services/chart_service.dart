@@ -1,6 +1,6 @@
 import 'dart:async';
 import 'package:interactive_chart/interactive_chart.dart';
-import 'package:mini_broker/generated/trading.pbgrpc.dart' as trading_pb;
+import 'package:mini_broker/generated/prtagent/v1/trading.pbgrpc.dart' as trading_pb;
 import 'package:mini_broker/generated/common.pb.dart' as common_pb;
 
 class ChartService {
@@ -16,14 +16,17 @@ class ChartService {
     if (ohlcData.hasDuration()) {
       if (ohlcData.duration.hasStartDt()) {
         final startDt = ohlcData.duration.startDt;
-        if (startDt.hasDate()) {
-          timestamp = DateTime(
-            startDt.date.year,
-            startDt.date.month,
-            startDt.date.day,
-            startDt.hasTime() && startDt.time.hasHms() ? startDt.time.hms.hour : 0,
-            startDt.hasTime() && startDt.time.hasHms() ? startDt.time.hms.minute : 0,
-          );
+        if (startDt.hasYmdhmss()) {
+          final ymdhmss = startDt.ymdhmss;
+          if (ymdhmss.hasDate()) {
+            timestamp = DateTime(
+              ymdhmss.date.year,
+              ymdhmss.date.month,
+              ymdhmss.date.day,
+              ymdhmss.hasTime() ? ymdhmss.time.hour : 0,
+              ymdhmss.hasTime() ? ymdhmss.time.minute : 0,
+            );
+          }
         }
       }
     }
@@ -64,22 +67,22 @@ class ChartService {
       if (startDate != null && endDate != null) {
         final duration = common_pb.Duration()
           ..startDt = (common_pb.DateTime()
-            ..date = (common_pb.Date()
-              ..year = startDate.year
-              ..month = startDate.month
-              ..day = startDate.day)
-            ..time = (common_pb.Time()
-              ..hms = (common_pb.TimeHMS()
+            ..ymdhmss = (common_pb.DateTimeYMDHMSS()
+              ..date = (common_pb.DateYMD()
+                ..year = startDate.year
+                ..month = startDate.month
+                ..day = startDate.day)
+              ..time = (common_pb.TimeHMSS()
                 ..hour = startDate.hour
                 ..minute = startDate.minute
                 ..second = startDate.second)))
           ..endDt = (common_pb.DateTime()
-            ..date = (common_pb.Date()
-              ..year = endDate.year
-              ..month = endDate.month
-              ..day = endDate.day)
-            ..time = (common_pb.Time()
-              ..hms = (common_pb.TimeHMS()
+            ..ymdhmss = (common_pb.DateTimeYMDHMSS()
+              ..date = (common_pb.DateYMD()
+                ..year = endDate.year
+                ..month = endDate.month
+                ..day = endDate.day)
+              ..time = (common_pb.TimeHMSS()
                 ..hour = endDate.hour
                 ..minute = endDate.minute
                 ..second = endDate.second)));
