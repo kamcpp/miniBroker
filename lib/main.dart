@@ -9,7 +9,9 @@ import 'services/auth_service.dart';
 import 'services/theme_service.dart';
 import 'services/real_grpc_client.dart';
 import 'config/app_config.dart';
-import 'utils/config_validator.dart';
+import 'utils/broker_config_helper.dart';
+import 'utils/config_rc_manager.dart';
+import 'widgets/config_finder_dialog.dart';
 
 void main() {
   // Add comprehensive error handling to catch ALL unhandled exceptions
@@ -178,24 +180,53 @@ class _AppInitializerState extends State<AppInitializer> with SingleTickerProvid
 
   Future<void> _initializeApp(AuthService authService) async {
     try {
-      // FIRST: Validate that the config file exists
-      final configValidation = ConfigValidator.validateConfig();
+      // Initialize RC file and get config directory
+      final configDir = ConfigRcManager.initializeRcFile();
+      print('✅ Config directory: $configDir');
 
-      if (!configValidation.isValid) {
-        // Show error dialog and stop initialization
+      // Find all broker config files
+      final configFiles = BrokerConfigHelper.findAllConfigFiles(configDir: configDir);
+
+      String? selectedConfigFile;
+
+      if (configFiles.isEmpty) {
+        // No config files found - show Config Finder dialog
         if (mounted) {
-          WidgetsBinding.instance.addPostFrameCallback((_) {
-            _showConfigErrorDialog(configValidation.errorMessage ?? 'Configuration file missing');
-          });
+          selectedConfigFile = await _showConfigFinderDialog();
         }
-        throw Exception('Configuration file validation failed');
+      } else if (configFiles.length == 1) {
+        // Only one config file - auto-select it
+        selectedConfigFile = configFiles.first;
+        print('✅ Auto-selected config: $selectedConfigFile');
+      } else {
+        // Multiple config files - show Config Finder to let user choose
+        if (mounted) {
+          selectedConfigFile = await _showConfigFinderDialog();
+        }
       }
+
+      if (selectedConfigFile == null) {
+        // User exited without selecting a config
+        throw Exception('No configuration selected');
+      }
+
+      // Load the selected config file
+      final config = BrokerConfigHelper.readConfigFile(
+        selectedConfigFile,
+        configDir: configDir,
+      );
+
+      if (config == null) {
+        throw Exception('Failed to read config file: $selectedConfigFile');
+      }
+
+      print('✅ Loaded config: $selectedConfigFile');
 
       // Initialize authentication service
       await authService.init();
 
-      // Initialize gRPC connection (re-enabled with fixes)
-      await _initializeGrpcConnection();
+      // Initialize gRPC connection with config from file
+      await _initializeGrpcConnection(config);
 
       // Add any other initialization here if needed
       await Future.delayed(const Duration(milliseconds: 500)); // Brief delay for smooth UX
@@ -204,82 +235,33 @@ class _AppInitializerState extends State<AppInitializer> with SingleTickerProvid
     }
   }
 
-  Future<void> _initializeGrpcConnection() async {
+  /// Show Config Finder dialog
+  Future<String?> _showConfigFinderDialog() async {
+    return await showDialog<String>(
+      context: context,
+      barrierDismissible: false,
+      builder: (context) => const ConfigFinderDialog(),
+    );
+  }
+
+  Future<void> _initializeGrpcConnection(Map<String, dynamic> config) async {
     try {
+      // Extract gRPC settings from config
+      final grpcConfig = config['grpc'] as Map<String, dynamic>?;
+      final host = grpcConfig?['host'] as String? ?? AppConfig.grpcHost;
+      final port = grpcConfig?['port'] as int? ?? AppConfig.grpcPort;
+      final useSecure = grpcConfig?['useSecure'] as bool? ?? false;
+
       await realGrpcClient.connect(
-        host: AppConfig.grpcHost,
-        port: AppConfig.grpcPort,
-        useSecure: false,
+        host: host,
+        port: port,
+        useSecure: useSecure,
       );
-      print('✅ Real gRPC client connected to simprtagent server');
+      print('✅ Real gRPC client connected to $host:$port');
     } catch (e) {
       print('⚠️ Failed to connect to real gRPC server: $e');
       // Continue with app initialization even if gRPC connection fails
       // The app can still function with local features
     }
-  }
-
-  /// Show error dialog when config file is missing
-  void _showConfigErrorDialog(String errorMessage) {
-    showDialog(
-      context: context,
-      barrierDismissible: false, // User cannot dismiss this dialog
-      builder: (BuildContext context) {
-        return AlertDialog(
-          backgroundColor: const Color(0xFF2A2A2A),
-          title: Row(
-            children: [
-              Icon(
-                Icons.error_outline,
-                color: Colors.red[400],
-                size: 32,
-              ),
-              const Expanded(
-                child: Text(
-                  'Configuration Error',
-                  style: TextStyle(
-                    color: Colors.white,
-                    fontWeight: FontWeight.bold,
-                    fontSize: 18,
-                  ),
-                ),
-              ),
-            ],
-          ),
-          content: Column(
-            mainAxisSize: MainAxisSize.min,
-            crossAxisAlignment: CrossAxisAlignment.start,
-            children: [
-              Text(
-                errorMessage,
-                style: const TextStyle(
-                  color: Colors.white,
-                  fontSize: 14,
-                ),
-              ),
-            ],
-          ),
-          actions: [
-            ElevatedButton(
-              onPressed: () {
-                // Exit the application
-                exit(0);
-              },
-              style: ElevatedButton.styleFrom(
-                backgroundColor: Colors.red[700],
-                foregroundColor: Colors.white,
-                padding: const EdgeInsets.symmetric(horizontal: 24, vertical: 12),
-              ),
-              child: const Text(
-                'Exit Application',
-                style: TextStyle(
-                  fontWeight: FontWeight.bold,
-                ),
-              ),
-            ),
-          ],
-        );
-      },
-    );
   }
 }
