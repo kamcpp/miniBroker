@@ -178,7 +178,7 @@ class _CreateBrokerConfigDialogState extends State<CreateBrokerConfigDialog> {
                             borderSide: BorderSide.none,
                           ),
                           helperText:
-                              '3-32 characters: letters, numbers, dash, underscore',
+                              '5-32 characters: letters, numbers, dash, underscore',
                           helperStyle: TextStyle(color: hintColor, fontSize: 12),
                         ),
                         validator: (value) {
@@ -187,7 +187,7 @@ class _CreateBrokerConfigDialogState extends State<CreateBrokerConfigDialog> {
                           }
                           if (!BrokerConfigHelper.isValidBrokerName(
                               value.trim())) {
-                            return 'Invalid name. Use 3-32 characters: A-Z, a-z, 0-9, -, _';
+                            return 'Invalid name. Use 5-32 characters: A-Z, a-z, 0-9, -, _';
                           }
                           return null;
                         },

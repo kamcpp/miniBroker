@@ -72,13 +72,15 @@ class _AppInitializerState extends State<AppInitializer> with SingleTickerProvid
   late Future<void> _initFuture;
   late AnimationController _fadeController;
   late Animation<double> _fadeAnimation;
+  bool _needsConfigSelection = false;
+  bool _configCheckDone = false;
 
   @override
   void initState() {
     super.initState();
     final authService = Provider.of<AuthService>(context, listen: false);
-    _initFuture = _initializeApp(authService);
-    
+    _initFuture = _checkConfigAndInitialize(authService);
+
     _fadeController = AnimationController(
       duration: const Duration(milliseconds: 800),
       vsync: this,
@@ -100,6 +102,30 @@ class _AppInitializerState extends State<AppInitializer> with SingleTickerProvid
 
   @override
   Widget build(BuildContext context) {
+    // Show Config Finder dialog if needed
+    if (_needsConfigSelection && _configCheckDone) {
+      WidgetsBinding.instance.addPostFrameCallback((_) async {
+        final result = await showDialog<String>(
+          context: context,
+          barrierDismissible: false,
+          builder: (context) => const ConfigFinderDialog(),
+        );
+
+        if (result != null) {
+          // Config was selected, restart initialization
+          setState(() {
+            _needsConfigSelection = false;
+            _configCheckDone = false;
+            final authService = Provider.of<AuthService>(context, listen: false);
+            _initFuture = _initializeWithConfig(authService, result);
+          });
+        } else {
+          // User cancelled or closed dialog - exit app
+          exit(0);
+        }
+      });
+    }
+
     return Consumer<AuthService>(
       builder: (context, authService, child) {
         return FutureBuilder<void>(
@@ -157,7 +183,24 @@ class _AppInitializerState extends State<AppInitializer> with SingleTickerProvid
                 ),
               );
             }
-            
+
+            // Check for initialization errors
+            if (snapshot.hasError) {
+              print('❌ Initialization error: ${snapshot.error}');
+              // Exit the app on critical initialization errors
+              Future.delayed(Duration.zero, () {
+                exit(1);
+              });
+              return Scaffold(
+                body: Center(
+                  child: Text(
+                    'Failed to initialize: ${snapshot.error}',
+                    style: const TextStyle(color: Colors.red),
+                  ),
+                ),
+              );
+            }
+
             // Check authentication state
             if (!authService.isLoggedIn) {
               // Start fade animation when showing login page
@@ -170,7 +213,7 @@ class _AppInitializerState extends State<AppInitializer> with SingleTickerProvid
                 ),
               );
             }
-            
+
             return const PortfolioPage();
           },
         );
@@ -178,49 +221,41 @@ class _AppInitializerState extends State<AppInitializer> with SingleTickerProvid
     );
   }
 
-  Future<void> _initializeApp(AuthService authService) async {
+  /// First pass - check if config selection is needed
+  Future<void> _checkConfigAndInitialize(AuthService authService) async {
     try {
       // Initialize RC file and get config directory
       final configDir = ConfigRcManager.initializeRcFile();
       print('✅ Config directory: $configDir');
 
-      // Find all broker config files
-      final configFiles = BrokerConfigHelper.findAllConfigFiles(configDir: configDir);
+      // Always show Config Finder dialog to let user select config
+      setState(() {
+        _needsConfigSelection = true;
+        _configCheckDone = true;
+      });
+      // Suspend here - dialog will be shown in build()
+      return;
+    } catch (e) {
+      throw Exception('Failed to check configuration: $e');
+    }
+  }
 
-      String? selectedConfigFile;
-
-      if (configFiles.isEmpty) {
-        // No config files found - show Config Finder dialog
-        if (mounted) {
-          selectedConfigFile = await _showConfigFinderDialog();
-        }
-      } else if (configFiles.length == 1) {
-        // Only one config file - auto-select it
-        selectedConfigFile = configFiles.first;
-        print('✅ Auto-selected config: $selectedConfigFile');
-      } else {
-        // Multiple config files - show Config Finder to let user choose
-        if (mounted) {
-          selectedConfigFile = await _showConfigFinderDialog();
-        }
-      }
-
-      if (selectedConfigFile == null) {
-        // User exited without selecting a config
-        throw Exception('No configuration selected');
-      }
+  /// Initialize app with selected config file
+  Future<void> _initializeWithConfig(AuthService authService, String configFileName) async {
+    try {
+      final configDir = ConfigRcManager.getCurrentConfigDir();
 
       // Load the selected config file
       final config = BrokerConfigHelper.readConfigFile(
-        selectedConfigFile,
+        configFileName,
         configDir: configDir,
       );
 
       if (config == null) {
-        throw Exception('Failed to read config file: $selectedConfigFile');
+        throw Exception('Failed to read config file: $configFileName');
       }
 
-      print('✅ Loaded config: $selectedConfigFile');
+      print('✅ Loaded config: $configFileName');
 
       // Initialize authentication service
       await authService.init();
@@ -233,15 +268,6 @@ class _AppInitializerState extends State<AppInitializer> with SingleTickerProvid
     } catch (e) {
       throw Exception('Failed to initialize application: $e');
     }
-  }
-
-  /// Show Config Finder dialog
-  Future<String?> _showConfigFinderDialog() async {
-    return await showDialog<String>(
-      context: context,
-      barrierDismissible: false,
-      builder: (context) => const ConfigFinderDialog(),
-    );
   }
 
   Future<void> _initializeGrpcConnection(Map<String, dynamic> config) async {

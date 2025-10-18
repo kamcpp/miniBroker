@@ -5,8 +5,8 @@ import 'config_rc_manager.dart';
 
 /// Helper for managing broker configuration files
 class BrokerConfigHelper {
-  /// Regex pattern for valid broker names: [A-Za-z0-9_-]{3,32}
-  static final RegExp brokerNamePattern = RegExp(r'^[A-Za-z0-9_-]{3,32}$');
+  /// Regex pattern for valid broker names: [A-Za-z0-9_-]{5,32}
+  static final RegExp brokerNamePattern = RegExp(r'^[A-Za-z0-9_-]{5,32}$');
 
   /// Config file pattern: broker-{brokerName}.config.json
   static String getConfigFileName(String brokerName) {
@@ -16,7 +16,7 @@ class BrokerConfigHelper {
   /// Extract broker name from config filename
   /// Returns null if filename doesn't match pattern
   static String? getBrokerNameFromFileName(String fileName) {
-    final pattern = RegExp(r'^broker-([A-Za-z0-9_-]{3,32})\.config\.json$');
+    final pattern = RegExp(r'^broker-([A-Za-z0-9_-]{5,32})\.config\.json$');
     final match = pattern.firstMatch(fileName);
     return match?.group(1);
   }

@@ -1,21 +1,25 @@
 import 'dart:io';
+import 'dart:convert';
 import 'package:path/path.dart' as path;
 
-/// Manages the .minibroker.rc file that stores the config directory path
+/// Manages the global.json file that stores the config directory path
 class ConfigRcManager {
-  /// RC file name
-  static const String rcFileName = '.minibroker.rc';
+  /// Global config file name
+  static const String globalConfigFileName = 'global.json';
 
   /// Default config directory name
   static const String defaultConfigDirName = '.minibroker';
 
-  /// Get the RC file path (always in user's home directory)
-  static String getRcFilePath() {
+  /// JSON field name for config directory path
+  static const String configDirPathField = 'config_dir_path';
+
+  /// Get the global config file path (${HOME}/.minibroker/global.json)
+  static String getGlobalConfigFilePath() {
     final home = Platform.environment['HOME'] ?? Platform.environment['USERPROFILE'] ?? '';
     if (home.isEmpty) {
       throw Exception('Could not determine user home directory');
     }
-    return path.join(home, rcFileName);
+    return path.join(home, defaultConfigDirName, globalConfigFileName);
   }
 
   /// Get the default config directory path
@@ -27,78 +31,100 @@ class ConfigRcManager {
     return path.join(home, defaultConfigDirName);
   }
 
-  /// Read the config directory from RC file
+  /// Read the config directory from global.json file
   /// Returns null if file doesn't exist or can't be read
   static String? readConfigDir() {
     try {
-      final rcPath = getRcFilePath();
-      final file = File(rcPath);
+      final globalConfigPath = getGlobalConfigFilePath();
+      final file = File(globalConfigPath);
 
       if (!file.existsSync()) {
-        print('📄 RC file not found: $rcPath');
+        print('📄 Global config file not found: $globalConfigPath');
         return null;
       }
 
-      final configDir = file.readAsStringSync().trim();
+      final contents = file.readAsStringSync().trim();
 
-      if (configDir.isEmpty) {
-        print('⚠️ RC file is empty');
+      if (contents.isEmpty) {
+        print('⚠️ Global config file is empty');
         return null;
       }
 
-      print('✅ Read config directory from RC: $configDir');
+      // Parse JSON
+      final json = jsonDecode(contents) as Map<String, dynamic>;
+      final configDir = json[configDirPathField] as String?;
+
+      if (configDir == null || configDir.isEmpty) {
+        print('⚠️ Global config file missing or empty "$configDirPathField" field');
+        return null;
+      }
+
+      print('✅ Read config directory from global.json: $configDir');
       return configDir;
     } catch (e) {
-      print('❌ Error reading RC file: $e');
+      print('❌ Error reading global config file: $e');
       return null;
     }
   }
 
-  /// Write the config directory to RC file
+  /// Write the config directory to global.json file
   static bool writeConfigDir(String configDir) {
     try {
-      final rcPath = getRcFilePath();
-      final file = File(rcPath);
+      final globalConfigPath = getGlobalConfigFilePath();
+      final file = File(globalConfigPath);
 
-      // Write the config directory path
-      file.writeAsStringSync(configDir);
+      // Ensure parent directory exists
+      final directory = file.parent;
+      if (!directory.existsSync()) {
+        directory.createSync(recursive: true);
+        print('✅ Created directory: ${directory.path}');
+      }
 
-      print('✅ Wrote config directory to RC: $configDir');
+      // Create JSON structure
+      final json = {
+        configDirPathField: configDir,
+      };
+
+      // Write with pretty formatting
+      final encoder = JsonEncoder.withIndent('  ');
+      file.writeAsStringSync(encoder.convert(json));
+
+      print('✅ Wrote config directory to global.json: $configDir');
       return true;
     } catch (e) {
-      print('❌ Error writing RC file: $e');
+      print('❌ Error writing global config file: $e');
       return false;
     }
   }
 
-  /// Get the current config directory (from RC or default)
+  /// Get the current config directory (from global.json or default)
   static String getCurrentConfigDir() {
-    // Try to read from RC file first
+    // Try to read from global.json file first
     final configDir = readConfigDir();
 
     if (configDir != null && configDir.isNotEmpty) {
       return configDir;
     }
 
-    // Return default if RC file doesn't exist or is invalid
+    // Return default if global.json doesn't exist or is invalid
     return getDefaultConfigDir();
   }
 
-  /// Initialize RC file with default config directory if it doesn't exist
+  /// Initialize global.json file with default config directory if it doesn't exist
   static String initializeRcFile() {
-    final rcPath = getRcFilePath();
-    final file = File(rcPath);
+    final globalConfigPath = getGlobalConfigFilePath();
+    final file = File(globalConfigPath);
 
     if (file.existsSync()) {
-      // RC file exists, read and return config dir
+      // global.json file exists, read and return config dir
       final configDir = readConfigDir();
       if (configDir != null && configDir.isNotEmpty) {
-        print('✅ RC file already exists: $rcPath');
+        print('✅ Global config file already exists: $globalConfigPath');
         return configDir;
       }
     }
 
-    // Create RC file with default config directory
+    // Create global.json file with default config directory
     final defaultDir = getDefaultConfigDir();
     writeConfigDir(defaultDir);
 
@@ -109,11 +135,11 @@ class ConfigRcManager {
       print('✅ Created config directory: $defaultDir');
     }
 
-    print('✅ Initialized RC file: $rcPath');
+    print('✅ Initialized global config file: $globalConfigPath');
     return defaultDir;
   }
 
-  /// Update config directory and write to RC file
+  /// Update config directory and write to global.json file
   /// Returns true if successful
   static bool updateConfigDir(String newConfigDir) {
     try {
@@ -124,7 +150,7 @@ class ConfigRcManager {
         print('✅ Created new config directory: $newConfigDir');
       }
 
-      // Write to RC file
+      // Write to global.json file
       return writeConfigDir(newConfigDir);
     } catch (e) {
       print('❌ Error updating config directory: $e');
@@ -132,9 +158,9 @@ class ConfigRcManager {
     }
   }
 
-  /// Check if RC file exists
-  static bool rcFileExists() {
-    final rcPath = getRcFilePath();
-    return File(rcPath).existsSync();
+  /// Check if global.json file exists
+  static bool globalConfigExists() {
+    final globalConfigPath = getGlobalConfigFilePath();
+    return File(globalConfigPath).existsSync();
   }
 }
