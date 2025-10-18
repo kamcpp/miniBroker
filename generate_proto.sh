@@ -37,10 +37,12 @@ PROTO_DIR="proto"
 echo -e "${GREEN}Compiling proto files...${NC}"
 
 # Generate Dart files from proto files
+# Using the proto directory as the base path to handle imports correctly
 protoc \
-    --proto_path="$PROTO_DIR/qomet/agora/daemons/prtagent/v1" \
+    --proto_path="$PROTO_DIR/qomet/agora/daemons/api/grpc" \
     --dart_out=grpc:"$OUTPUT_DIR" \
-    "$PROTO_DIR/qomet/agora/daemons/prtagent/v1/"*.proto
+    "$PROTO_DIR/qomet/agora/daemons/api/grpc/"*.proto \
+    "$PROTO_DIR/qomet/agora/daemons/api/grpc/prtagent/v1/"*.proto
 
 echo -e "${GREEN}✅ Proto compilation completed!${NC}"
 echo -e "${YELLOW}Generated files are in: $OUTPUT_DIR${NC}"
