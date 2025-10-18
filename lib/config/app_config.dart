@@ -26,7 +26,7 @@ class AppConfig {
   // ============================================================================
 
   /// Application name
-  static const String appName = 'mini Broker';
+  static const String appName = 'mini-broker';
 
   /// Application version
   static const String appVersion = '1.0.0';

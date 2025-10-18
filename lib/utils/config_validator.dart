@@ -5,24 +5,24 @@ import 'package:path/path.dart' as path;
 /// Validates the presence of required configuration files
 class ConfigValidator {
   /// The name of the required configuration file
-  static const String configFileName = 'mini Broker Config.json';
+  static const String configFileName = 'mini-broker-config.json';
 
   /// Get the directory where the app executable is located
   static String getAppDirectory() {
     // Get the path to the current executable
     final executablePath = Platform.resolvedExecutable;
 
-    // On macOS, the executable is inside "mini Broker.app/Contents/MacOS/mini Broker"
+    // On macOS, the executable is inside "mini-broker.app/Contents/MacOS/mini-broker"
     // We need to navigate up to the parent directory of the .app bundle
     String appDir = path.dirname(executablePath);
 
     // Check if we're inside a .app bundle
     if (Platform.isMacOS && appDir.contains('.app/Contents/MacOS')) {
-      // Navigate up from: /path/to/mini Broker.app/Contents/MacOS
+      // Navigate up from: /path/to/mini-broker.app/Contents/MacOS
       // to: /path/to (the directory containing the .app)
       appDir = path.dirname(executablePath); // MacOS directory
       appDir = path.dirname(appDir);          // Contents directory
-      appDir = path.dirname(appDir);          // mini Broker.app directory
+      appDir = path.dirname(appDir);          // mini-broker.app directory
       appDir = path.dirname(appDir);          // Parent directory of .app
     }
 
@@ -92,7 +92,7 @@ class ConfigValidator {
         print('❌ Config file not found: $configFileName');
         return ConfigValidationResult(
           isValid: false,
-          errorMessage: '$configFileName does not exist at the mini Broker app directory.\n\nExpected location: $configPath',
+          errorMessage: '$configFileName does not exist at the mini-broker app directory.\n\nExpected location: $configPath',
           configPath: configPath,
         );
       }

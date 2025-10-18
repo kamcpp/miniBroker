@@ -2,21 +2,21 @@
 
 ## Overview
 
-The mini Broker app requires a configuration file named `mini Broker Config.json` to be placed in a specific location depending on how you run the app.
+The mini-broker app requires a configuration file named `mini-broker-config.json` to be placed in a specific location depending on how you run the app.
 
 ## File Location
 
 ### When running from source (development):
 The config file should be placed in the **parent directory** of the project:
 ```
-/Users/kam/repos/NEW2/qomet/agora/mini Broker Config.json
+/Users/kam/repos/NEW2/qomet/agora/mini-broker-config.json
 ```
 
 ### When running the built .app (production):
-The config file should be in the same directory as the `mini Broker.app` bundle:
+The config file should be in the same directory as the `mini-broker.app` bundle:
 ```
-/path/to/mini Broker.app
-/path/to/mini Broker Config.json
+/path/to/mini-broker.app
+/path/to/mini-broker-config.json
 ```
 
 ## Configuration Structure
@@ -35,7 +35,7 @@ The config file should be in the same directory as the `mini Broker.app` bundle:
       "name": "Test User"
     },
     "app": {
-      "name": "mini Broker",
+      "name": "mini-broker",
       "version": "1.0.0",
       "environment": "development"
     },
@@ -84,7 +84,7 @@ The config file should be in the same directory as the `mini Broker.app` bundle:
 
 1. Copy the sample config file to the correct location:
    ```bash
-   cp "mini Broker Config.json" /Users/kam/repos/NEW2/qomet/agora/
+   cp "mini-broker-config.json" /Users/kam/repos/NEW2/qomet/agora/
    ```
 
 2. Edit the config file with your settings:

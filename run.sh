@@ -1,11 +1,11 @@
 #!/bin/bash
 
-# Build and run mini Broker app for x86_64 architecture
+# Build and run mini-broker app for x86_64 architecture
 # This script bypasses the flutter run arm64 issue
 
 set -e
 
-echo "🔨 Building mini Broker for x86_64..."
+echo "🔨 Building mini-broker for x86_64..."
 
 cd macos
 
@@ -18,10 +18,10 @@ xcodebuild \
 
 if [ $? -eq 0 ]; then
     echo "✅ Build succeeded!"
-    echo "🚀 Launching mini Broker..."
+    echo "🚀 Launching mini-broker..."
 
     # Find and launch the app
-    APP_PATH=$(find ~/Library/Developer/Xcode/DerivedData/Runner-*/Build/Products/Debug -name "mini Broker.app" 2>/dev/null | head -1)
+    APP_PATH=$(find ~/Library/Developer/Xcode/DerivedData/Runner-*/Build/Products/Debug -name "mini-broker.app" 2>/dev/null | head -1)
 
     if [ -n "$APP_PATH" ]; then
         open "$APP_PATH"
