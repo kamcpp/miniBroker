@@ -13,6 +13,7 @@ import '../services/real_grpc_client.dart';
 import '../services/grpcurl_helper.dart';
 import '../services/chart_service.dart';
 import '../utils/connectivity_checker.dart';
+import 'instruments_page.dart';
 import 'portfolio_page.dart';
 import 'Cash_management_page.dart';
 import 'activity_page.dart';
@@ -2961,6 +2962,56 @@ class _TradingPageState extends State<TradingPage> {
               mainAxisSize: MainAxisSize.min,
               crossAxisAlignment: CrossAxisAlignment.end,
               children: [
+              // Instruments Button
+              MouseRegion(
+                cursor: SystemMouseCursors.click,
+                child: GestureDetector(
+                  onTap: () {
+                    Navigator.of(context).push(
+                      PageRouteBuilder(
+                        pageBuilder: (context, animation, secondaryAnimation) => const InstrumentsPage(),
+                        transitionDuration: Duration.zero,
+                        reverseTransitionDuration: Duration.zero,
+                      ),
+                    );
+                  },
+                  child: ClipRRect(
+                    borderRadius: const BorderRadius.only(
+                      topLeft: Radius.circular(8),
+                      topRight: Radius.circular(8),
+                    ),
+                    child: BackdropFilter(
+                      filter: ImageFilter.blur(sigmaX: 2, sigmaY: 2),
+                      child: Container(
+                        height: 45,
+                        padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 9),
+                        decoration: BoxDecoration(
+                          color: Colors.white.withOpacity(0.1),
+                          border: Border(
+                            top: BorderSide(color: Colors.white.withOpacity(0.3), width: 1),
+                            left: BorderSide(color: Colors.white.withOpacity(0.3), width: 1),
+                            right: BorderSide(color: Colors.white.withOpacity(0.3), width: 1),
+                            bottom: BorderSide(color: Colors.white.withOpacity(0.3), width: 1),
+                          ),
+                          borderRadius: const BorderRadius.only(
+                            topLeft: Radius.circular(8),
+                            topRight: Radius.circular(8),
+                          ),
+                        ),
+                        child: const Text(
+                          'Instruments',
+                          style: TextStyle(
+                            fontSize: 13,
+                            fontWeight: FontWeight.w500,
+                            color: Colors.white70,
+                          ),
+                        ),
+                      ),
+                    ),
+                  ),
+                ),
+              ),
+
               // Portfolio Button
               MouseRegion(
                 cursor: SystemMouseCursors.click,
