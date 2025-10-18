@@ -1,6 +1,6 @@
 #!/bin/bash
 
-# Build and run mini-broker app
+# Build and run mini-broker app with full console output
 # This script forces x86_64 architecture for Rosetta 2 environments
 
 set -e
@@ -22,9 +22,9 @@ xcodebuild \
 
 if [ $? -eq 0 ]; then
     echo "✅ Build succeeded!"
-    echo "🚀 Launching mini-broker..."
+    echo "🚀 Launching mini-broker with console output..."
 
-    # Find and launch the app
+    # Find the app
     APP_PATH=$(find ~/Library/Developer/Xcode/DerivedData/Runner-*/Build/Products/Debug -name "mini-broker.app" 2>/dev/null | head -1)
 
     if [ -z "$APP_PATH" ]; then
@@ -33,9 +33,11 @@ if [ $? -eq 0 ]; then
     fi
 
     if [ -f "$APP_PATH/Contents/MacOS/mini-broker" ]; then
-        open "$APP_PATH"
-        echo "✅ App launched successfully!"
-        echo "📱 App path: $APP_PATH"
+        echo "✅ App found at: $APP_PATH"
+        echo "📱 Running with console output (Ctrl+C to stop)..."
+        echo "=========================================="
+        # Run the app directly to capture stdout/stderr
+        "$APP_PATH/Contents/MacOS/mini-broker"
     else
         echo "❌ Could not find built app at $APP_PATH"
         exit 1

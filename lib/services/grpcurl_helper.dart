@@ -81,9 +81,31 @@ class GrpcurlHelper {
     for (final path in _grpcurlPaths) {
       try {
         print('🧪 Testing grpcurl at: $path');
-        
-        // First check if the file exists for absolute paths
-        if (path.startsWith('/')) {
+
+        // CRITICAL: For non-absolute paths (like "grpcurl"), check if it's in PATH
+        // before attempting to run it to prevent segfaults/crashes
+        if (!path.startsWith('/')) {
+          // For PATH executables, try to find the actual path first
+          try {
+            print('🔍 Checking if "$path" is in PATH...');
+            final whichResult = await Process.run('which', [path]).timeout(
+              const Duration(milliseconds: 500),
+              onTimeout: () => ProcessResult(0, 1, '', 'timeout'),
+            );
+
+            if (whichResult.exitCode != 0) {
+              print('❌ "$path" not found in PATH');
+              continue; // Skip this path
+            }
+
+            final actualPath = (whichResult.stdout as String).trim();
+            print('✅ Found "$path" in PATH at: $actualPath');
+          } catch (e) {
+            print('❌ Failed to check PATH for "$path": $e');
+            continue; // Skip this path if we can't verify it exists
+          }
+        } else {
+          // For absolute paths, check if file exists
           try {
             final file = File(path);
             if (!await file.exists()) {
@@ -95,12 +117,13 @@ class GrpcurlHelper {
             continue;
           }
         }
-        
-        // Use a very short timeout to avoid hanging during initialization
+
+        // Now it's safer to run Process.run since we verified the executable exists
         ProcessResult? result;
         try {
+          print('▶️ Running grpcurl at $path...');
           result = await Process.run(
-            path, 
+            path,
             ['-plaintext', '$_host:$_port', 'list'],
           ).timeout(
             const Duration(milliseconds: 1000), // Slightly longer timeout for file system access
@@ -112,12 +135,17 @@ class GrpcurlHelper {
         } on TimeoutException catch (e) {
           print('⏰ Timeout testing $path: ${e.message}');
           continue; // Skip to next path
-        } catch (e) {
+        } on ProcessException catch (e) {
+          // Specifically catch ProcessException when executable not found
+          print('❌ grpcurl not found at $path: ${e.message}');
+          continue; // Skip to next path
+        } catch (e, stackTrace) {
           // Catch ANY other exception that might occur in sandboxed environment
           print('❌ Process.run failed for $path in sandboxed app: ${e.runtimeType}: ${e.toString()}');
+          print('❌ Stack trace: $stackTrace');
           continue; // Skip to next path
         }
-        
+
         if (result.exitCode == 0) {
           print('✅ Found working grpcurl at: $path');
           _cachedGrpcurlPath = path;

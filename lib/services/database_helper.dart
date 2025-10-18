@@ -45,26 +45,37 @@ class DatabaseHelper {
   }
 
   Future<Database> _initDatabase() async {
-    // Get config directory from ConfigRcManager
-    final configDir = ConfigRcManager.getCurrentConfigDir();
+    try {
+      // Get config directory from ConfigRcManager
+      final configDir = ConfigRcManager.getCurrentConfigDir();
+      print('📊 Config directory: $configDir');
 
-    // Create database path: broker-{brokerName}.db
-    final dbFileName = 'broker-$_currentBrokerName.db';
-    final dbPath = join(configDir, dbFileName);
+      // Create database path: broker-{brokerName}.db
+      final dbFileName = 'broker-$_currentBrokerName.db';
+      final dbPath = join(configDir, dbFileName);
 
-    // Ensure config directory exists
-    final dir = Directory(configDir);
-    if (!await dir.exists()) {
-      await dir.create(recursive: true);
+      // Ensure config directory exists
+      final dir = Directory(configDir);
+      if (!await dir.exists()) {
+        print('📊 Creating config directory: $configDir');
+        await dir.create(recursive: true);
+      }
+
+      print('📊 Database path: $dbPath');
+
+      final db = await openDatabase(
+        dbPath,
+        version: 1,
+        onCreate: _createDatabase,
+      );
+
+      print('📊 Database opened successfully');
+      return db;
+    } catch (e, stackTrace) {
+      print('❌ CRITICAL ERROR initializing database: $e');
+      print('❌ Stack trace: $stackTrace');
+      rethrow;
     }
-
-    print('📊 Database path: $dbPath');
-
-    return await openDatabase(
-      dbPath,
-      version: 1,
-      onCreate: _createDatabase,
-    );
   }
 
   Future<void> _createDatabase(Database db, int version) async {
@@ -106,16 +117,23 @@ class DatabaseHelper {
   // Ensure admin user exists (call this on app startup)
   Future<void> ensureAdminUserExists() async {
     try {
+      print('📊 Ensuring admin user exists...');
       final db = await database;
-      
+      print('📊 Database instance obtained');
+
       // Check if admin user exists
       final adminExists = await isUsernameExists('admin');
-      
+      print('📊 Admin exists check: $adminExists');
+
       if (!adminExists) {
+        print('📊 Creating default admin user...');
         await _createDefaultAdminUser(db);
+        print('📊 Default admin user created');
       }
-    } catch (e) {
-      print('Error ensuring admin user exists: $e');
+    } catch (e, stackTrace) {
+      print('❌ Error ensuring admin user exists: $e');
+      print('❌ Stack trace: $stackTrace');
+      // Don't rethrow - just log the error to prevent app crash
     }
   }
 

@@ -120,8 +120,9 @@ class _AppInitializerState extends State<AppInitializer> with SingleTickerProvid
             _initFuture = _initializeWithConfig(authService, result);
           });
         } else {
-          // User cancelled or closed dialog - exit app
-          exit(0);
+          // User cancelled - show dialog again (config is required)
+          // Don't exit, just stay in config selection mode
+          print('⚠️ Config selection cancelled - config is required to continue');
         }
       });
     }
@@ -187,15 +188,48 @@ class _AppInitializerState extends State<AppInitializer> with SingleTickerProvid
             // Check for initialization errors
             if (snapshot.hasError) {
               print('❌ Initialization error: ${snapshot.error}');
-              // Exit the app on critical initialization errors
-              Future.delayed(Duration.zero, () {
-                exit(1);
-              });
+              // Show error but don't exit - let user see the error
               return Scaffold(
+                backgroundColor: const Color(0xFF1a1754),
                 body: Center(
-                  child: Text(
-                    'Failed to initialize: ${snapshot.error}',
-                    style: const TextStyle(color: Colors.red),
+                  child: Padding(
+                    padding: const EdgeInsets.all(32.0),
+                    child: Column(
+                      mainAxisAlignment: MainAxisAlignment.center,
+                      children: [
+                        const Icon(
+                          Icons.error_outline,
+                          color: Colors.red,
+                          size: 64,
+                        ),
+                        const SizedBox(height: 24),
+                        const Text(
+                          'Initialization Failed',
+                          style: TextStyle(
+                            color: Colors.white,
+                            fontSize: 24,
+                            fontWeight: FontWeight.bold,
+                          ),
+                        ),
+                        const SizedBox(height: 16),
+                        Text(
+                          '${snapshot.error}',
+                          style: const TextStyle(color: Colors.red),
+                          textAlign: TextAlign.center,
+                        ),
+                        const SizedBox(height: 32),
+                        ElevatedButton(
+                          onPressed: () {
+                            // Restart initialization
+                            setState(() {
+                              final authService = Provider.of<AuthService>(context, listen: false);
+                              _initFuture = _checkConfigAndInitialize(authService);
+                            });
+                          },
+                          child: const Text('Retry'),
+                        ),
+                      ],
+                    ),
                   ),
                 ),
               );

@@ -315,9 +315,16 @@ class _ConfigFinderDialogState extends State<ConfigFinderDialog> {
         actions: [
           ElevatedButton(
             onPressed: () {
-              exit(0); // Exit app (will be relaunched by user)
+              Navigator.of(context).pop();
+              // Show message that user needs to restart manually
+              ScaffoldMessenger.of(context).showSnackBar(
+                const SnackBar(
+                  content: Text('Please restart the app to apply changes'),
+                  duration: Duration(seconds: 5),
+                ),
+              );
             },
-            child: const Text('Restart Now'),
+            child: const Text('OK'),
           ),
         ],
       ),
@@ -717,11 +724,11 @@ class _ConfigFinderDialogState extends State<ConfigFinderDialog> {
               mainAxisAlignment: MainAxisAlignment.end,
               children: [
                 TextButton(
-                  onPressed: () => exit(0),
+                  onPressed: () => Navigator.of(context).pop(null),
                   style: TextButton.styleFrom(
                     foregroundColor: hintColor,
                   ),
-                  child: const Text('Exit'),
+                  child: const Text('Cancel'),
                 ),
                 const SizedBox(width: 12),
                 ElevatedButton(
