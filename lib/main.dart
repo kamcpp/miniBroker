@@ -255,6 +255,13 @@ class _AppInitializerState extends State<AppInitializer> with SingleTickerProvid
         throw Exception('Failed to read config file: $configFileName');
       }
 
+      // Extract and store broker name
+      final brokerName = BrokerConfigHelper.getBrokerNameFromFileName(configFileName);
+      if (brokerName != null) {
+        AppConfig.selectedBrokerName = brokerName;
+        print('✅ Selected broker: $brokerName');
+      }
+
       print('✅ Loaded config: $configFileName');
 
       // Initialize authentication service

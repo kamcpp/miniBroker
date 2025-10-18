@@ -2,6 +2,7 @@ import 'package:flutter/foundation.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 import 'database_helper.dart';
 import 'real_grpc_client.dart';
+import '../config/app_config.dart';
 
 class AuthService extends ChangeNotifier {
   
@@ -22,17 +23,26 @@ class AuthService extends ChangeNotifier {
   String get username => _username;
 
   Future<void> init() async {
+    // Set the broker name for the database
+    final brokerName = AppConfig.selectedBrokerName;
+    if (brokerName == null) {
+      throw Exception('Broker name not set. Config must be selected before initializing AuthService.');
+    }
+
+    _databaseHelper.setBrokerName(brokerName);
+    print('✅ AuthService initialized with broker: $brokerName');
+
     // Always reset to logged-out state when app starts (for fresh sessions each time)
     final prefs = await SharedPreferences.getInstance();
     await prefs.setBool('isLoggedIn', false);
     await prefs.remove('username');
-    
+
     _isLoggedIn = false;
     _username = '';
-    
+
     // Ensure admin user exists on app startup
     await _databaseHelper.ensureAdminUserExists();
-    
+
     notifyListeners();
   }
 
@@ -97,9 +107,9 @@ class AuthService extends ChangeNotifier {
       if (password != confirmPassword) {
         throw 'Passwords do not match';
       }
-      
-      if (password.length < 6) {
-        throw 'Password must be at least 6 characters long';
+
+      if (password.length < 5) {
+        throw 'Password must be at least 5 characters long';
       }
       
       // Prevent creating another admin user

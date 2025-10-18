@@ -2,15 +2,18 @@ import 'package:sqflite/sqflite.dart';
 import 'package:path/path.dart';
 import 'package:crypto/crypto.dart';
 import 'dart:convert';
+import 'dart:io';
+import '../utils/config_rc_manager.dart';
 
 class DatabaseHelper {
-  
+
   /// Convert DateTime to Unix timestamp (seconds since epoch)
   static int _toUnixTimestamp(DateTime dateTime) {
     return dateTime.millisecondsSinceEpoch ~/ 1000;
   }
   static final DatabaseHelper _instance = DatabaseHelper._internal();
   static Database? _database;
+  static String? _currentBrokerName;
 
   DatabaseHelper._internal();
 
@@ -18,18 +21,47 @@ class DatabaseHelper {
     return _instance;
   }
 
+  /// Initialize database with specific broker name
+  /// This must be called before accessing the database
+  void setBrokerName(String brokerName) {
+    if (_currentBrokerName != brokerName) {
+      // Close existing database if broker name changes
+      _database?.close();
+      _database = null;
+      _currentBrokerName = brokerName;
+      print('📊 Database broker name set to: $brokerName');
+    }
+  }
+
   Future<Database> get database async {
     if (_database != null) return _database!;
+
+    if (_currentBrokerName == null) {
+      throw Exception('Broker name must be set before accessing database. Call setBrokerName() first.');
+    }
+
     _database = await _initDatabase();
     return _database!;
   }
 
   Future<Database> _initDatabase() async {
-    String databasesPath = await getDatabasesPath();
-    String path = join(databasesPath, 'mini_broker.db');
+    // Get config directory from ConfigRcManager
+    final configDir = ConfigRcManager.getCurrentConfigDir();
+
+    // Create database path: broker-{brokerName}.db
+    final dbFileName = 'broker-$_currentBrokerName.db';
+    final dbPath = join(configDir, dbFileName);
+
+    // Ensure config directory exists
+    final dir = Directory(configDir);
+    if (!await dir.exists()) {
+      await dir.create(recursive: true);
+    }
+
+    print('📊 Database path: $dbPath');
 
     return await openDatabase(
-      path,
+      dbPath,
       version: 1,
       onCreate: _createDatabase,
     );

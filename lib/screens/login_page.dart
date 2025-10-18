@@ -5,6 +5,7 @@ import '../services/auth_service.dart';
 import '../utils/connectivity_checker.dart';
 import '../main.dart';
 import 'signup_page.dart';
+import '../config/app_config.dart';
 
 class LoginPage extends StatefulWidget {
   const LoginPage({super.key});
@@ -33,15 +34,11 @@ class _LoginPageState extends State<LoginPage> with TickerProviderStateMixin {
   void initState() {
     super.initState();
 
-    // Pre-fill login credentials
-    _userController.text = 'test-account-001';
-    _passwordController.text = '111111';
-
     // Check server connectivity when page opens
     WidgetsBinding.instance.addPostFrameCallback((_) {
       ConnectivityChecker.checkAndShowErrorIfNeeded(context, 'Login');
     });
-    
+
     _flipController = AnimationController(
       duration: const Duration(milliseconds: 800),
       vsync: this,
@@ -312,6 +309,9 @@ class _LoginPageState extends State<LoginPage> with TickerProviderStateMixin {
                         if (value == null || value.isEmpty) {
                           return 'Please enter your username';
                         }
+                        if (value.length < 5) {
+                          return 'Username must be at least 5 characters';
+                        }
                         return null;
                       },
                     ),
@@ -360,8 +360,8 @@ class _LoginPageState extends State<LoginPage> with TickerProviderStateMixin {
                         if (value == null || value.isEmpty) {
                           return 'Please enter your password';
                         }
-                        if (value.length < 6) {
-                          return 'Password must be at least 6 characters';
+                        if (value.length < 5) {
+                          return 'Password must be at least 5 characters';
                         }
                         return null;
                       },
@@ -506,6 +506,9 @@ class _LoginPageState extends State<LoginPage> with TickerProviderStateMixin {
               if (value == null || value.trim().isEmpty) {
                 return 'Please enter your username';
               }
+              if (value.trim().length < 5) {
+                return 'Username must be at least 5 characters';
+              }
               return null;
             },
           ),
@@ -554,8 +557,8 @@ class _LoginPageState extends State<LoginPage> with TickerProviderStateMixin {
               if (value == null || value.isEmpty) {
                 return 'Please create a password';
               }
-              if (value.length < 6) {
-                return 'Password must be at least 6 characters';
+              if (value.length < 5) {
+                return 'Password must be at least 5 characters';
               }
               return null;
             },

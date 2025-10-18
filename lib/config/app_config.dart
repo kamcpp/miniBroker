@@ -60,4 +60,11 @@ class AppConfig {
 
   /// Enable server connectivity checks
   static const bool enableConnectivityChecks = true;
+
+  // ============================================================================
+  // Runtime Configuration
+  // ============================================================================
+
+  /// Selected broker name (set at startup from config file)
+  static String? selectedBrokerName;
 }

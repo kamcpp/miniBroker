@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 import 'dart:io';
+import 'package:path/path.dart' as path;
 import '../services/theme_service.dart';
 import '../utils/config_rc_manager.dart';
 import '../utils/broker_config_helper.dart';
@@ -198,6 +199,77 @@ class _ConfigFinderDialogState extends State<ConfigFinderDialog> {
         _showError('Failed to duplicate config. A broker with this name may already exist.');
       }
     }
+  }
+
+  Future<void> _deleteConfig(String fileName, String brokerName) async {
+    // Show confirmation dialog
+    final confirmed = await _showDeleteConfirmDialog(brokerName);
+
+    if (!confirmed) {
+      return;
+    }
+
+    try {
+      final filePath = path.join(_configDir, fileName);
+      final file = File(filePath);
+
+      if (file.existsSync()) {
+        file.deleteSync();
+
+        // Clear selection if deleted config was selected
+        if (_selectedConfig == fileName) {
+          setState(() {
+            _selectedConfig = null;
+          });
+        }
+
+        // Reload config list
+        _loadConfigFiles();
+      } else {
+        _showError('Config file not found');
+      }
+    } catch (e) {
+      _showError('Failed to delete config: $e');
+    }
+  }
+
+  Future<bool> _showDeleteConfirmDialog(String brokerName) async {
+    final result = await showDialog<bool>(
+      context: context,
+      builder: (context) {
+        final themeService = Provider.of<ThemeService>(context, listen: false);
+        final isDarkTheme = themeService.isDarkTheme;
+        final textColor = isDarkTheme ? Colors.white : Colors.black;
+
+        return AlertDialog(
+          backgroundColor: isDarkTheme ? const Color(0xFF2A2A2A) : Colors.white,
+          title: Text(
+            'Delete Configuration',
+            style: TextStyle(color: textColor),
+          ),
+          content: Text(
+            'Are you sure you want to delete "$brokerName"? This action cannot be undone.',
+            style: TextStyle(color: textColor),
+          ),
+          actions: [
+            TextButton(
+              onPressed: () => Navigator.of(context).pop(false),
+              child: const Text('Cancel'),
+            ),
+            ElevatedButton(
+              onPressed: () => Navigator.of(context).pop(true),
+              style: ElevatedButton.styleFrom(
+                backgroundColor: Colors.red[600],
+                foregroundColor: Colors.white,
+              ),
+              child: const Text('Delete'),
+            ),
+          ],
+        );
+      },
+    );
+
+    return result ?? false;
   }
 
   void _showError(String message) {
@@ -457,9 +529,19 @@ class _ConfigFinderDialogState extends State<ConfigFinderDialog> {
                                 configDir: _configDir,
                               );
                               final grpcConfig = config?['grpc'] as Map<String, dynamic>?;
+                              final participantConfig = config?['participant'] as Map<String, dynamic>?;
+                              final appConfig = config?['app'] as Map<String, dynamic>?;
+
                               final host = grpcConfig?['host'] as String? ?? 'N/A';
                               final port = grpcConfig?['port']?.toString() ?? 'N/A';
-                              final summary = '$host:$port';
+                              final participantId = participantConfig?['participantId'] as String? ?? 'N/A';
+                              final apiKey = participantConfig?['apiKey'] as String? ?? '';
+                              final apiKeyPreview = apiKey.length > 8
+                                  ? '${apiKey.substring(0, 4)}...${apiKey.substring(apiKey.length - 4)}'
+                                  : (apiKey.isNotEmpty ? '***' : 'N/A');
+                              final environment = appConfig?['environment'] as String? ?? 'N/A';
+
+                              final summary = '$host:$port • $participantId • API: $apiKeyPreview • $environment';
 
                               return MouseRegion(
                                 onEnter: (_) =>
@@ -577,6 +659,16 @@ class _ConfigFinderDialogState extends State<ConfigFinderDialog> {
                                               ),
                                               tooltip: 'Duplicate config',
                                               onPressed: () => _duplicateConfig(fileName),
+                                            ),
+                                            // Delete button
+                                            IconButton(
+                                              icon: Icon(
+                                                Icons.delete_outline,
+                                                size: 18,
+                                                color: Colors.red[400],
+                                              ),
+                                              tooltip: 'Delete config',
+                                              onPressed: () => _deleteConfig(fileName, brokerName),
                                             ),
                                           ],
                                         ),
