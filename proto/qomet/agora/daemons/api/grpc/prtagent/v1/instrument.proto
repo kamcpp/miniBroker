@@ -1,77 +1,72 @@
 syntax = "proto3";
 
-// Field Numbering Convention:
-// 1-100: Core business fields
-// 101-104: Display metadata (display_name, description, labels, tags)
-// 105: Request aux_data / Response metadata
-// 106-999: Reserved for future use
-// 1000+: Extension/OTHER enum values
+package tech.qomet.agora.api.grpc.prtagent.v1;
 
-package qomet.agora.daemons.prtagent.v1;
-
-option go_package = "pkg/daemons/prtagent/api/v1/grpc;prtagentapiv1";
-option csharp_namespace  = "Qomet.Agora.Daemons.ParticipantAgent.API.V1";
+option go_package = "qomet.tech/agora/daemons/gen-pkg/tech/qomet/agora/api/grpc/prtagent/v1;agoraapigrpcprtagentv1";
+option java_package = "tech.qomet.agora.api.grpc.prtagent.v1";
+option java_outer_classname = "Instrument";
+option csharp_namespace  = "Tech.Qomet.Agora.Api.Grpc.PrtAgent.V1";
 
 import "common.proto";
-import "fin_common.proto";
-import "filter.proto";
+import "fin.proto";
+import "prtagent/v1/query.proto";
 
 service InstrumentService {
   rpc GetInstrumentList(GetInstrumentListRequest) returns (GetInstrumentListResponse);
-  rpc GetInstrumentListAsync(GetInstrumentListRequest) returns (ExecutionAsyncResponse);
+  rpc GetInstrumentListAsync(GetInstrumentListRequest) returns (tech.qomet.agora.api.grpc.common.ExecutionAsyncResponse);
 
   rpc GetInstrumentInfoBatch(GetInstrumentInfoBatchRequest) returns (GetInstrumentInfoBatchResponse);
-  rpc GetInstrumentInfoBatchAsync(GetInstrumentInfoBatchRequest) returns (ExecutionAsyncResponse);
+  rpc GetInstrumentInfoBatchAsync(GetInstrumentInfoBatchRequest) returns (tech.qomet.agora.api.grpc.common.ExecutionAsyncResponse);
 
   rpc GetInstrumentOrders(GetInstrumentOrdersRequest) returns (GetInstrumentOrdersResponse);
-  rpc GetInstrumentOrdersAsync(GetInstrumentOrdersRequest) returns (ExecutionAsyncResponse);
+  rpc GetInstrumentOrdersAsync(GetInstrumentOrdersRequest) returns (tech.qomet.agora.api.grpc.common.ExecutionAsyncResponse);
 
   rpc GetInstrumentTrades(GetInstrumentTradesRequest) returns (GetInstrumentTradesResponse);
-  rpc GetInstrumentTradesAsync(GetInstrumentTradesRequest) returns (ExecutionAsyncResponse);
+  rpc GetInstrumentTradesAsync(GetInstrumentTradesRequest) returns (tech.qomet.agora.api.grpc.common.ExecutionAsyncResponse);
 
   rpc GetInstrumentSettlements(GetInstrumentSettlementsRequest) returns (GetInstrumentSettlementsResponse);
-  rpc GetInstrumentSettlementsAsync(GetInstrumentSettlementsRequest) returns (ExecutionAsyncResponse);
+  rpc GetInstrumentSettlementsAsync(GetInstrumentSettlementsRequest) returns (tech.qomet.agora.api.grpc.common.ExecutionAsyncResponse);
 }
 
 message GetInstrumentListRequest {
   string proposed_execution_id = 1;           // OPTIONAL: Client-proposed execution ID for tracking
-  PaginationParams pagination = 2;            // OPTIONAL: Pagination parameters
+  tech.qomet.agora.api.grpc.common.PaginationParams pagination = 2;            // OPTIONAL: Pagination parameters
   string market_id_or_symbol_regex = 3;       // OPTIONAL: Filter by market ID or symbol regex
   string venue_id_or_symbol_regex = 4;        // OPTIONAL: Filter by venue ID or symbol regex
   string instrument_id_or_symbol_regex = 5;   // OPTIONAL: Filter by instrument ID or symbol regex
-  repeated InstrumentListingStatusEnum listing_types = 6; // OPTIONAL: Filter by listing status types
+  repeated tech.qomet.agora.api.grpc.common.InstrumentListingStatusEnum listing_types = 6; // OPTIONAL: Filter by listing status types
 
   map<string, string> aux_data = 105;         // OPTIONAL: Additional request data
 }
 
 message GetInstrumentListResponse {
   string ref_execution_id = 1;                // REQUIRED: Reference to the execution ID
-  PaginationInfo pagination_info = 2;         // OPTIONAL: Pagination information (required if paginated)
-  repeated Instrument instruments = 3;         // REQUIRED: List of instruments (can be empty)
+  tech.qomet.agora.api.grpc.common.PaginationInfo pagination_info = 2;         // OPTIONAL: Pagination information (required if paginated)
+  repeated tech.qomet.agora.api.grpc.common.Instrument instruments = 3;         // REQUIRED: List of instruments (can be empty)
 
   map<string, string> metadata = 105;         // OPTIONAL: Response metadata
 }
 
 message GetInstrumentInfoBatchRequest {
   string proposed_execution_id = 1;           // OPTIONAL: Client-proposed execution ID for tracking
-  PaginationParams pagination = 2;            // OPTIONAL: Pagination parameters
+  tech.qomet.agora.api.grpc.common.PaginationParams pagination = 2;            // OPTIONAL: Pagination parameters
   repeated string instrument_id_and_symbol_regexes = 3; // REQUIRED: Instrument ID and symbol regexes to retrieve
-  repeated InstrumentListingStatusEnum listing_types = 4; // OPTIONAL: Filter by listing status types
+  repeated tech.qomet.agora.api.grpc.common.InstrumentListingStatusEnum listing_types = 4; // OPTIONAL: Filter by listing status types
 
   map<string, string> aux_data = 105;         // OPTIONAL: Additional request data
 }
 
 message GetInstrumentInfoBatchResponse {
   string ref_execution_id = 1;                // REQUIRED: Reference to the execution ID
-  PaginationInfo pagination_info = 3;         // OPTIONAL: Pagination information (required if paginated)
-  repeated Instrument instruments = 4;         // REQUIRED: List of instrument details (can be empty)
+  tech.qomet.agora.api.grpc.common.PaginationInfo pagination_info = 3;         // OPTIONAL: Pagination information (required if paginated)
+  repeated tech.qomet.agora.api.grpc.common.Instrument instruments = 4;         // REQUIRED: List of instrument details (can be empty)
 
   map<string, string> metadata = 105;         // OPTIONAL: Response metadata
 }
 
 message GetInstrumentOrdersRequest {
   string proposed_execution_id = 1;           // OPTIONAL: Client-proposed execution ID for tracking
-  PaginationParams pagination = 2;            // OPTIONAL: Pagination parameters
+  tech.qomet.agora.api.grpc.common.PaginationParams pagination = 2;            // OPTIONAL: Pagination parameters
   repeated string instrument_id_and_symbol_regexes = 3; // REQUIRED: Instrument ID and symbol regexes
   OrderQueryFilter order_query_filter = 4;    // OPTIONAL: Additional order filters
 
@@ -80,15 +75,15 @@ message GetInstrumentOrdersRequest {
 
 message GetInstrumentOrdersResponse {
   string ref_execution_id = 1;                // REQUIRED: Reference to the execution ID
-  PaginationInfo pagination_info = 2;         // OPTIONAL: Pagination information (required if paginated)
-  repeated Order orders = 3;                  // REQUIRED: List of orders (can be empty)
+  tech.qomet.agora.api.grpc.common.PaginationInfo pagination_info = 2;         // OPTIONAL: Pagination information (required if paginated)
+  repeated tech.qomet.agora.api.grpc.common.Order orders = 3;                  // REQUIRED: List of orders (can be empty)
 
   map<string, string> metadata = 105;         // OPTIONAL: Response metadata
 }
 
 message GetInstrumentTradesRequest {
   string proposed_execution_id = 1;           // OPTIONAL: Client-proposed execution ID for tracking
-  PaginationParams pagination = 2;            // OPTIONAL: Pagination parameters
+  tech.qomet.agora.api.grpc.common.PaginationParams pagination = 2;            // OPTIONAL: Pagination parameters
   repeated string instrument_id_and_symbol_regexes = 3; // REQUIRED: Instrument ID and symbol regexes
   TradeQueryFilter trade_query_filter = 4;    // OPTIONAL: Additional trade filters
 
@@ -97,15 +92,15 @@ message GetInstrumentTradesRequest {
 
 message GetInstrumentTradesResponse {
   string ref_execution_id = 1;                // REQUIRED: Reference to the execution ID
-  PaginationInfo pagination_info = 2;         // OPTIONAL: Pagination information (required if paginated)
-  repeated Trade trades = 3;                  // REQUIRED: List of trades (can be empty)
+  tech.qomet.agora.api.grpc.common.PaginationInfo pagination_info = 2;         // OPTIONAL: Pagination information (required if paginated)
+  repeated tech.qomet.agora.api.grpc.common.Trade trades = 3;                  // REQUIRED: List of trades (can be empty)
 
   map<string, string> metadata = 105;         // OPTIONAL: Response metadata
 }
 
 message GetInstrumentSettlementsRequest {
   string proposed_execution_id = 1;           // OPTIONAL: Client-proposed execution ID for tracking
-  PaginationParams pagination = 2;            // OPTIONAL: Pagination parameters
+  tech.qomet.agora.api.grpc.common.PaginationParams pagination = 2;            // OPTIONAL: Pagination parameters
   repeated string instrument_id_and_symbol_regexes = 3; // REQUIRED: Instrument ID and symbol regexes
   SettlementQueryFilter settlement_query_filter = 4; // OPTIONAL: Additional settlement filters
 
@@ -114,8 +109,8 @@ message GetInstrumentSettlementsRequest {
 
 message GetInstrumentSettlementsResponse {
   string ref_execution_id = 1;                // REQUIRED: Reference to the execution ID
-  PaginationInfo pagination_info = 2;         // OPTIONAL: Pagination information (required if paginated)
-  repeated Settlement settlements = 3;         // REQUIRED: List of settlements (can be empty)
+  tech.qomet.agora.api.grpc.common.PaginationInfo pagination_info = 2;         // OPTIONAL: Pagination information (required if paginated)
+  repeated tech.qomet.agora.api.grpc.common.Settlement settlements = 3;         // REQUIRED: List of settlements (can be empty)
 
   map<string, string> metadata = 105;         // OPTIONAL: Response metadata
 }

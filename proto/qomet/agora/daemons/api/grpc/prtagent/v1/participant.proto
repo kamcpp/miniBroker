@@ -1,34 +1,29 @@
 syntax = "proto3";
 
-// Field Numbering Convention:
-// 1-100: Core business fields
-// 101-104: Display metadata (display_name, description, labels, tags)
-// 105: Request aux_data / Response metadata
-// 106-999: Reserved for future use
-// 1000+: Extension/OTHER enum values
+package tech.qomet.agora.api.grpc.prtagent.v1;
 
-package qomet.agora.daemons.prtagent.v1;
-
-option go_package = "pkg/daemons/prtagent/api/v1/grpc;prtagentapiv1";
-option csharp_namespace  = "Qomet.Agora.Daemons.ParticipantAgent.API.V1";
+option go_package = "qomet.tech/agora/daemons/gen-pkg/tech/qomet/agora/api/grpc/prtagent/v1;agoraapigrpcprtagentv1";
+option java_package = "tech.qomet.agora.api.grpc.prtagent.v1";
+option java_outer_classname = "Participant";
+option csharp_namespace  = "Tech.Qomet.Agora.Api.Grpc.PrtAgent.V1";
 
 import "common.proto";
-import "fin_common.proto";
+import "fin.proto";
 
 service ParticipantService {
   rpc GetParticipantInfo(GetParticipantInfoRequest) returns (GetParticipantInfoResponse);
-  rpc GetParticipantInfoAsync(GetParticipantInfoRequest) returns (ExecutionAsyncResponse);
+  rpc GetParticipantInfoAsync(GetParticipantInfoRequest) returns (tech.qomet.agora.api.grpc.common.ExecutionAsyncResponse);
 
   rpc GetParticipantOrders(GetParticipantOrdersRequest) returns (GetParticipantOrdersResponse);
-  rpc GetParticipantOrdersAsync(GetParticipantOrdersRequest) returns (ExecutionAsyncResponse);
+  rpc GetParticipantOrdersAsync(GetParticipantOrdersRequest) returns (tech.qomet.agora.api.grpc.common.ExecutionAsyncResponse);
 
   rpc GetParticipantTrades(GetParticipantTradesRequest) returns (GetParticipantTradesResponse);
-  rpc GetParticipantTradesAsync(GetParticipantTradesRequest) returns (ExecutionAsyncResponse);
+  rpc GetParticipantTradesAsync(GetParticipantTradesRequest) returns (tech.qomet.agora.api.grpc.common.ExecutionAsyncResponse);
 
-  rpc GetParticipantSettlements(GetParticipantSettlementsRequest) 
+  rpc GetParticipantSettlements(GetParticipantSettlementsRequest)
     returns (GetParticipantSettlementsResponse);
-  rpc GetParticipantSettlementsAsync(GetParticipantSettlementsRequest) 
-    returns (ExecutionAsyncResponse);
+  rpc GetParticipantSettlementsAsync(GetParticipantSettlementsRequest)
+    returns (tech.qomet.agora.api.grpc.common.ExecutionAsyncResponse);
 }
 
 message GetParticipantInfoRequest {
@@ -39,22 +34,22 @@ message GetParticipantInfoRequest {
 
 message GetParticipantInfoResponse {
   string ref_execution_id = 1;                // REQUIRED: Reference to the execution ID
-  Participant participant = 2;                // REQUIRED: Participant information
+  tech.qomet.agora.api.grpc.common.Participant participant = 2;                // REQUIRED: Participant information
 
   map<string, string> metadata = 105;         // OPTIONAL: Response metadata
 }
 
 message GetParticipantOrdersRequest {
   string proposed_execution_id = 1;           // OPTIONAL: Client-proposed execution ID for tracking
-  PaginationParams pagination = 2;            // OPTIONAL: Pagination parameters
+  tech.qomet.agora.api.grpc.common.PaginationParams pagination = 2;            // OPTIONAL: Pagination parameters
   repeated string account_id_or_name_regexes = 3; // OPTIONAL: Filter by account ID or name regex
   repeated string market_id_or_name_regexes = 4; // OPTIONAL: Filter by market ID or name regex
   repeated string venue_id_or_symbol_regexes = 5; // OPTIONAL: Filter by venue ID or symbol regex
   repeated string participant_id_or_symbol_regexes = 6; // OPTIONAL: Filter by participant ID or symbol regex
   repeated string instrument_id_or_symbol_regexes = 7; // OPTIONAL: Filter by instrument ID or symbol regex
-  DateTime from_dt = 8;                       // OPTIONAL: Start of time range
-  DateTime to_dt = 9;                         // OPTIONAL: End of time range
-  OrderSide side = 10;                        // OPTIONAL: Filter by order side
+  tech.qomet.agora.api.grpc.common.DateTime from_dt = 8;                       // OPTIONAL: Start of time range
+  tech.qomet.agora.api.grpc.common.DateTime to_dt = 9;                         // OPTIONAL: End of time range
+  tech.qomet.agora.api.grpc.common.OrderSide side = 10;                        // OPTIONAL: Filter by order side
   repeated bool status_filters = 11;          // OPTIONAL: Status filters [is_filled, is_cancelled, is_expired]
 
   map<string, string> aux_data = 105;         // OPTIONAL: Additional request data
@@ -62,9 +57,9 @@ message GetParticipantOrdersRequest {
 
 message GetParticipantOrdersResponse {
   string ref_execution_id = 1;                // REQUIRED: Reference to the execution ID
-  PaginationInfo pagination_info = 2;         // OPTIONAL: Pagination information (required if paginated)
-  DateTime generated_at_dt = 3;               // REQUIRED: Response generation timestamp
-  repeated Order orders = 4;                  // REQUIRED: List of orders (can be empty)
+  tech.qomet.agora.api.grpc.common.PaginationInfo pagination_info = 2;         // OPTIONAL: Pagination information (required if paginated)
+  tech.qomet.agora.api.grpc.common.DateTime generated_at_dt = 3;               // REQUIRED: Response generation timestamp
+  repeated tech.qomet.agora.api.grpc.common.Order orders = 4;                  // REQUIRED: List of orders (can be empty)
   map<string, string> account_summaries = 5;  // OPTIONAL: Account ID -> summary stats
 
   map<string, string> metadata = 105;         // OPTIONAL: Response metadata
@@ -72,24 +67,24 @@ message GetParticipantOrdersResponse {
 
 message GetParticipantTradesRequest {
   string proposed_execution_id = 1;           // OPTIONAL: Client-proposed execution ID for tracking
-  PaginationParams pagination = 2;            // OPTIONAL: Pagination parameters
+  tech.qomet.agora.api.grpc.common.PaginationParams pagination = 2;            // OPTIONAL: Pagination parameters
   repeated string account_id_or_name_regexes = 3; // OPTIONAL: Filter by account ID or name regex
   repeated string market_id_or_name_regexes = 4; // OPTIONAL: Filter by market ID or name regex
   repeated string venue_id_or_symbol_regexes = 5; // OPTIONAL: Filter by venue ID or symbol regex
   repeated string participant_id_or_symbol_regexes = 6; // OPTIONAL: Filter by participant ID or symbol regex
   repeated string instrument_id_or_symbol_regexes = 7; // OPTIONAL: Filter by instrument ID or symbol regex
-  DateTime from_dt = 8;                       // OPTIONAL: Start of time range
-  DateTime to_dt = 9;                         // OPTIONAL: End of time range
-  OrderSide side = 10;                        // OPTIONAL: Filter by order side
+  tech.qomet.agora.api.grpc.common.DateTime from_dt = 8;                       // OPTIONAL: Start of time range
+  tech.qomet.agora.api.grpc.common.DateTime to_dt = 9;                         // OPTIONAL: End of time range
+  tech.qomet.agora.api.grpc.common.OrderSide side = 10;                        // OPTIONAL: Filter by order side
 
   map<string, string> aux_data = 105;         // OPTIONAL: Additional request data
 }
 
 message GetParticipantTradesResponse {
   string ref_execution_id = 1;                // REQUIRED: Reference to the execution ID
-  PaginationInfo pagination_info = 2;         // OPTIONAL: Pagination information (required if paginated)
-  DateTime generated_at_dt = 3;               // REQUIRED: Response generation timestamp
-  repeated Trade trades = 4;                  // REQUIRED: List of trades (can be empty)
+  tech.qomet.agora.api.grpc.common.PaginationInfo pagination_info = 2;         // OPTIONAL: Pagination information (required if paginated)
+  tech.qomet.agora.api.grpc.common.DateTime generated_at_dt = 3;               // REQUIRED: Response generation timestamp
+  repeated tech.qomet.agora.api.grpc.common.Trade trades = 4;                  // REQUIRED: List of trades (can be empty)
   map<string, string> account_summaries = 5;  // OPTIONAL: Account ID -> trade volume summary
 
   map<string, string> metadata = 105;         // OPTIONAL: Response metadata
@@ -97,24 +92,24 @@ message GetParticipantTradesResponse {
 
 message GetParticipantSettlementsRequest {
   string proposed_execution_id = 1;           // OPTIONAL: Client-proposed execution ID for tracking
-  PaginationParams pagination = 2;            // OPTIONAL: Pagination parameters
+  tech.qomet.agora.api.grpc.common.PaginationParams pagination = 2;            // OPTIONAL: Pagination parameters
   repeated string account_id_or_name_regexes = 3; // OPTIONAL: Filter by account ID or name regex
   repeated string market_id_or_name_regexes = 4; // OPTIONAL: Filter by market ID or name regex
   repeated string venue_id_or_symbol_regexes = 5; // OPTIONAL: Filter by venue ID or symbol regex
   repeated string participant_id_or_symbol_regexes = 6; // OPTIONAL: Filter by participant ID or symbol regex
   repeated string instrument_id_or_symbol_regexes = 7; // OPTIONAL: Filter by instrument ID or symbol regex
-  DateTime from_dt = 8;                       // OPTIONAL: Start of time range
-  DateTime to_dt = 9;                         // OPTIONAL: End of time range
-  ConfirmationStatus status = 10;             // OPTIONAL: Filter by confirmation status
+  tech.qomet.agora.api.grpc.common.DateTime from_dt = 8;                       // OPTIONAL: Start of time range
+  tech.qomet.agora.api.grpc.common.DateTime to_dt = 9;                         // OPTIONAL: End of time range
+  tech.qomet.agora.api.grpc.common.ConfirmationStatus status = 10;             // OPTIONAL: Filter by confirmation status
 
   map<string, string> aux_data = 105;         // OPTIONAL: Additional request data
 }
 
 message GetParticipantSettlementsResponse {
   string ref_execution_id = 1;                // REQUIRED: Reference to the execution ID
-  PaginationInfo pagination_info = 2;         // OPTIONAL: Pagination information (required if paginated)
-  DateTime generated_at_dt = 3;               // REQUIRED: Response generation timestamp
-  repeated Settlement settlements = 4;         // REQUIRED: List of settlements (can be empty)
+  tech.qomet.agora.api.grpc.common.PaginationInfo pagination_info = 2;         // OPTIONAL: Pagination information (required if paginated)
+  tech.qomet.agora.api.grpc.common.DateTime generated_at_dt = 3;               // REQUIRED: Response generation timestamp
+  repeated tech.qomet.agora.api.grpc.common.Settlement settlements = 4;         // REQUIRED: List of settlements (can be empty)
   map<string, string> account_summaries = 5;  // OPTIONAL: Account ID -> settlement summary
 
   map<string, string> metadata = 105;         // OPTIONAL: Response metadata

@@ -1,25 +1,19 @@
 syntax = "proto3";
 
-// Field Numbering Convention:
-// 1-100: Core business fields
-// 101-104: Display metadata (display_name, description, labels, tags)
-// 105: Request aux_data / Response metadata
-// 106-999: Reserved for future use
-// 1000+: Extension/OTHER enum values
+package tech.qomet.agora.api.grpc.prtagent.v1;
 
-package qomet.agora.daemons.prtagent.v1;
-
-option go_package = "pkg/daemons/prtagent/api/v1/grpc;prtagentapiv1";
-option csharp_namespace  = "Qomet.Agora.Daemons.ParticipantAgent.API.V1";
+option go_package = "qomet.tech/agora/daemons/gen-pkg/tech/qomet/agora/api/grpc/prtagent/v1;agoraapigrpcprtagentv1";
+option java_package = "tech.qomet.agora.api.grpc.prtagent.v1";
+option java_outer_classname = "EventProto";
+option csharp_namespace  = "Tech.Qomet.Agora.Api.Grpc.PrtAgent.V1";
 
 import "common.proto";
-import "account.proto";
-// import "agent.proto";
-import "instrument.proto";
-import "market.proto";
-import "participant.proto";
-import "trading.proto";
-import "venue.proto";
+import "prtagent/v1/account.proto";
+import "prtagent/v1/instrument.proto";
+import "prtagent/v1/market.proto";
+import "prtagent/v1/participant.proto";
+import "prtagent/v1/trading.proto";
+import "prtagent/v1/venue.proto";
 
 enum EventTypeEnum {
   EVENT_TYPE_ENUM__UNKNOWN = 0;
@@ -43,7 +37,7 @@ enum EventTypeEnum {
   EVENT_TYPE_ENUM__EXECUTION_UPDATE = 12;
   EVENT_TYPE_ENUM__EXECUTION_RESPONSE = 13;
 
-  EVENT_TYPE_ENUM__OTHER = 1000;
+  EVENT_TYPE_ENUM__OTHER = 0x0fff0000;
 }
 
 message EventSubscriptionParams {
@@ -55,7 +49,7 @@ message EventSubscriptionParams {
 }
 
 message BlobEvent {
-  Blob data = 1;                              // REQUIRED: The blob data payload
+  tech.qomet.agora.api.grpc.common.Blob data = 1;                              // REQUIRED: The blob data payload
 }
 
 enum ExecutionUpdateEventTypeEnum {
@@ -65,7 +59,7 @@ enum ExecutionUpdateEventTypeEnum {
   EXECUTION_UPDATE_EVENT_TYPE_ENUM__FLOW_PROGRESS_REPORT = 2;
   EXECUTION_UPDATE_EVENT_TYPE_ENUM__EXECUTION_COMPLETED = 3;
 
-  EXECUTION_UPDATE_EVENT_TYPE_ENUM__OTHER = 1000;
+  EXECUTION_UPDATE_EVENT_TYPE_ENUM__OTHER = 0x0fff0000;
 }
 
 message ExecutionUpdateEvent {
@@ -134,7 +128,7 @@ message Event {
   string hash = 2;                           // OPTIONAL: Event content hash
   string ref_subscription_id = 3;            // REQUIRED: Reference to subscription ID
   string topic = 4;                          // REQUIRED: Event topic
-  DateTime generated_at_dt = 5;              // REQUIRED: Event generation timestamp
+  tech.qomet.agora.api.grpc.common.DateTime generated_at_dt = 5;              // REQUIRED: Event generation timestamp
 
   EventTypeEnum type = 6;                    // REQUIRED: Event type
   oneof carrying_object {                    // REQUIRED: Must contain one event payload

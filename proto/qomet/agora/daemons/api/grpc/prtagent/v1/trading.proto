@@ -1,20 +1,15 @@
 syntax = "proto3";
 
-// Field Numbering Convention:
-// 1-100: Core business fields
-// 101-104: Display metadata (display_name, description, labels, tags)
-// 105: Request aux_data / Response metadata
-// 106-999: Reserved for future use
-// 1000+: Extension/OTHER enum values
+package tech.qomet.agora.api.grpc.prtagent.v1;
 
-package qomet.agora.daemons.prtagent.v1;
-
-option go_package = "pkg/daemons/prtagent/api/v1/grpc;prtagentapiv1";
-option csharp_namespace  = "Qomet.Agora.Daemons.ParticipantAgent.API.V1";
+option go_package = "qomet.tech/agora/daemons/gen-pkg/tech/qomet/agora/api/grpc/prtagent/v1;agoraapigrpcprtagentv1";
+option java_package = "tech.qomet.agora.api.grpc.prtagent.v1";
+option java_outer_classname = "Trading";
+option csharp_namespace  = "Tech.Qomet.Agora.Api.Grpc.PrtAgent.V1";
 
 import "common.proto";
-import "fin_common.proto";
-import "filter.proto";
+import "fin.proto";
+import "prtagent/v1/query.proto";
 
 service TradingService {
   rpc GetLatestQuote(GetLatestQuoteRequest) returns (InstrumentQuoteResponse);
@@ -24,18 +19,18 @@ service TradingService {
   rpc GetHistoricalOhlcData(GetHistoricalOhlcDataRequest) returns (GetHistoricalOhlcDataResponse);
 
   rpc GetOrderFees(GetOrderFeesRequest) returns (GetOrderFeesResponse);
-  rpc GetOrderFeesAsync(GetOrderFeesRequest) returns (ExecutionAsyncResponse);
+  rpc GetOrderFeesAsync(GetOrderFeesRequest) returns (tech.qomet.agora.api.grpc.common.ExecutionAsyncResponse);
 
-  rpc CreateOrderAsync(CreateOrderAsyncRequest) returns (ExecutionAsyncResponse);
-  rpc ReplaceOrderAsync(ReplaceOrderAsyncRequest) returns (ExecutionAsyncResponse);
-  rpc CancelOrderAsync(CancelOrderAsyncRequest) returns (ExecutionAsyncResponse);
+  rpc CreateOrderAsync(CreateOrderAsyncRequest) returns (tech.qomet.agora.api.grpc.common.ExecutionAsyncResponse);
+  rpc ReplaceOrderAsync(ReplaceOrderAsyncRequest) returns (tech.qomet.agora.api.grpc.common.ExecutionAsyncResponse);
+  rpc CancelOrderAsync(CancelOrderAsyncRequest) returns (tech.qomet.agora.api.grpc.common.ExecutionAsyncResponse);
 
   rpc GetOrderbook(GetOrderbookRequest) returns (GetOrderbookResponse);
-  rpc GetOrderbookAsync(GetOrderbookRequest) returns (ExecutionAsyncResponse);
+  rpc GetOrderbookAsync(GetOrderbookRequest) returns (tech.qomet.agora.api.grpc.common.ExecutionAsyncResponse);
 }
 
 message InstrumentQuote {
-  Instrument instrument = 1;                  // REQUIRED: Instrument information
+  tech.qomet.agora.api.grpc.common.Instrument instrument = 1;                  // REQUIRED: Instrument information
   string amount = 2;                          // REQUIRED: Quote amount
 }
 
@@ -47,8 +42,8 @@ message InstrumentQuoteResponse {
 }
 
 message OhlcData {
-  Instrument instrument = 3;                  // REQUIRED: Instrument information
-  Duration duration = 4;                      // REQUIRED: Time period duration
+  tech.qomet.agora.api.grpc.common.Instrument instrument = 3;                  // REQUIRED: Instrument information
+  tech.qomet.agora.api.grpc.common.Duration duration = 4;                      // REQUIRED: Time period duration
   string open = 5;                            // REQUIRED: Opening price
   string high = 6;                            // REQUIRED: Highest price
   string low = 7;                             // REQUIRED: Lowest price
@@ -88,16 +83,16 @@ message FetchLiveQuoteRequest {
 
 message GetHistoricalQuoteRequest {
   string proposed_execution_id = 1;           // OPTIONAL: Client-proposed execution ID for tracking
-  PaginationParams pagination = 2;            // OPTIONAL: Pagination parameters
+  tech.qomet.agora.api.grpc.common.PaginationParams pagination = 2;            // OPTIONAL: Pagination parameters
   repeated string instrument_id_and_symbol_regexes = 3; // REQUIRED: Instrument ID and symbol regexes
-  optional Duration duration = 4;             // OPTIONAL: Time range duration
+  optional tech.qomet.agora.api.grpc.common.Duration duration = 4;             // OPTIONAL: Time range duration
 
   map<string, string> aux_data = 105;         // OPTIONAL: Additional request data
 }
 
 message GetHistoricalQuoteResponse {
   string ref_execution_id = 1;                // REQUIRED: Reference to the execution ID
-  PaginationInfo pagination_info = 2;         // OPTIONAL: Pagination information (required if paginated)
+  tech.qomet.agora.api.grpc.common.PaginationInfo pagination_info = 2;         // OPTIONAL: Pagination information (required if paginated)
   repeated InstrumentQuote quotes = 3;         // REQUIRED: List of historical quotes (can be empty)
 
   map<string, string> metadata = 105;         // OPTIONAL: Response metadata
@@ -121,9 +116,9 @@ message FetchLiveOhlcDataRequest {
 
 message GetHistoricalOhlcDataRequest {
   string proposed_execution_id = 1;           // OPTIONAL: Client-proposed execution ID for tracking
-  PaginationParams pagination = 2;            // OPTIONAL: Pagination parameters
+  tech.qomet.agora.api.grpc.common.PaginationParams pagination = 2;            // OPTIONAL: Pagination parameters
   repeated string instrument_id_and_symbol_regexes = 3; // REQUIRED: Instrument ID and symbol regexes
-  optional Duration duration = 4;             // OPTIONAL: Time range duration
+  optional tech.qomet.agora.api.grpc.common.Duration duration = 4;             // OPTIONAL: Time range duration
   string period = 5;                          // REQUIRED: Time period ("1m", "5m", "15m", "1h", "1d")
   bool include_volume = 6;                    // OPTIONAL: Include volume data (default: false)
 
@@ -132,7 +127,7 @@ message GetHistoricalOhlcDataRequest {
 
 message GetHistoricalOhlcDataResponse {
   string ref_execution_id = 1;                // REQUIRED: Reference to the execution ID
-  PaginationInfo pagination_info = 2;         // OPTIONAL: Pagination information (required if paginated)
+  tech.qomet.agora.api.grpc.common.PaginationInfo pagination_info = 2;         // OPTIONAL: Pagination information (required if paginated)
   repeated OhlcData ohlc_datas = 3;            // REQUIRED: List of historical OHLC data (can be empty)
 
   map<string, string> metadata = 105;         // OPTIONAL: Response metadata
@@ -160,7 +155,7 @@ message GetOrderFeesRequest {
 
   // Order details for fee calculation
   string order_type = 5;                      // REQUIRED: Order type ("LIMIT", "MARKET")
-  OrderSide side = 6;                         // REQUIRED: Order side ("BUY", "SELL")
+  tech.qomet.agora.api.grpc.common.OrderSide side = 6;                         // REQUIRED: Order side ("BUY", "SELL")
   string quantity = 7;                        // REQUIRED: Order quantity
   string price = 8;                           // OPTIONAL: Order price (required for LIMIT orders)
 
@@ -179,7 +174,7 @@ message GetOrderFeesResponse {
   FeeStructure fee_structure = 2;             // REQUIRED: Primary fee structure
 
   repeated string fee_notes = 3;              // OPTIONAL: Additional fee notes or warnings
-  DateTime fee_valid_until_dt = 4;            // OPTIONAL: Fee validity expiration
+  tech.qomet.agora.api.grpc.common.DateTime fee_valid_until_dt = 4;            // OPTIONAL: Fee validity expiration
   string msg = 5;                             // OPTIONAL: Additional message or status
 
   map<string, string> fee_breakdown = 6;      // OPTIONAL: Detailed breakdown of fee components
@@ -198,13 +193,13 @@ message CreateOrderAsyncRequest {
 
   // Order details
   string order_type = 5;                      // REQUIRED: Order type ("LIMIT", "MARKET", STOP not supported)
-  OrderSide side = 6;                         // REQUIRED: Order side ("BUY", "SELL")
+  tech.qomet.agora.api.grpc.common.OrderSide side = 6;                         // REQUIRED: Order side ("BUY", "SELL")
   string quantity = 7;                        // REQUIRED: Order quantity (for both LIMIT and MARKET)
   string price = 8;                           // REQUIRED for LIMIT orders, must be zero for MARKET
 
   // Time constraints
   string time_in_force = 9;                   // OPTIONAL: Time in force ("GTC", "IOC", "FOK", "DAY")
-  DateTime expire_dt = 10;                    // OPTIONAL: Expiration date for GTT orders
+  tech.qomet.agora.api.grpc.common.DateTime expire_dt = 10;                    // OPTIONAL: Expiration date for GTT orders
 
   // Additional parameters
   string participant_order_iid = 11;          // REQUIRED: Client's order ID (mandatory in FIX)
@@ -221,7 +216,7 @@ message ReplaceOrderAsyncRequest {
   // Fields that can be modified
   string new_quantity = 4;                    // OPTIONAL: New order quantity
   string new_price = 5;                       // OPTIONAL: New order price
-  Time new_expire_time = 6;                   // OPTIONAL: New expiration time
+  tech.qomet.agora.api.grpc.common.Time new_expire_time = 6;                   // OPTIONAL: New expiration time
 
   string reason = 7;                          // OPTIONAL: Reason for modification
 
@@ -240,7 +235,7 @@ message CancelOrderAsyncRequest {
 message GetOrderbookRequest {
   string proposed_execution_id = 1;           // OPTIONAL: Client-proposed execution ID for tracking
 
-  PaginationParams pagination = 2;            // OPTIONAL: Pagination parameters
+  tech.qomet.agora.api.grpc.common.PaginationParams pagination = 2;            // OPTIONAL: Pagination parameters
   string instrument_iid = 3;                  // REQUIRED: Instrument internal ID
   OrderbookQueryFilter orderbook_query_filter = 4; // OPTIONAL: Orderbook query filters
 
@@ -250,8 +245,8 @@ message GetOrderbookRequest {
 message GetOrderbookResponse {
   string ref_execution_id = 1;                // REQUIRED: Reference to the execution ID
 
-  DateTime generated_at_dt = 2;               // REQUIRED: Response generation timestamp
-  Instrument instrument = 3;                  // REQUIRED: Instrument information
+  tech.qomet.agora.api.grpc.common.DateTime generated_at_dt = 2;               // REQUIRED: Response generation timestamp
+  tech.qomet.agora.api.grpc.common.Instrument instrument = 3;                  // REQUIRED: Instrument information
   OrderList buy_list = 4;                     // REQUIRED: Buy side orders (can be empty)
   OrderList sell_list = 5;                    // REQUIRED: Sell side orders (can be empty)
 

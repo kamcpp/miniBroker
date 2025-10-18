@@ -1,16 +1,11 @@
 syntax = "proto3";
 
-// Field Numbering Convention:
-// 1-100: Core business fields
-// 101-104: Display metadata (display_name, description, labels, tags)
-// 105: Request aux_data / Response metadata
-// 106-999: Reserved for future use
-// 1000+: Extension/OTHER enum values
+package tech.qomet.agora.api.grpc.common;
 
-package qomet.agora.daemons.prtagent.v1;
-
-option go_package = "pkg/daemons/prtagent/api/v1/grpc;prtagentapiv1";
-option csharp_namespace  = "Qomet.Agora.Daemons.ParticipantAgent.API.V1";
+option go_package = "qomet.tech/agora/daemons/gen-pkg/tech/qomet/agora/api/grpc/common;agoraapigrpccommon";
+option java_package = "tech.qomet.agora.api.grpc.common";
+option java_outer_classname = "Fin";
+option csharp_namespace  = "Tech.Qomet.Agora.Api.Grpc.Common";
 
 import "common.proto";
 
@@ -26,7 +21,7 @@ enum AccountTypeEnum {
   ACCOUNT_TYPE_ENUM__ESCROW = 7;
   ACCOUNT_TYPE_ENUM__ISSUER = 8;
 
-  ACCOUNT_TYPE_ENUM__OTHER = 1000;
+  ACCOUNT_TYPE_ENUM__OTHER = 0x0fff0000;
 }
 
 enum AccountStatusEnum {
@@ -40,7 +35,7 @@ enum AccountStatusEnum {
   ACCOUNT_STATUS_ENUM__PENDING = 6;
   ACCOUNT_STATUS_ENUM__TERMINATED = 7;
 
-  ACCOUNT_STATUS_ENUM__OTHER = 1000;
+  ACCOUNT_STATUS_ENUM__OTHER = 0x0fff0000;
 }
 
 message Account {
@@ -70,7 +65,7 @@ enum AccountToAccountRelationTypeEnum {
   ACCOUNT_TO_ACCOUNT_RELATION_TYPE_ENUM__ISSUANCE_FLOW = 7;      // Issuer account → investor accounts
   ACCOUNT_TO_ACCOUNT_RELATION_TYPE_ENUM__REPORTING_POOL = 8;     // Aggregation/grouping
 
-  ACCOUNT_TO_ACCOUNT_RELATION_TYPE_ENUM__OTHER = 1000;
+  ACCOUNT_TO_ACCOUNT_RELATION_TYPE_ENUM__OTHER = 0x0fff0000;
 }
 
 message AccountToAccountRelation {
@@ -99,22 +94,50 @@ enum FinEntityTypeEnum {
   FIN_ENTITY_TYPE_ENUM__MARKET = 3;
   FIN_ENTITY_TYPE_ENUM__VENUE = 4;
 
-  FIN_ENTITY_TYPE_ENUM__OTHER = 1000;
+  FIN_ENTITY_TYPE_ENUM__OTHER = 0x0fff0000;
+}
+
+enum FinIdentifierSchemeTypeEnum {
+  FIN_IDENTIFIER_SCHEME_ENUM_TYPE__UNKNOWN = 0;
+
+  FIN_IDENTIFIER_SCHEME_ENUM_TYPE__TEXT = 1;                 // Free text scheme name
+  FIN_IDENTIFIER_SCHEME_ENUM_TYPE__BIC = 2;                  // Business Identifier Code
+  FIN_IDENTIFIER_SCHEME_ENUM_TYPE__ISIN = 3;                 // International Securities Identification Number
+  FIN_IDENTIFIER_SCHEME_ENUM_TYPE__LEI = 4;                  // Legal Entity Identifier
+  FIN_IDENTIFIER_SCHEME_ENUM_TYPE__TICKER = 5;               // Ticker Symbol
+  FIN_IDENTIFIER_SCHEME_ENUM_TYPE__CUSIP = 6;                // Committee on Uniform Securities Identification Procedures
+  FIN_IDENTIFIER_SCHEME_ENUM_TYPE__SEDOL = 7;                // Stock Exchange Daily Official List
+  FIN_IDENTIFIER_SCHEME_ENUM_TYPE__RIC = 8;                  // Reuters Instrument Code
+  FIN_IDENTIFIER_SCHEME_ENUM_TYPE__FIGI = 9;                 // Financial Instrument Global Identifier
+  FIN_IDENTIFIER_SCHEME_ENUM_TYPE__WKN = 10;                 // Wertpapierkennnummer (German securities identification code)
+  FIN_IDENTIFIER_SCHEME_ENUM_TYPE__VALOREN = 11;             // Swiss securities identification code
+  FIN_IDENTIFIER_SCHEME_ENUM_TYPE__LEI_PLUS = 12;            // Extended Legal Entity Identifier
+  FIN_IDENTIFIER_SCHEME_ENUM_TYPE__DUNS = 13;                // Data Universal Numbering System
+  FIN_IDENTIFIER_SCHEME_ENUM_TYPE__MIC = 14;                 // Market Identifier Code
+  FIN_IDENTIFIER_SCHEME_ENUM_TYPE__ISIN_PLUS = 15;           // Extended International Securities Identification Number
+  FIN_IDENTIFIER_SCHEME_ENUM_TYPE__TICKER_PLUS = 16;         // Extended Ticker Symbol
+  FIN_IDENTIFIER_SCHEME_ENUM_TYPE__ORGANIZATION_ID = 17;     // Organization Identifier
+  FIN_IDENTIFIER_SCHEME_ENUM_TYPE__UN_LOCODE = 18;           // UN/LOCODE (location code)
+  FIN_IDENTIFIER_SCHEME_ENUM_TYPE__ISO_COUNTRY_CODE = 19;    // ISO 3166-1 alpha-2 country code
+
+  FIN_IDENTIFIER_SCHEME_ENUM_TYPE__OTHER = 0x0fff0000;       // Other scheme types
 }
 
 message FinIdentifier {
-  FinEntityTypeEnum fin_entity_type = 1;      // REQUIRED: Type of financial entity
-  string scheme = 2;                          // REQUIRED: Identification scheme
-  string standard_or_format = 3;              // OPTIONAL: Standard or format used
-  repeated StringValue ids = 4;               // REQUIRED: List of identifiers
+  FinEntityTypeEnum fin_entity_type = 1;          // REQUIRED: Type of financial entity
+  FinIdentifierSchemeTypeEnum scheme_type = 2;    // REQUIRED: Scheme type (e.g., BIC, ISIN, LEI, etc)
+  string scheme_name = 3;                         // OPTIONAL: Identification scheme name if TEXT or OTHERS 
+                                                  //           is selected for schema_type
+  string standard_or_format = 4;                  // OPTIONAL: Standard or format used
+  repeated StringValue ids = 5;                   // REQUIRED: List of identifiers
 
-  bool is_primary = 5;                        // OPTIONAL: Whether this is primary identifier (default: false)
+  bool is_primary = 6;                            // OPTIONAL: Whether this is primary identifier (default: false)
 
-  map<string, string> display_names = 101;    // OPTIONAL: Display names for localization
-  map<string, string> descriptions = 102;     // OPTIONAL: Descriptions for localization
-  map<string, string> labels = 103;           // OPTIONAL: Key-value labels
-  repeated string tags = 104;                 // OPTIONAL: Tags for categorization
-  map<string, string> metadata = 105;         // OPTIONAL: Additional metadata
+  map<string, string> display_names = 101;        // OPTIONAL: Display names for localization
+  map<string, string> descriptions = 102;         // OPTIONAL: Descriptions for localization
+  map<string, string> labels = 103;               // OPTIONAL: Key-value labels
+  repeated string tags = 104;                     // OPTIONAL: Tags for categorization
+  map<string, string> metadata = 105;             // OPTIONAL: Additional metadata
 }
 
 enum AssetClassEnum {
@@ -137,7 +160,7 @@ enum AssetClassEnum {
   ASSET_CLASS_ENUM__LEDGER_NATIVE_COIN = 16;
   ASSET_CLASS_ENUM__EXTERNAL_INSTRUMENT = 17;
 
-  ASSET_CLASS_ENUM__OTHER = 1000; 
+  ASSET_CLASS_ENUM__OTHER = 0x0fff0000; 
 }
 
 message FinAssetClass {
@@ -199,7 +222,7 @@ enum ParticipantTypeEnum {
   PARTICIPANT_TYPE_ENUM__TECHNOLOGY_PROVIDER = 30; // IT Service Provider, Cloud Provider, etc.
   PARTICIPANT_TYPE_ENUM__DATA_PROVIDER = 31; // Market Data Provider, Financial Data Provider, etc.
 
-  PARTICIPANT_TYPE_ENUM__OTHER = 1000;
+  PARTICIPANT_TYPE_ENUM__OTHER = 0x0fff0000;
 }
 
 message Participant {
@@ -241,7 +264,7 @@ enum ParticipantToAssetRelationEnum {
   PARTICIPANT_TO_ASSET_RELATION_ENUM__MINER_VALIDATOR = 24;
   PARTICIPANT_TO_ASSET_RELATION_ENUM__SERVICE_PROVIDER = 25;
 
-  PARTICIPANT_TO_ASSET_RELATION_ENUM__OTHER = 1000;
+  PARTICIPANT_TO_ASSET_RELATION_ENUM__OTHER = 0x0fff0000;
 }
 
 message ParticipantToAssetRelation {
@@ -279,7 +302,7 @@ enum InstrumentClassEnum {
   INSTRUMENT_CLASS_ENUM__OPTION = 11;
   INSTRUMENT_CLASS_ENUM__FUTURE = 12;
 
-  INSTRUMENT_CLASS_ENUM__OTHER = 1000;
+  INSTRUMENT_CLASS_ENUM__OTHER = 0x0fff0000;
 }
 
 message FinInstrumentClass {
@@ -353,7 +376,7 @@ enum ParticipantToInstrumentRelationEnum {
   PARTICIPANT_TO_INSTRUMENT_RELATION_ENUM__MINER_VALIDATOR = 24;
   PARTICIPANT_TO_INSTRUMENT_RELATION_ENUM__SERVICE_PROVIDER = 25;
 
-  PARTICIPANT_TO_INSTRUMENT_RELATION_ENUM__OTHER = 1000;
+  PARTICIPANT_TO_INSTRUMENT_RELATION_ENUM__OTHER = 0x0fff0000;
 }
 
 message ParticipantToInstrumentRelation {
@@ -450,7 +473,7 @@ enum VenueTypeEnum {
 
   VENUE_TYPE_ENUM__EXCHANGE = 1;
 
-  VENUE_TYPE_ENUM__OTHER = 1000;
+  VENUE_TYPE_ENUM__OTHER = 0x0fff0000;
 }
 
 enum VenueStatus {
@@ -519,7 +542,7 @@ enum InstrumentListingStatusEnum {
   INSTRUMENT_LISTING_STATUS_ENUM__LIQUIDATED = 10; // permanently not tradable
   INSTRUMENT_LISTING_STATUS_ENUM__TEST = 11;
 
-  INSTRUMENT_LISTING_STATUS_ENUM__OTHER = 1000;
+  INSTRUMENT_LISTING_STATUS_ENUM__OTHER = 0x0fff0000;
 }
 
 message InstrumentListing {
@@ -749,7 +772,7 @@ enum TransactionTypeEnum {
   TRANSACTION_TYPE_ENUM__TRANSFER_IN = 9;
   TRANSACTION_TYPE_ENUM__TRANSFER_OUT = 10;
 
-  TRANSACTION_TYPE_ENUM__OTHER = 1000;
+  TRANSACTION_TYPE_ENUM__OTHER = 0x0fff0000;
 }
 
 // Transaction message reflects Activity structure with from/to accounts and stashes

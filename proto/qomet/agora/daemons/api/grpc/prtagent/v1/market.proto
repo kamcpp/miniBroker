@@ -1,31 +1,26 @@
 syntax = "proto3";
 
-// Field Numbering Convention:
-// 1-100: Core business fields
-// 101-104: Display metadata (display_name, description, labels, tags)
-// 105: Request aux_data / Response metadata
-// 106-999: Reserved for future use
-// 1000+: Extension/OTHER enum values
+package tech.qomet.agora.api.grpc.prtagent.v1;
 
-package qomet.agora.daemons.prtagent.v1;
-
-option go_package = "pkg/daemons/prtagent/api/v1/grpc;prtagentapiv1";
-option csharp_namespace  = "Qomet.Agora.Daemons.ParticipantAgent.API.V1";
+option go_package = "qomet.tech/agora/daemons/gen-pkg/tech/qomet/agora/api/grpc/prtagent/v1;agoraapigrpcprtagentv1";
+option java_package = "tech.qomet.agora.api.grpc.prtagent.v1";
+option java_outer_classname = "Market";
+option csharp_namespace  = "Tech.Qomet.Agora.Api.Grpc.PrtAgent.V1";
 
 import "common.proto";
-import "fin_common.proto";
+import "fin.proto";
 
 service MarketService {
   rpc GetMarketList(GetMarketListRequest) returns (GetMarketListResponse);
-  rpc GetMarketListAsync(GetMarketListRequest) returns (ExecutionAsyncResponse);
+  rpc GetMarketListAsync(GetMarketListRequest) returns (tech.qomet.agora.api.grpc.common.ExecutionAsyncResponse);
 
   rpc GetMarketCalendar(GetMarketCalendarRequest) returns (GetMarketCalendarResponse);
-  rpc GetMarketCalendarAsync(GetMarketCalendarRequest) returns (ExecutionAsyncResponse);
+  rpc GetMarketCalendarAsync(GetMarketCalendarRequest) returns (tech.qomet.agora.api.grpc.common.ExecutionAsyncResponse);
 }
 
 message GetMarketListRequest {
   string proposed_execution_id = 1;           // OPTIONAL: Client-proposed execution ID for tracking
-  PaginationParams pagination = 2;            // OPTIONAL: Pagination parameters
+  tech.qomet.agora.api.grpc.common.PaginationParams pagination = 2;            // OPTIONAL: Pagination parameters
   string market_id_or_symbol_regex = 3;       // OPTIONAL: Filter by market ID or symbol regex
 
   map<string, string> aux_data = 105;         // OPTIONAL: Additional request data
@@ -33,8 +28,8 @@ message GetMarketListRequest {
 
 message GetMarketListResponse {
   string ref_execution_id = 1;                // REQUIRED: Reference to the execution ID
-  PaginationInfo pagination_info = 2;         // OPTIONAL: Pagination information (required if paginated)
-  repeated Market markets = 3;                // REQUIRED: List of markets (can be empty)
+  tech.qomet.agora.api.grpc.common.PaginationInfo pagination_info = 2;         // OPTIONAL: Pagination information (required if paginated)
+  repeated tech.qomet.agora.api.grpc.common.Market markets = 3;                // REQUIRED: List of markets (can be empty)
 
   map<string, string> metadata = 105;         // OPTIONAL: Response metadata
 }
@@ -48,7 +43,7 @@ message GetMarketCalendarRequest {
 
 message GetMarketCalendarResponse {
   string ref_execution_id = 1;                // REQUIRED: Reference to the execution ID
-  MarketCalendar calendar = 2;                // REQUIRED: Market calendar information
+  tech.qomet.agora.api.grpc.common.MarketCalendar calendar = 2;                // REQUIRED: Market calendar information
 
   map<string, string> metadata = 105;         // OPTIONAL: Response metadata
 }

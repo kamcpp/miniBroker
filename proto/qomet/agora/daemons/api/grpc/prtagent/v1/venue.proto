@@ -1,31 +1,26 @@
 syntax = "proto3";
 
-// Field Numbering Convention:
-// 1-100: Core business fields
-// 101-104: Display metadata (display_name, description, labels, tags)
-// 105: Request aux_data / Response metadata
-// 106-999: Reserved for future use
-// 1000+: Extension/OTHER enum values
+package tech.qomet.agora.api.grpc.prtagent.v1;
 
-package qomet.agora.daemons.prtagent.v1;
-
-option go_package = "pkg/daemons/prtagent/api/v1/grpc;prtagentapiv1";
-option csharp_namespace  = "Qomet.Agora.Daemons.ParticipantAgent.API.V1";
+option go_package = "qomet.tech/agora/daemons/gen-pkg/tech/qomet/agora/api/grpc/prtagent/v1;agoraapigrpcprtagentv1";
+option java_package = "tech.qomet.agora.api.grpc.prtagent.v1";
+option java_outer_classname = "Venue";
+option csharp_namespace  = "Tech.Qomet.Agora.Api.Grpc.PrtAgent.V1";
 
 import "common.proto";
-import "fin_common.proto";
+import "fin.proto";
 
 service VenueService {
   rpc GetVenueList(GetVenueListRequest) returns (GetVenueListResponse);
-  rpc GetVenueListAsync(GetVenueListRequest) returns (ExecutionAsyncResponse);
+  rpc GetVenueListAsync(GetVenueListRequest) returns (tech.qomet.agora.api.grpc.common.ExecutionAsyncResponse);
 
   rpc GetVenueCalendar(GetVenueCalendarRequest) returns (GetVenueCalendarResponse);
-  rpc GetVenueCalendarAsync(GetVenueCalendarRequest) returns (ExecutionAsyncResponse);
+  rpc GetVenueCalendarAsync(GetVenueCalendarRequest) returns (tech.qomet.agora.api.grpc.common.ExecutionAsyncResponse);
 }
 
 message GetVenueListRequest {
   string proposed_execution_id = 1;           // OPTIONAL: Client-proposed execution ID for tracking
-  PaginationParams pagination = 2;            // OPTIONAL: Pagination parameters
+  tech.qomet.agora.api.grpc.common.PaginationParams pagination = 2;            // OPTIONAL: Pagination parameters
   string market_id_or_symbol_regex = 3;       // OPTIONAL: Filter by market ID or symbol regex
   string venue_id_or_symbol_regex = 4;        // OPTIONAL: Filter by venue ID or symbol regex
 
@@ -34,8 +29,8 @@ message GetVenueListRequest {
 
 message GetVenueListResponse {
   string ref_execution_id = 1;                // REQUIRED: Reference to the execution ID
-  PaginationInfo pagination = 2;              // OPTIONAL: Pagination information (required if paginated)
-  repeated Venue venues = 3;                  // REQUIRED: List of venues (can be empty)
+  tech.qomet.agora.api.grpc.common.PaginationInfo pagination = 2;              // OPTIONAL: Pagination information (required if paginated)
+  repeated tech.qomet.agora.api.grpc.common.Venue venues = 3;                  // REQUIRED: List of venues (can be empty)
 
   map<string, string> metadata = 105;         // OPTIONAL: Response metadata
 }
@@ -49,7 +44,7 @@ message GetVenueCalendarRequest {
 
 message GetVenueCalendarResponse {
   string ref_execution_id = 1;                // REQUIRED: Reference to the execution ID
-  VenueCalendar calendar = 2;                 // REQUIRED: Venue calendar information
+  tech.qomet.agora.api.grpc.common.VenueCalendar calendar = 2;                 // REQUIRED: Venue calendar information
 
   map<string, string> metadata = 105;         // OPTIONAL: Response metadata
 }
