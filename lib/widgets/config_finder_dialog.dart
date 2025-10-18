@@ -5,6 +5,8 @@ import '../services/theme_service.dart';
 import '../utils/config_rc_manager.dart';
 import '../utils/broker_config_helper.dart';
 import 'create_broker_config_dialog.dart';
+import 'edit_broker_config_dialog.dart';
+import 'duplicate_config_dialog.dart';
 
 /// Config Finder Dialog - main entry point for config management
 class ConfigFinderDialog extends StatefulWidget {
@@ -126,6 +128,78 @@ class _ConfigFinderDialogState extends State<ConfigFinderDialog> {
     }
   }
 
+  Future<void> _editConfig(String fileName) async {
+    // Load existing config
+    final config = BrokerConfigHelper.readConfigFile(fileName, configDir: _configDir);
+    if (config == null) {
+      _showError('Failed to load config file');
+      return;
+    }
+
+    final result = await showDialog<bool>(
+      context: context,
+      barrierDismissible: false,
+      builder: (context) => EditBrokerConfigDialog(
+        configDir: _configDir,
+        fileName: fileName,
+        existingConfig: config,
+      ),
+    );
+
+    if (result == true) {
+      // Reload config files to refresh summary
+      _loadConfigFiles();
+    }
+  }
+
+  Future<void> _duplicateConfig(String fileName) async {
+    // Load existing config
+    final config = BrokerConfigHelper.readConfigFile(fileName, configDir: _configDir);
+    if (config == null) {
+      _showError('Failed to load config file');
+      return;
+    }
+
+    final existingBrokerName = BrokerConfigHelper.getBrokerNameFromFileName(fileName);
+
+    // Show dialog to get new broker name
+    final newBrokerName = await showDialog<String>(
+      context: context,
+      barrierDismissible: false,
+      builder: (context) => DuplicateConfigDialog(
+        originalName: existingBrokerName ?? 'unknown',
+      ),
+    );
+
+    if (newBrokerName != null && newBrokerName.isNotEmpty) {
+      // Get config values
+      final grpcConfig = config['grpc'] as Map<String, dynamic>?;
+      final participantConfig = config['participant'] as Map<String, dynamic>?;
+
+      // Create new config with same values but new name
+      final success = BrokerConfigHelper.createConfigFile(
+        brokerName: newBrokerName,
+        grpcHost: grpcConfig?['host'] as String? ?? 'localhost',
+        grpcPort: grpcConfig?['port'] as int? ?? 50051,
+        apiKey: participantConfig?['apiKey'] as String? ?? '',
+        participantId: participantConfig?['participantId'] as String?,
+        participantName: participantConfig?['name'] as String?,
+        configDir: _configDir,
+      );
+
+      if (success) {
+        // Reload and select the new config
+        _loadConfigFiles();
+        final newFileName = BrokerConfigHelper.getConfigFileName(newBrokerName);
+        setState(() {
+          _selectedConfig = newFileName;
+        });
+      } else {
+        _showError('Failed to duplicate config. A broker with this name may already exist.');
+      }
+    }
+  }
+
   void _showError(String message) {
     ScaffoldMessenger.of(context).showSnackBar(
       SnackBar(
@@ -194,8 +268,8 @@ class _ConfigFinderDialogState extends State<ConfigFinderDialog> {
     final hoverColor = isDarkTheme ? const Color(0xFF3d3d3d) : Colors.grey[200]!;
     final textColor = isDarkTheme ? Colors.white : Colors.black;
     final hintColor = isDarkTheme ? Colors.grey[400]! : Colors.grey[600]!;
-    final primaryColor = const Color(0xFF1a1754);
-    final selectedColor = isDarkTheme ? const Color(0xFF00b8fb) : primaryColor;
+    final primaryColor = isDarkTheme ? const Color(0xFF6b9eff) : const Color(0xFF1a1754);
+    final selectedColor = isDarkTheme ? const Color(0xFF00b8fb) : const Color(0xFF1a1754);
 
     return Dialog(
       backgroundColor: backgroundColor,
@@ -377,6 +451,16 @@ class _ConfigFinderDialogState extends State<ConfigFinderDialog> {
                               final isSelected = _selectedConfig == fileName;
                               final isHovered = _hoveredIndex == index;
 
+                              // Load config summary
+                              final config = BrokerConfigHelper.readConfigFile(
+                                fileName,
+                                configDir: _configDir,
+                              );
+                              final grpcConfig = config?['grpc'] as Map<String, dynamic>?;
+                              final host = grpcConfig?['host'] as String? ?? 'N/A';
+                              final port = grpcConfig?['port']?.toString() ?? 'N/A';
+                              final summary = '$host:$port';
+
                               return MouseRegion(
                                 onEnter: (_) =>
                                     setState(() => _hoveredIndex = index),
@@ -460,7 +544,7 @@ class _ConfigFinderDialogState extends State<ConfigFinderDialog> {
                                               ),
                                               const SizedBox(height: 4),
                                               Text(
-                                                fileName,
+                                                summary,
                                                 style: TextStyle(
                                                   color: hintColor,
                                                   fontSize: 13,
@@ -470,13 +554,31 @@ class _ConfigFinderDialogState extends State<ConfigFinderDialog> {
                                           ),
                                         ),
 
-                                        // File icon
-                                        Icon(
-                                          Icons.description_outlined,
-                                          color: isSelected
-                                              ? selectedColor
-                                              : hintColor,
-                                          size: 20,
+                                        // Action buttons
+                                        Row(
+                                          mainAxisSize: MainAxisSize.min,
+                                          children: [
+                                            // Edit button
+                                            IconButton(
+                                              icon: Icon(
+                                                Icons.edit_outlined,
+                                                size: 18,
+                                                color: hintColor,
+                                              ),
+                                              tooltip: 'Edit config',
+                                              onPressed: () => _editConfig(fileName),
+                                            ),
+                                            // Duplicate button
+                                            IconButton(
+                                              icon: Icon(
+                                                Icons.content_copy,
+                                                size: 18,
+                                                color: hintColor,
+                                              ),
+                                              tooltip: 'Duplicate config',
+                                              onPressed: () => _duplicateConfig(fileName),
+                                            ),
+                                          ],
                                         ),
                                       ],
                                     ),

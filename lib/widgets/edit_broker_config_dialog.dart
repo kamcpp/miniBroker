@@ -1,33 +1,68 @@
+import 'dart:io';
+import 'dart:convert';
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
+import 'package:path/path.dart' as path;
 import '../services/theme_service.dart';
 import '../utils/broker_config_helper.dart';
 
-/// Dialog for creating a new broker configuration
-class CreateBrokerConfigDialog extends StatefulWidget {
+/// Dialog for editing an existing broker configuration (except broker name)
+class EditBrokerConfigDialog extends StatefulWidget {
   final String configDir;
+  final String fileName;
+  final Map<String, dynamic> existingConfig;
 
-  const CreateBrokerConfigDialog({
+  const EditBrokerConfigDialog({
     super.key,
     required this.configDir,
+    required this.fileName,
+    required this.existingConfig,
   });
 
   @override
-  State<CreateBrokerConfigDialog> createState() =>
-      _CreateBrokerConfigDialogState();
+  State<EditBrokerConfigDialog> createState() => _EditBrokerConfigDialogState();
 }
 
-class _CreateBrokerConfigDialogState extends State<CreateBrokerConfigDialog> {
+class _EditBrokerConfigDialogState extends State<EditBrokerConfigDialog> {
   final _formKey = GlobalKey<FormState>();
-  final _brokerNameController = TextEditingController();
-  final _grpcHostController = TextEditingController(text: 'localhost');
-  final _grpcPortController = TextEditingController(text: '50051');
-  final _apiKeyController = TextEditingController();
-  final _participantIdController = TextEditingController();
-  final _participantNameController = TextEditingController();
+  late final TextEditingController _brokerNameController;
+  late final TextEditingController _grpcHostController;
+  late final TextEditingController _grpcPortController;
+  late final TextEditingController _apiKeyController;
+  late final TextEditingController _participantIdController;
+  late final TextEditingController _participantNameController;
 
-  bool _isCreating = false;
+  bool _isSaving = false;
   String? _errorMessage;
+
+  @override
+  void initState() {
+    super.initState();
+
+    // Extract existing values
+    final broker = widget.existingConfig['broker'] as Map<String, dynamic>?;
+    final grpc = widget.existingConfig['grpc'] as Map<String, dynamic>?;
+    final participant = widget.existingConfig['participant'] as Map<String, dynamic>?;
+
+    _brokerNameController = TextEditingController(
+      text: broker?['name'] as String? ?? '',
+    );
+    _grpcHostController = TextEditingController(
+      text: grpc?['host'] as String? ?? 'localhost',
+    );
+    _grpcPortController = TextEditingController(
+      text: (grpc?['port'] as int?)?.toString() ?? '50051',
+    );
+    _apiKeyController = TextEditingController(
+      text: participant?['apiKey'] as String? ?? '',
+    );
+    _participantIdController = TextEditingController(
+      text: participant?['participantId'] as String? ?? '',
+    );
+    _participantNameController = TextEditingController(
+      text: participant?['name'] as String? ?? '',
+    );
+  }
 
   @override
   void dispose() {
@@ -40,46 +75,42 @@ class _CreateBrokerConfigDialogState extends State<CreateBrokerConfigDialog> {
     super.dispose();
   }
 
-  Future<void> _createConfig() async {
+  Future<void> _saveConfig() async {
     if (!_formKey.currentState!.validate()) {
       return;
     }
 
     setState(() {
-      _isCreating = true;
+      _isSaving = true;
       _errorMessage = null;
     });
 
     try {
-      final brokerName = _brokerNameController.text.trim();
-      final grpcHost = _grpcHostController.text.trim();
-      final grpcPort = int.parse(_grpcPortController.text.trim());
-      final apiKey = _apiKeyController.text.trim();
-      final participantId = _participantIdController.text.trim();
-      final participantName = _participantNameController.text.trim();
+      // Update the config with new values
+      final updatedConfig = Map<String, dynamic>.from(widget.existingConfig);
 
-      final success = BrokerConfigHelper.createConfigFile(
-        brokerName: brokerName,
-        grpcHost: grpcHost,
-        grpcPort: grpcPort,
-        apiKey: apiKey,
-        participantId: participantId.isEmpty ? null : participantId,
-        participantName: participantName.isEmpty ? null : participantName,
-        configDir: widget.configDir,
-      );
+      // Update grpc settings
+      (updatedConfig['grpc'] as Map<String, dynamic>?)?['host'] =
+          _grpcHostController.text.trim();
+      (updatedConfig['grpc'] as Map<String, dynamic>?)?['port'] =
+          int.parse(_grpcPortController.text.trim());
 
-      if (success) {
-        if (mounted) {
-          Navigator.of(context).pop({
-            'brokerName': brokerName,
-            'fileName': BrokerConfigHelper.getConfigFileName(brokerName),
-          });
-        }
-      } else {
-        setState(() {
-          _errorMessage =
-              'Failed to create config file. A broker with this name may already exist.';
-        });
+      // Update participant settings
+      (updatedConfig['participant'] as Map<String, dynamic>?)?['apiKey'] =
+          _apiKeyController.text.trim();
+      (updatedConfig['participant'] as Map<String, dynamic>?)?['participantId'] =
+          _participantIdController.text.trim();
+      (updatedConfig['participant'] as Map<String, dynamic>?)?['name'] =
+          _participantNameController.text.trim();
+
+      // Write back to file
+      final filePath = path.join(widget.configDir, widget.fileName);
+      final file = File(filePath);
+      final encoder = JsonEncoder.withIndent('  ');
+      file.writeAsStringSync(encoder.convert(updatedConfig));
+
+      if (mounted) {
+        Navigator.of(context).pop(true);
       }
     } catch (e) {
       setState(() {
@@ -88,7 +119,7 @@ class _CreateBrokerConfigDialogState extends State<CreateBrokerConfigDialog> {
     } finally {
       if (mounted) {
         setState(() {
-          _isCreating = false;
+          _isSaving = false;
         });
       }
     }
@@ -123,11 +154,11 @@ class _CreateBrokerConfigDialogState extends State<CreateBrokerConfigDialog> {
               // Header
               Row(
                 children: [
-                  Icon(Icons.add_circle_outline, color: primaryColor, size: 32),
+                  Icon(Icons.edit_outlined, color: primaryColor, size: 32),
                   const SizedBox(width: 12),
                   Expanded(
                     child: Text(
-                      'Create Broker Configuration',
+                      'Edit Broker Configuration',
                       style: TextStyle(
                         color: textColor,
                         fontSize: 20,
@@ -137,13 +168,13 @@ class _CreateBrokerConfigDialogState extends State<CreateBrokerConfigDialog> {
                   ),
                   IconButton(
                     icon: Icon(Icons.close, color: textColor),
-                    onPressed: () => Navigator.of(context).pop(),
+                    onPressed: () => Navigator.of(context).pop(false),
                   ),
                 ],
               ),
               const SizedBox(height: 8),
               Text(
-                'Create a new broker instance configuration',
+                'Edit configuration settings (broker name cannot be changed)',
                 style: TextStyle(color: hintColor, fontSize: 14),
               ),
               const SizedBox(height: 24),
@@ -154,9 +185,9 @@ class _CreateBrokerConfigDialogState extends State<CreateBrokerConfigDialog> {
                   child: Column(
                     crossAxisAlignment: CrossAxisAlignment.start,
                     children: [
-                      // Broker Name (Required first)
+                      // Broker Name (Disabled)
                       Text(
-                        'Broker Name *',
+                        'Broker Name',
                         style: TextStyle(
                           color: textColor,
                           fontWeight: FontWeight.w600,
@@ -166,31 +197,18 @@ class _CreateBrokerConfigDialogState extends State<CreateBrokerConfigDialog> {
                       const SizedBox(height: 8),
                       TextFormField(
                         controller: _brokerNameController,
-                        autofocus: true,
-                        style: TextStyle(color: textColor),
+                        enabled: false,
+                        style: TextStyle(color: hintColor),
                         decoration: InputDecoration(
-                          hintText: 'e.g., my-broker, test_broker_01',
-                          hintStyle: TextStyle(color: hintColor),
                           filled: true,
-                          fillColor: surfaceColor,
+                          fillColor: surfaceColor.withOpacity(0.5),
                           border: OutlineInputBorder(
                             borderRadius: BorderRadius.circular(8),
                             borderSide: BorderSide.none,
                           ),
-                          helperText:
-                              '5-32 characters: letters, numbers, dash, underscore',
+                          helperText: 'Broker name cannot be changed',
                           helperStyle: TextStyle(color: hintColor, fontSize: 12),
                         ),
-                        validator: (value) {
-                          if (value == null || value.trim().isEmpty) {
-                            return 'Broker name is required';
-                          }
-                          if (!BrokerConfigHelper.isValidBrokerName(
-                              value.trim())) {
-                            return 'Invalid name. Use 5-32 characters: A-Z, a-z, 0-9, -, _';
-                          }
-                          return null;
-                        },
                       ),
                       const SizedBox(height: 20),
 
@@ -404,9 +422,7 @@ class _CreateBrokerConfigDialogState extends State<CreateBrokerConfigDialog> {
                 mainAxisAlignment: MainAxisAlignment.end,
                 children: [
                   TextButton(
-                    onPressed: _isCreating
-                        ? null
-                        : () => Navigator.of(context).pop(),
+                    onPressed: _isSaving ? null : () => Navigator.of(context).pop(false),
                     style: TextButton.styleFrom(
                       foregroundColor: hintColor,
                     ),
@@ -414,7 +430,7 @@ class _CreateBrokerConfigDialogState extends State<CreateBrokerConfigDialog> {
                   ),
                   const SizedBox(width: 12),
                   ElevatedButton(
-                    onPressed: _isCreating ? null : _createConfig,
+                    onPressed: _isSaving ? null : _saveConfig,
                     style: ElevatedButton.styleFrom(
                       backgroundColor: primaryColor,
                       foregroundColor: Colors.white,
@@ -426,18 +442,17 @@ class _CreateBrokerConfigDialogState extends State<CreateBrokerConfigDialog> {
                         borderRadius: BorderRadius.circular(8),
                       ),
                     ),
-                    child: _isCreating
+                    child: _isSaving
                         ? const SizedBox(
                             width: 20,
                             height: 20,
                             child: CircularProgressIndicator(
                               strokeWidth: 2,
-                              valueColor:
-                                  AlwaysStoppedAnimation<Color>(Colors.white),
+                              valueColor: AlwaysStoppedAnimation<Color>(Colors.white),
                             ),
                           )
                         : const Text(
-                            'Create Configuration',
+                            'Save Changes',
                             style: TextStyle(fontWeight: FontWeight.bold),
                           ),
                   ),

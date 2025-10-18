@@ -11,24 +11,19 @@ class MainFlutterWindow: NSWindow {
     let screenSize = NSScreen.main?.visibleFrame.size ?? NSSize(width: 1440, height: 900)
     let screenFrame = NSScreen.main?.visibleFrame ?? NSRect(x: 0, y: 0, width: 1440, height: 900)
 
-    // Keep original width calculation
-    let minWidth: CGFloat = 1237.5  // Increased by 25% (990 * 1.25)
-
-    // Use 100% of screen height
-    let fullHeight = screenSize.height
+    // Set reasonable minimum window size
+    let minWidth: CGFloat = 800
+    let minHeight: CGFloat = 600
 
     // Set minimum window size
-    self.minSize = NSSize(width: minWidth, height: fullHeight)
+    self.minSize = NSSize(width: minWidth, height: minHeight)
 
-    // Calculate optimal width (keep original logic) but use full height
-    let optimalWidth = max(minWidth, min(windowFrame.size.width, screenSize.width * 1.0))
-
-    // Set initial window size with full height
+    // Start with minimum size
     let newFrame = NSRect(
       x: windowFrame.origin.x,
-      y: screenFrame.origin.y,
-      width: optimalWidth,
-      height: fullHeight
+      y: windowFrame.origin.y,
+      width: minWidth,
+      height: minHeight
     )
     self.setFrame(newFrame, display: true)
 
