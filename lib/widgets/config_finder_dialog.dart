@@ -561,10 +561,6 @@ class _ConfigFinderDialogState extends State<ConfigFinderDialog> {
                                       _selectedConfig = fileName;
                                     });
                                   },
-                                  onDoubleTap: () {
-                                    // Double-click to launch immediately
-                                    Navigator.of(context).pop(fileName);
-                                  },
                                   child: Container(
                                     padding: const EdgeInsets.all(16),
                                     decoration: BoxDecoration(
@@ -704,7 +700,7 @@ class _ConfigFinderDialogState extends State<ConfigFinderDialog> {
                     const SizedBox(width: 8),
                     Expanded(
                       child: Text(
-                        'Tip: Double-click a configuration to launch immediately',
+                        'Tip: Select a configuration and click Launch button',
                         style: TextStyle(
                           color:
                               isDarkTheme ? Colors.blue[200] : primaryColor,

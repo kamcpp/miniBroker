@@ -320,6 +320,21 @@ class _AppInitializerState extends State<AppInitializer> with SingleTickerProvid
       final port = grpcConfig?['port'] as int? ?? AppConfig.grpcPort;
       final useSecure = grpcConfig?['useSecure'] as bool? ?? false;
 
+      // Extract API key from participant config
+      final participantConfig = config['participant'] as Map<String, dynamic>?;
+      final apiKey = participantConfig?['apiKey'] as String?;
+
+      // Update AppConfig so GrpcurlHelper and other components use the correct host/port
+      AppConfig.grpcHost = host;
+      AppConfig.grpcPort = port;
+      AppConfig.grpcApiKey = apiKey;
+      print('✅ Updated AppConfig: gRPC server set to $host:$port');
+      if (apiKey != null && apiKey.isNotEmpty) {
+        print('✅ API key loaded from config: ${apiKey.substring(0, 20)}...');
+      } else {
+        print('⚠️  No API key found in config');
+      }
+
       await realGrpcClient.connect(
         host: host,
         port: port,

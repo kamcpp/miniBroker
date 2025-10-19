@@ -10,13 +10,17 @@ class AppConfig {
   // Server Configuration
   // ============================================================================
 
-  /// gRPC server host
-  /// Change this to your server's hostname or IP address
-  static const String grpcHost = 'localhost';
+  /// gRPC server host (loaded from config file at runtime)
+  /// Default fallback value if config file doesn't specify
+  static String grpcHost = 'localhost';
 
-  /// gRPC server port
-  /// Change this to your server's port number
-  static const int grpcPort = 50051;
+  /// gRPC server port (loaded from config file at runtime)
+  /// Default fallback value if config file doesn't specify
+  static int grpcPort = 50051;
+
+  /// API key for authenticating with the gRPC server (loaded from config file at runtime)
+  /// This is sent as the X-Agora-Participant-Api-Key header
+  static String? grpcApiKey;
 
   /// Full server address (computed from host and port)
   static String get grpcServerAddress => '$grpcHost:$grpcPort';

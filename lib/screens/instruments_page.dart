@@ -20,10 +20,8 @@ class InstrumentsPage extends StatefulWidget {
 }
 
 class _InstrumentsPageState extends State<InstrumentsPage> {
-  Map<String, dynamic>? _marketListData;
   Map<String, dynamic>? _instrumentsData;
   bool _isLoadingInstruments = false;
-  String? _selectedMarketId;
 
   // Pagination
   int _currentPage = 0;
@@ -58,8 +56,8 @@ class _InstrumentsPageState extends State<InstrumentsPage> {
         return;
       }
 
-      // Server is reachable, load market list first
-      await _fetchMarketList();
+      // Server is reachable, load instruments directly
+      await _fetchInstruments();
     } catch (e) {
       print('❌ Error checking connectivity: $e');
       setState(() {
@@ -69,65 +67,7 @@ class _InstrumentsPageState extends State<InstrumentsPage> {
     }
   }
 
-  Future<void> _fetchMarketList() async {
-    try {
-      print('📋 Fetching market list...');
-
-      final marketListResponse = await realGrpcClient.getMarketList().timeout(
-        const Duration(seconds: 10),
-        onTimeout: () => {
-          'input': {},
-          'output': {'error': 'Request timed out', 'message': 'Market list request timed out after 10 seconds'},
-          'requestTime': (DateTime.now().millisecondsSinceEpoch ~/ 1000).toString(),
-          'serverType': 'timeout',
-          'success': false,
-        },
-      );
-
-      if (mounted) {
-        setState(() {
-          _marketListData = marketListResponse;
-          _showNetworkError = false;
-        });
-
-        if (marketListResponse['success'] == true) {
-          final markets = marketListResponse['output']['markets'] as List<dynamic>?;
-          if (markets != null && markets.isNotEmpty) {
-            // Select first market by default
-            final firstMarket = markets[0] as Map<String, dynamic>;
-            _selectedMarketId = firstMarket['id'] ?? firstMarket['iid'];
-
-            // Fetch instruments for the first market
-            await _fetchInstruments();
-          }
-        } else {
-          // Network error occurred
-          final error = marketListResponse['output']['error'] ?? 'Unknown error';
-          setState(() {
-            _showNetworkError = true;
-            _networkErrorMessage = error;
-          });
-          _showErrorSnackBar('Failed to load markets: $error');
-        }
-      }
-    } catch (e) {
-      print('❌ Error in _fetchMarketList: $e');
-      if (mounted) {
-        setState(() {
-          _showNetworkError = true;
-          _networkErrorMessage = 'Failed to fetch markets: $e';
-        });
-        _showErrorSnackBar('Network error: Failed to fetch markets');
-      }
-    }
-  }
-
   Future<void> _fetchInstruments({int? page}) async {
-    if (_selectedMarketId == null) {
-      print('⚠️ No market selected');
-      return;
-    }
-
     try {
       setState(() {
         _isLoadingInstruments = true;
@@ -136,16 +76,15 @@ class _InstrumentsPageState extends State<InstrumentsPage> {
 
       final pageToFetch = page ?? _currentPage;
 
-      print('📋 Fetching instruments for market: $_selectedMarketId, page: $pageToFetch');
+      print('📋 Fetching instruments, page: $pageToFetch');
 
-      final instrumentsResponse = await realGrpcClient.getMarketInstrumentList(
-        marketId: _selectedMarketId!,
+      final instrumentsResponse = await realGrpcClient.getInstrumentList(
         pageNumber: pageToFetch,
         pageSize: _pageSize,
       ).timeout(
         const Duration(seconds: 15),
         onTimeout: () => {
-          'input': {'market_id': _selectedMarketId},
+          'input': {},
           'output': {'error': 'Request timed out', 'message': 'Instruments request timed out after 15 seconds'},
           'requestTime': (DateTime.now().millisecondsSinceEpoch ~/ 1000).toString(),
           'serverType': 'timeout',
@@ -279,8 +218,6 @@ class _InstrumentsPageState extends State<InstrumentsPage> {
                             color: isDarkTheme ? Colors.white : Colors.black,
                           ),
                         ),
-                        // Market dropdown
-                        _buildMarketSelector(isDarkTheme),
                       ],
                     ),
                     const SizedBox(height: 20),
@@ -319,89 +256,6 @@ class _InstrumentsPageState extends State<InstrumentsPage> {
             ),
           ],
         ),
-      ),
-    );
-  }
-
-  Widget _buildMarketSelector(bool isDarkTheme) {
-    if (_marketListData == null || _marketListData!['success'] != true) {
-      return Container(
-        padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
-        decoration: BoxDecoration(
-          color: isDarkTheme ? const Color(0xFF404040) : Colors.grey[200],
-          borderRadius: BorderRadius.circular(8),
-        ),
-        child: Text(
-          'No markets available',
-          style: TextStyle(
-            color: isDarkTheme ? Colors.grey[400] : Colors.grey[600],
-            fontSize: 14,
-          ),
-        ),
-      );
-    }
-
-    final markets = _marketListData!['output']['markets'] as List<dynamic>? ?? [];
-
-    if (markets.isEmpty) {
-      return Container(
-        padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
-        decoration: BoxDecoration(
-          color: isDarkTheme ? const Color(0xFF404040) : Colors.grey[200],
-          borderRadius: BorderRadius.circular(8),
-        ),
-        child: Text(
-          'No markets found',
-          style: TextStyle(
-            color: isDarkTheme ? Colors.grey[400] : Colors.grey[600],
-            fontSize: 14,
-          ),
-        ),
-      );
-    }
-
-    return Container(
-      padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 4),
-      decoration: BoxDecoration(
-        color: isDarkTheme ? const Color(0xFF404040) : Colors.grey[200],
-        borderRadius: BorderRadius.circular(8),
-        border: Border.all(
-          color: isDarkTheme ? Colors.grey[700]! : Colors.grey[300]!,
-          width: 1,
-        ),
-      ),
-      child: DropdownButton<String>(
-        value: _selectedMarketId,
-        underline: const SizedBox(),
-        dropdownColor: isDarkTheme ? const Color(0xFF404040) : Colors.white,
-        icon: Icon(
-          Icons.arrow_drop_down,
-          color: isDarkTheme ? Colors.white : Colors.black,
-        ),
-        style: TextStyle(
-          color: isDarkTheme ? Colors.white : Colors.black,
-          fontSize: 14,
-        ),
-        items: markets.map((market) {
-          final marketMap = market as Map<String, dynamic>;
-          final marketId = marketMap['id'] ?? marketMap['iid'];
-          final marketName = marketMap['name'] ?? marketId;
-
-          return DropdownMenuItem<String>(
-            value: marketId,
-            child: Text(marketName),
-          );
-        }).toList(),
-        onChanged: (String? newMarketId) {
-          if (newMarketId != null && newMarketId != _selectedMarketId) {
-            setState(() {
-              _selectedMarketId = newMarketId;
-              _currentPage = 0; // Reset to first page
-              _instrumentsData = null; // Clear current data
-            });
-            _fetchInstruments(page: 0);
-          }
-        },
       ),
     );
   }
@@ -459,41 +313,77 @@ class _InstrumentsPageState extends State<InstrumentsPage> {
     }
 
     if (_instrumentsData!['success'] != true) {
-      final error = _instrumentsData!['output']['error'] ?? 'Unknown error';
+      final output = _instrumentsData!['output'] as Map<String, dynamic>?;
+      final error = output?['error'] ?? 'Unknown error';
+      final details = output?['details'] ?? '';
+      final suggestion = output?['suggestion'] ?? '';
+
       return Center(
-        child: Column(
-          mainAxisAlignment: MainAxisAlignment.center,
-          children: [
-            const Icon(
-              Icons.error_outline,
-              size: 64,
-              color: Colors.red,
-            ),
-            const SizedBox(height: 16),
-            Text(
-              'Failed to load instruments',
-              style: TextStyle(
-                fontSize: 18,
-                fontWeight: FontWeight.bold,
-                color: isDarkTheme ? Colors.white : Colors.black,
-              ),
-            ),
-            const SizedBox(height: 8),
-            Text(
-              error,
-              textAlign: TextAlign.center,
-              style: const TextStyle(
-                fontSize: 14,
+        child: Padding(
+          padding: const EdgeInsets.all(32.0),
+          child: Column(
+            mainAxisAlignment: MainAxisAlignment.center,
+            children: [
+              const Icon(
+                Icons.error_outline,
+                size: 64,
                 color: Colors.red,
               ),
-            ),
-            const SizedBox(height: 16),
-            ElevatedButton.icon(
-              onPressed: () => _fetchInstruments(),
-              icon: const Icon(Icons.refresh),
-              label: const Text('Retry'),
-            ),
-          ],
+              const SizedBox(height: 24),
+              Text(
+                error,
+                style: TextStyle(
+                  fontSize: 18,
+                  fontWeight: FontWeight.bold,
+                  color: isDarkTheme ? Colors.white : Colors.black,
+                ),
+                textAlign: TextAlign.center,
+              ),
+              if (details.isNotEmpty) ...[
+                const SizedBox(height: 12),
+                Text(
+                  details,
+                  textAlign: TextAlign.center,
+                  style: TextStyle(
+                    fontSize: 14,
+                    color: isDarkTheme ? Colors.grey[300] : Colors.grey[700],
+                  ),
+                ),
+              ],
+              if (suggestion.isNotEmpty) ...[
+                const SizedBox(height: 16),
+                Container(
+                  padding: const EdgeInsets.all(16),
+                  decoration: BoxDecoration(
+                    color: Colors.blue.withOpacity(0.1),
+                    borderRadius: BorderRadius.circular(8),
+                    border: Border.all(color: Colors.blue.withOpacity(0.3)),
+                  ),
+                  child: Row(
+                    children: [
+                      const Icon(Icons.lightbulb_outline, color: Colors.blue, size: 20),
+                      const SizedBox(width: 12),
+                      Expanded(
+                        child: Text(
+                          suggestion,
+                          style: const TextStyle(
+                            fontSize: 13,
+                            color: Colors.blue,
+                          ),
+                        ),
+                      ),
+                    ],
+                  ),
+                ),
+              ],
+              const SizedBox(height: 24),
+              ElevatedButton.icon(
+                onPressed: () => _fetchInstruments(),
+                icon: const Icon(Icons.refresh),
+                label: const Text('Retry'),
+              ),
+            ],
+          ),
         ),
       );
     }
@@ -552,12 +442,26 @@ class _InstrumentsPageState extends State<InstrumentsPage> {
     bool isDarkTheme,
   ) {
     final instrumentId = instrument['id'] ?? instrument['iid'] ?? 'Unknown';
-    final base = instrument['base_currency'] ?? instrument['baseCurrency'] ?? '';
-    final quote = instrument['quote_currency'] ?? instrument['quoteCurrency'] ?? '';
-    final symbol = base.isNotEmpty && quote.isNotEmpty ? '$base/$quote' : instrumentId;
-    final status = instrument['status'] ?? 'unknown';
-    final minOrderSize = instrument['min_order_size'] ?? instrument['minOrderSize'] ?? 'N/A';
-    final maxOrderSize = instrument['max_order_size'] ?? instrument['maxOrderSize'] ?? 'N/A';
+    final cfiCode = instrument['cfi_code'] ?? instrument['cfiCode'] ?? '';
+    final issueCurrency = instrument['issue_currency'] ?? instrument['issueCurrency'] ?? '';
+
+    // Extract symbol from identifiers if available
+    String symbol = instrumentId;
+    final identifiers = instrument['identifiers'] as List<dynamic>?;
+    if (identifiers != null && identifiers.isNotEmpty) {
+      for (var id in identifiers) {
+        final ids = id['ids'] as List<dynamic>?;
+        if (ids != null && ids.isNotEmpty) {
+          symbol = ids.first.toString();
+          break;
+        }
+      }
+    }
+
+    // Instrument doesn't have these fields - they're on InstrumentListing
+    final status = 'active';
+    final minOrderSize = cfiCode.isNotEmpty ? cfiCode : 'N/A';
+    final maxOrderSize = issueCurrency.isNotEmpty ? issueCurrency : 'N/A';
 
     return Container(
       padding: const EdgeInsets.all(16),
@@ -576,12 +480,12 @@ class _InstrumentsPageState extends State<InstrumentsPage> {
             width: 48,
             height: 48,
             decoration: BoxDecoration(
-              color: _getColorForInstrument(base),
+              color: _getColorForInstrument(symbol),
               borderRadius: BorderRadius.circular(8),
             ),
             child: Center(
               child: Text(
-                base.isNotEmpty ? base.substring(0, base.length > 2 ? 2 : base.length).toUpperCase() : '??',
+                symbol.length >= 2 ? symbol.substring(0, 2).toUpperCase() : (symbol.isNotEmpty ? symbol.toUpperCase() : '??'),
                 style: const TextStyle(
                   color: Colors.white,
                   fontSize: 16,
@@ -638,12 +542,12 @@ class _InstrumentsPageState extends State<InstrumentsPage> {
             ),
           ),
 
-          // Order Size Info
+          // Instrument Info
           Column(
             crossAxisAlignment: CrossAxisAlignment.end,
             children: [
               Text(
-                'Min: $minOrderSize',
+                'CFI: $minOrderSize',
                 style: TextStyle(
                   fontSize: 12,
                   color: isDarkTheme ? Colors.grey[300] : Colors.grey[700],
@@ -651,7 +555,7 @@ class _InstrumentsPageState extends State<InstrumentsPage> {
               ),
               const SizedBox(height: 4),
               Text(
-                'Max: $maxOrderSize',
+                'Currency: $maxOrderSize',
                 style: TextStyle(
                   fontSize: 12,
                   color: isDarkTheme ? Colors.grey[300] : Colors.grey[700],

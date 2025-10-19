@@ -126,10 +126,10 @@ class GrpcurlHelper {
             path,
             ['-plaintext', '$_host:$_port', 'list'],
           ).timeout(
-            const Duration(milliseconds: 1000), // Slightly longer timeout for file system access
+            const Duration(seconds: 30), // 30 second timeout for network operations
             onTimeout: () {
               print('⏰ Timeout testing $path');
-              throw TimeoutException('Command timed out', const Duration(milliseconds: 1000));
+              throw TimeoutException('Command timed out', const Duration(seconds: 30));
             }
           );
         } on TimeoutException catch (e) {
@@ -151,7 +151,15 @@ class GrpcurlHelper {
           _cachedGrpcurlPath = path;
           return path;
         } else {
-          print('⚠️ grpcurl at $path returned exit code ${result.exitCode}: ${result.stderr}');
+          final stderr = result.stderr.toString().trim();
+          if (stderr.contains('does not support the reflection API')) {
+            print('❌ gRPC Reflection API not enabled on server $_host:$_port');
+            print('💡 Server must enable reflection or use -proto files with grpcurl');
+            // Don't try other paths if we know the server doesn't support reflection
+            break;
+          } else {
+            print('⚠️ grpcurl failed (exit ${result.exitCode}): ${stderr.length > 80 ? stderr.substring(0, 80) + "..." : stderr}');
+          }
         }
       } catch (e) {
         // Try next path quickly, but log the specific error
@@ -159,8 +167,12 @@ class GrpcurlHelper {
         continue;
       }
     }
-    print('❌ No working grpcurl found in any of the paths: $_grpcurlPaths');
-    print('💡 This might be due to macOS app sandbox restrictions');
+
+    // Provide more specific error message
+    if (_cachedGrpcurlPath == null) {
+      print('❌ grpcurl unavailable: Server reflection API disabled or grpcurl not accessible');
+      print('💡 Ensure $_host:$_port has gRPC reflection enabled');
+    }
     return null;
     } finally {
       _isFindingGrpcurlPath = false;
@@ -1876,6 +1888,115 @@ class GrpcurlHelper {
     }
   }
 
+  /// Get Instrument List using grpcurl (without market filter)
+  static Future<Map<String, dynamic>> getInstrumentList({
+    int pageNumber = 0,
+    int pageSize = 0,
+  }) async {
+    final responseData = <String, dynamic>{
+      'success': false,
+      'output': {},
+      'requestTime': _toUnixTimestamp(DateTime.now()).toString(),
+      'serverType': 'real_grpc',
+    };
+
+    try {
+      print('📋 Getting instrument list from real server...');
+
+      // Check server reachability first
+      if (!await _isServerReachable()) {
+        responseData['output'] = {'error': 'Server not reachable'};
+        responseData['serverType'] = 'unreachable';
+        return responseData;
+      }
+
+      final grpcurlPath = await _findGrpcurlPath();
+      if (grpcurlPath == null) {
+        responseData['output'] = {
+          'error': 'gRPC Reflection API not enabled',
+          'details': 'Server $_host:$_port must enable gRPC reflection for grpcurl to work',
+          'suggestion': 'Enable reflection on your gRPC server or provide .proto files'
+        };
+        responseData['serverType'] = 'reflection-disabled';
+        return responseData;
+      }
+
+      // TODO: Remove market_id_or_symbol_regex once we confirm the API works without it
+      // For now, passing empty string to test that GetInstrumentList works
+      final inputParams = {
+        'proposed_execution_id': 'get_instrument_list_${DateTime.now().millisecondsSinceEpoch}',
+        'pagination': {
+          'page_nr': pageNumber,
+          'page_size': pageSize,
+          'page_token': '',
+        },
+        'market_id_or_symbol_regex': '', // Empty market filter - returns all instruments
+      };
+
+      // Log the full request
+      print('━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━');
+      print('📤 GetInstrumentList REQUEST:');
+      print('Service: qomet.agora.daemons.prtagent.v1.InstrumentService/GetInstrumentList');
+      print('Host: $_host:$_port');
+      print('Request Body:');
+      print(const JsonEncoder.withIndent('  ').convert(inputParams));
+      print('━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━');
+
+      final result = await Process.run(
+        grpcurlPath,
+        [
+          '-plaintext',
+          '-d', jsonEncode(inputParams),
+          '$_host:$_port',
+          'qomet.agora.daemons.prtagent.v1.InstrumentService/GetInstrumentList'
+        ],
+        environment: {'PATH': '/usr/local/bin:/opt/homebrew/bin:${Platform.environment['PATH']}'},
+      ).timeout(const Duration(seconds: 10));
+
+      if (result.exitCode == 0) {
+        final responseJson = jsonDecode(result.stdout);
+        responseData['success'] = true;
+        responseData['output'] = responseJson;
+
+        // Log the full response
+        print('━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━');
+        print('📥 GetInstrumentList RESPONSE:');
+        print('Status: SUCCESS');
+        print('Response Body:');
+        print(const JsonEncoder.withIndent('  ').convert(responseJson));
+        print('━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━');
+        print('✅ GetInstrumentList successful');
+      } else {
+        responseData['output'] = {
+          'error': 'gRPC call failed',
+          'stderr': result.stderr.toString(),
+          'stdout': result.stdout.toString(),
+          'exit_code': result.exitCode,
+        };
+
+        // Log the error response
+        print('━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━');
+        print('📥 GetInstrumentList RESPONSE:');
+        print('Status: FAILED');
+        print('Exit Code: ${result.exitCode}');
+        print('STDERR: ${result.stderr}');
+        print('STDOUT: ${result.stdout}');
+        print('━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━');
+        print('❌ GetInstrumentList failed: ${result.stderr}');
+      }
+
+      return responseData;
+    } catch (e) {
+      print('❌ GetInstrumentList exception: $e');
+      return {
+        'success': false,
+        'output': {'error': 'Exception occurred', 'details': e.toString()},
+        'requestTime': _toUnixTimestamp(DateTime.now()).toString(),
+        'serverType': 'exception',
+      };
+    }
+  }
+
   /// Get Market Instrument List using grpcurl
   static Future<Map<String, dynamic>> getMarketInstrumentList({
     required String marketId,
@@ -1901,8 +2022,12 @@ class GrpcurlHelper {
 
       final grpcurlPath = await _findGrpcurlPath();
       if (grpcurlPath == null) {
-        responseData['output'] = {'error': 'grpcurl not found'};
-        responseData['serverType'] = 'grpcurl-not-found';
+        responseData['output'] = {
+          'error': 'gRPC Reflection API not enabled',
+          'details': 'Server $_host:$_port must enable gRPC reflection for grpcurl to work',
+          'suggestion': 'Enable reflection on your gRPC server or provide .proto files'
+        };
+        responseData['serverType'] = 'reflection-disabled';
         return responseData;
       }
 
