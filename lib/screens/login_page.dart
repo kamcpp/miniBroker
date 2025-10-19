@@ -230,7 +230,7 @@ class _LoginPageState extends State<LoginPage> with TickerProviderStateMixin {
           // Main content
           Center(
         child: SingleChildScrollView(
-          padding: const EdgeInsets.all(24.0),
+          padding: UIConstants.paddingStandard,
           child: AnimatedBuilder(
             animation: _flipAnimation,
             builder: (context, child) {
@@ -240,15 +240,15 @@ class _LoginPageState extends State<LoginPage> with TickerProviderStateMixin {
                   ..setEntry(3, 2, 0.001)
                   ..rotateY(_flipAnimation.value * 3.14159),
                 child: ClipRRect(
-                  borderRadius: BorderRadius.circular(16),
+                  borderRadius: BorderRadius.circular(UIConstants.borderRadiusLg),
                   child: BackdropFilter(
                     filter: ImageFilter.blur(sigmaX: 2, sigmaY: 2),
                     child: Container(
-                      width: 400,
+                      width: 360,
                       padding: const EdgeInsets.all(32.0),
                       decoration: BoxDecoration(
                         color: Colors.white.withOpacity(0.1),
-                        borderRadius: BorderRadius.circular(16),
+                        borderRadius: BorderRadius.circular(UIConstants.borderRadiusLg),
                         border: Border.all(
                           color: Colors.white,
                           width: 0.4,
@@ -302,7 +302,7 @@ class _LoginPageState extends State<LoginPage> with TickerProviderStateMixin {
                         color: Colors.white,
                       ),
                     ),
-                    const SizedBox(height: 32),
+                    const SizedBox(height: UIConstants.spacingLg),
 
                     // Username Field
                     TextFormField(
@@ -315,15 +315,15 @@ class _LoginPageState extends State<LoginPage> with TickerProviderStateMixin {
                         filled: true,
                         fillColor: Colors.white.withOpacity(0.9),
                         border: OutlineInputBorder(
-                          borderRadius: BorderRadius.circular(12),
+                          borderRadius: BorderRadius.circular(UIConstants.borderRadiusMd),
                           borderSide: const BorderSide(color: Colors.white),
                         ),
                         enabledBorder: OutlineInputBorder(
-                          borderRadius: BorderRadius.circular(12),
+                          borderRadius: BorderRadius.circular(UIConstants.borderRadiusMd),
                           borderSide: const BorderSide(color: Colors.white),
                         ),
                         focusedBorder: OutlineInputBorder(
-                          borderRadius: BorderRadius.circular(12),
+                          borderRadius: BorderRadius.circular(UIConstants.borderRadiusMd),
                           borderSide: const BorderSide(color: Color(0xFF1a1754), width: 2),
                         ),
                         prefixIcon: const Icon(Icons.person, color: Colors.grey),
@@ -338,7 +338,7 @@ class _LoginPageState extends State<LoginPage> with TickerProviderStateMixin {
                         return null;
                       },
                     ),
-                    const SizedBox(height: 16),
+                    const SizedBox(height: UIConstants.spacingMd),
 
                     // Password Field
                     TextFormField(
@@ -363,15 +363,15 @@ class _LoginPageState extends State<LoginPage> with TickerProviderStateMixin {
                           },
                         ),
                         border: OutlineInputBorder(
-                          borderRadius: BorderRadius.circular(12),
+                          borderRadius: BorderRadius.circular(UIConstants.borderRadiusMd),
                           borderSide: const BorderSide(color: Colors.white),
                         ),
                         enabledBorder: OutlineInputBorder(
-                          borderRadius: BorderRadius.circular(12),
+                          borderRadius: BorderRadius.circular(UIConstants.borderRadiusMd),
                           borderSide: const BorderSide(color: Colors.white),
                         ),
                         focusedBorder: OutlineInputBorder(
-                          borderRadius: BorderRadius.circular(12),
+                          borderRadius: BorderRadius.circular(UIConstants.borderRadiusMd),
                           borderSide: const BorderSide(color: Color(0xFF1a1754), width: 2),
                         ),
                         contentPadding: const EdgeInsets.symmetric(
@@ -389,7 +389,7 @@ class _LoginPageState extends State<LoginPage> with TickerProviderStateMixin {
                         return null;
                       },
                     ),
-                    const SizedBox(height: 16),
+                    const SizedBox(height: UIConstants.spacingMd),
 
                     // Forgot Password Link (hidden)
                     Visibility(
@@ -415,7 +415,7 @@ class _LoginPageState extends State<LoginPage> with TickerProviderStateMixin {
                         ),
                       ),
                     ),
-                    const SizedBox(height: 24),
+                    const SizedBox(height: UIConstants.spacingMd),
 
                     // Login Button
                     SizedBox(
@@ -427,7 +427,7 @@ class _LoginPageState extends State<LoginPage> with TickerProviderStateMixin {
                           backgroundColor: const Color(0xFF1a1754),
                           foregroundColor: Colors.white,
                           shape: RoundedRectangleBorder(
-                            borderRadius: BorderRadius.circular(8),
+                            borderRadius: BorderRadius.circular(UIConstants.borderRadiusSm),
                           ),
                           elevation: 0,
                         ),
@@ -449,7 +449,7 @@ class _LoginPageState extends State<LoginPage> with TickerProviderStateMixin {
                               ),
                       ),
                     ),
-                    const SizedBox(height: 24),
+                    const SizedBox(height: UIConstants.spacingMd),
 
                     // Sign up link
                     Row(
@@ -495,7 +495,7 @@ class _LoginPageState extends State<LoginPage> with TickerProviderStateMixin {
               color: Colors.white,
             ),
           ),
-          const SizedBox(height: 32),
+          const SizedBox(height: UIConstants.spacingLg),
 
           // Username Field
           TextFormField(
@@ -509,15 +509,15 @@ class _LoginPageState extends State<LoginPage> with TickerProviderStateMixin {
               fillColor: Colors.white.withOpacity(0.9),
               prefixIcon: const Icon(Icons.person, color: Colors.grey),
               border: OutlineInputBorder(
-                borderRadius: BorderRadius.circular(12),
+                borderRadius: BorderRadius.circular(UIConstants.borderRadiusMd),
                 borderSide: const BorderSide(color: Colors.white),
               ),
               enabledBorder: OutlineInputBorder(
-                borderRadius: BorderRadius.circular(12),
+                borderRadius: BorderRadius.circular(UIConstants.borderRadiusMd),
                 borderSide: const BorderSide(color: Colors.white),
               ),
               focusedBorder: OutlineInputBorder(
-                borderRadius: BorderRadius.circular(12),
+                borderRadius: BorderRadius.circular(UIConstants.borderRadiusMd),
                 borderSide: const BorderSide(color: Color(0xFF1a1754), width: 2),
               ),
               contentPadding: const EdgeInsets.symmetric(
@@ -535,7 +535,7 @@ class _LoginPageState extends State<LoginPage> with TickerProviderStateMixin {
               return null;
             },
           ),
-          const SizedBox(height: 16),
+          const SizedBox(height: UIConstants.spacingMd),
 
           // Password Field
           TextFormField(
@@ -560,15 +560,15 @@ class _LoginPageState extends State<LoginPage> with TickerProviderStateMixin {
                 },
               ),
               border: OutlineInputBorder(
-                borderRadius: BorderRadius.circular(12),
+                borderRadius: BorderRadius.circular(UIConstants.borderRadiusMd),
                 borderSide: const BorderSide(color: Colors.white),
               ),
               enabledBorder: OutlineInputBorder(
-                borderRadius: BorderRadius.circular(12),
+                borderRadius: BorderRadius.circular(UIConstants.borderRadiusMd),
                 borderSide: const BorderSide(color: Colors.white),
               ),
               focusedBorder: OutlineInputBorder(
-                borderRadius: BorderRadius.circular(12),
+                borderRadius: BorderRadius.circular(UIConstants.borderRadiusMd),
                 borderSide: const BorderSide(color: Color(0xFF1a1754), width: 2),
               ),
               contentPadding: const EdgeInsets.symmetric(
@@ -586,7 +586,7 @@ class _LoginPageState extends State<LoginPage> with TickerProviderStateMixin {
               return null;
             },
           ),
-          const SizedBox(height: 16),
+          const SizedBox(height: UIConstants.spacingMd),
 
           // Confirm Password Field
           TextFormField(
@@ -611,15 +611,15 @@ class _LoginPageState extends State<LoginPage> with TickerProviderStateMixin {
                 },
               ),
               border: OutlineInputBorder(
-                borderRadius: BorderRadius.circular(12),
+                borderRadius: BorderRadius.circular(UIConstants.borderRadiusMd),
                 borderSide: const BorderSide(color: Colors.white),
               ),
               enabledBorder: OutlineInputBorder(
-                borderRadius: BorderRadius.circular(12),
+                borderRadius: BorderRadius.circular(UIConstants.borderRadiusMd),
                 borderSide: const BorderSide(color: Colors.white),
               ),
               focusedBorder: OutlineInputBorder(
-                borderRadius: BorderRadius.circular(12),
+                borderRadius: BorderRadius.circular(UIConstants.borderRadiusMd),
                 borderSide: const BorderSide(color: Color(0xFF1a1754), width: 2),
               ),
               contentPadding: const EdgeInsets.symmetric(
@@ -637,7 +637,7 @@ class _LoginPageState extends State<LoginPage> with TickerProviderStateMixin {
               return null;
             },
           ),
-          const SizedBox(height: 32),
+          const SizedBox(height: UIConstants.spacingLg),
 
           // Signup Button
           SizedBox(
@@ -649,7 +649,7 @@ class _LoginPageState extends State<LoginPage> with TickerProviderStateMixin {
                 backgroundColor: const Color(0xFF1a1754),
                 foregroundColor: Colors.white,
                 shape: RoundedRectangleBorder(
-                  borderRadius: BorderRadius.circular(8),
+                  borderRadius: BorderRadius.circular(UIConstants.borderRadiusSm),
                 ),
                 elevation: 0,
               ),
@@ -671,7 +671,7 @@ class _LoginPageState extends State<LoginPage> with TickerProviderStateMixin {
                     ),
             ),
           ),
-          const SizedBox(height: 24),
+          const SizedBox(height: UIConstants.spacingMd),
 
           // Login link
           Row(

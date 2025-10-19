@@ -4,6 +4,7 @@ import 'dart:ui';
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 import '../services/auth_service.dart';
+import '../config/ui_constants.dart';
 import '../services/theme_service.dart';
 import '../services/real_grpc_client.dart';
 import '../utils/connectivity_checker.dart';
@@ -1144,14 +1145,14 @@ class _ActivityPageState extends State<ActivityPage> {
     return Container(
       decoration: BoxDecoration(
         color: isDarkTheme ? const Color(0xFF1e1e1e) : Colors.white,
-        borderRadius: BorderRadius.circular(8),
+        borderRadius: BorderRadius.circular(UIConstants.borderRadiusSm),
       ),
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
           // Table header
           Container(
-            padding: const EdgeInsets.all(16),
+            padding: UIConstants.paddingStandard,
             decoration: BoxDecoration(
               color: isDarkTheme ? const Color(0xFF2d2d2d) : Colors.grey[50],
               borderRadius: const BorderRadius.only(
@@ -1164,12 +1165,12 @@ class _ActivityPageState extends State<ActivityPage> {
                 Text(
                   'Orders',
                   style: TextStyle(
-                    fontSize: 18,
-                    fontWeight: FontWeight.bold,
+                    fontSize: UIConstants.fontSizeMd,
+                    fontWeight: UIConstants.fontWeightMedium,
                     color: isDarkTheme ? Colors.white : Colors.black,
                   ),
                 ),
-                const SizedBox(width: 16),
+                const SizedBox(width: UIConstants.spacingMd),
                 // Filter toggle button
                 IconButton(
                   onPressed: () {
@@ -1201,7 +1202,7 @@ class _ActivityPageState extends State<ActivityPage> {
           // Filter section
           if (_showFilters)
             Container(
-              padding: const EdgeInsets.all(16),
+              padding: UIConstants.paddingStandard,
               decoration: BoxDecoration(
                 color: isDarkTheme ? const Color(0xFF2a2a2a) : Colors.grey[100],
               ),
@@ -1219,8 +1220,8 @@ class _ActivityPageState extends State<ActivityPage> {
                             Text(
                               'Side',
                               style: TextStyle(
-                                fontSize: 12,
-                                fontWeight: FontWeight.w500,
+                                fontSize: UIConstants.fontSizeSm,
+                                fontWeight: UIConstants.fontWeightNormal,
                                 color: isDarkTheme ? Colors.grey[300] : Colors.grey[700],
                               ),
                             ),
@@ -1230,7 +1231,7 @@ class _ActivityPageState extends State<ActivityPage> {
                               padding: const EdgeInsets.symmetric(horizontal: 12),
                               decoration: BoxDecoration(
                                 color: isDarkTheme ? const Color(0xFF3a3a3a) : Colors.white,
-                                borderRadius: BorderRadius.circular(4),
+                                borderRadius: BorderRadius.circular(UIConstants.borderRadiusSm),
                                 border: Border.all(
                                   color: isDarkTheme ? Colors.grey[600]! : Colors.grey[300]!,
                                 ),
@@ -1257,7 +1258,7 @@ class _ActivityPageState extends State<ActivityPage> {
                           ],
                         ),
                       ),
-                      const SizedBox(width: 16),
+                      const SizedBox(width: UIConstants.spacingMd),
                       // Page size filter
                       Expanded(
                         child: Column(
@@ -1266,8 +1267,8 @@ class _ActivityPageState extends State<ActivityPage> {
                             Text(
                               'Page Size',
                               style: TextStyle(
-                                fontSize: 12,
-                                fontWeight: FontWeight.w500,
+                                fontSize: UIConstants.fontSizeSm,
+                                fontWeight: UIConstants.fontWeightNormal,
                                 color: isDarkTheme ? Colors.grey[300] : Colors.grey[700],
                               ),
                             ),
@@ -1277,7 +1278,7 @@ class _ActivityPageState extends State<ActivityPage> {
                               padding: const EdgeInsets.symmetric(horizontal: 12),
                               decoration: BoxDecoration(
                                 color: isDarkTheme ? const Color(0xFF3a3a3a) : Colors.white,
-                                borderRadius: BorderRadius.circular(4),
+                                borderRadius: BorderRadius.circular(UIConstants.borderRadiusSm),
                                 border: Border.all(
                                   color: isDarkTheme ? Colors.grey[600]! : Colors.grey[300]!,
                                 ),
@@ -1311,7 +1312,7 @@ class _ActivityPageState extends State<ActivityPage> {
                           ],
                         ),
                       ),
-                      const SizedBox(width: 16),
+                      const SizedBox(width: UIConstants.spacingMd),
                       // Page number filter
                       Expanded(
                         child: Column(
@@ -1320,8 +1321,8 @@ class _ActivityPageState extends State<ActivityPage> {
                             Text(
                               'Page Number',
                               style: TextStyle(
-                                fontSize: 12,
-                                fontWeight: FontWeight.w500,
+                                fontSize: UIConstants.fontSizeSm,
+                                fontWeight: UIConstants.fontWeightNormal,
                                 color: isDarkTheme ? Colors.grey[300] : Colors.grey[700],
                               ),
                             ),
@@ -1334,7 +1335,7 @@ class _ActivityPageState extends State<ActivityPage> {
                                     padding: const EdgeInsets.symmetric(horizontal: 12),
                                     decoration: BoxDecoration(
                                       color: isDarkTheme ? const Color(0xFF3a3a3a) : Colors.white,
-                                      borderRadius: BorderRadius.circular(4),
+                                      borderRadius: BorderRadius.circular(UIConstants.borderRadiusSm),
                                       border: Border.all(
                                         color: isDarkTheme ? Colors.grey[600]! : Colors.grey[300]!,
                                       ),
@@ -1344,7 +1345,7 @@ class _ActivityPageState extends State<ActivityPage> {
                                       keyboardType: TextInputType.number,
                                       style: TextStyle(
                                         color: isDarkTheme ? Colors.white : Colors.black,
-                                        fontSize: 14,
+                                        fontSize: UIConstants.fontSizeBody,
                                       ),
                                       decoration: const InputDecoration(
                                         border: InputBorder.none,
@@ -1362,7 +1363,7 @@ class _ActivityPageState extends State<ActivityPage> {
                                     ),
                                   ),
                                 ),
-                                const SizedBox(width: 8),
+                                const SizedBox(width: UIConstants.spacingSm),
                                 IconButton(
                                   onPressed: _pageNumber > 1 ? () {
                                     setState(() {
@@ -1398,7 +1399,7 @@ class _ActivityPageState extends State<ActivityPage> {
                       ),
                     ],
                   ),
-                  const SizedBox(height: 16),
+                  const SizedBox(height: UIConstants.spacingMd),
                   // Market, Asset and Status filters row
                   Row(
                     children: [
@@ -1410,8 +1411,8 @@ class _ActivityPageState extends State<ActivityPage> {
                             Text(
                               'Market',
                               style: TextStyle(
-                                fontSize: 12,
-                                fontWeight: FontWeight.w500,
+                                fontSize: UIConstants.fontSizeSm,
+                                fontWeight: UIConstants.fontWeightNormal,
                                 color: isDarkTheme ? Colors.grey[300] : Colors.grey[700],
                               ),
                             ),
@@ -1421,7 +1422,7 @@ class _ActivityPageState extends State<ActivityPage> {
                               padding: const EdgeInsets.symmetric(horizontal: 12),
                               decoration: BoxDecoration(
                                 color: isDarkTheme ? const Color(0xFF3a3a3a) : Colors.white,
-                                borderRadius: BorderRadius.circular(4),
+                                borderRadius: BorderRadius.circular(UIConstants.borderRadiusSm),
                                 border: Border.all(
                                   color: isDarkTheme ? Colors.grey[600]! : Colors.grey[300]!,
                                 ),
@@ -1493,7 +1494,7 @@ class _ActivityPageState extends State<ActivityPage> {
                           ],
                         ),
                       ),
-                      const SizedBox(width: 16),
+                      const SizedBox(width: UIConstants.spacingMd),
                       // Asset filter
                       Expanded(
                         child: Column(
@@ -1502,8 +1503,8 @@ class _ActivityPageState extends State<ActivityPage> {
                             Text(
                               'Asset',
                               style: TextStyle(
-                                fontSize: 12,
-                                fontWeight: FontWeight.w500,
+                                fontSize: UIConstants.fontSizeSm,
+                                fontWeight: UIConstants.fontWeightNormal,
                                 color: isDarkTheme ? Colors.grey[300] : Colors.grey[700],
                               ),
                             ),
@@ -1513,7 +1514,7 @@ class _ActivityPageState extends State<ActivityPage> {
                               padding: const EdgeInsets.symmetric(horizontal: 12),
                               decoration: BoxDecoration(
                                 color: isDarkTheme ? const Color(0xFF3a3a3a) : Colors.white,
-                                borderRadius: BorderRadius.circular(4),
+                                borderRadius: BorderRadius.circular(UIConstants.borderRadiusSm),
                                 border: Border.all(
                                   color: isDarkTheme ? Colors.grey[600]! : Colors.grey[300]!,
                                 ),
@@ -1549,7 +1550,7 @@ class _ActivityPageState extends State<ActivityPage> {
                           ],
                         ),
                       ),
-                      const SizedBox(width: 16),
+                      const SizedBox(width: UIConstants.spacingMd),
                       // Status filter
                       Expanded(
                         child: Column(
@@ -1558,8 +1559,8 @@ class _ActivityPageState extends State<ActivityPage> {
                             Text(
                               'Status',
                               style: TextStyle(
-                                fontSize: 12,
-                                fontWeight: FontWeight.w500,
+                                fontSize: UIConstants.fontSizeSm,
+                                fontWeight: UIConstants.fontWeightNormal,
                                 color: isDarkTheme ? Colors.grey[300] : Colors.grey[700],
                               ),
                             ),
@@ -1569,7 +1570,7 @@ class _ActivityPageState extends State<ActivityPage> {
                               padding: const EdgeInsets.symmetric(horizontal: 12),
                               decoration: BoxDecoration(
                                 color: isDarkTheme ? const Color(0xFF3a3a3a) : Colors.white,
-                                borderRadius: BorderRadius.circular(4),
+                                borderRadius: BorderRadius.circular(UIConstants.borderRadiusSm),
                                 border: Border.all(
                                   color: isDarkTheme ? Colors.grey[600]! : Colors.grey[300]!,
                                 ),
@@ -1600,7 +1601,7 @@ class _ActivityPageState extends State<ActivityPage> {
                       ),
                     ],
                   ),
-                  const SizedBox(height: 16),
+                  const SizedBox(height: UIConstants.spacingMd),
                   // Date filters row
                   Row(
                     children: [
@@ -1612,8 +1613,8 @@ class _ActivityPageState extends State<ActivityPage> {
                             Text(
                               'From Time',
                               style: TextStyle(
-                                fontSize: 12,
-                                fontWeight: FontWeight.w500,
+                                fontSize: UIConstants.fontSizeSm,
+                                fontWeight: UIConstants.fontWeightNormal,
                                 color: isDarkTheme ? Colors.grey[300] : Colors.grey[700],
                               ),
                             ),
@@ -1642,7 +1643,7 @@ class _ActivityPageState extends State<ActivityPage> {
                                 padding: const EdgeInsets.symmetric(horizontal: 12),
                                 decoration: BoxDecoration(
                                   color: isDarkTheme ? const Color(0xFF3a3a3a) : Colors.white,
-                                  borderRadius: BorderRadius.circular(4),
+                                  borderRadius: BorderRadius.circular(UIConstants.borderRadiusSm),
                                   border: Border.all(
                                     color: isDarkTheme ? Colors.grey[600]! : Colors.grey[300]!,
                                   ),
@@ -1654,7 +1655,7 @@ class _ActivityPageState extends State<ActivityPage> {
                                         _formatDateTime(_fromDate),
                                         style: TextStyle(
                                           color: isDarkTheme ? Colors.white : Colors.black,
-                                          fontSize: 14,
+                                          fontSize: UIConstants.fontSizeBody,
                                         ),
                                       ),
                                     ),
@@ -1670,7 +1671,7 @@ class _ActivityPageState extends State<ActivityPage> {
                           ],
                         ),
                       ),
-                      const SizedBox(width: 16),
+                      const SizedBox(width: UIConstants.spacingMd),
                       // To Date filter
                       Expanded(
                         child: Column(
@@ -1679,8 +1680,8 @@ class _ActivityPageState extends State<ActivityPage> {
                             Text(
                               'To Time',
                               style: TextStyle(
-                                fontSize: 12,
-                                fontWeight: FontWeight.w500,
+                                fontSize: UIConstants.fontSizeSm,
+                                fontWeight: UIConstants.fontWeightNormal,
                                 color: isDarkTheme ? Colors.grey[300] : Colors.grey[700],
                               ),
                             ),
@@ -1705,7 +1706,7 @@ class _ActivityPageState extends State<ActivityPage> {
                                 padding: const EdgeInsets.symmetric(horizontal: 12),
                                 decoration: BoxDecoration(
                                   color: isDarkTheme ? const Color(0xFF3a3a3a) : Colors.white,
-                                  borderRadius: BorderRadius.circular(4),
+                                  borderRadius: BorderRadius.circular(UIConstants.borderRadiusSm),
                                   border: Border.all(
                                     color: isDarkTheme ? Colors.grey[600]! : Colors.grey[300]!,
                                   ),
@@ -1717,7 +1718,7 @@ class _ActivityPageState extends State<ActivityPage> {
                                         _formatDateTime(_toDate),
                                         style: TextStyle(
                                           color: isDarkTheme ? Colors.white : Colors.black,
-                                          fontSize: 14,
+                                          fontSize: UIConstants.fontSizeBody,
                                         ),
                                       ),
                                     ),
@@ -1735,7 +1736,7 @@ class _ActivityPageState extends State<ActivityPage> {
                       ),
                     ],
                   ),
-                  const SizedBox(height: 16),
+                  const SizedBox(height: UIConstants.spacingMd),
                   // Action buttons
                   Row(
                     mainAxisAlignment: MainAxisAlignment.center,
@@ -1751,7 +1752,7 @@ class _ActivityPageState extends State<ActivityPage> {
                           foregroundColor: Colors.white,
                         ),
                       ),
-                      const SizedBox(width: 16),
+                      const SizedBox(width: UIConstants.spacingMd),
                       ElevatedButton.icon(
                         onPressed: () {
                           _clearOrdersFilters();
@@ -1782,7 +1783,7 @@ class _ActivityPageState extends State<ActivityPage> {
                         child: Text(
                           'Order ID',
                           style: TextStyle(
-                            fontSize: 14,
+                            fontSize: UIConstants.fontSizeBody,
                             color: isDarkTheme ? Colors.grey[400] : Colors.grey[600],
                           ),
                         ),
@@ -1793,7 +1794,7 @@ class _ActivityPageState extends State<ActivityPage> {
                       child: Text(
                         'Account',
                         style: TextStyle(
-                          fontSize: 14,
+                          fontSize: UIConstants.fontSizeBody,
                           color: isDarkTheme ? Colors.grey[400] : Colors.grey[600],
                         ),
                       ),
@@ -1803,7 +1804,7 @@ class _ActivityPageState extends State<ActivityPage> {
                       child: Text(
                         'Symbol',
                         style: TextStyle(
-                          fontSize: 14,
+                          fontSize: UIConstants.fontSizeBody,
                           color: isDarkTheme ? Colors.grey[400] : Colors.grey[600],
                         ),
                       ),
@@ -1814,7 +1815,7 @@ class _ActivityPageState extends State<ActivityPage> {
                         'Quantity',
                         textAlign: TextAlign.center,
                         style: TextStyle(
-                          fontSize: 14,
+                          fontSize: UIConstants.fontSizeBody,
                           color: isDarkTheme ? Colors.grey[400] : Colors.grey[600],
                         ),
                       ),
@@ -1827,7 +1828,7 @@ class _ActivityPageState extends State<ActivityPage> {
                           'Price',
                           textAlign: TextAlign.right,
                           style: TextStyle(
-                            fontSize: 14,
+                            fontSize: UIConstants.fontSizeBody,
                             color: isDarkTheme ? Colors.grey[400] : Colors.grey[600],
                           ),
                         ),
@@ -1835,12 +1836,12 @@ class _ActivityPageState extends State<ActivityPage> {
                     ),
                   ],
                 ),
-                const SizedBox(height: 8),
+                const SizedBox(height: UIConstants.spacingSm),
                 Container(
                   height: 1,
                   color: isDarkTheme ? Colors.grey[700] : Colors.grey[300],
                 ),
-                const SizedBox(height: 12),
+                const SizedBox(height: UIConstants.spacingSm),
                 // Table rows
                 Flexible(
                   child: _isLoadingOrders
@@ -1857,7 +1858,7 @@ class _ActivityPageState extends State<ActivityPage> {
                                 'No orders found',
                                 style: TextStyle(
                                   color: isDarkTheme ? Colors.grey[400] : Colors.grey[600],
-                                  fontSize: 14,
+                                  fontSize: UIConstants.fontSizeBody,
                                 ),
                               ),
                             )
@@ -1880,9 +1881,9 @@ class _ActivityPageState extends State<ActivityPage> {
                                             order['order_id']?.toString() ?? 
                                             'N/A',
                                             style: TextStyle(
-                                              fontSize: 16,
+                                              fontSize: UIConstants.fontSizeBody,
                                               color: isDarkTheme ? Colors.white : Colors.black,
-                                              fontWeight: FontWeight.w500,
+                                              fontWeight: UIConstants.fontWeightNormal,
                                             ),
                                             overflow: TextOverflow.ellipsis,
                                           ),
@@ -1897,7 +1898,7 @@ class _ActivityPageState extends State<ActivityPage> {
                                           order['participant_account']?.toString() ?? 
                                           'N/A',
                                           style: TextStyle(
-                                            fontSize: 16,
+                                            fontSize: UIConstants.fontSizeBody,
                                             color: isDarkTheme ? Colors.white : Colors.black,
                                           ),
                                           overflow: TextOverflow.ellipsis,
@@ -1911,7 +1912,7 @@ class _ActivityPageState extends State<ActivityPage> {
                                           order['asset_id']?.toString() ?? 
                                           'N/A',
                                           style: TextStyle(
-                                            fontSize: 16,
+                                            fontSize: UIConstants.fontSizeBody,
                                             color: isDarkTheme ? Colors.white : Colors.black,
                                           ),
                                         ),
@@ -1923,7 +1924,7 @@ class _ActivityPageState extends State<ActivityPage> {
                                           order['quantity']?.toString() ?? 'N/A',
                                           textAlign: TextAlign.center,
                                           style: TextStyle(
-                                            fontSize: 16,
+                                            fontSize: UIConstants.fontSizeBody,
                                             color: isDarkTheme ? Colors.white : Colors.black,
                                           ),
                                         ),
@@ -1937,9 +1938,9 @@ class _ActivityPageState extends State<ActivityPage> {
                                             order['price']?.toString() ?? 'N/A',
                                             textAlign: TextAlign.right,
                                             style: TextStyle(
-                                              fontSize: 16,
+                                              fontSize: UIConstants.fontSizeBody,
                                               color: isDarkTheme ? Colors.white : Colors.black,
-                                              fontWeight: FontWeight.w500,
+                                              fontWeight: UIConstants.fontWeightNormal,
                                             ),
                                           ),
                                         ),
@@ -1963,14 +1964,14 @@ class _ActivityPageState extends State<ActivityPage> {
     return Container(
       decoration: BoxDecoration(
         color: isDarkTheme ? const Color(0xFF1e1e1e) : Colors.white,
-        borderRadius: BorderRadius.circular(8),
+        borderRadius: BorderRadius.circular(UIConstants.borderRadiusSm),
       ),
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
           // Table header
           Container(
-            padding: const EdgeInsets.all(16),
+            padding: UIConstants.paddingStandard,
             decoration: BoxDecoration(
               color: isDarkTheme ? const Color(0xFF2d2d2d) : Colors.grey[50],
               borderRadius: const BorderRadius.only(
@@ -1983,12 +1984,12 @@ class _ActivityPageState extends State<ActivityPage> {
                 Text(
                   'Trades',
                   style: TextStyle(
-                    fontSize: 18,
-                    fontWeight: FontWeight.bold,
+                    fontSize: UIConstants.fontSizeMd,
+                    fontWeight: UIConstants.fontWeightMedium,
                     color: isDarkTheme ? Colors.white : Colors.black,
                   ),
                 ),
-                const SizedBox(width: 16),
+                const SizedBox(width: UIConstants.spacingMd),
                 // Filter toggle button for trades
                 IconButton(
                   onPressed: () {
@@ -2020,7 +2021,7 @@ class _ActivityPageState extends State<ActivityPage> {
           // Filter section for trades
           if (_showTradeFilters)
             Container(
-              padding: const EdgeInsets.all(16),
+              padding: UIConstants.paddingStandard,
               decoration: BoxDecoration(
                 color: isDarkTheme ? const Color(0xFF2a2a2a) : Colors.grey[100],
               ),
@@ -2038,8 +2039,8 @@ class _ActivityPageState extends State<ActivityPage> {
                             Text(
                               'Side',
                               style: TextStyle(
-                                fontSize: 12,
-                                fontWeight: FontWeight.w500,
+                                fontSize: UIConstants.fontSizeSm,
+                                fontWeight: UIConstants.fontWeightNormal,
                                 color: isDarkTheme ? Colors.grey[300] : Colors.grey[700],
                               ),
                             ),
@@ -2049,7 +2050,7 @@ class _ActivityPageState extends State<ActivityPage> {
                               padding: const EdgeInsets.symmetric(horizontal: 12),
                               decoration: BoxDecoration(
                                 color: isDarkTheme ? const Color(0xFF3a3a3a) : Colors.white,
-                                borderRadius: BorderRadius.circular(4),
+                                borderRadius: BorderRadius.circular(UIConstants.borderRadiusSm),
                                 border: Border.all(
                                   color: isDarkTheme ? Colors.grey[600]! : Colors.grey[300]!,
                                 ),
@@ -2076,7 +2077,7 @@ class _ActivityPageState extends State<ActivityPage> {
                           ],
                         ),
                       ),
-                      const SizedBox(width: 16),
+                      const SizedBox(width: UIConstants.spacingMd),
                       // Page size filter for trades
                       Expanded(
                         child: Column(
@@ -2085,8 +2086,8 @@ class _ActivityPageState extends State<ActivityPage> {
                             Text(
                               'Page Size',
                               style: TextStyle(
-                                fontSize: 12,
-                                fontWeight: FontWeight.w500,
+                                fontSize: UIConstants.fontSizeSm,
+                                fontWeight: UIConstants.fontWeightNormal,
                                 color: isDarkTheme ? Colors.grey[300] : Colors.grey[700],
                               ),
                             ),
@@ -2096,7 +2097,7 @@ class _ActivityPageState extends State<ActivityPage> {
                               padding: const EdgeInsets.symmetric(horizontal: 12),
                               decoration: BoxDecoration(
                                 color: isDarkTheme ? const Color(0xFF3a3a3a) : Colors.white,
-                                borderRadius: BorderRadius.circular(4),
+                                borderRadius: BorderRadius.circular(UIConstants.borderRadiusSm),
                                 border: Border.all(
                                   color: isDarkTheme ? Colors.grey[600]! : Colors.grey[300]!,
                                 ),
@@ -2130,7 +2131,7 @@ class _ActivityPageState extends State<ActivityPage> {
                           ],
                         ),
                       ),
-                      const SizedBox(width: 16),
+                      const SizedBox(width: UIConstants.spacingMd),
                       // Page number filter
                       Expanded(
                         child: Column(
@@ -2139,8 +2140,8 @@ class _ActivityPageState extends State<ActivityPage> {
                             Text(
                               'Page Number',
                               style: TextStyle(
-                                fontSize: 12,
-                                fontWeight: FontWeight.w500,
+                                fontSize: UIConstants.fontSizeSm,
+                                fontWeight: UIConstants.fontWeightNormal,
                                 color: isDarkTheme ? Colors.grey[300] : Colors.grey[700],
                               ),
                             ),
@@ -2153,7 +2154,7 @@ class _ActivityPageState extends State<ActivityPage> {
                                     padding: const EdgeInsets.symmetric(horizontal: 12),
                                     decoration: BoxDecoration(
                                       color: isDarkTheme ? const Color(0xFF3a3a3a) : Colors.white,
-                                      borderRadius: BorderRadius.circular(4),
+                                      borderRadius: BorderRadius.circular(UIConstants.borderRadiusSm),
                                       border: Border.all(
                                         color: isDarkTheme ? Colors.grey[600]! : Colors.grey[300]!,
                                       ),
@@ -2163,7 +2164,7 @@ class _ActivityPageState extends State<ActivityPage> {
                                       keyboardType: TextInputType.number,
                                       style: TextStyle(
                                         color: isDarkTheme ? Colors.white : Colors.black,
-                                        fontSize: 14,
+                                        fontSize: UIConstants.fontSizeBody,
                                       ),
                                       decoration: const InputDecoration(
                                         border: InputBorder.none,
@@ -2181,7 +2182,7 @@ class _ActivityPageState extends State<ActivityPage> {
                                     ),
                                   ),
                                 ),
-                                const SizedBox(width: 8),
+                                const SizedBox(width: UIConstants.spacingSm),
                                 IconButton(
                                   onPressed: _tradePageNumber > 1 ? () {
                                     setState(() {
@@ -2217,7 +2218,7 @@ class _ActivityPageState extends State<ActivityPage> {
                       ),
                     ],
                   ),
-                  const SizedBox(height: 16),
+                  const SizedBox(height: UIConstants.spacingMd),
                   // Market and Asset filters row for trades
                   Row(
                     children: [
@@ -2229,8 +2230,8 @@ class _ActivityPageState extends State<ActivityPage> {
                             Text(
                               'Market',
                               style: TextStyle(
-                                fontSize: 12,
-                                fontWeight: FontWeight.w500,
+                                fontSize: UIConstants.fontSizeSm,
+                                fontWeight: UIConstants.fontWeightNormal,
                                 color: isDarkTheme ? Colors.grey[300] : Colors.grey[700],
                               ),
                             ),
@@ -2240,7 +2241,7 @@ class _ActivityPageState extends State<ActivityPage> {
                               padding: const EdgeInsets.symmetric(horizontal: 12),
                               decoration: BoxDecoration(
                                 color: isDarkTheme ? const Color(0xFF3a3a3a) : Colors.white,
-                                borderRadius: BorderRadius.circular(4),
+                                borderRadius: BorderRadius.circular(UIConstants.borderRadiusSm),
                                 border: Border.all(
                                   color: isDarkTheme ? Colors.grey[600]! : Colors.grey[300]!,
                                 ),
@@ -2312,7 +2313,7 @@ class _ActivityPageState extends State<ActivityPage> {
                           ],
                         ),
                       ),
-                      const SizedBox(width: 16),
+                      const SizedBox(width: UIConstants.spacingMd),
                       // Asset filter for trades
                       Expanded(
                         child: Column(
@@ -2321,8 +2322,8 @@ class _ActivityPageState extends State<ActivityPage> {
                             Text(
                               'Asset',
                               style: TextStyle(
-                                fontSize: 12,
-                                fontWeight: FontWeight.w500,
+                                fontSize: UIConstants.fontSizeSm,
+                                fontWeight: UIConstants.fontWeightNormal,
                                 color: isDarkTheme ? Colors.grey[300] : Colors.grey[700],
                               ),
                             ),
@@ -2332,7 +2333,7 @@ class _ActivityPageState extends State<ActivityPage> {
                               padding: const EdgeInsets.symmetric(horizontal: 12),
                               decoration: BoxDecoration(
                                 color: isDarkTheme ? const Color(0xFF3a3a3a) : Colors.white,
-                                borderRadius: BorderRadius.circular(4),
+                                borderRadius: BorderRadius.circular(UIConstants.borderRadiusSm),
                                 border: Border.all(
                                   color: isDarkTheme ? Colors.grey[600]! : Colors.grey[300]!,
                                 ),
@@ -2368,12 +2369,12 @@ class _ActivityPageState extends State<ActivityPage> {
                           ],
                         ),
                       ),
-                      const SizedBox(width: 16),
+                      const SizedBox(width: UIConstants.spacingMd),
                       // Empty space to balance the row
                       Expanded(child: Container()),
                     ],
                   ),
-                  const SizedBox(height: 16),
+                  const SizedBox(height: UIConstants.spacingMd),
                   // Date filters row
                   Row(
                     children: [
@@ -2385,8 +2386,8 @@ class _ActivityPageState extends State<ActivityPage> {
                             Text(
                               'From Time',
                               style: TextStyle(
-                                fontSize: 12,
-                                fontWeight: FontWeight.w500,
+                                fontSize: UIConstants.fontSizeSm,
+                                fontWeight: UIConstants.fontWeightNormal,
                                 color: isDarkTheme ? Colors.grey[300] : Colors.grey[700],
                               ),
                             ),
@@ -2415,7 +2416,7 @@ class _ActivityPageState extends State<ActivityPage> {
                                 padding: const EdgeInsets.symmetric(horizontal: 12),
                                 decoration: BoxDecoration(
                                   color: isDarkTheme ? const Color(0xFF3a3a3a) : Colors.white,
-                                  borderRadius: BorderRadius.circular(4),
+                                  borderRadius: BorderRadius.circular(UIConstants.borderRadiusSm),
                                   border: Border.all(
                                     color: isDarkTheme ? Colors.grey[600]! : Colors.grey[300]!,
                                   ),
@@ -2427,7 +2428,7 @@ class _ActivityPageState extends State<ActivityPage> {
                                         _formatDateTime(_tradeFromDate),
                                         style: TextStyle(
                                           color: isDarkTheme ? Colors.white : Colors.black,
-                                          fontSize: 14,
+                                          fontSize: UIConstants.fontSizeBody,
                                         ),
                                       ),
                                     ),
@@ -2443,7 +2444,7 @@ class _ActivityPageState extends State<ActivityPage> {
                           ],
                         ),
                       ),
-                      const SizedBox(width: 16),
+                      const SizedBox(width: UIConstants.spacingMd),
                       // To Date filter
                       Expanded(
                         child: Column(
@@ -2452,8 +2453,8 @@ class _ActivityPageState extends State<ActivityPage> {
                             Text(
                               'To Time',
                               style: TextStyle(
-                                fontSize: 12,
-                                fontWeight: FontWeight.w500,
+                                fontSize: UIConstants.fontSizeSm,
+                                fontWeight: UIConstants.fontWeightNormal,
                                 color: isDarkTheme ? Colors.grey[300] : Colors.grey[700],
                               ),
                             ),
@@ -2478,7 +2479,7 @@ class _ActivityPageState extends State<ActivityPage> {
                                 padding: const EdgeInsets.symmetric(horizontal: 12),
                                 decoration: BoxDecoration(
                                   color: isDarkTheme ? const Color(0xFF3a3a3a) : Colors.white,
-                                  borderRadius: BorderRadius.circular(4),
+                                  borderRadius: BorderRadius.circular(UIConstants.borderRadiusSm),
                                   border: Border.all(
                                     color: isDarkTheme ? Colors.grey[600]! : Colors.grey[300]!,
                                   ),
@@ -2490,7 +2491,7 @@ class _ActivityPageState extends State<ActivityPage> {
                                         _formatDateTime(_tradeToDate),
                                         style: TextStyle(
                                           color: isDarkTheme ? Colors.white : Colors.black,
-                                          fontSize: 14,
+                                          fontSize: UIConstants.fontSizeBody,
                                         ),
                                       ),
                                     ),
@@ -2508,7 +2509,7 @@ class _ActivityPageState extends State<ActivityPage> {
                       ),
                     ],
                   ),
-                  const SizedBox(height: 16),
+                  const SizedBox(height: UIConstants.spacingMd),
                   // Action buttons
                   Row(
                     mainAxisAlignment: MainAxisAlignment.center,
@@ -2524,7 +2525,7 @@ class _ActivityPageState extends State<ActivityPage> {
                           foregroundColor: Colors.white,
                         ),
                       ),
-                      const SizedBox(width: 16),
+                      const SizedBox(width: UIConstants.spacingMd),
                       ElevatedButton.icon(
                         onPressed: () {
                           _clearTradesFilters();
@@ -2555,7 +2556,7 @@ class _ActivityPageState extends State<ActivityPage> {
                         child: Text(
                           'Price',
                           style: TextStyle(
-                            fontSize: 14,
+                            fontSize: UIConstants.fontSizeBody,
                             color: isDarkTheme ? Colors.grey[400] : Colors.grey[600],
                           ),
                         ),
@@ -2569,7 +2570,7 @@ class _ActivityPageState extends State<ActivityPage> {
                           'Quantity',
                           textAlign: TextAlign.right,
                           style: TextStyle(
-                            fontSize: 14,
+                            fontSize: UIConstants.fontSizeBody,
                             color: isDarkTheme ? Colors.grey[400] : Colors.grey[600],
                           ),
                         ),
@@ -2577,12 +2578,12 @@ class _ActivityPageState extends State<ActivityPage> {
                     ),
                   ],
                 ),
-                const SizedBox(height: 8),
+                const SizedBox(height: UIConstants.spacingSm),
                 Container(
                   height: 1,
                   color: isDarkTheme ? Colors.grey[700] : Colors.grey[300],
                 ),
-                const SizedBox(height: 12),
+                const SizedBox(height: UIConstants.spacingSm),
                 // Trades table rows
                 Flexible(
                   child: _isLoadingTrades
@@ -2599,7 +2600,7 @@ class _ActivityPageState extends State<ActivityPage> {
                                 'No trades found',
                                 style: TextStyle(
                                   color: isDarkTheme ? Colors.grey[400] : Colors.grey[600],
-                                  fontSize: 14,
+                                  fontSize: UIConstants.fontSizeBody,
                                 ),
                               ),
                             )
@@ -2619,9 +2620,9 @@ class _ActivityPageState extends State<ActivityPage> {
                                           child: Text(
                                             '\$${trade['price']?.toString() ?? 'N/A'}',
                                             style: TextStyle(
-                                              fontSize: 16,
+                                              fontSize: UIConstants.fontSizeBody,
                                               color: isDarkTheme ? Colors.white : Colors.black,
-                                              fontWeight: FontWeight.w500,
+                                              fontWeight: UIConstants.fontWeightNormal,
                                             ),
                                             overflow: TextOverflow.ellipsis,
                                           ),
@@ -2636,7 +2637,7 @@ class _ActivityPageState extends State<ActivityPage> {
                                             trade['quantity']?.toString() ?? 'N/A',
                                             textAlign: TextAlign.right,
                                             style: TextStyle(
-                                              fontSize: 16,
+                                              fontSize: UIConstants.fontSizeBody,
                                               color: isDarkTheme ? Colors.white : Colors.black,
                                             ),
                                             overflow: TextOverflow.ellipsis,
@@ -2756,8 +2757,8 @@ class _ActivityPageState extends State<ActivityPage> {
                   color: isActive
                       ? (isDarkTheme ? Colors.white : Colors.black)
                       : Colors.grey[400],
-                  fontSize: 14,
-                  fontWeight: isActive ? FontWeight.w600 : FontWeight.w500,
+                  fontSize: UIConstants.fontSizeBody,
+                  fontWeight: isActive ? UIConstants.fontWeightMedium : UIConstants.fontWeightNormal,
                 ),
               ),
             ),
@@ -2789,14 +2790,14 @@ class _ActivityPageState extends State<ActivityPage> {
     return Container(
       decoration: BoxDecoration(
         color: isDarkTheme ? const Color(0xFF1e1e1e) : Colors.white,
-        borderRadius: BorderRadius.circular(8),
+        borderRadius: BorderRadius.circular(UIConstants.borderRadiusSm),
       ),
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
           // Table header
           Container(
-            padding: const EdgeInsets.all(16),
+            padding: UIConstants.paddingStandard,
             decoration: BoxDecoration(
               color: isDarkTheme ? const Color(0xFF2d2d2d) : Colors.grey[50],
               borderRadius: const BorderRadius.only(
@@ -2809,12 +2810,12 @@ class _ActivityPageState extends State<ActivityPage> {
                 Text(
                   'Settlements',
                   style: TextStyle(
-                    fontSize: 18,
-                    fontWeight: FontWeight.bold,
+                    fontSize: UIConstants.fontSizeMd,
+                    fontWeight: UIConstants.fontWeightMedium,
                     color: isDarkTheme ? Colors.white : Colors.black,
                   ),
                 ),
-                const SizedBox(width: 16),
+                const SizedBox(width: UIConstants.spacingMd),
                 // Filter toggle button
                 IconButton(
                   onPressed: () {
@@ -2847,7 +2848,7 @@ class _ActivityPageState extends State<ActivityPage> {
           // Filters section
           if (_showSettlementFilters)
             Container(
-              padding: const EdgeInsets.all(16),
+              padding: UIConstants.paddingStandard,
               decoration: BoxDecoration(
                 color: isDarkTheme ? const Color(0xFF2a2a2a) : Colors.grey[100],
                 border: Border(
@@ -2869,8 +2870,8 @@ class _ActivityPageState extends State<ActivityPage> {
                             Text(
                               'Status',
                               style: TextStyle(
-                                fontSize: 12,
-                                fontWeight: FontWeight.w500,
+                                fontSize: UIConstants.fontSizeSm,
+                                fontWeight: UIConstants.fontWeightNormal,
                                 color: isDarkTheme ? Colors.grey[300] : Colors.grey[700],
                               ),
                             ),
@@ -2879,7 +2880,7 @@ class _ActivityPageState extends State<ActivityPage> {
                               padding: const EdgeInsets.symmetric(horizontal: 12),
                               decoration: BoxDecoration(
                                 color: isDarkTheme ? const Color(0xFF3a3a3a) : Colors.white,
-                                borderRadius: BorderRadius.circular(4),
+                                borderRadius: BorderRadius.circular(UIConstants.borderRadiusSm),
                                 border: Border.all(
                                   color: isDarkTheme ? Colors.grey[600]! : Colors.grey[300]!,
                                 ),
@@ -2907,7 +2908,7 @@ class _ActivityPageState extends State<ActivityPage> {
                           ],
                         ),
                       ),
-                      const SizedBox(width: 12),
+                      const SizedBox(width: UIConstants.spacingSm),
                       // Transaction Type filter
                       Expanded(
                         child: Column(
@@ -2916,8 +2917,8 @@ class _ActivityPageState extends State<ActivityPage> {
                             Text(
                               'Transaction Type',
                               style: TextStyle(
-                                fontSize: 12,
-                                fontWeight: FontWeight.w500,
+                                fontSize: UIConstants.fontSizeSm,
+                                fontWeight: UIConstants.fontWeightNormal,
                                 color: isDarkTheme ? Colors.grey[300] : Colors.grey[700],
                               ),
                             ),
@@ -2926,7 +2927,7 @@ class _ActivityPageState extends State<ActivityPage> {
                               padding: const EdgeInsets.symmetric(horizontal: 12),
                               decoration: BoxDecoration(
                                 color: isDarkTheme ? const Color(0xFF3a3a3a) : Colors.white,
-                                borderRadius: BorderRadius.circular(4),
+                                borderRadius: BorderRadius.circular(UIConstants.borderRadiusSm),
                                 border: Border.all(
                                   color: isDarkTheme ? Colors.grey[600]! : Colors.grey[300]!,
                                 ),
@@ -2957,7 +2958,7 @@ class _ActivityPageState extends State<ActivityPage> {
                           ],
                         ),
                       ),
-                      const SizedBox(width: 12),
+                      const SizedBox(width: UIConstants.spacingSm),
                       // Market filter
                       Expanded(
                         child: Column(
@@ -2966,8 +2967,8 @@ class _ActivityPageState extends State<ActivityPage> {
                             Text(
                               'Market',
                               style: TextStyle(
-                                fontSize: 12,
-                                fontWeight: FontWeight.w500,
+                                fontSize: UIConstants.fontSizeSm,
+                                fontWeight: UIConstants.fontWeightNormal,
                                 color: isDarkTheme ? Colors.grey[300] : Colors.grey[700],
                               ),
                             ),
@@ -2976,7 +2977,7 @@ class _ActivityPageState extends State<ActivityPage> {
                               padding: const EdgeInsets.symmetric(horizontal: 12),
                               decoration: BoxDecoration(
                                 color: isDarkTheme ? const Color(0xFF3a3a3a) : Colors.white,
-                                borderRadius: BorderRadius.circular(4),
+                                borderRadius: BorderRadius.circular(UIConstants.borderRadiusSm),
                                 border: Border.all(
                                   color: isDarkTheme ? Colors.grey[600]! : Colors.grey[300]!,
                                 ),
@@ -3016,7 +3017,7 @@ class _ActivityPageState extends State<ActivityPage> {
                           ],
                         ),
                       ),
-                      const SizedBox(width: 12),
+                      const SizedBox(width: UIConstants.spacingSm),
                       // Asset filter
                       Expanded(
                         child: Column(
@@ -3025,8 +3026,8 @@ class _ActivityPageState extends State<ActivityPage> {
                             Text(
                               'Asset',
                               style: TextStyle(
-                                fontSize: 12,
-                                fontWeight: FontWeight.w500,
+                                fontSize: UIConstants.fontSizeSm,
+                                fontWeight: UIConstants.fontWeightNormal,
                                 color: isDarkTheme ? Colors.grey[300] : Colors.grey[700],
                               ),
                             ),
@@ -3035,7 +3036,7 @@ class _ActivityPageState extends State<ActivityPage> {
                               padding: const EdgeInsets.symmetric(horizontal: 12),
                               decoration: BoxDecoration(
                                 color: isDarkTheme ? const Color(0xFF3a3a3a) : Colors.white,
-                                borderRadius: BorderRadius.circular(4),
+                                borderRadius: BorderRadius.circular(UIConstants.borderRadiusSm),
                                 border: Border.all(
                                   color: isDarkTheme ? Colors.grey[600]! : Colors.grey[300]!,
                                 ),
@@ -3071,7 +3072,7 @@ class _ActivityPageState extends State<ActivityPage> {
                       ),
                     ],
                   ),
-                  const SizedBox(height: 12),
+                  const SizedBox(height: UIConstants.spacingSm),
                   // Second row: Date filters and Page size
                   Row(
                     children: [
@@ -3083,8 +3084,8 @@ class _ActivityPageState extends State<ActivityPage> {
                             Text(
                               'From Date',
                               style: TextStyle(
-                                fontSize: 12,
-                                fontWeight: FontWeight.w500,
+                                fontSize: UIConstants.fontSizeSm,
+                                fontWeight: UIConstants.fontWeightNormal,
                                 color: isDarkTheme ? Colors.grey[300] : Colors.grey[700],
                               ),
                             ),
@@ -3102,7 +3103,7 @@ class _ActivityPageState extends State<ActivityPage> {
                                 padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 12),
                                 decoration: BoxDecoration(
                                   color: isDarkTheme ? const Color(0xFF3a3a3a) : Colors.white,
-                                  borderRadius: BorderRadius.circular(4),
+                                  borderRadius: BorderRadius.circular(UIConstants.borderRadiusSm),
                                   border: Border.all(
                                     color: isDarkTheme ? Colors.grey[600]! : Colors.grey[300]!,
                                   ),
@@ -3114,13 +3115,13 @@ class _ActivityPageState extends State<ActivityPage> {
                                       size: 16,
                                       color: isDarkTheme ? Colors.grey[400] : Colors.grey[600],
                                     ),
-                                    const SizedBox(width: 8),
+                                    const SizedBox(width: UIConstants.spacingSm),
                                     Text(
                                       _settlementFromDate != null ?
                                       '${_settlementFromDate!.day}/${_settlementFromDate!.month}/${_settlementFromDate!.year} ${_settlementFromDate!.hour.toString().padLeft(2, '0')}:${_settlementFromDate!.minute.toString().padLeft(2, '0')}' :
                                       'Select Date',
                                       style: TextStyle(
-                                        fontSize: 12,
+                                        fontSize: UIConstants.fontSizeSm,
                                         color: isDarkTheme ? Colors.white : Colors.black,
                                       ),
                                     ),
@@ -3131,7 +3132,7 @@ class _ActivityPageState extends State<ActivityPage> {
                           ],
                         ),
                       ),
-                      const SizedBox(width: 12),
+                      const SizedBox(width: UIConstants.spacingSm),
                       // To Date
                       Expanded(
                         child: Column(
@@ -3140,8 +3141,8 @@ class _ActivityPageState extends State<ActivityPage> {
                             Text(
                               'To Date',
                               style: TextStyle(
-                                fontSize: 12,
-                                fontWeight: FontWeight.w500,
+                                fontSize: UIConstants.fontSizeSm,
+                                fontWeight: UIConstants.fontWeightNormal,
                                 color: isDarkTheme ? Colors.grey[300] : Colors.grey[700],
                               ),
                             ),
@@ -3159,7 +3160,7 @@ class _ActivityPageState extends State<ActivityPage> {
                                 padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 12),
                                 decoration: BoxDecoration(
                                   color: isDarkTheme ? const Color(0xFF3a3a3a) : Colors.white,
-                                  borderRadius: BorderRadius.circular(4),
+                                  borderRadius: BorderRadius.circular(UIConstants.borderRadiusSm),
                                   border: Border.all(
                                     color: isDarkTheme ? Colors.grey[600]! : Colors.grey[300]!,
                                   ),
@@ -3171,13 +3172,13 @@ class _ActivityPageState extends State<ActivityPage> {
                                       size: 16,
                                       color: isDarkTheme ? Colors.grey[400] : Colors.grey[600],
                                     ),
-                                    const SizedBox(width: 8),
+                                    const SizedBox(width: UIConstants.spacingSm),
                                     Text(
                                       _settlementToDate != null ?
                                       '${_settlementToDate!.day}/${_settlementToDate!.month}/${_settlementToDate!.year} ${_settlementToDate!.hour.toString().padLeft(2, '0')}:${_settlementToDate!.minute.toString().padLeft(2, '0')}' :
                                       'Select Date',
                                       style: TextStyle(
-                                        fontSize: 12,
+                                        fontSize: UIConstants.fontSizeSm,
                                         color: isDarkTheme ? Colors.white : Colors.black,
                                       ),
                                     ),
@@ -3188,7 +3189,7 @@ class _ActivityPageState extends State<ActivityPage> {
                           ],
                         ),
                       ),
-                      const SizedBox(width: 12),
+                      const SizedBox(width: UIConstants.spacingSm),
                       // Page Size
                       Expanded(
                         child: Column(
@@ -3197,8 +3198,8 @@ class _ActivityPageState extends State<ActivityPage> {
                             Text(
                               'Page Size',
                               style: TextStyle(
-                                fontSize: 12,
-                                fontWeight: FontWeight.w500,
+                                fontSize: UIConstants.fontSizeSm,
+                                fontWeight: UIConstants.fontWeightNormal,
                                 color: isDarkTheme ? Colors.grey[300] : Colors.grey[700],
                               ),
                             ),
@@ -3207,7 +3208,7 @@ class _ActivityPageState extends State<ActivityPage> {
                               padding: const EdgeInsets.symmetric(horizontal: 12),
                               decoration: BoxDecoration(
                                 color: isDarkTheme ? const Color(0xFF3a3a3a) : Colors.white,
-                                borderRadius: BorderRadius.circular(4),
+                                borderRadius: BorderRadius.circular(UIConstants.borderRadiusSm),
                                 border: Border.all(
                                   color: isDarkTheme ? Colors.grey[600]! : Colors.grey[300]!,
                                 ),
@@ -3235,7 +3236,7 @@ class _ActivityPageState extends State<ActivityPage> {
                       ),
                     ],
                   ),
-                  const SizedBox(height: 16),
+                  const SizedBox(height: UIConstants.spacingMd),
                   // Action buttons
                   Row(
                     mainAxisAlignment: MainAxisAlignment.center,
@@ -3255,7 +3256,7 @@ class _ActivityPageState extends State<ActivityPage> {
                           foregroundColor: Colors.white,
                         ),
                       ),
-                      const SizedBox(width: 16),
+                      const SizedBox(width: UIConstants.spacingMd),
                       ElevatedButton.icon(
                         onPressed: () {
                           _clearSettlementsFilters();
@@ -3287,7 +3288,7 @@ class _ActivityPageState extends State<ActivityPage> {
                         child: Text(
                           'Settlement ID',
                           style: TextStyle(
-                            fontSize: 14,
+                            fontSize: UIConstants.fontSizeBody,
                             color: isDarkTheme ? Colors.grey[400] : Colors.grey[600],
                           ),
                         ),
@@ -3298,7 +3299,7 @@ class _ActivityPageState extends State<ActivityPage> {
                       child: Text(
                         'Status',
                         style: TextStyle(
-                          fontSize: 14,
+                          fontSize: UIConstants.fontSizeBody,
                           color: isDarkTheme ? Colors.grey[400] : Colors.grey[600],
                         ),
                       ),
@@ -3308,7 +3309,7 @@ class _ActivityPageState extends State<ActivityPage> {
                       child: Text(
                         'Asset',
                         style: TextStyle(
-                          fontSize: 14,
+                          fontSize: UIConstants.fontSizeBody,
                           color: isDarkTheme ? Colors.grey[400] : Colors.grey[600],
                         ),
                       ),
@@ -3319,7 +3320,7 @@ class _ActivityPageState extends State<ActivityPage> {
                         'Amount',
                         textAlign: TextAlign.center,
                         style: TextStyle(
-                          fontSize: 14,
+                          fontSize: UIConstants.fontSizeBody,
                           color: isDarkTheme ? Colors.grey[400] : Colors.grey[600],
                         ),
                       ),
@@ -3332,7 +3333,7 @@ class _ActivityPageState extends State<ActivityPage> {
                           'Timestamp',
                           textAlign: TextAlign.right,
                           style: TextStyle(
-                            fontSize: 14,
+                            fontSize: UIConstants.fontSizeBody,
                             color: isDarkTheme ? Colors.grey[400] : Colors.grey[600],
                           ),
                         ),
@@ -3340,12 +3341,12 @@ class _ActivityPageState extends State<ActivityPage> {
                     ),
                   ],
                 ),
-                const SizedBox(height: 8),
+                const SizedBox(height: UIConstants.spacingSm),
                 Container(
                   height: 1,
                   color: isDarkTheme ? Colors.grey[700] : Colors.grey[300],
                 ),
-                const SizedBox(height: 12),
+                const SizedBox(height: UIConstants.spacingSm),
                 // Table rows
                 Flexible(
                   child: _isLoadingSettlements
@@ -3362,7 +3363,7 @@ class _ActivityPageState extends State<ActivityPage> {
                                 'No settlements found',
                                 style: TextStyle(
                                   color: isDarkTheme ? Colors.grey[400] : Colors.grey[600],
-                                  fontSize: 14,
+                                  fontSize: UIConstants.fontSizeBody,
                                 ),
                               ),
                             )
@@ -3382,9 +3383,9 @@ class _ActivityPageState extends State<ActivityPage> {
                                           child: Text(
                                             settlement['settlement_id']?.toString() ?? 'N/A',
                                             style: TextStyle(
-                                              fontSize: 16,
+                                              fontSize: UIConstants.fontSizeBody,
                                               color: isDarkTheme ? Colors.white : Colors.black,
-                                              fontWeight: FontWeight.w500,
+                                              fontWeight: UIConstants.fontWeightNormal,
                                             ),
                                             overflow: TextOverflow.ellipsis,
                                           ),
@@ -3396,7 +3397,7 @@ class _ActivityPageState extends State<ActivityPage> {
                                         child: Text(
                                           settlement['confirmation_status']?.toString().replaceAll('CONFIRMATION_STATUS__', '') ?? 'N/A',
                                           style: TextStyle(
-                                            fontSize: 16,
+                                            fontSize: UIConstants.fontSizeBody,
                                             color: settlement['confirmation_status'] == 'CONFIRMATION_STATUS__CONFIRMED'
                                                 ? Colors.green[600]
                                                 : settlement['confirmation_status'] == 'CONFIRMATION_STATUS__PENDING'
@@ -3412,7 +3413,7 @@ class _ActivityPageState extends State<ActivityPage> {
                                         child: Text(
                                           settlement['asset_transferred']?.toString() ?? 'N/A',
                                           style: TextStyle(
-                                            fontSize: 16,
+                                            fontSize: UIConstants.fontSizeBody,
                                             color: isDarkTheme ? Colors.white : Colors.black,
                                           ),
                                           overflow: TextOverflow.ellipsis,
@@ -3425,9 +3426,9 @@ class _ActivityPageState extends State<ActivityPage> {
                                           settlement['amount_transferred']?.toString() ?? 'N/A',
                                           textAlign: TextAlign.center,
                                           style: TextStyle(
-                                            fontSize: 16,
+                                            fontSize: UIConstants.fontSizeBody,
                                             color: isDarkTheme ? Colors.white : Colors.black,
-                                            fontWeight: FontWeight.w500,
+                                            fontWeight: UIConstants.fontWeightNormal,
                                           ),
                                           overflow: TextOverflow.ellipsis,
                                         ),
@@ -3443,7 +3444,7 @@ class _ActivityPageState extends State<ActivityPage> {
                                                 : 'N/A',
                                             textAlign: TextAlign.right,
                                             style: TextStyle(
-                                              fontSize: 14,
+                                              fontSize: UIConstants.fontSizeBody,
                                               color: isDarkTheme ? Colors.grey[400] : Colors.grey[600],
                                             ),
                                             overflow: TextOverflow.ellipsis,
@@ -3469,14 +3470,14 @@ class _ActivityPageState extends State<ActivityPage> {
     return Container(
       decoration: BoxDecoration(
         color: isDarkTheme ? const Color(0xFF1e1e1e) : Colors.white,
-        borderRadius: BorderRadius.circular(8),
+        borderRadius: BorderRadius.circular(UIConstants.borderRadiusSm),
       ),
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
           // Table header
           Container(
-            padding: const EdgeInsets.all(16),
+            padding: UIConstants.paddingStandard,
             decoration: BoxDecoration(
               color: isDarkTheme ? const Color(0xFF2d2d2d) : Colors.grey[50],
               borderRadius: const BorderRadius.only(
@@ -3489,12 +3490,12 @@ class _ActivityPageState extends State<ActivityPage> {
                 Text(
                   'Transactions',
                   style: TextStyle(
-                    fontSize: 18,
-                    fontWeight: FontWeight.bold,
+                    fontSize: UIConstants.fontSizeMd,
+                    fontWeight: UIConstants.fontWeightMedium,
                     color: isDarkTheme ? Colors.white : Colors.black,
                   ),
                 ),
-                const SizedBox(width: 16),
+                const SizedBox(width: UIConstants.spacingMd),
                 // Filter toggle button
                 IconButton(
                   onPressed: () {
@@ -3527,7 +3528,7 @@ class _ActivityPageState extends State<ActivityPage> {
           // Filters section
           if (_showTransactionFilters)
             Container(
-              padding: const EdgeInsets.all(16),
+              padding: UIConstants.paddingStandard,
               decoration: BoxDecoration(
                 color: isDarkTheme ? const Color(0xFF2a2a2a) : Colors.grey[100],
                 border: Border(
@@ -3550,17 +3551,17 @@ class _ActivityPageState extends State<ActivityPage> {
                             Text(
                               'Transaction Types',
                               style: TextStyle(
-                                fontSize: 12,
-                                fontWeight: FontWeight.w500,
+                                fontSize: UIConstants.fontSizeSm,
+                                fontWeight: UIConstants.fontWeightNormal,
                                 color: isDarkTheme ? Colors.grey[300] : Colors.grey[700],
                               ),
                             ),
                             const SizedBox(height: 4),
                             Container(
-                              padding: const EdgeInsets.all(8),
+                              padding: UIConstants.paddingMinimal,
                               decoration: BoxDecoration(
                                 color: isDarkTheme ? const Color(0xFF3a3a3a) : Colors.white,
-                                borderRadius: BorderRadius.circular(4),
+                                borderRadius: BorderRadius.circular(UIConstants.borderRadiusSm),
                                 border: Border.all(
                                   color: isDarkTheme ? Colors.grey[600]! : Colors.grey[300]!,
                                 ),
@@ -3578,7 +3579,7 @@ class _ActivityPageState extends State<ActivityPage> {
                                   label: Text(
                                     type.replaceAll('TRANSACTION_TYPE__', '').replaceAll('_', ' '),
                                     style: TextStyle(
-                                      fontSize: 10,
+                                      fontSize: UIConstants.fontSizeXs,
                                       color: isDarkTheme ? Colors.white : Colors.black,
                                     ),
                                   ),
@@ -3600,7 +3601,7 @@ class _ActivityPageState extends State<ActivityPage> {
                           ],
                         ),
                       ),
-                      const SizedBox(width: 12),
+                      const SizedBox(width: UIConstants.spacingSm),
                       // Asset filter
                       Expanded(
                         child: Column(
@@ -3609,8 +3610,8 @@ class _ActivityPageState extends State<ActivityPage> {
                             Text(
                               'Asset',
                               style: TextStyle(
-                                fontSize: 12,
-                                fontWeight: FontWeight.w500,
+                                fontSize: UIConstants.fontSizeSm,
+                                fontWeight: UIConstants.fontWeightNormal,
                                 color: isDarkTheme ? Colors.grey[300] : Colors.grey[700],
                               ),
                             ),
@@ -3619,7 +3620,7 @@ class _ActivityPageState extends State<ActivityPage> {
                               padding: const EdgeInsets.symmetric(horizontal: 12),
                               decoration: BoxDecoration(
                                 color: isDarkTheme ? const Color(0xFF3a3a3a) : Colors.white,
-                                borderRadius: BorderRadius.circular(4),
+                                borderRadius: BorderRadius.circular(UIConstants.borderRadiusSm),
                                 border: Border.all(
                                   color: isDarkTheme ? Colors.grey[600]! : Colors.grey[300]!,
                                 ),
@@ -3650,7 +3651,7 @@ class _ActivityPageState extends State<ActivityPage> {
                       ),
                     ],
                   ),
-                  const SizedBox(height: 12),
+                  const SizedBox(height: UIConstants.spacingSm),
                   // Second row: Date filters and Page size
                   Row(
                     children: [
@@ -3662,8 +3663,8 @@ class _ActivityPageState extends State<ActivityPage> {
                             Text(
                               'From Date',
                               style: TextStyle(
-                                fontSize: 12,
-                                fontWeight: FontWeight.w500,
+                                fontSize: UIConstants.fontSizeSm,
+                                fontWeight: UIConstants.fontWeightNormal,
                                 color: isDarkTheme ? Colors.grey[300] : Colors.grey[700],
                               ),
                             ),
@@ -3681,7 +3682,7 @@ class _ActivityPageState extends State<ActivityPage> {
                                 padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 12),
                                 decoration: BoxDecoration(
                                   color: isDarkTheme ? const Color(0xFF3a3a3a) : Colors.white,
-                                  borderRadius: BorderRadius.circular(4),
+                                  borderRadius: BorderRadius.circular(UIConstants.borderRadiusSm),
                                   border: Border.all(
                                     color: isDarkTheme ? Colors.grey[600]! : Colors.grey[300]!,
                                   ),
@@ -3693,13 +3694,13 @@ class _ActivityPageState extends State<ActivityPage> {
                                       size: 16,
                                       color: isDarkTheme ? Colors.grey[400] : Colors.grey[600],
                                     ),
-                                    const SizedBox(width: 8),
+                                    const SizedBox(width: UIConstants.spacingSm),
                                     Text(
                                       _transactionFromDate != null ?
                                       '${_transactionFromDate!.day}/${_transactionFromDate!.month}/${_transactionFromDate!.year} ${_transactionFromDate!.hour.toString().padLeft(2, '0')}:${_transactionFromDate!.minute.toString().padLeft(2, '0')}' :
                                       'Select Date',
                                       style: TextStyle(
-                                        fontSize: 12,
+                                        fontSize: UIConstants.fontSizeSm,
                                         color: isDarkTheme ? Colors.white : Colors.black,
                                       ),
                                     ),
@@ -3710,7 +3711,7 @@ class _ActivityPageState extends State<ActivityPage> {
                           ],
                         ),
                       ),
-                      const SizedBox(width: 12),
+                      const SizedBox(width: UIConstants.spacingSm),
                       // To Date
                       Expanded(
                         child: Column(
@@ -3719,8 +3720,8 @@ class _ActivityPageState extends State<ActivityPage> {
                             Text(
                               'To Date',
                               style: TextStyle(
-                                fontSize: 12,
-                                fontWeight: FontWeight.w500,
+                                fontSize: UIConstants.fontSizeSm,
+                                fontWeight: UIConstants.fontWeightNormal,
                                 color: isDarkTheme ? Colors.grey[300] : Colors.grey[700],
                               ),
                             ),
@@ -3738,7 +3739,7 @@ class _ActivityPageState extends State<ActivityPage> {
                                 padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 12),
                                 decoration: BoxDecoration(
                                   color: isDarkTheme ? const Color(0xFF3a3a3a) : Colors.white,
-                                  borderRadius: BorderRadius.circular(4),
+                                  borderRadius: BorderRadius.circular(UIConstants.borderRadiusSm),
                                   border: Border.all(
                                     color: isDarkTheme ? Colors.grey[600]! : Colors.grey[300]!,
                                   ),
@@ -3750,13 +3751,13 @@ class _ActivityPageState extends State<ActivityPage> {
                                       size: 16,
                                       color: isDarkTheme ? Colors.grey[400] : Colors.grey[600],
                                     ),
-                                    const SizedBox(width: 8),
+                                    const SizedBox(width: UIConstants.spacingSm),
                                     Text(
                                       _transactionToDate != null ?
                                       '${_transactionToDate!.day}/${_transactionToDate!.month}/${_transactionToDate!.year} ${_transactionToDate!.hour.toString().padLeft(2, '0')}:${_transactionToDate!.minute.toString().padLeft(2, '0')}' :
                                       'Select Date',
                                       style: TextStyle(
-                                        fontSize: 12,
+                                        fontSize: UIConstants.fontSizeSm,
                                         color: isDarkTheme ? Colors.white : Colors.black,
                                       ),
                                     ),
@@ -3767,7 +3768,7 @@ class _ActivityPageState extends State<ActivityPage> {
                           ],
                         ),
                       ),
-                      const SizedBox(width: 12),
+                      const SizedBox(width: UIConstants.spacingSm),
                       // Page Size
                       Expanded(
                         child: Column(
@@ -3776,8 +3777,8 @@ class _ActivityPageState extends State<ActivityPage> {
                             Text(
                               'Page Size',
                               style: TextStyle(
-                                fontSize: 12,
-                                fontWeight: FontWeight.w500,
+                                fontSize: UIConstants.fontSizeSm,
+                                fontWeight: UIConstants.fontWeightNormal,
                                 color: isDarkTheme ? Colors.grey[300] : Colors.grey[700],
                               ),
                             ),
@@ -3786,7 +3787,7 @@ class _ActivityPageState extends State<ActivityPage> {
                               padding: const EdgeInsets.symmetric(horizontal: 12),
                               decoration: BoxDecoration(
                                 color: isDarkTheme ? const Color(0xFF3a3a3a) : Colors.white,
-                                borderRadius: BorderRadius.circular(4),
+                                borderRadius: BorderRadius.circular(UIConstants.borderRadiusSm),
                                 border: Border.all(
                                   color: isDarkTheme ? Colors.grey[600]! : Colors.grey[300]!,
                                 ),
@@ -3814,7 +3815,7 @@ class _ActivityPageState extends State<ActivityPage> {
                       ),
                     ],
                   ),
-                  const SizedBox(height: 16),
+                  const SizedBox(height: UIConstants.spacingMd),
                   // Action buttons
                   Row(
                     mainAxisAlignment: MainAxisAlignment.center,
@@ -3833,7 +3834,7 @@ class _ActivityPageState extends State<ActivityPage> {
                           foregroundColor: Colors.white,
                         ),
                       ),
-                      const SizedBox(width: 16),
+                      const SizedBox(width: UIConstants.spacingMd),
                       ElevatedButton.icon(
                         onPressed: () {
                           _clearTransactionsFilters();
@@ -3865,7 +3866,7 @@ class _ActivityPageState extends State<ActivityPage> {
                         child: Text(
                           'Transaction ID',
                           style: TextStyle(
-                            fontSize: 14,
+                            fontSize: UIConstants.fontSizeBody,
                             color: isDarkTheme ? Colors.grey[400] : Colors.grey[600],
                           ),
                         ),
@@ -3876,7 +3877,7 @@ class _ActivityPageState extends State<ActivityPage> {
                       child: Text(
                         'Type',
                         style: TextStyle(
-                          fontSize: 14,
+                          fontSize: UIConstants.fontSizeBody,
                           color: isDarkTheme ? Colors.grey[400] : Colors.grey[600],
                         ),
                       ),
@@ -3886,7 +3887,7 @@ class _ActivityPageState extends State<ActivityPage> {
                       child: Text(
                         'Asset',
                         style: TextStyle(
-                          fontSize: 14,
+                          fontSize: UIConstants.fontSizeBody,
                           color: isDarkTheme ? Colors.grey[400] : Colors.grey[600],
                         ),
                       ),
@@ -3897,7 +3898,7 @@ class _ActivityPageState extends State<ActivityPage> {
                         'Amount',
                         textAlign: TextAlign.center,
                         style: TextStyle(
-                          fontSize: 14,
+                          fontSize: UIConstants.fontSizeBody,
                           color: isDarkTheme ? Colors.grey[400] : Colors.grey[600],
                         ),
                       ),
@@ -3910,7 +3911,7 @@ class _ActivityPageState extends State<ActivityPage> {
                           'Timestamp',
                           textAlign: TextAlign.right,
                           style: TextStyle(
-                            fontSize: 14,
+                            fontSize: UIConstants.fontSizeBody,
                             color: isDarkTheme ? Colors.grey[400] : Colors.grey[600],
                           ),
                         ),
@@ -3918,12 +3919,12 @@ class _ActivityPageState extends State<ActivityPage> {
                     ),
                   ],
                 ),
-                const SizedBox(height: 8),
+                const SizedBox(height: UIConstants.spacingSm),
                 Container(
                   height: 1,
                   color: isDarkTheme ? Colors.grey[700] : Colors.grey[300],
                 ),
-                const SizedBox(height: 12),
+                const SizedBox(height: UIConstants.spacingSm),
                 // Table rows
                 Flexible(
                   child: _isLoadingTransactions
@@ -3940,7 +3941,7 @@ class _ActivityPageState extends State<ActivityPage> {
                                 'No transactions found',
                                 style: TextStyle(
                                   color: isDarkTheme ? Colors.grey[400] : Colors.grey[600],
-                                  fontSize: 14,
+                                  fontSize: UIConstants.fontSizeBody,
                                 ),
                               ),
                             )
@@ -3960,7 +3961,7 @@ class _ActivityPageState extends State<ActivityPage> {
                                             child: Text(
                                               transaction['transaction_id']?.toString() ?? 'N/A',
                                               style: TextStyle(
-                                                fontSize: 16,
+                                                fontSize: UIConstants.fontSizeBody,
                                                 color: isDarkTheme ? Colors.white : Colors.black,
                                               ),
                                               overflow: TextOverflow.ellipsis,
@@ -3973,7 +3974,7 @@ class _ActivityPageState extends State<ActivityPage> {
                                           child: Text(
                                             transaction['type']?.toString().replaceAll('TRANSACTION_TYPE__', '').replaceAll('_', ' ') ?? 'N/A',
                                             style: TextStyle(
-                                              fontSize: 16,
+                                              fontSize: UIConstants.fontSizeBody,
                                               color: _getTransactionTypeColor(transaction['type']?.toString() ?? ''),
                                             ),
                                             overflow: TextOverflow.ellipsis,
@@ -3985,7 +3986,7 @@ class _ActivityPageState extends State<ActivityPage> {
                                           child: Text(
                                             transaction['asset_id']?.toString() ?? 'N/A',
                                             style: TextStyle(
-                                              fontSize: 16,
+                                              fontSize: UIConstants.fontSizeBody,
                                               color: isDarkTheme ? Colors.white : Colors.black,
                                             ),
                                             overflow: TextOverflow.ellipsis,
@@ -3998,9 +3999,9 @@ class _ActivityPageState extends State<ActivityPage> {
                                             _formatTransactionAmount(transaction['amount']?.toString() ?? '0', transaction['asset_id']?.toString() ?? ''),
                                             textAlign: TextAlign.center,
                                             style: TextStyle(
-                                              fontSize: 16,
+                                              fontSize: UIConstants.fontSizeBody,
                                               color: isDarkTheme ? Colors.white : Colors.black,
-                                              fontWeight: FontWeight.w500,
+                                              fontWeight: UIConstants.fontWeightNormal,
                                             ),
                                             overflow: TextOverflow.ellipsis,
                                           ),
@@ -4014,7 +4015,7 @@ class _ActivityPageState extends State<ActivityPage> {
                                               _formatTransactionTimestamp(transaction['timestamp']),
                                               textAlign: TextAlign.right,
                                               style: TextStyle(
-                                                fontSize: 14,
+                                                fontSize: UIConstants.fontSizeBody,
                                                 color: isDarkTheme ? Colors.grey[400] : Colors.grey[600],
                                               ),
                                               overflow: TextOverflow.ellipsis,
@@ -4112,7 +4113,7 @@ class _ActivityPageState extends State<ActivityPage> {
           // Main content area
           Expanded(
             child: Padding(
-              padding: const EdgeInsets.all(16),
+              padding: UIConstants.paddingStandard,
               child: _buildConnectedTabInterface(isDarkTheme),
             ),
           ),
@@ -4165,7 +4166,7 @@ class _ActivityPageState extends State<ActivityPage> {
                             style: TextStyle(
                               color: Colors.white,
                               fontSize: 8,
-                              fontWeight: FontWeight.w500,
+                              fontWeight: UIConstants.fontWeightNormal,
                               height: 0.8,
                             ),
                           ),
@@ -4174,7 +4175,7 @@ class _ActivityPageState extends State<ActivityPage> {
                             style: TextStyle(
                               color: Colors.white,
                               fontSize: 8,
-                              fontWeight: FontWeight.bold,
+                              fontWeight: UIConstants.fontWeightMedium,
                               height: 0.8,
                             ),
                           ),
@@ -4187,7 +4188,7 @@ class _ActivityPageState extends State<ActivityPage> {
             ),
           ),
           
-          const SizedBox(width: 16),
+          const SizedBox(width: UIConstants.spacingMd),
           
           // Navigation Tabs - Left side beside logo
           Padding(
@@ -4235,8 +4236,8 @@ class _ActivityPageState extends State<ActivityPage> {
                         child: const Text(
                           'Instruments',
                           style: TextStyle(
-                            fontSize: 13,
-                            fontWeight: FontWeight.w500,
+                            fontSize: UIConstants.fontSizeSm,
+                            fontWeight: UIConstants.fontWeightNormal,
                             color: Colors.white70,
                           ),
                         ),
@@ -4285,8 +4286,8 @@ class _ActivityPageState extends State<ActivityPage> {
                         child: const Text(
                           'Portfolio',
                           style: TextStyle(
-                            fontSize: 13,
-                            fontWeight: FontWeight.w500,
+                            fontSize: UIConstants.fontSizeSm,
+                            fontWeight: UIConstants.fontWeightNormal,
                             color: Colors.white70,
                           ),
                         ),
@@ -4335,8 +4336,8 @@ class _ActivityPageState extends State<ActivityPage> {
                         child: const Text(
                           'Trading',
                           style: TextStyle(
-                            fontSize: 13,
-                            fontWeight: FontWeight.w500,
+                            fontSize: UIConstants.fontSizeSm,
+                            fontWeight: UIConstants.fontWeightNormal,
                             color: Colors.white70,
                           ),
                         ),
@@ -4366,8 +4367,8 @@ class _ActivityPageState extends State<ActivityPage> {
                   child: Text(
                     'Activity',
                     style: TextStyle(
-                      fontSize: 13,
-                      fontWeight: FontWeight.w600,
+                      fontSize: UIConstants.fontSizeSm,
+                      fontWeight: UIConstants.fontWeightMedium,
                       color: isDarkTheme ? Colors.white : Colors.black,
                     ),
                   ),
@@ -4413,8 +4414,8 @@ class _ActivityPageState extends State<ActivityPage> {
                         child: const Text(
                           'Cash Management',
                           style: TextStyle(
-                            fontSize: 13,
-                            fontWeight: FontWeight.w500,
+                            fontSize: UIConstants.fontSizeSm,
+                            fontWeight: UIConstants.fontWeightNormal,
                             color: Colors.white70,
                           ),
                         ),
@@ -4460,7 +4461,7 @@ class _ActivityPageState extends State<ActivityPage> {
                   child: Row(
                     children: [
                       Icon(Icons.person, size: 18, color: Colors.white),
-                      SizedBox(width: 8),
+                      SizedBox(width: UIConstants.spacingSm),
                       Text('Profile', style: TextStyle(color: Colors.white)),
                     ],
                   ),
@@ -4476,7 +4477,7 @@ class _ActivityPageState extends State<ActivityPage> {
                     child: Row(
                       children: [
                         Icon(Icons.people, size: 18, color: Colors.white),
-                        SizedBox(width: 8),
+                        SizedBox(width: UIConstants.spacingSm),
                         Text('View Users', style: TextStyle(color: Colors.white)),
                       ],
                     ),
@@ -4500,13 +4501,13 @@ class _ActivityPageState extends State<ActivityPage> {
                     size: 14,
                   ),
                 ),
-                const SizedBox(width: 8),
+                const SizedBox(width: UIConstants.spacingSm),
                 Text(
                   authService.username,
                   style: const TextStyle(
                     color: Colors.white,
-                    fontSize: 16,
-                    fontWeight: FontWeight.w500,
+                    fontSize: UIConstants.fontSizeBody,
+                    fontWeight: UIConstants.fontWeightNormal,
                   ),
                 ),
                 const SizedBox(width: 4),
@@ -4519,7 +4520,7 @@ class _ActivityPageState extends State<ActivityPage> {
             ),
           ),
           
-          const SizedBox(width: 16),
+          const SizedBox(width: UIConstants.spacingMd),
           
           // Vertical divider line
           Container(
@@ -4528,7 +4529,7 @@ class _ActivityPageState extends State<ActivityPage> {
             color: Colors.white.withOpacity(0.3),
           ),
           
-          const SizedBox(width: 16),
+          const SizedBox(width: UIConstants.spacingMd),
           
           // Theme toggle button (centered)
           Container(
@@ -4544,11 +4545,11 @@ class _ActivityPageState extends State<ActivityPage> {
                 size: 20,
               ),
               tooltip: themeService.isDarkTheme ? 'Light Theme' : 'Dark Theme',
-              padding: const EdgeInsets.all(8),
+              padding: UIConstants.paddingMinimal,
             ),
           ),
           
-          const SizedBox(width: 8),
+          const SizedBox(width: UIConstants.spacingSm),
           
           // Vertical divider line
           Container(
@@ -4557,7 +4558,7 @@ class _ActivityPageState extends State<ActivityPage> {
             color: Colors.white.withOpacity(0.3),
           ),
           
-          const SizedBox(width: 8),
+          const SizedBox(width: UIConstants.spacingSm),
           
           // Logout icon button
           IconButton(
@@ -4589,7 +4590,7 @@ class _ActivityPageState extends State<ActivityPage> {
               size: 20,
             ),
             tooltip: 'Logout',
-            padding: const EdgeInsets.all(8),
+            padding: UIConstants.paddingMinimal,
           ),
         ],
       ),

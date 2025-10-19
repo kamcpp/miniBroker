@@ -4,6 +4,7 @@ import '../services/theme_service.dart';
 import '../utils/broker_config_helper.dart';
 
 /// Simple dialog to get new broker name for duplication
+import '../config/ui_constants.dart';
 class DuplicateConfigDialog extends StatefulWidget {
   final String originalName;
 
@@ -47,11 +48,11 @@ class _DuplicateConfigDialogState extends State<DuplicateConfigDialog> {
     return Dialog(
       backgroundColor: backgroundColor,
       shape: RoundedRectangleBorder(
-        borderRadius: BorderRadius.circular(16),
+        borderRadius: BorderRadius.circular(UIConstants.borderRadiusLg),
       ),
       child: Container(
         width: 450,
-        padding: const EdgeInsets.all(24),
+        padding: UIConstants.paddingComfortable,
         child: Form(
           key: _formKey,
           child: Column(
@@ -62,14 +63,14 @@ class _DuplicateConfigDialogState extends State<DuplicateConfigDialog> {
               Row(
                 children: [
                   Icon(Icons.content_copy, color: primaryColor, size: 28),
-                  const SizedBox(width: 12),
+                  const SizedBox(width: UIConstants.spacingSm),
                   Expanded(
                     child: Text(
                       'Duplicate Configuration',
                       style: TextStyle(
                         color: textColor,
-                        fontSize: 18,
-                        fontWeight: FontWeight.bold,
+                        fontSize: UIConstants.fontSizeMd,
+                        fontWeight: UIConstants.fontWeightMedium,
                       ),
                     ),
                   ),
@@ -79,23 +80,23 @@ class _DuplicateConfigDialogState extends State<DuplicateConfigDialog> {
                   ),
                 ],
               ),
-              const SizedBox(height: 8),
+              const SizedBox(height: UIConstants.spacingSm),
               Text(
                 'Duplicating: ${widget.originalName}',
                 style: TextStyle(color: hintColor, fontSize: 14),
               ),
-              const SizedBox(height: 24),
+              const SizedBox(height: UIConstants.spacingLg),
 
               // Broker Name field
               Text(
                 'New Broker Name *',
                 style: TextStyle(
                   color: textColor,
-                  fontWeight: FontWeight.w600,
-                  fontSize: 14,
+                  fontWeight: UIConstants.fontWeightMedium,
+                  fontSize: UIConstants.fontSizeBody,
                 ),
               ),
-              const SizedBox(height: 8),
+              const SizedBox(height: UIConstants.spacingSm),
               TextFormField(
                 controller: _brokerNameController,
                 autofocus: true,
@@ -106,7 +107,7 @@ class _DuplicateConfigDialogState extends State<DuplicateConfigDialog> {
                   filled: true,
                   fillColor: surfaceColor,
                   border: OutlineInputBorder(
-                    borderRadius: BorderRadius.circular(8),
+                    borderRadius: BorderRadius.circular(UIConstants.borderRadiusSm),
                     borderSide: BorderSide.none,
                   ),
                   helperText: '5-32 characters: letters, numbers, dash, underscore',
@@ -122,7 +123,7 @@ class _DuplicateConfigDialogState extends State<DuplicateConfigDialog> {
                   return null;
                 },
               ),
-              const SizedBox(height: 24),
+              const SizedBox(height: UIConstants.spacingLg),
 
               // Action buttons
               Row(
@@ -135,7 +136,7 @@ class _DuplicateConfigDialogState extends State<DuplicateConfigDialog> {
                     ),
                     child: const Text('Cancel'),
                   ),
-                  const SizedBox(width: 12),
+                  const SizedBox(width: UIConstants.spacingSm),
                   ElevatedButton(
                     onPressed: () {
                       if (_formKey.currentState!.validate()) {
@@ -150,12 +151,12 @@ class _DuplicateConfigDialogState extends State<DuplicateConfigDialog> {
                         vertical: 14,
                       ),
                       shape: RoundedRectangleBorder(
-                        borderRadius: BorderRadius.circular(8),
+                        borderRadius: BorderRadius.circular(UIConstants.borderRadiusSm),
                       ),
                     ),
                     child: const Text(
                       'Duplicate',
-                      style: TextStyle(fontWeight: FontWeight.bold),
+                      style: TextStyle(fontWeight: UIConstants.fontWeightMedium),
                     ),
                   ),
                 ],

@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import '../services/database_helper.dart';
 import '../services/user_sync_service.dart';
+import '../config/ui_constants.dart';
 
 class UsersAdminPage extends StatefulWidget {
   const UsersAdminPage({super.key});
@@ -164,12 +165,12 @@ class _UsersAdminPageState extends State<UsersAdminPage> {
                 mainAxisAlignment: MainAxisAlignment.center,
                 children: [
                   const CircularProgressIndicator(color: Colors.white),
-                  const SizedBox(height: 16),
+                  const SizedBox(height: UIConstants.spacingMd),
                   Text(
                     _isSyncing ? 'Syncing with server...' : 'Loading users...',
                     style: const TextStyle(
                       color: Colors.white,
-                      fontSize: 16,
+                      fontSize: UIConstants.fontSizeBody,
                     ),
                   ),
                 ],
@@ -181,12 +182,12 @@ class _UsersAdminPageState extends State<UsersAdminPage> {
                     'No users registered yet',
                     style: TextStyle(
                       color: Colors.white,
-                      fontSize: 18,
+                      fontSize: UIConstants.fontSizeMd,
                     ),
                   ),
                 )
               : ListView.builder(
-                  padding: const EdgeInsets.all(16),
+                  padding: UIConstants.paddingStandard,
                   itemCount: _users.length,
                   itemBuilder: (context, index) {
                     final user = _users[index];
@@ -202,7 +203,7 @@ class _UsersAdminPageState extends State<UsersAdminPage> {
                             user['username']?.substring(0, 1).toUpperCase() ?? 'U',
                             style: const TextStyle(
                               color: Colors.white,
-                              fontWeight: FontWeight.bold,
+                              fontWeight: UIConstants.fontWeightMedium,
                             ),
                           ),
                         ),
@@ -210,10 +211,10 @@ class _UsersAdminPageState extends State<UsersAdminPage> {
                           children: [
                             Text(
                               user['username'] ?? 'Unknown',
-                              style: const TextStyle(fontWeight: FontWeight.bold),
+                              style: const TextStyle(fontWeight: UIConstants.fontWeightMedium),
                             ),
                             if (_databaseHelper.isAdminUser(user['username'] ?? '')) ...[
-                              const SizedBox(width: 8),
+                              const SizedBox(width: UIConstants.spacingSm),
                               const Icon(
                                 Icons.admin_panel_settings,
                                 color: Colors.amber,
@@ -223,8 +224,8 @@ class _UsersAdminPageState extends State<UsersAdminPage> {
                                 ' (Admin)',
                                 style: TextStyle(
                                   color: Colors.amber,
-                                  fontWeight: FontWeight.w500,
-                                  fontSize: 12,
+                                  fontWeight: UIConstants.fontWeightNormal,
+                                  fontSize: UIConstants.fontSizeSm,
                                 ),
                               ),
                             ],

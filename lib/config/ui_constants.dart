@@ -145,17 +145,17 @@ class UIConstants {
   static const double iconSizeLg = 20.0;
 
   // ============================================================================
-  // BORDER RADIUS - Subtle, modern rounding
+  // BORDER RADIUS - Minimal rounding for sharp, professional look
   // ============================================================================
 
-  /// Small radius for compact elements (4px)
-  static const double borderRadiusSm = 4.0;
+  /// Small radius for compact elements (2px)
+  static const double borderRadiusSm = 2.0;
 
-  /// Medium radius for cards, buttons (6px)
-  static const double borderRadiusMd = 6.0;
+  /// Medium radius for cards, buttons (3px)
+  static const double borderRadiusMd = 3.0;
 
-  /// Large radius for dialogs, major containers (8px)
-  static const double borderRadiusLg = 8.0;
+  /// Large radius for dialogs, major containers (4px)
+  static const double borderRadiusLg = 4.0;
 
   // ============================================================================
   // LIST/TABLE SETTINGS - Dense data display

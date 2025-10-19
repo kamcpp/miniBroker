@@ -4,6 +4,7 @@ import 'dart:async';
 import 'dart:convert';
 import 'dart:ui';
 import 'package:flutter/material.dart';
+import '../config/ui_constants.dart';
 import 'package:provider/provider.dart';
 import 'package:http/http.dart' as http;
 import 'package:interactive_chart/interactive_chart.dart';
@@ -1322,7 +1323,7 @@ class _TradingPageState extends State<TradingPage> {
           content: Row(
             children: [
               CircularProgressIndicator(),
-              SizedBox(width: 16),
+              SizedBox(width: UIConstants.spacingMd),
               Text('Cancelling order...'),
             ],
           ),
@@ -1408,16 +1409,16 @@ class _TradingPageState extends State<TradingPage> {
                         decoration: const InputDecoration(labelText: 'New Quantity'),
                         keyboardType: TextInputType.number,
                       ),
-                      const SizedBox(height: 16),
+                      const SizedBox(height: UIConstants.spacingMd),
                       TextField(
                         controller: priceController,
                         decoration: const InputDecoration(labelText: 'New Price'),
                         keyboardType: TextInputType.number,
                       ),
-                      const SizedBox(height: 20),
+                      const SizedBox(height: UIConstants.spacingMd),
                       const Text(
                         'New Expiration Time (Optional)',
-                        style: TextStyle(fontWeight: FontWeight.bold, fontSize: 14),
+                        style: TextStyle(fontWeight: UIConstants.fontWeightMedium, fontSize: 14),
                       ),
                       const SizedBox(height: 10),
                       // Date picker
@@ -1447,7 +1448,7 @@ class _TradingPageState extends State<TradingPage> {
                               ),
                             ),
                           ),
-                          const SizedBox(width: 8),
+                          const SizedBox(width: UIConstants.spacingSm),
                           Expanded(
                             child: OutlinedButton.icon(
                               onPressed: () async {
@@ -1481,7 +1482,7 @@ class _TradingPageState extends State<TradingPage> {
                                 child: Text(
                                   'Selected: ${_formatSelectedDateTime(selectedExpirationDate, selectedExpirationTime)}',
                                   style: TextStyle(
-                                    fontSize: 12,
+                                    fontSize: UIConstants.fontSizeSm,
                                     color: Colors.grey[600],
                                     fontStyle: FontStyle.italic,
                                   ),
@@ -1561,7 +1562,7 @@ class _TradingPageState extends State<TradingPage> {
           content: Row(
             children: [
               CircularProgressIndicator(),
-              SizedBox(width: 16),
+              SizedBox(width: UIConstants.spacingMd),
               Text('Replacing order...'),
             ],
           ),
@@ -2426,7 +2427,7 @@ class _TradingPageState extends State<TradingPage> {
           height: 24,
           decoration: BoxDecoration(
             color: currentPage > 1 ? (isDarkTheme ? Colors.grey[700] : Colors.grey[300]) : Colors.transparent,
-            borderRadius: BorderRadius.circular(4),
+            borderRadius: BorderRadius.circular(UIConstants.borderRadiusSm),
           ),
           child: Icon(
             Icons.chevron_left,
@@ -2451,13 +2452,13 @@ class _TradingPageState extends State<TradingPage> {
                 color: i == currentPage 
                   ? Colors.blue 
                   : (isDarkTheme ? Colors.grey[700] : Colors.grey[300]),
-                borderRadius: BorderRadius.circular(4),
+                borderRadius: BorderRadius.circular(UIConstants.borderRadiusSm),
               ),
               child: Center(
                 child: Text(
                   i.toString(),
                   style: TextStyle(
-                    fontSize: 12,
+                    fontSize: UIConstants.fontSizeSm,
                     color: i == currentPage 
                       ? Colors.white 
                       : (isDarkTheme ? Colors.white : Colors.black),
@@ -2477,7 +2478,7 @@ class _TradingPageState extends State<TradingPage> {
               child: Text(
                 '...',
                 style: TextStyle(
-                  fontSize: 12,
+                  fontSize: UIConstants.fontSizeSm,
                   color: isDarkTheme ? Colors.white70 : Colors.black54,
                 ),
               ),
@@ -2496,7 +2497,7 @@ class _TradingPageState extends State<TradingPage> {
           height: 24,
           decoration: BoxDecoration(
             color: currentPage < totalPages ? (isDarkTheme ? Colors.grey[700] : Colors.grey[300]) : Colors.transparent,
-            borderRadius: BorderRadius.circular(4),
+            borderRadius: BorderRadius.circular(UIConstants.borderRadiusSm),
           ),
           child: Icon(
             Icons.chevron_right,
@@ -2931,7 +2932,7 @@ class _TradingPageState extends State<TradingPage> {
                             style: TextStyle(
                               color: Colors.white,
                               fontSize: 8,
-                              fontWeight: FontWeight.w500,
+                              fontWeight: UIConstants.fontWeightNormal,
                               height: 0.8,
                             ),
                           ),
@@ -2940,7 +2941,7 @@ class _TradingPageState extends State<TradingPage> {
                             style: TextStyle(
                               color: Colors.white,
                               fontSize: 8,
-                              fontWeight: FontWeight.bold,
+                              fontWeight: UIConstants.fontWeightMedium,
                               height: 0.8,
                             ),
                           ),
@@ -2953,7 +2954,7 @@ class _TradingPageState extends State<TradingPage> {
             ),
           ),
           
-          const SizedBox(width: 16),
+          const SizedBox(width: UIConstants.spacingMd),
           
           // Navigation Tabs - Left side beside logo
           Padding(
@@ -3001,8 +3002,8 @@ class _TradingPageState extends State<TradingPage> {
                         child: const Text(
                           'Instruments',
                           style: TextStyle(
-                            fontSize: 13,
-                            fontWeight: FontWeight.w500,
+                            fontSize: UIConstants.fontSizeSm,
+                            fontWeight: UIConstants.fontWeightNormal,
                             color: Colors.white70,
                           ),
                         ),
@@ -3051,8 +3052,8 @@ class _TradingPageState extends State<TradingPage> {
                         child: const Text(
                           'Portfolio',
                           style: TextStyle(
-                            fontSize: 13,
-                            fontWeight: FontWeight.w500,
+                            fontSize: UIConstants.fontSizeSm,
+                            fontWeight: UIConstants.fontWeightNormal,
                             color: Colors.white70,
                           ),
                         ),
@@ -3083,8 +3084,8 @@ class _TradingPageState extends State<TradingPage> {
                   child: Text(
                     'Trading',
                     style: TextStyle(
-                      fontSize: 13,
-                      fontWeight: FontWeight.w600,
+                      fontSize: UIConstants.fontSizeSm,
+                      fontWeight: UIConstants.fontWeightMedium,
                       color: isDarkTheme ? Colors.white : Colors.black,
                     ),
                   ),
@@ -3130,8 +3131,8 @@ class _TradingPageState extends State<TradingPage> {
                         child: const Text(
                           'Activity',
                           style: TextStyle(
-                            fontSize: 13,
-                            fontWeight: FontWeight.w500,
+                            fontSize: UIConstants.fontSizeSm,
+                            fontWeight: UIConstants.fontWeightNormal,
                             color: Colors.white70,
                           ),
                         ),
@@ -3180,8 +3181,8 @@ class _TradingPageState extends State<TradingPage> {
                         child: const Text(
                           'Cash Management',
                           style: TextStyle(
-                            fontSize: 13,
-                            fontWeight: FontWeight.w500,
+                            fontSize: UIConstants.fontSizeSm,
+                            fontWeight: UIConstants.fontWeightNormal,
                             color: Colors.white70,
                           ),
                         ),
@@ -3227,7 +3228,7 @@ class _TradingPageState extends State<TradingPage> {
                   child: Row(
                     children: [
                       Icon(Icons.person, size: 18, color: Colors.white),
-                      SizedBox(width: 8),
+                      SizedBox(width: UIConstants.spacingSm),
                       Text('Profile', style: TextStyle(color: Colors.white)),
                     ],
                   ),
@@ -3243,7 +3244,7 @@ class _TradingPageState extends State<TradingPage> {
                     child: Row(
                       children: [
                         Icon(Icons.people, size: 18, color: Colors.white),
-                        SizedBox(width: 8),
+                        SizedBox(width: UIConstants.spacingSm),
                         Text('View Users', style: TextStyle(color: Colors.white)),
                       ],
                     ),
@@ -3267,13 +3268,13 @@ class _TradingPageState extends State<TradingPage> {
                     size: 14,
                   ),
                 ),
-                const SizedBox(width: 8),
+                const SizedBox(width: UIConstants.spacingSm),
                 Text(
                   authService.username,
                   style: const TextStyle(
                     color: Colors.white,
-                    fontSize: 16,
-                    fontWeight: FontWeight.w500,
+                    fontSize: UIConstants.fontSizeBody,
+                    fontWeight: UIConstants.fontWeightNormal,
                   ),
                 ),
                 const SizedBox(width: 4),
@@ -3286,7 +3287,7 @@ class _TradingPageState extends State<TradingPage> {
             ),
           ),
           
-          const SizedBox(width: 16),
+          const SizedBox(width: UIConstants.spacingMd),
           
           // Vertical divider line
           Container(
@@ -3295,7 +3296,7 @@ class _TradingPageState extends State<TradingPage> {
             color: Colors.white.withOpacity(0.3),
           ),
           
-          const SizedBox(width: 16),
+          const SizedBox(width: UIConstants.spacingMd),
           
           // Theme toggle button (centered)
           Container(
@@ -3311,11 +3312,11 @@ class _TradingPageState extends State<TradingPage> {
                 size: 20,
               ),
               tooltip: themeService.isDarkTheme ? 'Light Theme' : 'Dark Theme',
-              padding: const EdgeInsets.all(8),
+              padding: UIConstants.paddingMinimal,
             ),
           ),
           
-          const SizedBox(width: 8),
+          const SizedBox(width: UIConstants.spacingSm),
           
           // Vertical divider line
           Container(
@@ -3324,7 +3325,7 @@ class _TradingPageState extends State<TradingPage> {
             color: Colors.white.withOpacity(0.3),
           ),
           
-          const SizedBox(width: 8),
+          const SizedBox(width: UIConstants.spacingSm),
           
           // Logout icon button
           IconButton(
@@ -3356,7 +3357,7 @@ class _TradingPageState extends State<TradingPage> {
               size: 20,
             ),
             tooltip: 'Logout',
-            padding: const EdgeInsets.all(8),
+            padding: UIConstants.paddingMinimal,
           ),
         ],
       ),
@@ -3366,7 +3367,7 @@ class _TradingPageState extends State<TradingPage> {
   Widget _buildTradingPanel(ThemeService themeService) {
     final _isDarkTheme = themeService.isDarkTheme;
     return Container(
-      padding: const EdgeInsets.all(20),
+      padding: UIConstants.paddingStandard,
       decoration: BoxDecoration(
         color: _isDarkTheme ? Colors.black : Colors.white,
       ),
@@ -3452,7 +3453,7 @@ class _TradingPageState extends State<TradingPage> {
   Widget _buildAssetSection(ThemeService themeService) {
     final _isDarkTheme = themeService.isDarkTheme;
     return Container(
-      padding: const EdgeInsets.all(20),
+      padding: UIConstants.paddingStandard,
       decoration: BoxDecoration(
         color: _isDarkTheme ? const Color(0xFF1e1e1e) : Colors.white,
         border: Border(
@@ -3473,8 +3474,8 @@ class _TradingPageState extends State<TradingPage> {
                 child: Text(
                   'Market',
                   style: TextStyle(
-                    fontSize: 14,
-                    fontWeight: FontWeight.w500,
+                    fontSize: UIConstants.fontSizeBody,
+                    fontWeight: UIConstants.fontWeightNormal,
                     color: _isDarkTheme ? Colors.white : Colors.black,
                   ),
                 ),
@@ -3512,7 +3513,7 @@ class _TradingPageState extends State<TradingPage> {
                       dropdownColor: _isDarkTheme ? const Color(0xFF1e1e1e) : Colors.white,
                       style: TextStyle(
                         color: _isDarkTheme ? Colors.white : Colors.black,
-                        fontSize: 14,
+                        fontSize: UIConstants.fontSizeBody,
                       ),
                       items: _markets.isEmpty
                           ? [DropdownMenuItem<Map<String, String>>(
@@ -3542,8 +3543,8 @@ class _TradingPageState extends State<TradingPage> {
                 child: Text(
                   'Venue',
                   style: TextStyle(
-                    fontSize: 14,
-                    fontWeight: FontWeight.w500,
+                    fontSize: UIConstants.fontSizeBody,
+                    fontWeight: UIConstants.fontWeightNormal,
                     color: _isDarkTheme ? Colors.white : Colors.black,
                   ),
                 ),
@@ -3571,7 +3572,7 @@ class _TradingPageState extends State<TradingPage> {
                       dropdownColor: _isDarkTheme ? const Color(0xFF1e1e1e) : Colors.white,
                       style: TextStyle(
                         color: _isDarkTheme ? Colors.white : Colors.black,
-                        fontSize: 14,
+                        fontSize: UIConstants.fontSizeBody,
                       ),
                       items: _venues.isEmpty
                           ? [DropdownMenuItem<Map<String, String>>(
@@ -3603,11 +3604,11 @@ class _TradingPageState extends State<TradingPage> {
                             _isDarkTheme ? Colors.white : const Color(0xFF1a1754),
                           ),
                         ),
-                        SizedBox(height: 20),
+                        SizedBox(height: UIConstants.spacingMd),
                         Text(
                           'Loading...',
                           style: TextStyle(
-                            fontSize: 14,
+                            fontSize: UIConstants.fontSizeBody,
                             color: _isDarkTheme ? Colors.grey[400] : Colors.grey[600],
                           ),
                         ),
@@ -3624,11 +3625,11 @@ class _TradingPageState extends State<TradingPage> {
                               size: 48,
                               color: _isDarkTheme ? Colors.grey[400] : Colors.grey[600],
                             ),
-                            SizedBox(height: 12),
+                            SizedBox(height: UIConstants.spacingSm),
                             Text(
                               'No asset found',
                               style: TextStyle(
-                                fontSize: 14,
+                                fontSize: UIConstants.fontSizeBody,
                                 color: _isDarkTheme ? Colors.grey[400] : Colors.grey[600],
                               ),
                             ),
@@ -3670,7 +3671,7 @@ class _TradingPageState extends State<TradingPage> {
                                     }
                                   },
                                   child: Container(
-                                    padding: const EdgeInsets.all(12),
+                                    padding: UIConstants.paddingStandard,
                                     decoration: BoxDecoration(
                                       border: isSelected 
                                           ? Border.all(color: const Color(0xFF00b8fb), width: 2)
@@ -3678,7 +3679,7 @@ class _TradingPageState extends State<TradingPage> {
                                               color: _isDarkTheme ? Colors.grey[700]! : Colors.grey[300]!,
                                               width: 1,
                                             ),
-                                      borderRadius: BorderRadius.circular(8),
+                                      borderRadius: BorderRadius.circular(UIConstants.borderRadiusSm),
                                       color: isSelected 
                                           ? (_isDarkTheme ? const Color(0xFF00b8fb).withOpacity(0.1) : const Color(0xFF00b8fb).withOpacity(0.05))
                                           : (_isDarkTheme ? Colors.black : Colors.white),
@@ -3691,8 +3692,8 @@ class _TradingPageState extends State<TradingPage> {
                                       Text(
                                         asset['symbol'],
                                         style: TextStyle(
-                                          fontSize: 14,
-                                          fontWeight: FontWeight.bold,
+                                          fontSize: UIConstants.fontSizeBody,
+                                          fontWeight: UIConstants.fontWeightMedium,
                                           color: isSelected
                                               ? (_isDarkTheme ? Colors.white : Colors.black)
                                               : Colors.grey,
@@ -3700,7 +3701,7 @@ class _TradingPageState extends State<TradingPage> {
                                         maxLines: 1,
                                         overflow: TextOverflow.ellipsis,
                                       ),
-                                      const SizedBox(height: 8),
+                                      const SizedBox(height: UIConstants.spacingSm),
                                       // Description
                                       Text(
                                         asset['description'] ?? '',
@@ -3747,7 +3748,7 @@ class _TradingPageState extends State<TradingPage> {
                                   height: 32,
                                   decoration: BoxDecoration(
                                     color: _isDarkTheme ? Colors.grey[800] : Colors.white,
-                                    borderRadius: BorderRadius.circular(16),
+                                    borderRadius: BorderRadius.circular(UIConstants.borderRadiusLg),
                                     boxShadow: [
                                       BoxShadow(
                                         color: Colors.black.withOpacity(0.1),
@@ -3795,7 +3796,7 @@ class _TradingPageState extends State<TradingPage> {
                                   height: 32,
                                   decoration: BoxDecoration(
                                     color: _isDarkTheme ? Colors.grey[800] : Colors.white,
-                                    borderRadius: BorderRadius.circular(16),
+                                    borderRadius: BorderRadius.circular(UIConstants.borderRadiusLg),
                                     boxShadow: [
                                       BoxShadow(
                                         color: Colors.black.withOpacity(0.1),
@@ -3827,7 +3828,7 @@ class _TradingPageState extends State<TradingPage> {
   Widget _buildChartSection(ThemeService themeService) {
     final _isDarkTheme = themeService.isDarkTheme;
     return Container(
-      padding: const EdgeInsets.all(8),
+      padding: UIConstants.paddingMinimal,
       decoration: BoxDecoration(
         color: _isDarkTheme ? Colors.black : Colors.white,
       ),
@@ -3839,7 +3840,7 @@ class _TradingPageState extends State<TradingPage> {
               width: double.infinity,
               decoration: BoxDecoration(
                 color: _isDarkTheme ? const Color(0xFF3d3d3d) : Colors.grey[200],
-                borderRadius: BorderRadius.circular(8),
+                borderRadius: BorderRadius.circular(UIConstants.borderRadiusSm),
               ),
               child: _buildChartContent(_isDarkTheme),
             ),
@@ -3856,7 +3857,7 @@ class _TradingPageState extends State<TradingPage> {
           mainAxisAlignment: MainAxisAlignment.center,
           children: [
             CircularProgressIndicator(),
-            SizedBox(height: 16),
+            SizedBox(height: UIConstants.spacingMd),
             Text('Loading chart data...'),
           ],
         ),
@@ -3873,25 +3874,25 @@ class _TradingPageState extends State<TradingPage> {
               size: 64,
               color: isDarkTheme ? Colors.grey[500] : Colors.grey[400],
             ),
-            const SizedBox(height: 16),
+            const SizedBox(height: UIConstants.spacingMd),
             Text(
               'Chart Error',
               style: TextStyle(
-                fontSize: 18,
-                fontWeight: FontWeight.w500,
+                fontSize: UIConstants.fontSizeMd,
+                fontWeight: UIConstants.fontWeightNormal,
                 color: isDarkTheme ? Colors.grey[400] : Colors.grey[600],
               ),
             ),
-            const SizedBox(height: 8),
+            const SizedBox(height: UIConstants.spacingSm),
             Text(
               _chartError,
               style: TextStyle(
-                fontSize: 14,
+                fontSize: UIConstants.fontSizeBody,
                 color: isDarkTheme ? Colors.grey[500] : Colors.grey[500],
               ),
               textAlign: TextAlign.center,
             ),
-            const SizedBox(height: 16),
+            const SizedBox(height: UIConstants.spacingMd),
             ElevatedButton(
               onPressed: () => _loadChartData(_selectedSymbol),
               child: const Text('Retry'),
@@ -3911,24 +3912,24 @@ class _TradingPageState extends State<TradingPage> {
               size: 64,
               color: isDarkTheme ? Colors.grey[500] : Colors.grey[400],
             ),
-            const SizedBox(height: 16),
+            const SizedBox(height: UIConstants.spacingMd),
             Text(
               '$_selectedSymbol Price Chart',
               style: TextStyle(
-                fontSize: 18,
-                fontWeight: FontWeight.w500,
+                fontSize: UIConstants.fontSizeMd,
+                fontWeight: UIConstants.fontWeightNormal,
                 color: isDarkTheme ? Colors.grey[400] : Colors.grey[600],
               ),
             ),
-            const SizedBox(height: 8),
+            const SizedBox(height: UIConstants.spacingSm),
             Text(
               'No chart data available',
               style: TextStyle(
-                fontSize: 14,
+                fontSize: UIConstants.fontSizeBody,
                 color: isDarkTheme ? Colors.grey[500] : Colors.grey[500],
               ),
             ),
-            const SizedBox(height: 16),
+            const SizedBox(height: UIConstants.spacingMd),
             ElevatedButton(
               onPressed: () => _loadChartData(_selectedSymbol),
               child: const Text('Load Chart'),
@@ -3954,8 +3955,8 @@ class _TradingPageState extends State<TradingPage> {
                 child: Text(
                   _selectedSymbol,
                   style: TextStyle(
-                    fontSize: 12,
-                    fontWeight: FontWeight.bold,
+                    fontSize: UIConstants.fontSizeSm,
+                    fontWeight: UIConstants.fontWeightMedium,
                     color: isDarkTheme ? Colors.white : Colors.black,
                   ),
                 ),
@@ -3968,24 +3969,24 @@ class _TradingPageState extends State<TradingPage> {
                       TextSpan(
                         text: '(Last Price: ',
                         style: TextStyle(
-                          fontSize: 12,
-                          fontWeight: FontWeight.bold,
+                          fontSize: UIConstants.fontSizeSm,
+                          fontWeight: UIConstants.fontWeightMedium,
                           color: Colors.grey,
                         ),
                       ),
                       TextSpan(
                         text: '\$${(_candles.last.close ?? 0).toStringAsFixed(2)}',
                         style: TextStyle(
-                          fontSize: 12,
-                          fontWeight: FontWeight.bold,
+                          fontSize: UIConstants.fontSizeSm,
+                          fontWeight: UIConstants.fontWeightMedium,
                           color: isDarkTheme ? Colors.white : Colors.black,
                         ),
                       ),
                       TextSpan(
                         text: ')',
                         style: TextStyle(
-                          fontSize: 12,
-                          fontWeight: FontWeight.bold,
+                          fontSize: UIConstants.fontSizeSm,
+                          fontWeight: UIConstants.fontWeightMedium,
                           color: Colors.grey,
                         ),
                       ),
@@ -3994,7 +3995,7 @@ class _TradingPageState extends State<TradingPage> {
                 ),
             ],
           ),
-          const SizedBox(height: 16),
+          const SizedBox(height: UIConstants.spacingMd),
           // Candlestick chart
           Expanded(
             child: _isLoadingChart
@@ -4032,7 +4033,7 @@ class _TradingPageState extends State<TradingPage> {
                             ),
                           ),
           ),
-          const SizedBox(height: 16),
+          const SizedBox(height: UIConstants.spacingMd),
           // Time period buttons
           Row(
             mainAxisAlignment: MainAxisAlignment.center,
@@ -4071,13 +4072,13 @@ class _TradingPageState extends State<TradingPage> {
             color: isSelected 
                 ? (isDarkTheme ? Colors.blue[600] : Colors.blue[500])
                 : (isDarkTheme ? Colors.grey[700] : Colors.grey[200]),
-            borderRadius: BorderRadius.circular(12),
+            borderRadius: BorderRadius.circular(UIConstants.borderRadiusMd),
           ),
           child: Text(
             period,
             style: TextStyle(
-              fontSize: 10,
-              fontWeight: isSelected ? FontWeight.bold : FontWeight.normal,
+              fontSize: UIConstants.fontSizeXs,
+              fontWeight: isSelected ? UIConstants.fontWeightMedium : FontWeight.normal,
               color: isSelected 
                   ? Colors.white 
                   : (isDarkTheme ? Colors.white : Colors.black),
@@ -4168,8 +4169,8 @@ class _TradingPageState extends State<TradingPage> {
                     color: isActive
                         ? (isDarkTheme ? Colors.white : Colors.black)
                         : Colors.grey[400],
-                    fontSize: 14,
-                    fontWeight: isActive ? FontWeight.w600 : FontWeight.w500,
+                    fontSize: UIConstants.fontSizeBody,
+                    fontWeight: isActive ? UIConstants.fontWeightMedium : UIConstants.fontWeightNormal,
                   ),
                 ),
               ),
@@ -4195,24 +4196,24 @@ class _TradingPageState extends State<TradingPage> {
   Widget _buildTradeHistoryTable(bool isDarkTheme) {
     if (_tradeHistory.isEmpty) {
       return Container(
-        padding: const EdgeInsets.all(20),
+        padding: UIConstants.paddingStandard,
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
-            const SizedBox(height: 16),
+            const SizedBox(height: UIConstants.spacingMd),
             Row(
               mainAxisAlignment: MainAxisAlignment.spaceBetween,
               children: [
                 SizedBox(
                   width: 60,
-                  child: Text('Price', style: TextStyle(color: Colors.grey[400], fontWeight: FontWeight.bold, fontSize: 13), textAlign: TextAlign.left),
+                  child: Text('Price', style: TextStyle(color: Colors.grey[400], fontWeight: UIConstants.fontWeightMedium, fontSize: 13), textAlign: TextAlign.left),
                 ),
                 SizedBox(
                   width: 70,
-                  child: Text('Quantity', style: TextStyle(color: Colors.grey[400], fontWeight: FontWeight.bold, fontSize: 13), textAlign: TextAlign.center),
+                  child: Text('Quantity', style: TextStyle(color: Colors.grey[400], fontWeight: UIConstants.fontWeightMedium, fontSize: 13), textAlign: TextAlign.center),
                 ),
                 Expanded(
-                  child: Text('Time', style: TextStyle(color: Colors.grey[400], fontWeight: FontWeight.bold, fontSize: 13), textAlign: TextAlign.right),
+                  child: Text('Time', style: TextStyle(color: Colors.grey[400], fontWeight: UIConstants.fontWeightMedium, fontSize: 13), textAlign: TextAlign.right),
                 ),
               ],
             ),
@@ -4224,14 +4225,14 @@ class _TradingPageState extends State<TradingPage> {
       );
     }
     return Container(
-      padding: const EdgeInsets.all(20),
+      padding: UIConstants.paddingStandard,
       decoration: BoxDecoration(
         color: isDarkTheme ? Colors.grey[800] : Colors.grey[200],
       ),
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
-          const SizedBox(height: 16),
+          const SizedBox(height: UIConstants.spacingMd),
           Padding(
             padding: const EdgeInsets.symmetric(vertical: 4, horizontal: 4),
             child: Column(
@@ -4245,8 +4246,8 @@ class _TradingPageState extends State<TradingPage> {
                         'Price',
                         style: TextStyle(
                           color: Colors.grey[400],
-                          fontWeight: FontWeight.bold,
-                          fontSize: 13,
+                          fontWeight: UIConstants.fontWeightMedium,
+                          fontSize: UIConstants.fontSizeSm,
                         ),
                         textAlign: TextAlign.left,
                       ),
@@ -4257,8 +4258,8 @@ class _TradingPageState extends State<TradingPage> {
                         'Quantity',
                         style: TextStyle(
                           color: Colors.grey[400],
-                          fontWeight: FontWeight.bold,
-                          fontSize: 13,
+                          fontWeight: UIConstants.fontWeightMedium,
+                          fontSize: UIConstants.fontSizeSm,
                         ),
                         textAlign: TextAlign.center,
                       ),
@@ -4268,8 +4269,8 @@ class _TradingPageState extends State<TradingPage> {
                         'Time',
                         style: TextStyle(
                           color: Colors.grey[400],
-                          fontWeight: FontWeight.bold,
-                          fontSize: 13,
+                          fontWeight: UIConstants.fontWeightMedium,
+                          fontSize: UIConstants.fontSizeSm,
                         ),
                         textAlign: TextAlign.right,
                       ),
@@ -4307,7 +4308,7 @@ class _TradingPageState extends State<TradingPage> {
                               '+ Show More',
                               style: TextStyle(
                                 color: isDarkTheme ? Colors.blue[300] : Colors.blue,
-                                fontSize: 14,
+                                fontSize: UIConstants.fontSizeBody,
                               ),
                             ),
                           ),
@@ -4331,8 +4332,8 @@ class _TradingPageState extends State<TradingPage> {
                           trade['price'].toString(),
                           style: TextStyle(
                             color: isDarkTheme ? Colors.white : Colors.black,
-                            fontWeight: FontWeight.bold,
-                            fontSize: 13,
+                            fontWeight: UIConstants.fontWeightMedium,
+                            fontSize: UIConstants.fontSizeSm,
                           ),
                           textAlign: TextAlign.left,
                         ),
@@ -4343,7 +4344,7 @@ class _TradingPageState extends State<TradingPage> {
                           trade['quantity'].toString(),
                           style: TextStyle(
                             color: isDarkTheme ? Colors.white : Colors.black,
-                            fontSize: 13,
+                            fontSize: UIConstants.fontSizeSm,
                           ),
                           textAlign: TextAlign.center,
                         ),
@@ -4353,7 +4354,7 @@ class _TradingPageState extends State<TradingPage> {
                           trade['time'].toString(),
                           style: TextStyle(
                             color: Colors.grey,
-                            fontSize: 13,
+                            fontSize: UIConstants.fontSizeSm,
                           ),
                           textAlign: TextAlign.right,
                         ),
@@ -4371,11 +4372,11 @@ class _TradingPageState extends State<TradingPage> {
 
   Widget _buildOrderbookTable(bool isDarkTheme) {
     return Container(
-      padding: const EdgeInsets.all(20),
+      padding: UIConstants.paddingStandard,
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
-          const SizedBox(height: 16),
+          const SizedBox(height: UIConstants.spacingMd),
           Expanded(
             child: Column(
               children: [
@@ -4388,12 +4389,12 @@ class _TradingPageState extends State<TradingPage> {
                       Text(
                         'Sell Orders',
                         style: TextStyle(
-                          fontSize: 18,
-                          fontWeight: FontWeight.bold,
+                          fontSize: UIConstants.fontSizeMd,
+                          fontWeight: UIConstants.fontWeightMedium,
                           color: isDarkTheme ? Colors.white : Colors.black,
                         ),
                       ),
-                      const SizedBox(height: 12),
+                      const SizedBox(height: UIConstants.spacingSm),
                       // Sell Orders Headers
                       Row(
                         children: [
@@ -4402,8 +4403,8 @@ class _TradingPageState extends State<TradingPage> {
                               'Price',
                               style: TextStyle(
                                 color: Colors.grey[400],
-                                fontWeight: FontWeight.bold,
-                                fontSize: 13,
+                                fontWeight: UIConstants.fontWeightMedium,
+                                fontSize: UIConstants.fontSizeSm,
                               ),
                               textAlign: TextAlign.left,
                             ),
@@ -4413,8 +4414,8 @@ class _TradingPageState extends State<TradingPage> {
                               'Quantity',
                               style: TextStyle(
                                 color: Colors.grey[400],
-                                fontWeight: FontWeight.bold,
-                                fontSize: 13,
+                                fontWeight: UIConstants.fontWeightMedium,
+                                fontSize: UIConstants.fontSizeSm,
                               ),
                               textAlign: TextAlign.center,
                             ),
@@ -4424,17 +4425,17 @@ class _TradingPageState extends State<TradingPage> {
                               'Total',
                               style: TextStyle(
                                 color: Colors.grey[400],
-                                fontWeight: FontWeight.bold,
-                                fontSize: 13,
+                                fontWeight: UIConstants.fontWeightMedium,
+                                fontSize: UIConstants.fontSizeSm,
                               ),
                               textAlign: TextAlign.right,
                             ),
                           ),
                         ],
                       ),
-                      const SizedBox(height: 8),
+                      const SizedBox(height: UIConstants.spacingSm),
                       Divider(color: Colors.grey, thickness: 0.7, height: 1),
-                      const SizedBox(height: 8),
+                      const SizedBox(height: UIConstants.spacingSm),
                       // Sell Orders List
                       Expanded(
                         child: _buildOrderbookSide(isDarkTheme, 'sell'),
@@ -4446,7 +4447,7 @@ class _TradingPageState extends State<TradingPage> {
                 ),
 
                 // Spacing between sections
-                const SizedBox(height: 16),
+                const SizedBox(height: UIConstants.spacingMd),
 
                 // Buy Orders Section
                 Expanded(
@@ -4457,12 +4458,12 @@ class _TradingPageState extends State<TradingPage> {
                       Text(
                         'Buy Orders',
                         style: TextStyle(
-                          fontSize: 18,
-                          fontWeight: FontWeight.bold,
+                          fontSize: UIConstants.fontSizeMd,
+                          fontWeight: UIConstants.fontWeightMedium,
                           color: isDarkTheme ? Colors.white : Colors.black,
                         ),
                       ),
-                      const SizedBox(height: 12),
+                      const SizedBox(height: UIConstants.spacingSm),
                       // Buy Orders Headers
                       Row(
                         children: [
@@ -4471,8 +4472,8 @@ class _TradingPageState extends State<TradingPage> {
                               'Price',
                               style: TextStyle(
                                 color: Colors.grey[400],
-                                fontWeight: FontWeight.bold,
-                                fontSize: 13,
+                                fontWeight: UIConstants.fontWeightMedium,
+                                fontSize: UIConstants.fontSizeSm,
                               ),
                               textAlign: TextAlign.left,
                             ),
@@ -4482,8 +4483,8 @@ class _TradingPageState extends State<TradingPage> {
                               'Quantity',
                               style: TextStyle(
                                 color: Colors.grey[400],
-                                fontWeight: FontWeight.bold,
-                                fontSize: 13,
+                                fontWeight: UIConstants.fontWeightMedium,
+                                fontSize: UIConstants.fontSizeSm,
                               ),
                               textAlign: TextAlign.center,
                             ),
@@ -4493,17 +4494,17 @@ class _TradingPageState extends State<TradingPage> {
                               'Total',
                               style: TextStyle(
                                 color: Colors.grey[400],
-                                fontWeight: FontWeight.bold,
-                                fontSize: 13,
+                                fontWeight: UIConstants.fontWeightMedium,
+                                fontSize: UIConstants.fontSizeSm,
                               ),
                               textAlign: TextAlign.right,
                             ),
                           ),
                         ],
                       ),
-                      const SizedBox(height: 8),
+                      const SizedBox(height: UIConstants.spacingSm),
                       Divider(color: Colors.grey, thickness: 0.7, height: 1),
-                      const SizedBox(height: 8),
+                      const SizedBox(height: UIConstants.spacingSm),
                       // Buy Orders List
                       Expanded(
                         child: _buildOrderbookSide(isDarkTheme, 'buy'),
@@ -4536,7 +4537,7 @@ class _TradingPageState extends State<TradingPage> {
           'No ${side} orders',
           style: TextStyle(
             color: isDarkTheme ? Colors.grey[400] : Colors.grey[600],
-            fontSize: 14,
+            fontSize: UIConstants.fontSizeBody,
           ),
         ),
       );
@@ -4557,8 +4558,8 @@ class _TradingPageState extends State<TradingPage> {
                   _formatPrice(order['price']),
                   style: TextStyle(
                     color: color,
-                    fontSize: 13,
-                    fontWeight: FontWeight.w500,
+                    fontSize: UIConstants.fontSizeSm,
+                    fontWeight: UIConstants.fontWeightNormal,
                   ),
                   textAlign: TextAlign.left,
                 ),
@@ -4568,7 +4569,7 @@ class _TradingPageState extends State<TradingPage> {
                   order['quantity'].toString(),
                   style: TextStyle(
                     color: isDarkTheme ? Colors.white : Colors.black,
-                    fontSize: 13,
+                    fontSize: UIConstants.fontSizeSm,
                   ),
                   textAlign: TextAlign.center,
                 ),
@@ -4578,7 +4579,7 @@ class _TradingPageState extends State<TradingPage> {
                   _formatPrice(order['total'] ?? 0.0),
                   style: TextStyle(
                     color: isDarkTheme ? Colors.grey[300] : Colors.grey[600],
-                    fontSize: 13,
+                    fontSize: UIConstants.fontSizeSm,
                   ),
                   textAlign: TextAlign.right,
                 ),
@@ -4632,7 +4633,7 @@ class _TradingPageState extends State<TradingPage> {
                         color: isHovered
                             ? Colors.blue.withOpacity(0.1)
                             : Colors.transparent,
-                        borderRadius: BorderRadius.circular(4),
+                        borderRadius: BorderRadius.circular(UIConstants.borderRadiusSm),
                       ),
                       child: Row(
                         mainAxisSize: MainAxisSize.min,
@@ -4647,8 +4648,8 @@ class _TradingPageState extends State<TradingPage> {
                             'Show More',
                             style: TextStyle(
                               color: isHovered ? Colors.blue[700] : Colors.blue,
-                              fontSize: 14,
-                              fontWeight: FontWeight.w500,
+                              fontSize: UIConstants.fontSizeBody,
+                              fontWeight: UIConstants.fontWeightNormal,
                             ),
                           ),
                         ],
@@ -4741,8 +4742,8 @@ class _TradingPageState extends State<TradingPage> {
                     color: isActive
                         ? (isDarkTheme ? Colors.white : Colors.black)
                         : Colors.grey[400],
-                    fontSize: 14,
-                    fontWeight: isActive ? FontWeight.w600 : FontWeight.w500,
+                    fontSize: UIConstants.fontSizeBody,
+                    fontWeight: isActive ? UIConstants.fontWeightMedium : UIConstants.fontWeightNormal,
                   ),
                 ),
               ),
@@ -4814,7 +4815,7 @@ class _TradingPageState extends State<TradingPage> {
         children: [
           SizedBox(
             width: 110,
-            child: Text(side, style: TextStyle(color: sideColor, fontSize: 12, fontWeight: FontWeight.bold), textAlign: TextAlign.left),
+            child: Text(side, style: TextStyle(color: sideColor, fontSize: UIConstants.fontSizeSm, fontWeight: UIConstants.fontWeightMedium), textAlign: TextAlign.left),
           ),
           SizedBox(
             width: 140,
@@ -4838,7 +4839,7 @@ class _TradingPageState extends State<TradingPage> {
           ),
           SizedBox(
             width: 140,
-            child: Text(status, style: TextStyle(color: statusColor, fontSize: 12, fontWeight: FontWeight.w500), textAlign: TextAlign.center),
+            child: Text(status, style: TextStyle(color: statusColor, fontSize: UIConstants.fontSizeSm, fontWeight: UIConstants.fontWeightNormal), textAlign: TextAlign.center),
           ),
           Expanded(child: status == 'Active' ?
             Row(
@@ -4874,7 +4875,7 @@ class _TradingPageState extends State<TradingPage> {
 
   Widget _buildOrdersTable(bool isDarkTheme) {
     return Container(
-      padding: const EdgeInsets.all(20),
+      padding: UIConstants.paddingStandard,
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
@@ -4885,34 +4886,34 @@ class _TradingPageState extends State<TradingPage> {
             children: [
               SizedBox(
                 width: 110,
-                child: Text('Side', style: TextStyle(color: Colors.grey[400], fontWeight: FontWeight.bold, fontSize: 13), textAlign: TextAlign.left),
+                child: Text('Side', style: TextStyle(color: Colors.grey[400], fontWeight: UIConstants.fontWeightMedium, fontSize: 13), textAlign: TextAlign.left),
               ),
               SizedBox(
                 width: 140,
-                child: Text('Pair', style: TextStyle(color: Colors.grey[400], fontWeight: FontWeight.bold, fontSize: 13), textAlign: TextAlign.center),
+                child: Text('Pair', style: TextStyle(color: Colors.grey[400], fontWeight: UIConstants.fontWeightMedium, fontSize: 13), textAlign: TextAlign.center),
               ),
               SizedBox(
                 width: 140,
-                child: Text('Quantity', style: TextStyle(color: Colors.grey[400], fontWeight: FontWeight.bold, fontSize: 13), textAlign: TextAlign.center),
+                child: Text('Quantity', style: TextStyle(color: Colors.grey[400], fontWeight: UIConstants.fontWeightMedium, fontSize: 13), textAlign: TextAlign.center),
               ),
               SizedBox(
                 width: 140,
-                child: Text('Price', style: TextStyle(color: Colors.grey[400], fontWeight: FontWeight.bold, fontSize: 13), textAlign: TextAlign.center),
+                child: Text('Price', style: TextStyle(color: Colors.grey[400], fontWeight: UIConstants.fontWeightMedium, fontSize: 13), textAlign: TextAlign.center),
               ),
               SizedBox(
                 width: 140,
-                child: Text('Creation Time', style: TextStyle(color: Colors.grey[400], fontWeight: FontWeight.bold, fontSize: 13), textAlign: TextAlign.center),
+                child: Text('Creation Time', style: TextStyle(color: Colors.grey[400], fontWeight: UIConstants.fontWeightMedium, fontSize: 13), textAlign: TextAlign.center),
               ),
               SizedBox(
                 width: 140,
-                child: Text('Expiration Time', style: TextStyle(color: Colors.grey[400], fontWeight: FontWeight.bold, fontSize: 13), textAlign: TextAlign.center),
+                child: Text('Expiration Time', style: TextStyle(color: Colors.grey[400], fontWeight: UIConstants.fontWeightMedium, fontSize: 13), textAlign: TextAlign.center),
               ),
               SizedBox(
                 width: 140,
-                child: Text('Status', style: TextStyle(color: Colors.grey[400], fontWeight: FontWeight.bold, fontSize: 13), textAlign: TextAlign.center),
+                child: Text('Status', style: TextStyle(color: Colors.grey[400], fontWeight: UIConstants.fontWeightMedium, fontSize: 13), textAlign: TextAlign.center),
               ),
               Expanded(
-                child: Text('Action', style: TextStyle(color: Colors.grey[400], fontWeight: FontWeight.bold, fontSize: 13), textAlign: TextAlign.center),
+                child: Text('Action', style: TextStyle(color: Colors.grey[400], fontWeight: UIConstants.fontWeightMedium, fontSize: 13), textAlign: TextAlign.center),
               ),
             ],
           ),
@@ -4922,7 +4923,7 @@ class _TradingPageState extends State<TradingPage> {
             thickness: 0.7,
             height: 1,
           ),
-          const SizedBox(height: 8),
+          const SizedBox(height: UIConstants.spacingSm),
           Expanded(
             child: _buildOrdersContent(isDarkTheme),
           ),
@@ -4939,7 +4940,7 @@ class _TradingPageState extends State<TradingPage> {
           mainAxisAlignment: MainAxisAlignment.center,
           children: [
             CircularProgressIndicator(),
-            SizedBox(height: 16),
+            SizedBox(height: UIConstants.spacingMd),
             Text('Loading orders...'),
           ],
         ),
@@ -4956,25 +4957,25 @@ class _TradingPageState extends State<TradingPage> {
               size: 48,
               color: Colors.red,
             ),
-            const SizedBox(height: 16),
+            const SizedBox(height: UIConstants.spacingMd),
             Text(
               'Failed to load orders',
               style: TextStyle(
-                fontSize: 16,
-                fontWeight: FontWeight.w500,
+                fontSize: UIConstants.fontSizeBody,
+                fontWeight: UIConstants.fontWeightNormal,
                 color: isDarkTheme ? Colors.grey[300] : Colors.grey[700],
               ),
             ),
-            const SizedBox(height: 8),
+            const SizedBox(height: UIConstants.spacingSm),
             Text(
               _realOrdersError!,
               style: TextStyle(
-                fontSize: 12,
+                fontSize: UIConstants.fontSizeSm,
                 color: Colors.red,
               ),
               textAlign: TextAlign.center,
             ),
-            const SizedBox(height: 16),
+            const SizedBox(height: UIConstants.spacingMd),
             ElevatedButton(
               onPressed: _fetchRealOrders,
               child: const Text('Retry'),
@@ -4992,7 +4993,7 @@ class _TradingPageState extends State<TradingPage> {
         // Empty state message if no orders
         if (_realOrders.isEmpty)
           Padding(
-            padding: const EdgeInsets.all(20),
+            padding: UIConstants.paddingStandard,
             child: Center(
               child: Column(
                 children: [
@@ -5001,21 +5002,21 @@ class _TradingPageState extends State<TradingPage> {
                     size: 48,
                     color: isDarkTheme ? Colors.grey[600] : Colors.grey[400],
                   ),
-                  const SizedBox(height: 16),
+                  const SizedBox(height: UIConstants.spacingMd),
                   Text(
                     'No orders found',
                     style: TextStyle(
                       color: isDarkTheme ? Colors.grey[400] : Colors.grey[600],
-                      fontSize: 16,
-                      fontWeight: FontWeight.w500,
+                      fontSize: UIConstants.fontSizeBody,
+                      fontWeight: UIConstants.fontWeightNormal,
                     ),
                   ),
-                  const SizedBox(height: 8),
+                  const SizedBox(height: UIConstants.spacingSm),
                   Text(
                     'Your active orders will appear here',
                     style: TextStyle(
                       color: isDarkTheme ? Colors.grey[500] : Colors.grey[500],
-                      fontSize: 12,
+                      fontSize: UIConstants.fontSizeSm,
                     ),
                   ),
                 ],
@@ -5024,7 +5025,7 @@ class _TradingPageState extends State<TradingPage> {
           ),
         // Add a load more button at the bottom (always show)
         Padding(
-          padding: const EdgeInsets.all(16),
+          padding: UIConstants.paddingStandard,
           child: Center(
             child: ElevatedButton.icon(
               onPressed: _isLoadingMoreOrders ? null : _loadMoreOrders,
@@ -5048,7 +5049,7 @@ class _TradingPageState extends State<TradingPage> {
 
   Widget _buildOrderHistoryTable(bool isDarkTheme) {
     return Container(
-      padding: const EdgeInsets.all(20),
+      padding: UIConstants.paddingStandard,
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
@@ -5059,30 +5060,30 @@ class _TradingPageState extends State<TradingPage> {
             children: [
               SizedBox(
                 width: 110,
-                child: Text('Side', style: TextStyle(color: Colors.grey[400], fontWeight: FontWeight.bold, fontSize: 13), textAlign: TextAlign.left),
+                child: Text('Side', style: TextStyle(color: Colors.grey[400], fontWeight: UIConstants.fontWeightMedium, fontSize: 13), textAlign: TextAlign.left),
               ),
               SizedBox(
                 width: 150,
-                child: Text('Pair', style: TextStyle(color: Colors.grey[400], fontWeight: FontWeight.bold, fontSize: 13), textAlign: TextAlign.center),
+                child: Text('Pair', style: TextStyle(color: Colors.grey[400], fontWeight: UIConstants.fontWeightMedium, fontSize: 13), textAlign: TextAlign.center),
               ),
               SizedBox(
                 width: 150,
-                child: Text('Quantity', style: TextStyle(color: Colors.grey[400], fontWeight: FontWeight.bold, fontSize: 13), textAlign: TextAlign.center),
+                child: Text('Quantity', style: TextStyle(color: Colors.grey[400], fontWeight: UIConstants.fontWeightMedium, fontSize: 13), textAlign: TextAlign.center),
               ),
               SizedBox(
                 width: 150,
-                child: Text('Price', style: TextStyle(color: Colors.grey[400], fontWeight: FontWeight.bold, fontSize: 13), textAlign: TextAlign.center),
+                child: Text('Price', style: TextStyle(color: Colors.grey[400], fontWeight: UIConstants.fontWeightMedium, fontSize: 13), textAlign: TextAlign.center),
               ),
               SizedBox(
                 width: 150,
-                child: Text('Creation Time', style: TextStyle(color: Colors.grey[400], fontWeight: FontWeight.bold, fontSize: 13), textAlign: TextAlign.center),
+                child: Text('Creation Time', style: TextStyle(color: Colors.grey[400], fontWeight: UIConstants.fontWeightMedium, fontSize: 13), textAlign: TextAlign.center),
               ),
               SizedBox(
                 width: 150,
-                child: Text('Expiration Time', style: TextStyle(color: Colors.grey[400], fontWeight: FontWeight.bold, fontSize: 13), textAlign: TextAlign.center),
+                child: Text('Expiration Time', style: TextStyle(color: Colors.grey[400], fontWeight: UIConstants.fontWeightMedium, fontSize: 13), textAlign: TextAlign.center),
               ),
               Expanded(
-                child: Text('Status', style: TextStyle(color: Colors.grey[400], fontWeight: FontWeight.bold, fontSize: 13), textAlign: TextAlign.center),
+                child: Text('Status', style: TextStyle(color: Colors.grey[400], fontWeight: UIConstants.fontWeightMedium, fontSize: 13), textAlign: TextAlign.center),
               ),
             ],
           ),
@@ -5092,7 +5093,7 @@ class _TradingPageState extends State<TradingPage> {
             thickness: 0.7,
             height: 1,
           ),
-          const SizedBox(height: 8),
+          const SizedBox(height: UIConstants.spacingSm),
           Expanded(
             child: ListView(
               children: [
@@ -5101,20 +5102,20 @@ class _TradingPageState extends State<TradingPage> {
                 // Empty state message if no history
                 if (_orderHistory.isEmpty)
                   Padding(
-                    padding: const EdgeInsets.all(20),
+                    padding: UIConstants.paddingStandard,
                     child: Center(
                       child: Text(
                         'No order history found',
                         style: TextStyle(
                           color: isDarkTheme ? Colors.grey[400] : Colors.grey[600],
-                          fontSize: 14,
+                          fontSize: UIConstants.fontSizeBody,
                         ),
                       ),
                     ),
                   ),
                 // Add a load more button at the bottom (always show)
                 Padding(
-                  padding: const EdgeInsets.all(16),
+                  padding: UIConstants.paddingStandard,
                   child: Center(
                     child: ElevatedButton.icon(
                       onPressed: _isLoadingMoreHistory ? null : _loadMoreHistory,
@@ -5189,7 +5190,7 @@ class _TradingPageState extends State<TradingPage> {
         children: [
           SizedBox(
             width: 110,
-            child: Text(side, style: TextStyle(color: sideColor, fontSize: 12, fontWeight: FontWeight.bold), textAlign: TextAlign.left),
+            child: Text(side, style: TextStyle(color: sideColor, fontSize: UIConstants.fontSizeSm, fontWeight: UIConstants.fontWeightMedium), textAlign: TextAlign.left),
           ),
           SizedBox(
             width: 150,
@@ -5212,7 +5213,7 @@ class _TradingPageState extends State<TradingPage> {
             child: Text(formatTimestamp(order['expire_timestamp']), style: TextStyle(color: isDarkTheme ? Colors.white : Colors.black, fontSize: 11), textAlign: TextAlign.center),
           ),
           Expanded(
-            child: Text(status, style: TextStyle(color: statusColor, fontSize: 12, fontWeight: FontWeight.w500), textAlign: TextAlign.center),
+            child: Text(status, style: TextStyle(color: statusColor, fontSize: UIConstants.fontSizeSm, fontWeight: UIConstants.fontWeightNormal), textAlign: TextAlign.center),
           ),
           // Note: No Action column for history
         ],
@@ -5223,7 +5224,7 @@ class _TradingPageState extends State<TradingPage> {
   Widget _buildOrderbookSection(ThemeService themeService) {
     final _isDarkTheme = themeService.isDarkTheme;
     return Container(
-      padding: const EdgeInsets.all(20),
+      padding: UIConstants.paddingStandard,
       decoration: BoxDecoration(
         color: _isDarkTheme ? Colors.black : Colors.white,
         border: Border(
@@ -5239,12 +5240,12 @@ class _TradingPageState extends State<TradingPage> {
           Text(
             'Orderbook',
             style: TextStyle(
-              fontSize: 20,
-              fontWeight: FontWeight.bold,
+              fontSize: UIConstants.fontSizeMd,
+              fontWeight: UIConstants.fontWeightMedium,
               color: _isDarkTheme ? Colors.white : Colors.black,
             ),
           ),
-          const SizedBox(height: 16),
+          const SizedBox(height: UIConstants.spacingMd),
           Expanded(
             child: Row(
               children: [
@@ -5256,19 +5257,19 @@ class _TradingPageState extends State<TradingPage> {
                       Text(
                         'Sell Orders',
                         style: TextStyle(
-                          fontSize: 18,
-                          fontWeight: FontWeight.bold,
+                          fontSize: UIConstants.fontSizeMd,
+                          fontWeight: UIConstants.fontWeightMedium,
                           color: _isDarkTheme ? Colors.white : Colors.black,
                         ),
                       ),
-                      const SizedBox(height: 8),
+                      const SizedBox(height: UIConstants.spacingSm),
                       Row(
                         children: [
                           Expanded(
                             child: Text(
                               'Price',
                               style: TextStyle(
-                                fontSize: 14,
+                                fontSize: UIConstants.fontSizeBody,
                                 color: _isDarkTheme ? Colors.grey[400] : Colors.grey[600],
                               ),
                             ),
@@ -5278,7 +5279,7 @@ class _TradingPageState extends State<TradingPage> {
                               'Quantity',
                               textAlign: TextAlign.center,
                               style: TextStyle(
-                                fontSize: 14,
+                                fontSize: UIConstants.fontSizeBody,
                                 color: _isDarkTheme ? Colors.grey[400] : Colors.grey[600],
                               ),
                             ),
@@ -5288,19 +5289,19 @@ class _TradingPageState extends State<TradingPage> {
                               'Total',
                               textAlign: TextAlign.right,
                               style: TextStyle(
-                                fontSize: 14,
+                                fontSize: UIConstants.fontSizeBody,
                                 color: _isDarkTheme ? Colors.grey[400] : Colors.grey[600],
                               ),
                             ),
                           ),
                         ],
                       ),
-                      const SizedBox(height: 8),
+                      const SizedBox(height: UIConstants.spacingSm),
                       Container(
                         height: 1,
                         color: _isDarkTheme ? Colors.grey[700] : Colors.grey[300],
                       ),
-                      const SizedBox(height: 8),
+                      const SizedBox(height: UIConstants.spacingSm),
                       Expanded(
                         child: _isLoadingSellOrders
                             ? const Center(
@@ -5312,7 +5313,7 @@ class _TradingPageState extends State<TradingPage> {
                                       'No sell orders',
                                       style: TextStyle(
                                         color: _isDarkTheme ? Colors.grey[400] : Colors.grey[600],
-                                        fontSize: 14,
+                                        fontSize: UIConstants.fontSizeBody,
                                       ),
                                     ),
                                   )
@@ -5331,9 +5332,9 @@ class _TradingPageState extends State<TradingPage> {
                                                     child: Text(
                                                       _formatPrice(order['price']),
                                                       style: const TextStyle(
-                                                        fontSize: 14,
+                                                        fontSize: UIConstants.fontSizeBody,
                                                         color: Color(0xFFFF4081),
-                                                        fontWeight: FontWeight.w500,
+                                                        fontWeight: UIConstants.fontWeightNormal,
                                                       ),
                                                     ),
                                                   ),
@@ -5342,7 +5343,7 @@ class _TradingPageState extends State<TradingPage> {
                                                       order['quantity'].toString(),
                                                       textAlign: TextAlign.center,
                                                       style: TextStyle(
-                                                        fontSize: 14,
+                                                        fontSize: UIConstants.fontSizeBody,
                                                         color: _isDarkTheme ? Colors.white : Colors.black,
                                                       ),
                                                     ),
@@ -5352,7 +5353,7 @@ class _TradingPageState extends State<TradingPage> {
                                                       _formatPrice(order['total'] ?? 0.0),
                                                       textAlign: TextAlign.right,
                                                       style: TextStyle(
-                                                        fontSize: 14,
+                                                        fontSize: UIConstants.fontSizeBody,
                                                         color: _isDarkTheme ? Colors.white : Colors.black,
                                                       ),
                                                     ),
@@ -5383,7 +5384,7 @@ class _TradingPageState extends State<TradingPage> {
                                                     'Load More',
                                                     style: TextStyle(
                                                       color: _isDarkTheme ? Colors.blue[300] : Colors.blue,
-                                                      fontSize: 14,
+                                                      fontSize: UIConstants.fontSizeBody,
                                                     ),
                                                   ),
                                                 ),
@@ -5405,19 +5406,19 @@ class _TradingPageState extends State<TradingPage> {
                       Text(
                         'Buy Orders',
                         style: TextStyle(
-                          fontSize: 18,
-                          fontWeight: FontWeight.bold,
+                          fontSize: UIConstants.fontSizeMd,
+                          fontWeight: UIConstants.fontWeightMedium,
                           color: _isDarkTheme ? Colors.white : Colors.black,
                         ),
                       ),
-                      const SizedBox(height: 8),
+                      const SizedBox(height: UIConstants.spacingSm),
                       Row(
                         children: [
                           Expanded(
                             child: Text(
                               'Price',
                               style: TextStyle(
-                                fontSize: 14,
+                                fontSize: UIConstants.fontSizeBody,
                                 color: _isDarkTheme ? Colors.grey[400] : Colors.grey[600],
                               ),
                             ),
@@ -5427,7 +5428,7 @@ class _TradingPageState extends State<TradingPage> {
                               'Quantity',
                               textAlign: TextAlign.center,
                               style: TextStyle(
-                                fontSize: 14,
+                                fontSize: UIConstants.fontSizeBody,
                                 color: _isDarkTheme ? Colors.grey[400] : Colors.grey[600],
                               ),
                             ),
@@ -5437,19 +5438,19 @@ class _TradingPageState extends State<TradingPage> {
                               'Total',
                               textAlign: TextAlign.right,
                               style: TextStyle(
-                                fontSize: 14,
+                                fontSize: UIConstants.fontSizeBody,
                                 color: _isDarkTheme ? Colors.grey[400] : Colors.grey[600],
                               ),
                             ),
                           ),
                         ],
                       ),
-                      const SizedBox(height: 8),
+                      const SizedBox(height: UIConstants.spacingSm),
                       Container(
                         height: 1,
                         color: _isDarkTheme ? Colors.grey[700] : Colors.grey[300],
                       ),
-                      const SizedBox(height: 8),
+                      const SizedBox(height: UIConstants.spacingSm),
                       Expanded(
                         child: _isLoadingBuyOrders
                             ? const Center(
@@ -5461,7 +5462,7 @@ class _TradingPageState extends State<TradingPage> {
                                       'No buy orders',
                                       style: TextStyle(
                                         color: _isDarkTheme ? Colors.grey[400] : Colors.grey[600],
-                                        fontSize: 14,
+                                        fontSize: UIConstants.fontSizeBody,
                                       ),
                                     ),
                                   )
@@ -5480,9 +5481,9 @@ class _TradingPageState extends State<TradingPage> {
                                                     child: Text(
                                                       _formatPrice(order['price']),
                                                       style: const TextStyle(
-                                                        fontSize: 14,
+                                                        fontSize: UIConstants.fontSizeBody,
                                                         color: Color(0xFF00D4AA),
-                                                        fontWeight: FontWeight.w500,
+                                                        fontWeight: UIConstants.fontWeightNormal,
                                                       ),
                                                     ),
                                                   ),
@@ -5491,7 +5492,7 @@ class _TradingPageState extends State<TradingPage> {
                                                       order['quantity'].toString(),
                                                       textAlign: TextAlign.center,
                                                       style: TextStyle(
-                                                        fontSize: 14,
+                                                        fontSize: UIConstants.fontSizeBody,
                                                         color: _isDarkTheme ? Colors.white : Colors.black,
                                                       ),
                                                     ),
@@ -5501,7 +5502,7 @@ class _TradingPageState extends State<TradingPage> {
                                                       _formatPrice(order['total'] ?? 0.0),
                                                       textAlign: TextAlign.right,
                                                       style: TextStyle(
-                                                        fontSize: 14,
+                                                        fontSize: UIConstants.fontSizeBody,
                                                         color: _isDarkTheme ? Colors.white : Colors.black,
                                                       ),
                                                     ),
@@ -5532,7 +5533,7 @@ class _TradingPageState extends State<TradingPage> {
                                                     'Load More',
                                                     style: TextStyle(
                                                       color: _isDarkTheme ? Colors.blue[300] : Colors.blue,
-                                                      fontSize: 14,
+                                                      fontSize: UIConstants.fontSizeBody,
                                                     ),
                                                   ),
                                                 ),
@@ -5640,7 +5641,7 @@ class _TradingPageState extends State<TradingPage> {
                   valueColor: AlwaysStoppedAnimation<Color>(Colors.white),
                 ),
               ),
-              SizedBox(width: 12),
+              SizedBox(width: UIConstants.spacingSm),
               Text('Placing ${side.toLowerCase()} order...'),
             ],
           ),
@@ -5757,9 +5758,9 @@ class _TradingPageState extends State<TradingPage> {
                 child: Text(
                   'Currency',
                   style: TextStyle(
-                    fontSize: 14,
+                    fontSize: UIConstants.fontSizeBody,
                     color: isDarkTheme ? Colors.grey[400] : Colors.grey[600],
-                    fontWeight: FontWeight.w500,
+                    fontWeight: UIConstants.fontWeightNormal,
                   ),
                 ),
               ),
@@ -5788,7 +5789,7 @@ class _TradingPageState extends State<TradingPage> {
                       dropdownColor: isDarkTheme ? const Color(0xFF1e1e1e) : Colors.white,
                       style: TextStyle(
                         color: isDarkTheme ? Colors.white : Colors.black,
-                        fontSize: 14, // Smaller font size
+                        fontSize: UIConstants.fontSizeBody, // Smaller font size
                       ),
                       items: _supportedCurrencies.isEmpty
                           ? [DropdownMenuItem<Map<String, String>>(
@@ -5808,7 +5809,7 @@ class _TradingPageState extends State<TradingPage> {
             ],
           ),
 
-          const SizedBox(height: 16), // Reduced from 20
+          const SizedBox(height: UIConstants.spacingMd), // Reduced from 20
 
           // Buy/Sell Toggle Buttons (stretches with container width)
           Container(
@@ -5847,13 +5848,13 @@ class _TradingPageState extends State<TradingPage> {
             ),
           ),
 
-          const SizedBox(height: 16), // Reduced space before order type
+          const SizedBox(height: UIConstants.spacingMd), // Reduced space before order type
 
           // Order Type Toggle Buttons with mouse cursor and smaller height (like buy/sell area)
           Container(
             decoration: BoxDecoration(
               color: isDarkTheme ? const Color(0xFF2d2d2d) : Colors.white,
-              borderRadius: BorderRadius.circular(8),
+              borderRadius: BorderRadius.circular(UIConstants.borderRadiusSm),
             ),
             child: Row(
               children: [
@@ -5885,7 +5886,7 @@ class _TradingPageState extends State<TradingPage> {
             ),
           ),
 
-          const SizedBox(height: 16), // Reduced space after order type
+          const SizedBox(height: UIConstants.spacingMd), // Reduced space after order type
 
           // Available Balance / Buying Power Row Layout
           SizedBox(
@@ -5895,11 +5896,11 @@ class _TradingPageState extends State<TradingPage> {
                 Text(
                   _isBuySelected ? 'Available to Invest' : 'Available',
                   style: TextStyle(
-                    fontSize: 14,
+                    fontSize: UIConstants.fontSizeBody,
                     color: isDarkTheme ? Colors.grey[400] : Colors.grey[600],
                   ),
                 ),
-                const SizedBox(width: 12),
+                const SizedBox(width: UIConstants.spacingSm),
                 Expanded(
                   child: Row(
                     children: [
@@ -5919,8 +5920,8 @@ class _TradingPageState extends State<TradingPage> {
                                   ? '$_buyingPower ${_selectedCurrency['symbol'] ?? ''}'
                                   : _availableBalance,
                               style: TextStyle(
-                                fontSize: 18,
-                                fontWeight: FontWeight.w600,
+                                fontSize: UIConstants.fontSizeMd,
+                                fontWeight: UIConstants.fontWeightMedium,
                                 color: isDarkTheme ? Colors.white : Colors.black,
                               ),
                             ),
@@ -5940,8 +5941,8 @@ class _TradingPageState extends State<TradingPage> {
                               ? Text(
                                   _getSelectedAssetSymbol(),
                                   style: TextStyle(
-                                    fontSize: 18,
-                                    fontWeight: FontWeight.w600,
+                                    fontSize: UIConstants.fontSizeMd,
+                                    fontWeight: UIConstants.fontWeightMedium,
                                     color: isDarkTheme ? Colors.white : Colors.black,
                                   ),
                                 )
@@ -5953,7 +5954,7 @@ class _TradingPageState extends State<TradingPage> {
             ),
           ),
 
-          const SizedBox(height: 8),
+          const SizedBox(height: UIConstants.spacingSm),
 
           // Amount Input
           Row(
@@ -5963,7 +5964,7 @@ class _TradingPageState extends State<TradingPage> {
                 child: Text(
                   'Amount',
                   style: TextStyle(
-                    fontSize: 14,
+                    fontSize: UIConstants.fontSizeBody,
                     color: isDarkTheme ? Colors.grey[400] : Colors.grey[600],
                   ),
                 ),
@@ -5994,13 +5995,13 @@ class _TradingPageState extends State<TradingPage> {
                                 'Max',
                                 style: TextStyle(
                                   color: const Color(0xFFFF4081), // Pink for sell
-                                  fontSize: 14,
-                                  fontWeight: FontWeight.w600,
+                                  fontSize: UIConstants.fontSizeBody,
+                                  fontWeight: UIConstants.fontWeightMedium,
                                 ),
                               ),
                             ),
                           ),
-                          const SizedBox(width: 8),
+                          const SizedBox(width: UIConstants.spacingSm),
                         ],
                         _assets.isEmpty
                             ? SizedBox(
@@ -6017,8 +6018,8 @@ class _TradingPageState extends State<TradingPage> {
                                 _getSelectedAssetSymbol(),
                                 style: TextStyle(
                                   color: isDarkTheme ? Colors.white : Colors.black,
-                                  fontSize: 14,
-                                  fontWeight: FontWeight.w500,
+                                  fontSize: UIConstants.fontSizeBody,
+                                  fontWeight: UIConstants.fontWeightNormal,
                                 ),
                               ),
                       ],
@@ -6030,7 +6031,7 @@ class _TradingPageState extends State<TradingPage> {
           ),
 
           if (_orderType == 'Limit') ...[
-            const SizedBox(height: 12),
+            const SizedBox(height: UIConstants.spacingSm),
 
             // Price Input
             Row(
@@ -6040,7 +6041,7 @@ class _TradingPageState extends State<TradingPage> {
                   child: Text(
                     'Price',
                     style: TextStyle(
-                      fontSize: 14,
+                      fontSize: UIConstants.fontSizeBody,
                       color: isDarkTheme ? Colors.grey[400] : Colors.grey[600],
                     ),
                   ),
@@ -6056,8 +6057,8 @@ class _TradingPageState extends State<TradingPage> {
                         '\$',
                         style: TextStyle(
                           color: isDarkTheme ? Colors.white : Colors.black,
-                          fontSize: 14,
-                          fontWeight: FontWeight.w500,
+                          fontSize: UIConstants.fontSizeBody,
+                          fontWeight: UIConstants.fontWeightNormal,
                         ),
                       ),
                     ),
@@ -6066,7 +6067,7 @@ class _TradingPageState extends State<TradingPage> {
               ],
             ),
 
-            const SizedBox(height: 12),
+            const SizedBox(height: UIConstants.spacingSm),
 
             // Expiry Dropdown
             Row(
@@ -6076,7 +6077,7 @@ class _TradingPageState extends State<TradingPage> {
                   child: Text(
                     'Expiry',
                     style: TextStyle(
-                      fontSize: 14,
+                      fontSize: UIConstants.fontSizeBody,
                       color: isDarkTheme ? Colors.grey[400] : Colors.grey[600],
                     ),
                   ),
@@ -6099,7 +6100,7 @@ class _TradingPageState extends State<TradingPage> {
                           dropdownColor: isDarkTheme ? const Color(0xFF1e1e1e) : Colors.white,
                           style: TextStyle(
                             color: isDarkTheme ? Colors.white : Colors.black,
-                            fontSize: 14,
+                            fontSize: UIConstants.fontSizeBody,
                           ),
                           items: ['1 Day', '3 Days', '1 Week', '2 Weeks', '1 Month']
                               .map<DropdownMenuItem<String>>((String value) {
@@ -6122,14 +6123,14 @@ class _TradingPageState extends State<TradingPage> {
 
           // Show Order Summary only for Limit orders
           if (_orderType == 'Limit') ...[
-            const SizedBox(height: 12), // Add space between amount field and est.fee total area
+            const SizedBox(height: UIConstants.spacingSm), // Add space between amount field and est.fee total area
 
             // Order Summary (no border)
             Container(
-              padding: const EdgeInsets.all(16),
+              padding: UIConstants.paddingStandard,
               decoration: BoxDecoration(
                 color: isDarkTheme ? const Color(0xFF3d3d3d) : Colors.grey[50],
-                borderRadius: BorderRadius.circular(12),
+                borderRadius: BorderRadius.circular(UIConstants.borderRadiusMd),
                 // Removed border
               ),
               child: Column(
@@ -6140,7 +6141,7 @@ class _TradingPageState extends State<TradingPage> {
                       Text(
                         'Est. Fee',
                         style: TextStyle(
-                          fontSize: 14,
+                          fontSize: UIConstants.fontSizeBody,
                           color: isDarkTheme ? Colors.grey[400] : Colors.grey[600],
                         ),
                       ),
@@ -6158,29 +6159,29 @@ class _TradingPageState extends State<TradingPage> {
                           : Text(
                               _estimatedFee,
                               style: TextStyle(
-                                fontSize: 14,
+                                fontSize: UIConstants.fontSizeBody,
                                 color: isDarkTheme ? Colors.white : Colors.black,
                               ),
                             ),
                     ],
                   ),
-                  const SizedBox(height: 8),
+                  const SizedBox(height: UIConstants.spacingSm),
                   Row(
                     mainAxisAlignment: MainAxisAlignment.spaceBetween,
                     children: [
                       Text(
                         'Total',
                         style: TextStyle(
-                          fontSize: 14,
-                          fontWeight: FontWeight.w600,
+                          fontSize: UIConstants.fontSizeBody,
+                          fontWeight: UIConstants.fontWeightMedium,
                           color: isDarkTheme ? Colors.grey[400] : Colors.grey[600],
                         ),
                       ),
                       Text(
                         '${_formatDecimal(_calculateTotal().toString())} \$',
                         style: TextStyle(
-                          fontSize: 14,
-                          fontWeight: FontWeight.w600,
+                          fontSize: UIConstants.fontSizeBody,
+                          fontWeight: UIConstants.fontWeightMedium,
                           color: isDarkTheme ? Colors.white : Colors.black,
                         ),
                       ),
@@ -6191,7 +6192,7 @@ class _TradingPageState extends State<TradingPage> {
             ),
           ],
 
-          const SizedBox(height: 16),
+          const SizedBox(height: UIConstants.spacingMd),
 
           // Buy/Sell Order Button
           SizedBox(
@@ -6212,8 +6213,8 @@ class _TradingPageState extends State<TradingPage> {
               child: Text(
                 '${_isBuySelected ? 'Buy' : 'Sell'} Order',
                 style: const TextStyle(
-                  fontSize: 16,
-                  fontWeight: FontWeight.w600,
+                  fontSize: UIConstants.fontSizeBody,
+                  fontWeight: UIConstants.fontWeightMedium,
                 ),
               ),
             ),
@@ -6263,7 +6264,7 @@ class _HoverButtonState extends State<_HoverButton> {
             style: TextStyle(
               color: _isHovered ? Colors.white : widget.color,
               fontSize: 9,
-              fontWeight: FontWeight.bold,
+              fontWeight: UIConstants.fontWeightMedium,
             ),
             textAlign: TextAlign.center,
           ),
@@ -6320,8 +6321,8 @@ class _HoverTradeButtonState extends State<_HoverTradeButton> {
                   : (_isHovered
                       ? widget.selectedColor
                       : (widget.isDarkTheme ? Colors.grey[400] : Colors.grey[600])),
-              fontWeight: FontWeight.w600,
-              fontSize: 14,
+              fontWeight: UIConstants.fontWeightMedium,
+              fontSize: UIConstants.fontSizeBody,
             ),
           ),
         ),
@@ -6378,8 +6379,8 @@ class _HoverOrderTypeButtonState extends State<_HoverOrderTypeButton> {
                   : (_isHovered
                       ? _selectedColor
                       : (widget.isDarkTheme ? Colors.grey[400] : Colors.grey[600])),
-              fontWeight: FontWeight.w500,
-              fontSize: 14,
+              fontWeight: UIConstants.fontWeightNormal,
+              fontSize: UIConstants.fontSizeBody,
             ),
           ),
         ),
@@ -6421,7 +6422,7 @@ class _HoverInputFieldState extends State<_HoverInputField> {
       child: Container(
         decoration: BoxDecoration(
           color: backgroundColor,
-          borderRadius: BorderRadius.circular(8),
+          borderRadius: BorderRadius.circular(UIConstants.borderRadiusSm),
           border: Border.all(
             color: borderColor,
             width: 1,
@@ -6435,7 +6436,7 @@ class _HoverInputFieldState extends State<_HoverInputField> {
                 keyboardType: TextInputType.number,
                 style: TextStyle(
                   color: widget.isDarkTheme ? Colors.white : Colors.black,
-                  fontSize: 14,
+                  fontSize: UIConstants.fontSizeBody,
                 ),
                 decoration: InputDecoration(
                   hintText: widget.hintText,
@@ -6487,7 +6488,7 @@ class _HoverDropdownFieldState extends State<_HoverDropdownField> {
         padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
         decoration: BoxDecoration(
           color: backgroundColor,
-          borderRadius: BorderRadius.circular(8),
+          borderRadius: BorderRadius.circular(UIConstants.borderRadiusSm),
           border: Border.all(
             color: borderColor,
             width: 1,

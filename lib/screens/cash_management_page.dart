@@ -4,6 +4,7 @@ import 'package:provider/provider.dart';
 import '../services/auth_service.dart';
 import '../services/theme_service.dart';
 import '../services/real_grpc_client.dart';
+import '../config/ui_constants.dart';
 import '../utils/connectivity_checker.dart';
 import 'instruments_page.dart';
 import 'trading_page.dart';
@@ -407,17 +408,17 @@ class _CashManagementPageState extends State<CashManagementPage> {
             // Main Content
             Expanded(
               child: Padding(
-                padding: const EdgeInsets.all(20),
+                padding: UIConstants.paddingStandard,
                 child: Column(
                   crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
                     // Cash Management Section
                     Expanded(
                       child: Container(
-                        padding: const EdgeInsets.all(20),
+                        padding: UIConstants.paddingStandard,
                         decoration: BoxDecoration(
                           color: _isDarkTheme ? const Color(0xFF2A2A2A) : Colors.white,
-                          borderRadius: BorderRadius.circular(12),
+                          borderRadius: BorderRadius.circular(UIConstants.borderRadiusMd),
                           boxShadow: [
                             BoxShadow(
                               color: Colors.black.withOpacity(0.1),
@@ -432,12 +433,12 @@ class _CashManagementPageState extends State<CashManagementPage> {
                             Text(
                               'Cash Management',
                               style: TextStyle(
-                                fontSize: 20,
-                                fontWeight: FontWeight.bold,
+                                fontSize: UIConstants.fontSizeMd,
+                                fontWeight: UIConstants.fontWeightMedium,
                                 color: _isDarkTheme ? Colors.white : Colors.black,
                               ),
                             ),
-                            const SizedBox(height: 20),
+                            const SizedBox(height: UIConstants.spacingMd),
                             _buildBalanceContent(themeService, _isDarkTheme),
                           ],
                         ),
@@ -496,7 +497,7 @@ class _CashManagementPageState extends State<CashManagementPage> {
                             style: TextStyle(
                               color: Colors.white,
                               fontSize: 8,
-                              fontWeight: FontWeight.w500,
+                              fontWeight: UIConstants.fontWeightNormal,
                               height: 0.8,
                             ),
                           ),
@@ -505,7 +506,7 @@ class _CashManagementPageState extends State<CashManagementPage> {
                             style: TextStyle(
                               color: Colors.white,
                               fontSize: 8,
-                              fontWeight: FontWeight.bold,
+                              fontWeight: UIConstants.fontWeightMedium,
                               height: 0.8,
                             ),
                           ),
@@ -518,7 +519,7 @@ class _CashManagementPageState extends State<CashManagementPage> {
             ),
           ),
 
-          const SizedBox(width: 16),
+          const SizedBox(width: UIConstants.spacingMd),
 
           // Navigation Tabs - Left side beside logo
           Padding(
@@ -566,8 +567,8 @@ class _CashManagementPageState extends State<CashManagementPage> {
                           child: const Text(
                             'Instruments',
                             style: TextStyle(
-                              fontSize: 13,
-                              fontWeight: FontWeight.w500,
+                              fontSize: UIConstants.fontSizeSm,
+                              fontWeight: UIConstants.fontWeightNormal,
                               color: Colors.white70,
                             ),
                           ),
@@ -616,8 +617,8 @@ class _CashManagementPageState extends State<CashManagementPage> {
                           child: const Text(
                             'Portfolio',
                             style: TextStyle(
-                              fontSize: 13,
-                              fontWeight: FontWeight.w500,
+                              fontSize: UIConstants.fontSizeSm,
+                              fontWeight: UIConstants.fontWeightNormal,
                               color: Colors.white70,
                             ),
                           ),
@@ -666,8 +667,8 @@ class _CashManagementPageState extends State<CashManagementPage> {
                           child: const Text(
                             'Trading',
                             style: TextStyle(
-                              fontSize: 13,
-                              fontWeight: FontWeight.w500,
+                              fontSize: UIConstants.fontSizeSm,
+                              fontWeight: UIConstants.fontWeightNormal,
                               color: Colors.white70,
                             ),
                           ),
@@ -716,8 +717,8 @@ class _CashManagementPageState extends State<CashManagementPage> {
                           child: const Text(
                             'Activity',
                             style: TextStyle(
-                              fontSize: 13,
-                              fontWeight: FontWeight.w500,
+                              fontSize: UIConstants.fontSizeSm,
+                              fontWeight: UIConstants.fontWeightNormal,
                               color: Colors.white70,
                             ),
                           ),
@@ -748,8 +749,8 @@ class _CashManagementPageState extends State<CashManagementPage> {
                   child: Text(
                     'Cash Management',
                     style: TextStyle(
-                      fontSize: 13,
-                      fontWeight: FontWeight.w600,
+                      fontSize: UIConstants.fontSizeSm,
+                      fontWeight: UIConstants.fontWeightMedium,
                       color: isDarkTheme ? Colors.white : Colors.black,
                     ),
                   ),
@@ -792,7 +793,7 @@ class _CashManagementPageState extends State<CashManagementPage> {
                   child: Row(
                     children: [
                       Icon(Icons.person, size: 18, color: Colors.white),
-                      SizedBox(width: 8),
+                      SizedBox(width: UIConstants.spacingSm),
                       Text('Profile', style: TextStyle(color: Colors.white)),
                     ],
                   ),
@@ -808,7 +809,7 @@ class _CashManagementPageState extends State<CashManagementPage> {
                     child: Row(
                       children: [
                         Icon(Icons.people, size: 18, color: Colors.white),
-                        SizedBox(width: 8),
+                        SizedBox(width: UIConstants.spacingSm),
                         Text('View Users', style: TextStyle(color: Colors.white)),
                       ],
                     ),
@@ -832,13 +833,13 @@ class _CashManagementPageState extends State<CashManagementPage> {
                     size: 14,
                   ),
                 ),
-                const SizedBox(width: 8),
+                const SizedBox(width: UIConstants.spacingSm),
                 Text(
                   authService.username,
                   style: const TextStyle(
                     color: Colors.white,
-                    fontSize: 16,
-                    fontWeight: FontWeight.w500,
+                    fontSize: UIConstants.fontSizeBody,
+                    fontWeight: UIConstants.fontWeightNormal,
                   ),
                 ),
                 const SizedBox(width: 4),
@@ -851,7 +852,7 @@ class _CashManagementPageState extends State<CashManagementPage> {
             ),
           ),
 
-          const SizedBox(width: 16),
+          const SizedBox(width: UIConstants.spacingMd),
 
           // Vertical divider line
           Container(
@@ -860,7 +861,7 @@ class _CashManagementPageState extends State<CashManagementPage> {
             color: Colors.white.withOpacity(0.3),
           ),
 
-          const SizedBox(width: 16),
+          const SizedBox(width: UIConstants.spacingMd),
 
           // Theme toggle button (centered)
           Container(
@@ -876,11 +877,11 @@ class _CashManagementPageState extends State<CashManagementPage> {
                 size: 20,
               ),
               tooltip: themeService.isDarkTheme ? 'Light Theme' : 'Dark Theme',
-              padding: const EdgeInsets.all(8),
+              padding: UIConstants.paddingMinimal,
             ),
           ),
 
-          const SizedBox(width: 8),
+          const SizedBox(width: UIConstants.spacingSm),
 
           // Vertical divider line
           Container(
@@ -889,7 +890,7 @@ class _CashManagementPageState extends State<CashManagementPage> {
             color: Colors.white.withOpacity(0.3),
           ),
 
-          const SizedBox(width: 8),
+          const SizedBox(width: UIConstants.spacingSm),
 
           // Logout icon button
           IconButton(
@@ -921,7 +922,7 @@ class _CashManagementPageState extends State<CashManagementPage> {
               size: 20,
             ),
             tooltip: 'Logout',
-            padding: const EdgeInsets.all(8),
+            padding: UIConstants.paddingMinimal,
           ),
         ],
       ),
@@ -930,11 +931,11 @@ class _CashManagementPageState extends State<CashManagementPage> {
 
   Widget _buildBalanceContent(ThemeService themeService, bool isDarkTheme) {
     return Container(
-      padding: const EdgeInsets.all(20),
+      padding: UIConstants.paddingStandard,
       height:220,
       decoration: BoxDecoration(
         color: isDarkTheme ? const Color(0xFF404040) : Colors.grey[50],
-        borderRadius: BorderRadius.circular(8),
+        borderRadius: BorderRadius.circular(UIConstants.borderRadiusSm),
         border: Border.all(
           color: isDarkTheme ? Colors.grey[700]! : Colors.grey[200]!,
           width: 1,
@@ -949,7 +950,7 @@ class _CashManagementPageState extends State<CashManagementPage> {
             Text(
               'Currency: ',
               style: TextStyle(
-                fontSize: 14,
+                fontSize: UIConstants.fontSizeBody,
                 color: isDarkTheme ? Colors.grey[400] : Colors.grey[600],
               ),
             ),
@@ -960,7 +961,7 @@ class _CashManagementPageState extends State<CashManagementPage> {
               height: 40,
               decoration: BoxDecoration(
                 color: isDarkTheme ? const Color(0xFF505050) : Colors.white, // Enhanced background color
-                borderRadius: BorderRadius.circular(8),
+                borderRadius: BorderRadius.circular(UIConstants.borderRadiusSm),
                 border: Border.all(
                   color: isDarkTheme ? Colors.grey[700]! : Colors.grey[200]!,
                   width: 1,
@@ -985,7 +986,7 @@ class _CashManagementPageState extends State<CashManagementPage> {
                   dropdownColor: isDarkTheme ? const Color(0xFF1e1e1e) : Colors.white,
                   style: TextStyle(
                     color: isDarkTheme ? Colors.white : Colors.black,
-                    fontSize: 12, // Smaller font for more compact appearance
+                    fontSize: UIConstants.fontSizeSm, // Smaller font for more compact appearance
                   ),
                   items: _supportedCurrencies.isEmpty
                       ? [DropdownMenuItem<Map<String, String>>(
@@ -1014,7 +1015,7 @@ class _CashManagementPageState extends State<CashManagementPage> {
               Text(
                 'Available: ',
                 style: TextStyle(
-                  fontSize: 14, // Same as Currency title
+                  fontSize: UIConstants.fontSizeBody, // Same as Currency title
                   color: isDarkTheme ? Colors.grey[400] : Colors.grey[600], // Same as Currency title
                 ),
               ),
@@ -1033,8 +1034,8 @@ class _CashManagementPageState extends State<CashManagementPage> {
                   : Text(
                       '$_buyingPower ${_selectedCurrency['symbol'] ?? ''}',
                       style: TextStyle(
-                        fontSize: 18,
-                        fontWeight: FontWeight.w600,
+                        fontSize: UIConstants.fontSizeMd,
+                        fontWeight: UIConstants.fontWeightMedium,
                         color: isDarkTheme ? Colors.white : Colors.black,
                       ),
                     ),
@@ -1056,18 +1057,18 @@ class _CashManagementPageState extends State<CashManagementPage> {
                 icon: const Icon(Icons.add, color: Colors.white),
                 label: const Text(
                   'Add Cash',
-                  style: TextStyle(color: Colors.white, fontWeight: FontWeight.w600),
+                  style: TextStyle(color: Colors.white, fontWeight: UIConstants.fontWeightMedium),
                 ),
                 style: ElevatedButton.styleFrom(
                   backgroundColor: const Color(0xFF4CAF50),
                   padding: const EdgeInsets.symmetric(vertical: 12),
                   shape: RoundedRectangleBorder(
-                    borderRadius: BorderRadius.circular(8),
+                    borderRadius: BorderRadius.circular(UIConstants.borderRadiusSm),
                   ),
                 ),
               ),
             ),
-            const SizedBox(width: 16),
+            const SizedBox(width: UIConstants.spacingMd),
             Expanded(
               child: ElevatedButton.icon(
                 onPressed: () {
@@ -1077,13 +1078,13 @@ class _CashManagementPageState extends State<CashManagementPage> {
                 icon: const Icon(Icons.remove, color: Colors.white),
                 label: const Text(
                   'Withdraw Cash',
-                  style: TextStyle(color: Colors.white, fontWeight: FontWeight.w600),
+                  style: TextStyle(color: Colors.white, fontWeight: UIConstants.fontWeightMedium),
                 ),
                 style: ElevatedButton.styleFrom(
                   backgroundColor: const Color(0xFFFF4081),
                   padding: const EdgeInsets.symmetric(vertical: 12),
                   shape: RoundedRectangleBorder(
-                    borderRadius: BorderRadius.circular(8),
+                    borderRadius: BorderRadius.circular(UIConstants.borderRadiusSm),
                   ),
                 ),
               ),
@@ -1109,7 +1110,7 @@ class _CashManagementPageState extends State<CashManagementPage> {
             'Add Cash',
             style: TextStyle(
               color: isDarkTheme ? Colors.white : Colors.black,
-              fontWeight: FontWeight.bold,
+              fontWeight: UIConstants.fontWeightMedium,
             ),
           ),
           content: Column(
@@ -1130,7 +1131,7 @@ class _CashManagementPageState extends State<CashManagementPage> {
                   hintText: '0.00',
                   suffixText: _selectedCurrency['symbol'] ?? '',
                   border: OutlineInputBorder(
-                    borderRadius: BorderRadius.circular(8),
+                    borderRadius: BorderRadius.circular(UIConstants.borderRadiusSm),
                   ),
                   filled: true,
                   fillColor: isDarkTheme ? Colors.grey[400] : Colors.grey[200],
@@ -1287,7 +1288,7 @@ class _CashManagementPageState extends State<CashManagementPage> {
             'Withdraw Cash',
             style: TextStyle(
               color: isDarkTheme ? Colors.white : Colors.black,
-              fontWeight: FontWeight.bold,
+              fontWeight: UIConstants.fontWeightMedium,
             ),
           ),
           content: Column(
@@ -1308,7 +1309,7 @@ class _CashManagementPageState extends State<CashManagementPage> {
                   hintText: '0.00',
                   suffixText: _selectedCurrency['symbol'] ?? '',
                   border: OutlineInputBorder(
-                    borderRadius: BorderRadius.circular(8),
+                    borderRadius: BorderRadius.circular(UIConstants.borderRadiusSm),
                   ),
                   filled: true,
                   fillColor: isDarkTheme ? Colors.grey[400] : Colors.grey[200],
@@ -1322,7 +1323,7 @@ class _CashManagementPageState extends State<CashManagementPage> {
                 'Available: $_buyingPower ${_selectedCurrency['symbol'] ?? ''}',
                 style: TextStyle(
                   color: isDarkTheme ? Colors.grey[400] : Colors.grey[600],
-                  fontSize: 12,
+                  fontSize: UIConstants.fontSizeSm,
                 ),
               ),
             ],

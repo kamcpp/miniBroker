@@ -4,6 +4,7 @@ import '../services/theme_service.dart';
 import '../utils/broker_config_helper.dart';
 
 /// Dialog for creating a new broker configuration
+import '../config/ui_constants.dart';
 class CreateBrokerConfigDialog extends StatefulWidget {
   final String configDir;
 
@@ -108,12 +109,12 @@ class _CreateBrokerConfigDialogState extends State<CreateBrokerConfigDialog> {
     return Dialog(
       backgroundColor: backgroundColor,
       shape: RoundedRectangleBorder(
-        borderRadius: BorderRadius.circular(16),
+        borderRadius: BorderRadius.circular(UIConstants.borderRadiusLg),
       ),
       child: Container(
         width: 600,
         constraints: const BoxConstraints(maxHeight: 700),
-        padding: const EdgeInsets.all(24),
+        padding: UIConstants.paddingComfortable,
         child: Form(
           key: _formKey,
           child: Column(
@@ -124,14 +125,14 @@ class _CreateBrokerConfigDialogState extends State<CreateBrokerConfigDialog> {
               Row(
                 children: [
                   Icon(Icons.add_circle_outline, color: primaryColor, size: 32),
-                  const SizedBox(width: 12),
+                  const SizedBox(width: UIConstants.spacingSm),
                   Expanded(
                     child: Text(
                       'Create Broker Configuration',
                       style: TextStyle(
                         color: textColor,
-                        fontSize: 20,
-                        fontWeight: FontWeight.bold,
+                        fontSize: UIConstants.fontSizeMd,
+                        fontWeight: UIConstants.fontWeightMedium,
                       ),
                     ),
                   ),
@@ -141,12 +142,12 @@ class _CreateBrokerConfigDialogState extends State<CreateBrokerConfigDialog> {
                   ),
                 ],
               ),
-              const SizedBox(height: 8),
+              const SizedBox(height: UIConstants.spacingSm),
               Text(
                 'Create a new broker instance configuration',
                 style: TextStyle(color: hintColor, fontSize: 14),
               ),
-              const SizedBox(height: 24),
+              const SizedBox(height: UIConstants.spacingLg),
 
               // Scrollable form
               Flexible(
@@ -159,11 +160,11 @@ class _CreateBrokerConfigDialogState extends State<CreateBrokerConfigDialog> {
                         'Broker Name *',
                         style: TextStyle(
                           color: textColor,
-                          fontWeight: FontWeight.w600,
-                          fontSize: 14,
+                          fontWeight: UIConstants.fontWeightMedium,
+                          fontSize: UIConstants.fontSizeBody,
                         ),
                       ),
-                      const SizedBox(height: 8),
+                      const SizedBox(height: UIConstants.spacingSm),
                       TextFormField(
                         controller: _brokerNameController,
                         autofocus: true,
@@ -174,7 +175,7 @@ class _CreateBrokerConfigDialogState extends State<CreateBrokerConfigDialog> {
                           filled: true,
                           fillColor: surfaceColor,
                           border: OutlineInputBorder(
-                            borderRadius: BorderRadius.circular(8),
+                            borderRadius: BorderRadius.circular(UIConstants.borderRadiusSm),
                             borderSide: BorderSide.none,
                           ),
                           helperText:
@@ -192,29 +193,29 @@ class _CreateBrokerConfigDialogState extends State<CreateBrokerConfigDialog> {
                           return null;
                         },
                       ),
-                      const SizedBox(height: 20),
+                      const SizedBox(height: UIConstants.spacingMd),
 
                       // gRPC Server Section
                       Text(
                         'gRPC Server',
                         style: TextStyle(
                           color: textColor,
-                          fontWeight: FontWeight.bold,
-                          fontSize: 16,
+                          fontWeight: UIConstants.fontWeightMedium,
+                          fontSize: UIConstants.fontSizeBody,
                         ),
                       ),
-                      const SizedBox(height: 12),
+                      const SizedBox(height: UIConstants.spacingSm),
 
                       // gRPC Host
                       Text(
                         'Host *',
                         style: TextStyle(
                           color: textColor,
-                          fontWeight: FontWeight.w600,
-                          fontSize: 14,
+                          fontWeight: UIConstants.fontWeightMedium,
+                          fontSize: UIConstants.fontSizeBody,
                         ),
                       ),
-                      const SizedBox(height: 8),
+                      const SizedBox(height: UIConstants.spacingSm),
                       TextFormField(
                         controller: _grpcHostController,
                         style: TextStyle(color: textColor),
@@ -224,7 +225,7 @@ class _CreateBrokerConfigDialogState extends State<CreateBrokerConfigDialog> {
                           filled: true,
                           fillColor: surfaceColor,
                           border: OutlineInputBorder(
-                            borderRadius: BorderRadius.circular(8),
+                            borderRadius: BorderRadius.circular(UIConstants.borderRadiusSm),
                             borderSide: BorderSide.none,
                           ),
                         ),
@@ -235,18 +236,18 @@ class _CreateBrokerConfigDialogState extends State<CreateBrokerConfigDialog> {
                           return null;
                         },
                       ),
-                      const SizedBox(height: 16),
+                      const SizedBox(height: UIConstants.spacingMd),
 
                       // gRPC Port
                       Text(
                         'Port *',
                         style: TextStyle(
                           color: textColor,
-                          fontWeight: FontWeight.w600,
-                          fontSize: 14,
+                          fontWeight: UIConstants.fontWeightMedium,
+                          fontSize: UIConstants.fontSizeBody,
                         ),
                       ),
-                      const SizedBox(height: 8),
+                      const SizedBox(height: UIConstants.spacingSm),
                       TextFormField(
                         controller: _grpcPortController,
                         style: TextStyle(color: textColor),
@@ -257,7 +258,7 @@ class _CreateBrokerConfigDialogState extends State<CreateBrokerConfigDialog> {
                           filled: true,
                           fillColor: surfaceColor,
                           border: OutlineInputBorder(
-                            borderRadius: BorderRadius.circular(8),
+                            borderRadius: BorderRadius.circular(UIConstants.borderRadiusSm),
                             borderSide: BorderSide.none,
                           ),
                         ),
@@ -272,29 +273,29 @@ class _CreateBrokerConfigDialogState extends State<CreateBrokerConfigDialog> {
                           return null;
                         },
                       ),
-                      const SizedBox(height: 20),
+                      const SizedBox(height: UIConstants.spacingMd),
 
                       // Participant Section
                       Text(
                         'Participant',
                         style: TextStyle(
                           color: textColor,
-                          fontWeight: FontWeight.bold,
-                          fontSize: 16,
+                          fontWeight: UIConstants.fontWeightMedium,
+                          fontSize: UIConstants.fontSizeBody,
                         ),
                       ),
-                      const SizedBox(height: 12),
+                      const SizedBox(height: UIConstants.spacingSm),
 
                       // API Key
                       Text(
                         'API Key *',
                         style: TextStyle(
                           color: textColor,
-                          fontWeight: FontWeight.w600,
-                          fontSize: 14,
+                          fontWeight: UIConstants.fontWeightMedium,
+                          fontSize: UIConstants.fontSizeBody,
                         ),
                       ),
-                      const SizedBox(height: 8),
+                      const SizedBox(height: UIConstants.spacingSm),
                       TextFormField(
                         controller: _apiKeyController,
                         style: TextStyle(color: textColor),
@@ -304,7 +305,7 @@ class _CreateBrokerConfigDialogState extends State<CreateBrokerConfigDialog> {
                           filled: true,
                           fillColor: surfaceColor,
                           border: OutlineInputBorder(
-                            borderRadius: BorderRadius.circular(8),
+                            borderRadius: BorderRadius.circular(UIConstants.borderRadiusSm),
                             borderSide: BorderSide.none,
                           ),
                         ),
@@ -315,18 +316,18 @@ class _CreateBrokerConfigDialogState extends State<CreateBrokerConfigDialog> {
                           return null;
                         },
                       ),
-                      const SizedBox(height: 16),
+                      const SizedBox(height: UIConstants.spacingMd),
 
                       // Participant ID (optional)
                       Text(
                         'Participant ID (optional)',
                         style: TextStyle(
                           color: textColor,
-                          fontWeight: FontWeight.w600,
-                          fontSize: 14,
+                          fontWeight: UIConstants.fontWeightMedium,
+                          fontSize: UIConstants.fontSizeBody,
                         ),
                       ),
-                      const SizedBox(height: 8),
+                      const SizedBox(height: UIConstants.spacingSm),
                       TextFormField(
                         controller: _participantIdController,
                         style: TextStyle(color: textColor),
@@ -336,23 +337,23 @@ class _CreateBrokerConfigDialogState extends State<CreateBrokerConfigDialog> {
                           filled: true,
                           fillColor: surfaceColor,
                           border: OutlineInputBorder(
-                            borderRadius: BorderRadius.circular(8),
+                            borderRadius: BorderRadius.circular(UIConstants.borderRadiusSm),
                             borderSide: BorderSide.none,
                           ),
                         ),
                       ),
-                      const SizedBox(height: 16),
+                      const SizedBox(height: UIConstants.spacingMd),
 
                       // Participant Name (optional)
                       Text(
                         'Participant Name (optional)',
                         style: TextStyle(
                           color: textColor,
-                          fontWeight: FontWeight.w600,
-                          fontSize: 14,
+                          fontWeight: UIConstants.fontWeightMedium,
+                          fontSize: UIConstants.fontSizeBody,
                         ),
                       ),
-                      const SizedBox(height: 8),
+                      const SizedBox(height: UIConstants.spacingSm),
                       TextFormField(
                         controller: _participantNameController,
                         style: TextStyle(color: textColor),
@@ -362,7 +363,7 @@ class _CreateBrokerConfigDialogState extends State<CreateBrokerConfigDialog> {
                           filled: true,
                           fillColor: surfaceColor,
                           border: OutlineInputBorder(
-                            borderRadius: BorderRadius.circular(8),
+                            borderRadius: BorderRadius.circular(UIConstants.borderRadiusSm),
                             borderSide: BorderSide.none,
                           ),
                         ),
@@ -374,18 +375,18 @@ class _CreateBrokerConfigDialogState extends State<CreateBrokerConfigDialog> {
 
               // Error message
               if (_errorMessage != null) ...[
-                const SizedBox(height: 16),
+                const SizedBox(height: UIConstants.spacingMd),
                 Container(
-                  padding: const EdgeInsets.all(12),
+                  padding: UIConstants.paddingStandard,
                   decoration: BoxDecoration(
                     color: Colors.red.withOpacity(0.1),
-                    borderRadius: BorderRadius.circular(8),
+                    borderRadius: BorderRadius.circular(UIConstants.borderRadiusSm),
                     border: Border.all(color: Colors.red.withOpacity(0.3)),
                   ),
                   child: Row(
                     children: [
                       Icon(Icons.error_outline, color: Colors.red[400], size: 20),
-                      const SizedBox(width: 8),
+                      const SizedBox(width: UIConstants.spacingSm),
                       Expanded(
                         child: Text(
                           _errorMessage!,
@@ -397,7 +398,7 @@ class _CreateBrokerConfigDialogState extends State<CreateBrokerConfigDialog> {
                 ),
               ],
 
-              const SizedBox(height: 24),
+              const SizedBox(height: UIConstants.spacingLg),
 
               // Action buttons
               Row(
@@ -412,7 +413,7 @@ class _CreateBrokerConfigDialogState extends State<CreateBrokerConfigDialog> {
                     ),
                     child: const Text('Cancel'),
                   ),
-                  const SizedBox(width: 12),
+                  const SizedBox(width: UIConstants.spacingSm),
                   ElevatedButton(
                     onPressed: _isCreating ? null : _createConfig,
                     style: ElevatedButton.styleFrom(
@@ -423,7 +424,7 @@ class _CreateBrokerConfigDialogState extends State<CreateBrokerConfigDialog> {
                         vertical: 16,
                       ),
                       shape: RoundedRectangleBorder(
-                        borderRadius: BorderRadius.circular(8),
+                        borderRadius: BorderRadius.circular(UIConstants.borderRadiusSm),
                       ),
                     ),
                     child: _isCreating
@@ -438,7 +439,7 @@ class _CreateBrokerConfigDialogState extends State<CreateBrokerConfigDialog> {
                           )
                         : const Text(
                             'Create Configuration',
-                            style: TextStyle(fontWeight: FontWeight.bold),
+                            style: TextStyle(fontWeight: UIConstants.fontWeightMedium),
                           ),
                   ),
                 ],

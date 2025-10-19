@@ -276,6 +276,9 @@ class _ConfigFinderDialogState extends State<ConfigFinderDialog> {
               style: ElevatedButton.styleFrom(
                 backgroundColor: Colors.red[600],
                 foregroundColor: Colors.white,
+                shape: RoundedRectangleBorder(
+                  borderRadius: BorderRadius.circular(UIConstants.borderRadiusSm),
+                ),
               ),
               child: const Text('Delete'),
             ),
@@ -309,6 +312,11 @@ class _ConfigFinderDialogState extends State<ConfigFinderDialog> {
           ),
           ElevatedButton(
             onPressed: () => Navigator.of(context).pop(true),
+            style: ElevatedButton.styleFrom(
+              shape: RoundedRectangleBorder(
+                borderRadius: BorderRadius.circular(UIConstants.borderRadiusSm),
+              ),
+            ),
             child: const Text('Create'),
           ),
         ],
@@ -339,6 +347,11 @@ class _ConfigFinderDialogState extends State<ConfigFinderDialog> {
                 ),
               );
             },
+            style: ElevatedButton.styleFrom(
+              shape: RoundedRectangleBorder(
+                borderRadius: BorderRadius.circular(UIConstants.borderRadiusSm),
+              ),
+            ),
             child: const Text('OK'),
           ),
         ],
@@ -368,13 +381,13 @@ class _ConfigFinderDialogState extends State<ConfigFinderDialog> {
     return Dialog(
       backgroundColor: backgroundColor,
       shape: RoundedRectangleBorder(
-        borderRadius: BorderRadius.circular(16),
+        borderRadius: BorderRadius.circular(UIConstants.borderRadiusLg),
       ),
       child: SizedBox(
-        width: 700,
-        height: 800,
+        width: 650,
+        height: 650,
         child: Padding(
-          padding: UIConstants.paddingComfortable,
+          padding: UIConstants.paddingStandard,
           child: Column(
             mainAxisSize: MainAxisSize.max,
             crossAxisAlignment: CrossAxisAlignment.start,
@@ -383,7 +396,7 @@ class _ConfigFinderDialogState extends State<ConfigFinderDialog> {
             Row(
               children: [
                 Icon(Icons.folder_special, color: primaryColor, size: 32),
-                const SizedBox(width: 12),
+                const SizedBox(width: UIConstants.spacingSm),
                 Expanded(
                   child: Text(
                     'Broker Configuration Finder',
@@ -396,7 +409,7 @@ class _ConfigFinderDialogState extends State<ConfigFinderDialog> {
                 ),
               ],
             ),
-            const SizedBox(height: UIConstants.spacingLg),
+            const SizedBox(height: UIConstants.spacingMd),
 
             // Config Directory Section
             Text(
@@ -420,7 +433,7 @@ class _ConfigFinderDialogState extends State<ConfigFinderDialog> {
                       filled: true,
                       fillColor: surfaceColor,
                       border: OutlineInputBorder(
-                        borderRadius: BorderRadius.circular(8),
+                        borderRadius: BorderRadius.circular(UIConstants.borderRadiusSm),
                         borderSide: BorderSide.none,
                       ),
                       contentPadding: const EdgeInsets.symmetric(
@@ -430,16 +443,16 @@ class _ConfigFinderDialogState extends State<ConfigFinderDialog> {
                     ),
                   ),
                 ),
-                const SizedBox(width: 8),
+                const SizedBox(width: UIConstants.spacingSm),
                 ElevatedButton.icon(
                   onPressed: _changeConfigDir,
                   style: ElevatedButton.styleFrom(
                     backgroundColor: primaryColor,
                     foregroundColor: Colors.white,
-                    padding: const EdgeInsets.symmetric(
-                      horizontal: 16,
-                      vertical: 12,
+                    shape: RoundedRectangleBorder(
+                      borderRadius: BorderRadius.circular(UIConstants.borderRadiusSm),
                     ),
+                    padding: UIConstants.paddingCompact,
                   ),
                   icon: const Icon(Icons.save, size: 18),
                   label: const Text('Change'),
@@ -451,7 +464,7 @@ class _ConfigFinderDialogState extends State<ConfigFinderDialog> {
               'Changes to config directory require app restart',
               style: TextStyle(color: hintColor, fontSize: 12),
             ),
-            const SizedBox(height: UIConstants.spacingLg),
+            const SizedBox(height: UIConstants.spacingMd),
 
             // Broker Configs Section
             Row(
@@ -469,6 +482,9 @@ class _ConfigFinderDialogState extends State<ConfigFinderDialog> {
                   onPressed: _createNewConfig,
                   style: TextButton.styleFrom(
                     foregroundColor: primaryColor,
+                    shape: RoundedRectangleBorder(
+                      borderRadius: BorderRadius.circular(UIConstants.borderRadiusSm),
+                    ),
                   ),
                   icon: const Icon(Icons.add_circle_outline, size: 20),
                   label: const Text('Create New'),
@@ -485,10 +501,10 @@ class _ConfigFinderDialogState extends State<ConfigFinderDialog> {
                     )
                   : _configFiles.isEmpty
                       ? Container(
-                          padding: const EdgeInsets.all(32),
+                          padding: UIConstants.paddingComfortable,
                           decoration: BoxDecoration(
                             color: surfaceColor,
-                            borderRadius: BorderRadius.circular(12),
+                            borderRadius: BorderRadius.circular(UIConstants.borderRadiusMd),
                             border: Border.all(
                               color: hintColor!.withOpacity(0.3),
                             ),
@@ -508,7 +524,7 @@ class _ConfigFinderDialogState extends State<ConfigFinderDialog> {
                                   style: TextStyle(
                                     color: textColor,
                                     fontSize: UIConstants.fontSizeBody,
-                                    fontWeight: FontWeight.w500,
+                                    fontWeight: UIConstants.fontWeightNormal,
                                   ),
                                 ),
                                 const SizedBox(height: UIConstants.spacingSm),
@@ -526,7 +542,7 @@ class _ConfigFinderDialogState extends State<ConfigFinderDialog> {
                       : Container(
                           decoration: BoxDecoration(
                             color: surfaceColor,
-                            borderRadius: BorderRadius.circular(12),
+                            borderRadius: BorderRadius.circular(UIConstants.borderRadiusMd),
                           ),
                           child: ListView.separated(
                             shrinkWrap: true,
@@ -624,7 +640,7 @@ class _ConfigFinderDialogState extends State<ConfigFinderDialog> {
                                                 )
                                               : null,
                                         ),
-                                        const SizedBox(width: 16),
+                                        const SizedBox(width: UIConstants.spacingMd),
 
                                         // Broker info
                                         Expanded(
@@ -698,7 +714,7 @@ class _ConfigFinderDialogState extends State<ConfigFinderDialog> {
                         ),
             ),
 
-            const SizedBox(height: UIConstants.spacingLg),
+            const SizedBox(height: UIConstants.spacingMd),
 
             // Action buttons
             Row(
@@ -708,10 +724,13 @@ class _ConfigFinderDialogState extends State<ConfigFinderDialog> {
                   onPressed: () => Navigator.of(context).pop(null),
                   style: TextButton.styleFrom(
                     foregroundColor: hintColor,
+                    shape: RoundedRectangleBorder(
+                      borderRadius: BorderRadius.circular(UIConstants.borderRadiusSm),
+                    ),
                   ),
                   child: const Text('Cancel'),
                 ),
-                const SizedBox(width: 12),
+                const SizedBox(width: UIConstants.spacingSm),
                 ElevatedButton(
                   onPressed: _selectedConfig != null
                       ? () => Navigator.of(context).pop(_selectedConfig)
@@ -720,11 +739,11 @@ class _ConfigFinderDialogState extends State<ConfigFinderDialog> {
                     backgroundColor: primaryColor,
                     foregroundColor: Colors.white,
                     padding: const EdgeInsets.symmetric(
-                      horizontal: 32,
-                      vertical: 16,
+                      horizontal: 24,
+                      vertical: 10,
                     ),
                     shape: RoundedRectangleBorder(
-                      borderRadius: BorderRadius.circular(8),
+                      borderRadius: BorderRadius.circular(UIConstants.borderRadiusSm),
                     ),
                     disabledBackgroundColor: hintColor?.withOpacity(0.3),
                   ),

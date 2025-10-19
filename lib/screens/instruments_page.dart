@@ -4,6 +4,7 @@ import 'package:provider/provider.dart';
 import '../services/auth_service.dart';
 import '../services/theme_service.dart';
 import '../services/real_grpc_client.dart';
+import '../config/ui_constants.dart';
 import '../utils/connectivity_checker.dart';
 import 'portfolio_page.dart';
 import 'trading_page.dart';
@@ -136,7 +137,7 @@ class _InstrumentsPageState extends State<InstrumentsPage> {
           content: Row(
             children: [
               const Icon(Icons.error_outline, color: Colors.white),
-              const SizedBox(width: 12),
+              const SizedBox(width: UIConstants.spacingSm),
               Expanded(child: Text(message)),
             ],
           ),
@@ -181,7 +182,7 @@ class _InstrumentsPageState extends State<InstrumentsPage> {
                 child: Row(
                   children: [
                     const Icon(Icons.error_outline, color: Colors.white, size: 20),
-                    const SizedBox(width: 12),
+                    const SizedBox(width: UIConstants.spacingSm),
                     Expanded(
                       child: Text(
                         'Network Error: $_networkErrorMessage',
@@ -202,7 +203,7 @@ class _InstrumentsPageState extends State<InstrumentsPage> {
             // Main Content
             Expanded(
               child: Padding(
-                padding: const EdgeInsets.all(20),
+                padding: UIConstants.paddingComfortable,
                 child: Column(
                   crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
@@ -213,22 +214,22 @@ class _InstrumentsPageState extends State<InstrumentsPage> {
                         Text(
                           'Instruments',
                           style: TextStyle(
-                            fontSize: 24,
-                            fontWeight: FontWeight.bold,
+                            fontSize: UIConstants.fontSizeLg,
+                            fontWeight: UIConstants.fontWeightMedium,
                             color: isDarkTheme ? Colors.white : Colors.black,
                           ),
                         ),
                       ],
                     ),
-                    const SizedBox(height: 20),
+                    const SizedBox(height: UIConstants.spacingMd),
 
                     // Instruments List
                     Expanded(
                       child: Container(
-                        padding: const EdgeInsets.all(20),
+                        padding: UIConstants.paddingComfortable,
                         decoration: BoxDecoration(
                           color: isDarkTheme ? const Color(0xFF2A2A2A) : Colors.white,
-                          borderRadius: BorderRadius.circular(12),
+                          borderRadius: BorderRadius.circular(UIConstants.borderRadiusMd),
                           boxShadow: [
                             BoxShadow(
                               color: Colors.black.withOpacity(0.1),
@@ -267,11 +268,11 @@ class _InstrumentsPageState extends State<InstrumentsPage> {
           mainAxisAlignment: MainAxisAlignment.center,
           children: [
             const CircularProgressIndicator(),
-            const SizedBox(height: 16),
+            const SizedBox(height: UIConstants.spacingMd),
             Text(
               'Loading instruments...',
               style: TextStyle(
-                fontSize: 16,
+                fontSize: UIConstants.fontSizeBody,
                 color: isDarkTheme ? Colors.grey[400] : Colors.grey[600],
               ),
             ),
@@ -290,20 +291,20 @@ class _InstrumentsPageState extends State<InstrumentsPage> {
               size: 64,
               color: isDarkTheme ? Colors.grey[600] : Colors.grey[400],
             ),
-            const SizedBox(height: 16),
+            const SizedBox(height: UIConstants.spacingMd),
             Text(
               'No instruments data available',
               style: TextStyle(
-                fontSize: 18,
-                fontWeight: FontWeight.bold,
+                fontSize: UIConstants.fontSizeMd,
+                fontWeight: UIConstants.fontWeightMedium,
                 color: isDarkTheme ? Colors.white : Colors.black,
               ),
             ),
-            const SizedBox(height: 8),
+            const SizedBox(height: UIConstants.spacingSm),
             Text(
               'Select a market to view instruments',
               style: TextStyle(
-                fontSize: 14,
+                fontSize: UIConstants.fontSizeBody,
                 color: isDarkTheme ? Colors.grey[400] : Colors.grey[600],
               ),
             ),
@@ -333,41 +334,41 @@ class _InstrumentsPageState extends State<InstrumentsPage> {
               Text(
                 error,
                 style: TextStyle(
-                  fontSize: 18,
-                  fontWeight: FontWeight.bold,
+                  fontSize: UIConstants.fontSizeMd,
+                  fontWeight: UIConstants.fontWeightMedium,
                   color: isDarkTheme ? Colors.white : Colors.black,
                 ),
                 textAlign: TextAlign.center,
               ),
               if (details.isNotEmpty) ...[
-                const SizedBox(height: 12),
+                const SizedBox(height: UIConstants.spacingSm),
                 Text(
                   details,
                   textAlign: TextAlign.center,
                   style: TextStyle(
-                    fontSize: 14,
+                    fontSize: UIConstants.fontSizeBody,
                     color: isDarkTheme ? Colors.grey[300] : Colors.grey[700],
                   ),
                 ),
               ],
               if (suggestion.isNotEmpty) ...[
-                const SizedBox(height: 16),
+                const SizedBox(height: UIConstants.spacingMd),
                 Container(
-                  padding: const EdgeInsets.all(16),
+                  padding: UIConstants.paddingStandard,
                   decoration: BoxDecoration(
                     color: Colors.blue.withOpacity(0.1),
-                    borderRadius: BorderRadius.circular(8),
+                    borderRadius: BorderRadius.circular(UIConstants.borderRadiusSm),
                     border: Border.all(color: Colors.blue.withOpacity(0.3)),
                   ),
                   child: Row(
                     children: [
                       const Icon(Icons.lightbulb_outline, color: Colors.blue, size: 20),
-                      const SizedBox(width: 12),
+                      const SizedBox(width: UIConstants.spacingSm),
                       Expanded(
                         child: Text(
                           suggestion,
                           style: const TextStyle(
-                            fontSize: 13,
+                            fontSize: UIConstants.fontSizeSm,
                             color: Colors.blue,
                           ),
                         ),
@@ -402,20 +403,20 @@ class _InstrumentsPageState extends State<InstrumentsPage> {
               size: 64,
               color: isDarkTheme ? Colors.grey[600] : Colors.grey[400],
             ),
-            const SizedBox(height: 16),
+            const SizedBox(height: UIConstants.spacingMd),
             Text(
               'No instruments found',
               style: TextStyle(
-                fontSize: 18,
-                fontWeight: FontWeight.bold,
+                fontSize: UIConstants.fontSizeMd,
+                fontWeight: UIConstants.fontWeightMedium,
                 color: isDarkTheme ? Colors.white : Colors.black,
               ),
             ),
-            const SizedBox(height: 8),
+            const SizedBox(height: UIConstants.spacingSm),
             Text(
               'This market has no instruments',
               style: TextStyle(
-                fontSize: 14,
+                fontSize: UIConstants.fontSizeBody,
                 color: isDarkTheme ? Colors.grey[400] : Colors.grey[600],
               ),
             ),
@@ -464,10 +465,10 @@ class _InstrumentsPageState extends State<InstrumentsPage> {
     final maxOrderSize = issueCurrency.isNotEmpty ? issueCurrency : 'N/A';
 
     return Container(
-      padding: const EdgeInsets.all(16),
+      padding: UIConstants.paddingStandard,
       decoration: BoxDecoration(
         color: isDarkTheme ? const Color(0xFF404040) : Colors.grey[50],
-        borderRadius: BorderRadius.circular(8),
+        borderRadius: BorderRadius.circular(UIConstants.borderRadiusSm),
         border: Border.all(
           color: isDarkTheme ? Colors.grey[700]! : Colors.grey[200]!,
           width: 1,
@@ -481,15 +482,15 @@ class _InstrumentsPageState extends State<InstrumentsPage> {
             height: 48,
             decoration: BoxDecoration(
               color: _getColorForInstrument(symbol),
-              borderRadius: BorderRadius.circular(8),
+              borderRadius: BorderRadius.circular(UIConstants.borderRadiusSm),
             ),
             child: Center(
               child: Text(
                 symbol.length >= 2 ? symbol.substring(0, 2).toUpperCase() : (symbol.isNotEmpty ? symbol.toUpperCase() : '??'),
                 style: const TextStyle(
                   color: Colors.white,
-                  fontSize: 16,
-                  fontWeight: FontWeight.bold,
+                  fontSize: UIConstants.fontSizeBody,
+                  fontWeight: UIConstants.fontWeightMedium,
                 ),
               ),
             ),
@@ -507,12 +508,12 @@ class _InstrumentsPageState extends State<InstrumentsPage> {
                     Text(
                       symbol,
                       style: TextStyle(
-                        fontSize: 18,
-                        fontWeight: FontWeight.bold,
+                        fontSize: UIConstants.fontSizeMd,
+                        fontWeight: UIConstants.fontWeightMedium,
                         color: isDarkTheme ? Colors.white : Colors.black,
                       ),
                     ),
-                    const SizedBox(width: 12),
+                    const SizedBox(width: UIConstants.spacingSm),
                     Container(
                       padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
                       decoration: BoxDecoration(
@@ -523,18 +524,18 @@ class _InstrumentsPageState extends State<InstrumentsPage> {
                         status.toString().toUpperCase(),
                         style: const TextStyle(
                           color: Colors.white,
-                          fontSize: 10,
-                          fontWeight: FontWeight.bold,
+                          fontSize: UIConstants.fontSizeXs,
+                          fontWeight: UIConstants.fontWeightMedium,
                         ),
                       ),
                     ),
                   ],
                 ),
-                const SizedBox(height: 8),
+                const SizedBox(height: UIConstants.spacingSm),
                 Text(
                   'ID: $instrumentId',
                   style: TextStyle(
-                    fontSize: 12,
+                    fontSize: UIConstants.fontSizeSm,
                     color: isDarkTheme ? Colors.grey[400] : Colors.grey[600],
                   ),
                 ),
@@ -549,7 +550,7 @@ class _InstrumentsPageState extends State<InstrumentsPage> {
               Text(
                 'CFI: $minOrderSize',
                 style: TextStyle(
-                  fontSize: 12,
+                  fontSize: UIConstants.fontSizeSm,
                   color: isDarkTheme ? Colors.grey[300] : Colors.grey[700],
                 ),
               ),
@@ -557,7 +558,7 @@ class _InstrumentsPageState extends State<InstrumentsPage> {
               Text(
                 'Currency: $maxOrderSize',
                 style: TextStyle(
-                  fontSize: 12,
+                  fontSize: UIConstants.fontSizeSm,
                   color: isDarkTheme ? Colors.grey[300] : Colors.grey[700],
                 ),
               ),
@@ -622,7 +623,7 @@ class _InstrumentsPageState extends State<InstrumentsPage> {
           Text(
             'Page ${_currentPage + 1} of ${totalPages > 0 ? totalPages : 1} (Total: $totalItems items)',
             style: TextStyle(
-              fontSize: 14,
+              fontSize: UIConstants.fontSizeBody,
               color: isDarkTheme ? Colors.grey[400] : Colors.grey[600],
             ),
           ),
@@ -637,7 +638,7 @@ class _InstrumentsPageState extends State<InstrumentsPage> {
                 color: isDarkTheme ? Colors.white : Colors.black,
                 disabledColor: Colors.grey,
               ),
-              const SizedBox(width: 8),
+              const SizedBox(width: UIConstants.spacingSm),
               IconButton(
                 onPressed: _currentPage < totalPages - 1
                     ? () => _fetchInstruments(page: _currentPage + 1)
@@ -697,7 +698,7 @@ class _InstrumentsPageState extends State<InstrumentsPage> {
                             style: TextStyle(
                               color: Colors.white,
                               fontSize: 8,
-                              fontWeight: FontWeight.w500,
+                              fontWeight: UIConstants.fontWeightNormal,
                               height: 0.8,
                             ),
                           ),
@@ -706,7 +707,7 @@ class _InstrumentsPageState extends State<InstrumentsPage> {
                             style: TextStyle(
                               color: Colors.white,
                               fontSize: 8,
-                              fontWeight: FontWeight.bold,
+                              fontWeight: UIConstants.fontWeightMedium,
                               height: 0.8,
                             ),
                           ),
@@ -749,8 +750,8 @@ class _InstrumentsPageState extends State<InstrumentsPage> {
                     child: Text(
                       'Instruments',
                       style: TextStyle(
-                        fontSize: 13,
-                        fontWeight: FontWeight.w600,
+                        fontSize: UIConstants.fontSizeSm,
+                        fontWeight: UIConstants.fontWeightMedium,
                         color: isDarkTheme ? Colors.white : Colors.black,
                       ),
                     ),
@@ -796,8 +797,8 @@ class _InstrumentsPageState extends State<InstrumentsPage> {
                           child: const Text(
                             'Portfolio',
                             style: TextStyle(
-                              fontSize: 13,
-                              fontWeight: FontWeight.w500,
+                              fontSize: UIConstants.fontSizeSm,
+                              fontWeight: UIConstants.fontWeightNormal,
                               color: Colors.white70,
                             ),
                           ),
@@ -846,8 +847,8 @@ class _InstrumentsPageState extends State<InstrumentsPage> {
                           child: const Text(
                             'Trading',
                             style: TextStyle(
-                              fontSize: 13,
-                              fontWeight: FontWeight.w500,
+                              fontSize: UIConstants.fontSizeSm,
+                              fontWeight: UIConstants.fontWeightNormal,
                               color: Colors.white70,
                             ),
                           ),
@@ -896,8 +897,8 @@ class _InstrumentsPageState extends State<InstrumentsPage> {
                           child: const Text(
                             'Activity',
                             style: TextStyle(
-                              fontSize: 13,
-                              fontWeight: FontWeight.w500,
+                              fontSize: UIConstants.fontSizeSm,
+                              fontWeight: UIConstants.fontWeightNormal,
                               color: Colors.white70,
                             ),
                           ),
@@ -946,8 +947,8 @@ class _InstrumentsPageState extends State<InstrumentsPage> {
                           child: const Text(
                             'Cash Management',
                             style: TextStyle(
-                              fontSize: 13,
-                              fontWeight: FontWeight.w500,
+                              fontSize: UIConstants.fontSizeSm,
+                              fontWeight: UIConstants.fontWeightNormal,
                               color: Colors.white70,
                             ),
                           ),
@@ -993,7 +994,7 @@ class _InstrumentsPageState extends State<InstrumentsPage> {
                   child: Row(
                     children: [
                       Icon(Icons.person, size: 18, color: Colors.white),
-                      SizedBox(width: 8),
+                      SizedBox(width: UIConstants.spacingSm),
                       Text('Profile', style: TextStyle(color: Colors.white)),
                     ],
                   ),
@@ -1009,7 +1010,7 @@ class _InstrumentsPageState extends State<InstrumentsPage> {
                     child: Row(
                       children: [
                         Icon(Icons.people, size: 18, color: Colors.white),
-                        SizedBox(width: 8),
+                        SizedBox(width: UIConstants.spacingSm),
                         Text('View Users', style: TextStyle(color: Colors.white)),
                       ],
                     ),
@@ -1033,13 +1034,13 @@ class _InstrumentsPageState extends State<InstrumentsPage> {
                     size: 14,
                   ),
                 ),
-                const SizedBox(width: 8),
+                const SizedBox(width: UIConstants.spacingSm),
                 Text(
                   authService.username,
                   style: const TextStyle(
                     color: Colors.white,
-                    fontSize: 16,
-                    fontWeight: FontWeight.w500,
+                    fontSize: UIConstants.fontSizeBody,
+                    fontWeight: UIConstants.fontWeightNormal,
                   ),
                 ),
                 const SizedBox(width: 4),
@@ -1077,11 +1078,11 @@ class _InstrumentsPageState extends State<InstrumentsPage> {
                 size: 20,
               ),
               tooltip: themeService.isDarkTheme ? 'Light Theme' : 'Dark Theme',
-              padding: const EdgeInsets.all(8),
+              padding: UIConstants.paddingMinimal,
             ),
           ),
 
-          const SizedBox(width: 8),
+          const SizedBox(width: UIConstants.spacingSm),
 
           // Vertical divider line
           Container(
@@ -1090,7 +1091,7 @@ class _InstrumentsPageState extends State<InstrumentsPage> {
             color: Colors.white.withOpacity(0.3),
           ),
 
-          const SizedBox(width: 8),
+          const SizedBox(width: UIConstants.spacingSm),
 
           // Logout icon button
           IconButton(
@@ -1122,7 +1123,7 @@ class _InstrumentsPageState extends State<InstrumentsPage> {
               size: 20,
             ),
             tooltip: 'Logout',
-            padding: const EdgeInsets.all(8),
+            padding: UIConstants.paddingMinimal,
           ),
         ],
       ),

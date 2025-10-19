@@ -4,6 +4,7 @@ import '../services/auth_service.dart';
 import '../services/theme_service.dart';
 import '../services/database_helper.dart';
 import '../utils/connectivity_checker.dart';
+import '../config/ui_constants.dart';
 
 class ProfilePage extends StatefulWidget {
   const ProfilePage({super.key});
@@ -70,7 +71,7 @@ class _ProfilePageState extends State<ProfilePage> {
           ),
         ),
         body: SingleChildScrollView(
-          padding: const EdgeInsets.all(24),
+          padding: UIConstants.paddingComfortable,
           child: Form(
             key: _formKey,
             child: Column(
@@ -80,13 +81,13 @@ class _ProfilePageState extends State<ProfilePage> {
                 Text(
                   'Personal Information',
                   style: TextStyle(
-                    fontSize: 24,
-                    fontWeight: FontWeight.bold,
+                    fontSize: UIConstants.fontSizeLg,
+                    fontWeight: UIConstants.fontWeightMedium,
                     color: _isDarkTheme ? Colors.white : Colors.black,
                   ),
                 ),
                 
-                const SizedBox(height: 32),
+                const SizedBox(height: UIConstants.spacingLg),
                 
                 // Username Section
                 _buildInfoSection(
@@ -104,7 +105,7 @@ class _ProfilePageState extends State<ProfilePage> {
                   canEdit: !_databaseHelper.isAdminUser(authService.username),
                 ),
                 
-                const SizedBox(height: 24),
+                const SizedBox(height: UIConstants.spacingLg),
                 
                 // Password Section
                 _buildPasswordSection(
@@ -130,10 +131,10 @@ class _ProfilePageState extends State<ProfilePage> {
     bool canEdit = true,
   }) {
     return Container(
-      padding: const EdgeInsets.all(20),
+      padding: UIConstants.paddingStandard,
       decoration: BoxDecoration(
         color: isDarkTheme ? const Color(0xFF2A2A2A) : Colors.white,
-        borderRadius: BorderRadius.circular(12),
+        borderRadius: BorderRadius.circular(UIConstants.borderRadiusMd),
         border: Border.all(
           color: isDarkTheme ? Colors.grey[700]! : Colors.grey[300]!,
           width: 1,
@@ -148,8 +149,8 @@ class _ProfilePageState extends State<ProfilePage> {
               Text(
                 label,
                 style: TextStyle(
-                  fontSize: 14,
-                  fontWeight: FontWeight.w500,
+                  fontSize: UIConstants.fontSizeBody,
+                  fontWeight: UIConstants.fontWeightNormal,
                   color: isDarkTheme ? Colors.grey[400] : Colors.grey[600],
                 ),
               ),
@@ -160,26 +161,26 @@ class _ProfilePageState extends State<ProfilePage> {
                     'Edit',
                     style: TextStyle(
                       color: isDarkTheme ? Colors.lightBlue : const Color(0xFF1a1754),
-                      fontSize: 14,
-                      fontWeight: FontWeight.w500,
+                      fontSize: UIConstants.fontSizeBody,
+                      fontWeight: UIConstants.fontWeightNormal,
                     ),
                   ),
                 ),
             ],
           ),
           
-          const SizedBox(height: 8),
+          const SizedBox(height: UIConstants.spacingSm),
           
           if (isEditing) ...[
             TextFormField(
               controller: controller,
               style: TextStyle(
-                fontSize: 16,
+                fontSize: UIConstants.fontSizeBody,
                 color: isDarkTheme ? Colors.white : Colors.black,
               ),
               decoration: InputDecoration(
                 border: OutlineInputBorder(
-                  borderRadius: BorderRadius.circular(8),
+                  borderRadius: BorderRadius.circular(UIConstants.borderRadiusSm),
                 ),
                 contentPadding: const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
               ),
@@ -191,7 +192,7 @@ class _ProfilePageState extends State<ProfilePage> {
               },
             ),
             
-            const SizedBox(height: 12),
+            const SizedBox(height: UIConstants.spacingSm),
             
             Row(
               children: [
@@ -203,7 +204,7 @@ class _ProfilePageState extends State<ProfilePage> {
                   ),
                   child: const Text('Save'),
                 ),
-                const SizedBox(width: 8),
+                const SizedBox(width: UIConstants.spacingSm),
                 TextButton(
                   onPressed: onCancel,
                   child: const Text('Cancel'),
@@ -214,7 +215,7 @@ class _ProfilePageState extends State<ProfilePage> {
             Text(
               canEdit ? value : '$value (Admin - cannot edit)',
               style: TextStyle(
-                fontSize: 16,
+                fontSize: UIConstants.fontSizeBody,
                 color: isDarkTheme ? Colors.white : Colors.black,
                 fontStyle: canEdit ? FontStyle.normal : FontStyle.italic,
               ),
@@ -227,10 +228,10 @@ class _ProfilePageState extends State<ProfilePage> {
 
   Widget _buildPasswordSection({required bool isDarkTheme}) {
     return Container(
-      padding: const EdgeInsets.all(20),
+      padding: UIConstants.paddingStandard,
       decoration: BoxDecoration(
         color: isDarkTheme ? const Color(0xFF2A2A2A) : Colors.white,
-        borderRadius: BorderRadius.circular(12),
+        borderRadius: BorderRadius.circular(UIConstants.borderRadiusMd),
         border: Border.all(
           color: isDarkTheme ? Colors.grey[700]! : Colors.grey[300]!,
           width: 1,
@@ -245,8 +246,8 @@ class _ProfilePageState extends State<ProfilePage> {
               Text(
                 'Password',
                 style: TextStyle(
-                  fontSize: 14,
-                  fontWeight: FontWeight.w500,
+                  fontSize: UIConstants.fontSizeBody,
+                  fontWeight: UIConstants.fontWeightNormal,
                   color: isDarkTheme ? Colors.grey[400] : Colors.grey[600],
                 ),
               ),
@@ -257,28 +258,28 @@ class _ProfilePageState extends State<ProfilePage> {
                     'Edit',
                     style: TextStyle(
                       color: isDarkTheme ? Colors.lightBlue : const Color(0xFF1a1754),
-                      fontSize: 14,
-                      fontWeight: FontWeight.w500,
+                      fontSize: UIConstants.fontSizeBody,
+                      fontWeight: UIConstants.fontWeightNormal,
                     ),
                   ),
                 ),
             ],
           ),
           
-          const SizedBox(height: 8),
+          const SizedBox(height: UIConstants.spacingSm),
           
           if (_isEditingPassword) ...[
             TextFormField(
               controller: _passwordController,
               obscureText: !_isPasswordVisible,
               style: TextStyle(
-                fontSize: 16,
+                fontSize: UIConstants.fontSizeBody,
                 color: isDarkTheme ? Colors.white : Colors.black,
               ),
               decoration: InputDecoration(
                 labelText: 'New Password',
                 border: OutlineInputBorder(
-                  borderRadius: BorderRadius.circular(8),
+                  borderRadius: BorderRadius.circular(UIConstants.borderRadiusSm),
                 ),
                 contentPadding: const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
                 suffixIcon: IconButton(
@@ -297,19 +298,19 @@ class _ProfilePageState extends State<ProfilePage> {
               },
             ),
             
-            const SizedBox(height: 12),
+            const SizedBox(height: UIConstants.spacingSm),
             
             TextFormField(
               controller: _confirmPasswordController,
               obscureText: !_isPasswordVisible,
               style: TextStyle(
-                fontSize: 16,
+                fontSize: UIConstants.fontSizeBody,
                 color: isDarkTheme ? Colors.white : Colors.black,
               ),
               decoration: InputDecoration(
                 labelText: 'Confirm Password',
                 border: OutlineInputBorder(
-                  borderRadius: BorderRadius.circular(8),
+                  borderRadius: BorderRadius.circular(UIConstants.borderRadiusSm),
                 ),
                 contentPadding: const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
               ),
@@ -321,7 +322,7 @@ class _ProfilePageState extends State<ProfilePage> {
               },
             ),
             
-            const SizedBox(height: 12),
+            const SizedBox(height: UIConstants.spacingSm),
             
             Row(
               children: [
@@ -333,7 +334,7 @@ class _ProfilePageState extends State<ProfilePage> {
                   ),
                   child: const Text('Save'),
                 ),
-                const SizedBox(width: 8),
+                const SizedBox(width: UIConstants.spacingSm),
                 TextButton(
                   onPressed: () {
                     setState(() {
@@ -350,7 +351,7 @@ class _ProfilePageState extends State<ProfilePage> {
             Text(
               '••••••••••',
               style: TextStyle(
-                fontSize: 16,
+                fontSize: UIConstants.fontSizeBody,
                 color: isDarkTheme ? Colors.white : Colors.black,
                 letterSpacing: 2,
               ),
