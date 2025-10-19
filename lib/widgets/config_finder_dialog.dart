@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 import 'dart:io';
+import 'dart:ui';
 import '../config/ui_constants.dart';
 import 'package:path/path.dart' as path;
 import '../services/theme_service.dart';
@@ -392,16 +393,34 @@ class _ConfigFinderDialogState extends State<ConfigFinderDialog> {
     final selectedColor = isDarkTheme ? const Color(0xFF00b8fb) : const Color(0xFF1a1754);
 
     return Dialog(
-      backgroundColor: backgroundColor,
+      backgroundColor: Colors.transparent,
       shape: RoundedRectangleBorder(
         borderRadius: BorderRadius.circular(UIConstants.borderRadiusLg),
       ),
-      child: SizedBox(
-        width: 650,
-        height: 500,
-        child: Padding(
-          padding: UIConstants.paddingStandard,
-          child: Column(
+      child: ClipRRect(
+        borderRadius: BorderRadius.circular(UIConstants.borderRadiusLg),
+        child: BackdropFilter(
+          filter: ImageFilter.blur(sigmaX: 10, sigmaY: 10),
+          child: Container(
+            width: 650,
+            height: 750,
+            padding: UIConstants.paddingComfortable,
+            decoration: BoxDecoration(
+              color: backgroundColor.withOpacity(0.85),
+              borderRadius: BorderRadius.circular(UIConstants.borderRadiusLg),
+              border: Border.all(
+                color: isDarkTheme ? Colors.white.withOpacity(0.2) : Colors.white.withOpacity(0.4),
+                width: 1,
+              ),
+              boxShadow: [
+                BoxShadow(
+                  color: Colors.black.withOpacity(0.2),
+                  blurRadius: 20,
+                  offset: const Offset(0, 10),
+                ),
+              ],
+            ),
+            child: Column(
             mainAxisSize: MainAxisSize.max,
             crossAxisAlignment: CrossAxisAlignment.start,
             children: [
@@ -769,6 +788,7 @@ class _ConfigFinderDialogState extends State<ConfigFinderDialog> {
             ],
           ),
         ),
+      ),
       ),
     );
   }
