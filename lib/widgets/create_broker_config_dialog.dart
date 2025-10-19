@@ -161,7 +161,7 @@ class _CreateBrokerConfigDialogState extends State<CreateBrokerConfigDialog> {
                         style: TextStyle(
                           color: textColor,
                           fontWeight: UIConstants.fontWeightMedium,
-                          fontSize: UIConstants.fontSizeBody,
+                          fontSize: UIConstants.textFieldFontSize,
                         ),
                       ),
                       const SizedBox(height: UIConstants.spacingSm),
@@ -175,7 +175,7 @@ class _CreateBrokerConfigDialogState extends State<CreateBrokerConfigDialog> {
                           filled: true,
                           fillColor: surfaceColor,
                           border: OutlineInputBorder(
-                            borderRadius: BorderRadius.circular(UIConstants.borderRadiusSm),
+                            borderRadius: BorderRadius.circular(UIConstants.textFieldBorderRadius),
                             borderSide: BorderSide.none,
                           ),
                           helperText:
@@ -201,7 +201,7 @@ class _CreateBrokerConfigDialogState extends State<CreateBrokerConfigDialog> {
                         style: TextStyle(
                           color: textColor,
                           fontWeight: UIConstants.fontWeightMedium,
-                          fontSize: UIConstants.fontSizeBody,
+                          fontSize: UIConstants.textFieldFontSize,
                         ),
                       ),
                       const SizedBox(height: UIConstants.spacingSm),
@@ -212,7 +212,7 @@ class _CreateBrokerConfigDialogState extends State<CreateBrokerConfigDialog> {
                         style: TextStyle(
                           color: textColor,
                           fontWeight: UIConstants.fontWeightMedium,
-                          fontSize: UIConstants.fontSizeBody,
+                          fontSize: UIConstants.textFieldFontSize,
                         ),
                       ),
                       const SizedBox(height: UIConstants.spacingSm),
@@ -225,7 +225,7 @@ class _CreateBrokerConfigDialogState extends State<CreateBrokerConfigDialog> {
                           filled: true,
                           fillColor: surfaceColor,
                           border: OutlineInputBorder(
-                            borderRadius: BorderRadius.circular(UIConstants.borderRadiusSm),
+                            borderRadius: BorderRadius.circular(UIConstants.textFieldBorderRadius),
                             borderSide: BorderSide.none,
                           ),
                         ),
@@ -244,7 +244,7 @@ class _CreateBrokerConfigDialogState extends State<CreateBrokerConfigDialog> {
                         style: TextStyle(
                           color: textColor,
                           fontWeight: UIConstants.fontWeightMedium,
-                          fontSize: UIConstants.fontSizeBody,
+                          fontSize: UIConstants.textFieldFontSize,
                         ),
                       ),
                       const SizedBox(height: UIConstants.spacingSm),
@@ -258,7 +258,7 @@ class _CreateBrokerConfigDialogState extends State<CreateBrokerConfigDialog> {
                           filled: true,
                           fillColor: surfaceColor,
                           border: OutlineInputBorder(
-                            borderRadius: BorderRadius.circular(UIConstants.borderRadiusSm),
+                            borderRadius: BorderRadius.circular(UIConstants.textFieldBorderRadius),
                             borderSide: BorderSide.none,
                           ),
                         ),
@@ -281,7 +281,7 @@ class _CreateBrokerConfigDialogState extends State<CreateBrokerConfigDialog> {
                         style: TextStyle(
                           color: textColor,
                           fontWeight: UIConstants.fontWeightMedium,
-                          fontSize: UIConstants.fontSizeBody,
+                          fontSize: UIConstants.textFieldFontSize,
                         ),
                       ),
                       const SizedBox(height: UIConstants.spacingSm),
@@ -292,7 +292,7 @@ class _CreateBrokerConfigDialogState extends State<CreateBrokerConfigDialog> {
                         style: TextStyle(
                           color: textColor,
                           fontWeight: UIConstants.fontWeightMedium,
-                          fontSize: UIConstants.fontSizeBody,
+                          fontSize: UIConstants.textFieldFontSize,
                         ),
                       ),
                       const SizedBox(height: UIConstants.spacingSm),
@@ -305,7 +305,7 @@ class _CreateBrokerConfigDialogState extends State<CreateBrokerConfigDialog> {
                           filled: true,
                           fillColor: surfaceColor,
                           border: OutlineInputBorder(
-                            borderRadius: BorderRadius.circular(UIConstants.borderRadiusSm),
+                            borderRadius: BorderRadius.circular(UIConstants.textFieldBorderRadius),
                             borderSide: BorderSide.none,
                           ),
                         ),
@@ -324,7 +324,7 @@ class _CreateBrokerConfigDialogState extends State<CreateBrokerConfigDialog> {
                         style: TextStyle(
                           color: textColor,
                           fontWeight: UIConstants.fontWeightMedium,
-                          fontSize: UIConstants.fontSizeBody,
+                          fontSize: UIConstants.textFieldFontSize,
                         ),
                       ),
                       const SizedBox(height: UIConstants.spacingSm),
@@ -337,7 +337,7 @@ class _CreateBrokerConfigDialogState extends State<CreateBrokerConfigDialog> {
                           filled: true,
                           fillColor: surfaceColor,
                           border: OutlineInputBorder(
-                            borderRadius: BorderRadius.circular(UIConstants.borderRadiusSm),
+                            borderRadius: BorderRadius.circular(UIConstants.textFieldBorderRadius),
                             borderSide: BorderSide.none,
                           ),
                         ),
@@ -350,7 +350,7 @@ class _CreateBrokerConfigDialogState extends State<CreateBrokerConfigDialog> {
                         style: TextStyle(
                           color: textColor,
                           fontWeight: UIConstants.fontWeightMedium,
-                          fontSize: UIConstants.fontSizeBody,
+                          fontSize: UIConstants.textFieldFontSize,
                         ),
                       ),
                       const SizedBox(height: UIConstants.spacingSm),
@@ -363,7 +363,7 @@ class _CreateBrokerConfigDialogState extends State<CreateBrokerConfigDialog> {
                           filled: true,
                           fillColor: surfaceColor,
                           border: OutlineInputBorder(
-                            borderRadius: BorderRadius.circular(UIConstants.borderRadiusSm),
+                            borderRadius: BorderRadius.circular(UIConstants.textFieldBorderRadius),
                             borderSide: BorderSide.none,
                           ),
                         ),
@@ -380,7 +380,7 @@ class _CreateBrokerConfigDialogState extends State<CreateBrokerConfigDialog> {
                   padding: UIConstants.paddingStandard,
                   decoration: BoxDecoration(
                     color: Colors.red.withOpacity(0.1),
-                    borderRadius: BorderRadius.circular(UIConstants.borderRadiusSm),
+                    borderRadius: BorderRadius.circular(UIConstants.textFieldBorderRadius),
                     border: Border.all(color: Colors.red.withOpacity(0.3)),
                   ),
                   child: Row(
@@ -424,7 +424,7 @@ class _CreateBrokerConfigDialogState extends State<CreateBrokerConfigDialog> {
                         vertical: 16,
                       ),
                       shape: RoundedRectangleBorder(
-                        borderRadius: BorderRadius.circular(UIConstants.borderRadiusSm),
+                        borderRadius: BorderRadius.circular(UIConstants.textFieldBorderRadius),
                       ),
                     ),
                     child: _isCreating

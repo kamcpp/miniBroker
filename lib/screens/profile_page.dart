@@ -149,7 +149,7 @@ class _ProfilePageState extends State<ProfilePage> {
               Text(
                 label,
                 style: TextStyle(
-                  fontSize: UIConstants.fontSizeBody,
+                  fontSize: UIConstants.textFieldFontSize,
                   fontWeight: UIConstants.fontWeightNormal,
                   color: isDarkTheme ? Colors.grey[400] : Colors.grey[600],
                 ),
@@ -161,7 +161,7 @@ class _ProfilePageState extends State<ProfilePage> {
                     'Edit',
                     style: TextStyle(
                       color: isDarkTheme ? Colors.lightBlue : const Color(0xFF1a1754),
-                      fontSize: UIConstants.fontSizeBody,
+                      fontSize: UIConstants.textFieldFontSize,
                       fontWeight: UIConstants.fontWeightNormal,
                     ),
                   ),
@@ -175,14 +175,14 @@ class _ProfilePageState extends State<ProfilePage> {
             TextFormField(
               controller: controller,
               style: TextStyle(
-                fontSize: UIConstants.fontSizeBody,
+                fontSize: UIConstants.textFieldFontSize,
                 color: isDarkTheme ? Colors.white : Colors.black,
               ),
               decoration: InputDecoration(
                 border: OutlineInputBorder(
-                  borderRadius: BorderRadius.circular(UIConstants.borderRadiusSm),
+                  borderRadius: BorderRadius.circular(UIConstants.textFieldBorderRadius),
                 ),
-                contentPadding: const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
+                contentPadding: UIConstants.textFieldPadding,
               ),
               validator: (value) {
                 if (value == null || value.trim().isEmpty) {
@@ -215,7 +215,7 @@ class _ProfilePageState extends State<ProfilePage> {
             Text(
               canEdit ? value : '$value (Admin - cannot edit)',
               style: TextStyle(
-                fontSize: UIConstants.fontSizeBody,
+                fontSize: UIConstants.textFieldFontSize,
                 color: isDarkTheme ? Colors.white : Colors.black,
                 fontStyle: canEdit ? FontStyle.normal : FontStyle.italic,
               ),
@@ -246,7 +246,7 @@ class _ProfilePageState extends State<ProfilePage> {
               Text(
                 'Password',
                 style: TextStyle(
-                  fontSize: UIConstants.fontSizeBody,
+                  fontSize: UIConstants.textFieldFontSize,
                   fontWeight: UIConstants.fontWeightNormal,
                   color: isDarkTheme ? Colors.grey[400] : Colors.grey[600],
                 ),
@@ -258,7 +258,7 @@ class _ProfilePageState extends State<ProfilePage> {
                     'Edit',
                     style: TextStyle(
                       color: isDarkTheme ? Colors.lightBlue : const Color(0xFF1a1754),
-                      fontSize: UIConstants.fontSizeBody,
+                      fontSize: UIConstants.textFieldFontSize,
                       fontWeight: UIConstants.fontWeightNormal,
                     ),
                   ),
@@ -273,15 +273,15 @@ class _ProfilePageState extends State<ProfilePage> {
               controller: _passwordController,
               obscureText: !_isPasswordVisible,
               style: TextStyle(
-                fontSize: UIConstants.fontSizeBody,
+                fontSize: UIConstants.textFieldFontSize,
                 color: isDarkTheme ? Colors.white : Colors.black,
               ),
               decoration: InputDecoration(
                 labelText: 'New Password',
                 border: OutlineInputBorder(
-                  borderRadius: BorderRadius.circular(UIConstants.borderRadiusSm),
+                  borderRadius: BorderRadius.circular(UIConstants.textFieldBorderRadius),
                 ),
-                contentPadding: const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
+                contentPadding: UIConstants.textFieldPadding,
                 suffixIcon: IconButton(
                   icon: Icon(_isPasswordVisible ? Icons.visibility_off : Icons.visibility),
                   onPressed: () => setState(() => _isPasswordVisible = !_isPasswordVisible),
@@ -304,15 +304,15 @@ class _ProfilePageState extends State<ProfilePage> {
               controller: _confirmPasswordController,
               obscureText: !_isPasswordVisible,
               style: TextStyle(
-                fontSize: UIConstants.fontSizeBody,
+                fontSize: UIConstants.textFieldFontSize,
                 color: isDarkTheme ? Colors.white : Colors.black,
               ),
               decoration: InputDecoration(
                 labelText: 'Confirm Password',
                 border: OutlineInputBorder(
-                  borderRadius: BorderRadius.circular(UIConstants.borderRadiusSm),
+                  borderRadius: BorderRadius.circular(UIConstants.textFieldBorderRadius),
                 ),
-                contentPadding: const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
+                contentPadding: UIConstants.textFieldPadding,
               ),
               validator: (value) {
                 if (value != _passwordController.text) {
@@ -351,7 +351,7 @@ class _ProfilePageState extends State<ProfilePage> {
             Text(
               '••••••••••',
               style: TextStyle(
-                fontSize: UIConstants.fontSizeBody,
+                fontSize: UIConstants.textFieldFontSize,
                 color: isDarkTheme ? Colors.white : Colors.black,
                 letterSpacing: 2,
               ),

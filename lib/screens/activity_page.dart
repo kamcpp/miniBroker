@@ -1145,7 +1145,7 @@ class _ActivityPageState extends State<ActivityPage> {
     return Container(
       decoration: BoxDecoration(
         color: isDarkTheme ? const Color(0xFF1e1e1e) : Colors.white,
-        borderRadius: BorderRadius.circular(UIConstants.borderRadiusSm),
+        borderRadius: BorderRadius.circular(UIConstants.textFieldBorderRadius),
       ),
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
@@ -1231,7 +1231,7 @@ class _ActivityPageState extends State<ActivityPage> {
                               padding: const EdgeInsets.symmetric(horizontal: 12),
                               decoration: BoxDecoration(
                                 color: isDarkTheme ? const Color(0xFF3a3a3a) : Colors.white,
-                                borderRadius: BorderRadius.circular(UIConstants.borderRadiusSm),
+                                borderRadius: BorderRadius.circular(UIConstants.textFieldBorderRadius),
                                 border: Border.all(
                                   color: isDarkTheme ? Colors.grey[600]! : Colors.grey[300]!,
                                 ),
@@ -1278,7 +1278,7 @@ class _ActivityPageState extends State<ActivityPage> {
                               padding: const EdgeInsets.symmetric(horizontal: 12),
                               decoration: BoxDecoration(
                                 color: isDarkTheme ? const Color(0xFF3a3a3a) : Colors.white,
-                                borderRadius: BorderRadius.circular(UIConstants.borderRadiusSm),
+                                borderRadius: BorderRadius.circular(UIConstants.textFieldBorderRadius),
                                 border: Border.all(
                                   color: isDarkTheme ? Colors.grey[600]! : Colors.grey[300]!,
                                 ),
@@ -1335,7 +1335,7 @@ class _ActivityPageState extends State<ActivityPage> {
                                     padding: const EdgeInsets.symmetric(horizontal: 12),
                                     decoration: BoxDecoration(
                                       color: isDarkTheme ? const Color(0xFF3a3a3a) : Colors.white,
-                                      borderRadius: BorderRadius.circular(UIConstants.borderRadiusSm),
+                                      borderRadius: BorderRadius.circular(UIConstants.textFieldBorderRadius),
                                       border: Border.all(
                                         color: isDarkTheme ? Colors.grey[600]! : Colors.grey[300]!,
                                       ),
@@ -1345,7 +1345,7 @@ class _ActivityPageState extends State<ActivityPage> {
                                       keyboardType: TextInputType.number,
                                       style: TextStyle(
                                         color: isDarkTheme ? Colors.white : Colors.black,
-                                        fontSize: UIConstants.fontSizeBody,
+                                        fontSize: UIConstants.textFieldFontSize,
                                       ),
                                       decoration: const InputDecoration(
                                         border: InputBorder.none,
@@ -1422,7 +1422,7 @@ class _ActivityPageState extends State<ActivityPage> {
                               padding: const EdgeInsets.symmetric(horizontal: 12),
                               decoration: BoxDecoration(
                                 color: isDarkTheme ? const Color(0xFF3a3a3a) : Colors.white,
-                                borderRadius: BorderRadius.circular(UIConstants.borderRadiusSm),
+                                borderRadius: BorderRadius.circular(UIConstants.textFieldBorderRadius),
                                 border: Border.all(
                                   color: isDarkTheme ? Colors.grey[600]! : Colors.grey[300]!,
                                 ),
@@ -1514,7 +1514,7 @@ class _ActivityPageState extends State<ActivityPage> {
                               padding: const EdgeInsets.symmetric(horizontal: 12),
                               decoration: BoxDecoration(
                                 color: isDarkTheme ? const Color(0xFF3a3a3a) : Colors.white,
-                                borderRadius: BorderRadius.circular(UIConstants.borderRadiusSm),
+                                borderRadius: BorderRadius.circular(UIConstants.textFieldBorderRadius),
                                 border: Border.all(
                                   color: isDarkTheme ? Colors.grey[600]! : Colors.grey[300]!,
                                 ),
@@ -1570,7 +1570,7 @@ class _ActivityPageState extends State<ActivityPage> {
                               padding: const EdgeInsets.symmetric(horizontal: 12),
                               decoration: BoxDecoration(
                                 color: isDarkTheme ? const Color(0xFF3a3a3a) : Colors.white,
-                                borderRadius: BorderRadius.circular(UIConstants.borderRadiusSm),
+                                borderRadius: BorderRadius.circular(UIConstants.textFieldBorderRadius),
                                 border: Border.all(
                                   color: isDarkTheme ? Colors.grey[600]! : Colors.grey[300]!,
                                 ),
@@ -1643,7 +1643,7 @@ class _ActivityPageState extends State<ActivityPage> {
                                 padding: const EdgeInsets.symmetric(horizontal: 12),
                                 decoration: BoxDecoration(
                                   color: isDarkTheme ? const Color(0xFF3a3a3a) : Colors.white,
-                                  borderRadius: BorderRadius.circular(UIConstants.borderRadiusSm),
+                                  borderRadius: BorderRadius.circular(UIConstants.textFieldBorderRadius),
                                   border: Border.all(
                                     color: isDarkTheme ? Colors.grey[600]! : Colors.grey[300]!,
                                   ),
@@ -1655,7 +1655,7 @@ class _ActivityPageState extends State<ActivityPage> {
                                         _formatDateTime(_fromDate),
                                         style: TextStyle(
                                           color: isDarkTheme ? Colors.white : Colors.black,
-                                          fontSize: UIConstants.fontSizeBody,
+                                          fontSize: UIConstants.textFieldFontSize,
                                         ),
                                       ),
                                     ),
@@ -1706,7 +1706,7 @@ class _ActivityPageState extends State<ActivityPage> {
                                 padding: const EdgeInsets.symmetric(horizontal: 12),
                                 decoration: BoxDecoration(
                                   color: isDarkTheme ? const Color(0xFF3a3a3a) : Colors.white,
-                                  borderRadius: BorderRadius.circular(UIConstants.borderRadiusSm),
+                                  borderRadius: BorderRadius.circular(UIConstants.textFieldBorderRadius),
                                   border: Border.all(
                                     color: isDarkTheme ? Colors.grey[600]! : Colors.grey[300]!,
                                   ),
@@ -1718,7 +1718,7 @@ class _ActivityPageState extends State<ActivityPage> {
                                         _formatDateTime(_toDate),
                                         style: TextStyle(
                                           color: isDarkTheme ? Colors.white : Colors.black,
-                                          fontSize: UIConstants.fontSizeBody,
+                                          fontSize: UIConstants.textFieldFontSize,
                                         ),
                                       ),
                                     ),
@@ -1783,7 +1783,7 @@ class _ActivityPageState extends State<ActivityPage> {
                         child: Text(
                           'Order ID',
                           style: TextStyle(
-                            fontSize: UIConstants.fontSizeBody,
+                            fontSize: UIConstants.textFieldFontSize,
                             color: isDarkTheme ? Colors.grey[400] : Colors.grey[600],
                           ),
                         ),
@@ -1794,7 +1794,7 @@ class _ActivityPageState extends State<ActivityPage> {
                       child: Text(
                         'Account',
                         style: TextStyle(
-                          fontSize: UIConstants.fontSizeBody,
+                          fontSize: UIConstants.textFieldFontSize,
                           color: isDarkTheme ? Colors.grey[400] : Colors.grey[600],
                         ),
                       ),
@@ -1804,7 +1804,7 @@ class _ActivityPageState extends State<ActivityPage> {
                       child: Text(
                         'Symbol',
                         style: TextStyle(
-                          fontSize: UIConstants.fontSizeBody,
+                          fontSize: UIConstants.textFieldFontSize,
                           color: isDarkTheme ? Colors.grey[400] : Colors.grey[600],
                         ),
                       ),
@@ -1815,7 +1815,7 @@ class _ActivityPageState extends State<ActivityPage> {
                         'Quantity',
                         textAlign: TextAlign.center,
                         style: TextStyle(
-                          fontSize: UIConstants.fontSizeBody,
+                          fontSize: UIConstants.textFieldFontSize,
                           color: isDarkTheme ? Colors.grey[400] : Colors.grey[600],
                         ),
                       ),
@@ -1828,7 +1828,7 @@ class _ActivityPageState extends State<ActivityPage> {
                           'Price',
                           textAlign: TextAlign.right,
                           style: TextStyle(
-                            fontSize: UIConstants.fontSizeBody,
+                            fontSize: UIConstants.textFieldFontSize,
                             color: isDarkTheme ? Colors.grey[400] : Colors.grey[600],
                           ),
                         ),
@@ -1858,7 +1858,7 @@ class _ActivityPageState extends State<ActivityPage> {
                                 'No orders found',
                                 style: TextStyle(
                                   color: isDarkTheme ? Colors.grey[400] : Colors.grey[600],
-                                  fontSize: UIConstants.fontSizeBody,
+                                  fontSize: UIConstants.textFieldFontSize,
                                 ),
                               ),
                             )
@@ -1881,7 +1881,7 @@ class _ActivityPageState extends State<ActivityPage> {
                                             order['order_id']?.toString() ?? 
                                             'N/A',
                                             style: TextStyle(
-                                              fontSize: UIConstants.fontSizeBody,
+                                              fontSize: UIConstants.textFieldFontSize,
                                               color: isDarkTheme ? Colors.white : Colors.black,
                                               fontWeight: UIConstants.fontWeightNormal,
                                             ),
@@ -1898,7 +1898,7 @@ class _ActivityPageState extends State<ActivityPage> {
                                           order['participant_account']?.toString() ?? 
                                           'N/A',
                                           style: TextStyle(
-                                            fontSize: UIConstants.fontSizeBody,
+                                            fontSize: UIConstants.textFieldFontSize,
                                             color: isDarkTheme ? Colors.white : Colors.black,
                                           ),
                                           overflow: TextOverflow.ellipsis,
@@ -1912,7 +1912,7 @@ class _ActivityPageState extends State<ActivityPage> {
                                           order['asset_id']?.toString() ?? 
                                           'N/A',
                                           style: TextStyle(
-                                            fontSize: UIConstants.fontSizeBody,
+                                            fontSize: UIConstants.textFieldFontSize,
                                             color: isDarkTheme ? Colors.white : Colors.black,
                                           ),
                                         ),
@@ -1924,7 +1924,7 @@ class _ActivityPageState extends State<ActivityPage> {
                                           order['quantity']?.toString() ?? 'N/A',
                                           textAlign: TextAlign.center,
                                           style: TextStyle(
-                                            fontSize: UIConstants.fontSizeBody,
+                                            fontSize: UIConstants.textFieldFontSize,
                                             color: isDarkTheme ? Colors.white : Colors.black,
                                           ),
                                         ),
@@ -1938,7 +1938,7 @@ class _ActivityPageState extends State<ActivityPage> {
                                             order['price']?.toString() ?? 'N/A',
                                             textAlign: TextAlign.right,
                                             style: TextStyle(
-                                              fontSize: UIConstants.fontSizeBody,
+                                              fontSize: UIConstants.textFieldFontSize,
                                               color: isDarkTheme ? Colors.white : Colors.black,
                                               fontWeight: UIConstants.fontWeightNormal,
                                             ),
@@ -1964,7 +1964,7 @@ class _ActivityPageState extends State<ActivityPage> {
     return Container(
       decoration: BoxDecoration(
         color: isDarkTheme ? const Color(0xFF1e1e1e) : Colors.white,
-        borderRadius: BorderRadius.circular(UIConstants.borderRadiusSm),
+        borderRadius: BorderRadius.circular(UIConstants.textFieldBorderRadius),
       ),
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
@@ -2050,7 +2050,7 @@ class _ActivityPageState extends State<ActivityPage> {
                               padding: const EdgeInsets.symmetric(horizontal: 12),
                               decoration: BoxDecoration(
                                 color: isDarkTheme ? const Color(0xFF3a3a3a) : Colors.white,
-                                borderRadius: BorderRadius.circular(UIConstants.borderRadiusSm),
+                                borderRadius: BorderRadius.circular(UIConstants.textFieldBorderRadius),
                                 border: Border.all(
                                   color: isDarkTheme ? Colors.grey[600]! : Colors.grey[300]!,
                                 ),
@@ -2097,7 +2097,7 @@ class _ActivityPageState extends State<ActivityPage> {
                               padding: const EdgeInsets.symmetric(horizontal: 12),
                               decoration: BoxDecoration(
                                 color: isDarkTheme ? const Color(0xFF3a3a3a) : Colors.white,
-                                borderRadius: BorderRadius.circular(UIConstants.borderRadiusSm),
+                                borderRadius: BorderRadius.circular(UIConstants.textFieldBorderRadius),
                                 border: Border.all(
                                   color: isDarkTheme ? Colors.grey[600]! : Colors.grey[300]!,
                                 ),
@@ -2154,7 +2154,7 @@ class _ActivityPageState extends State<ActivityPage> {
                                     padding: const EdgeInsets.symmetric(horizontal: 12),
                                     decoration: BoxDecoration(
                                       color: isDarkTheme ? const Color(0xFF3a3a3a) : Colors.white,
-                                      borderRadius: BorderRadius.circular(UIConstants.borderRadiusSm),
+                                      borderRadius: BorderRadius.circular(UIConstants.textFieldBorderRadius),
                                       border: Border.all(
                                         color: isDarkTheme ? Colors.grey[600]! : Colors.grey[300]!,
                                       ),
@@ -2164,7 +2164,7 @@ class _ActivityPageState extends State<ActivityPage> {
                                       keyboardType: TextInputType.number,
                                       style: TextStyle(
                                         color: isDarkTheme ? Colors.white : Colors.black,
-                                        fontSize: UIConstants.fontSizeBody,
+                                        fontSize: UIConstants.textFieldFontSize,
                                       ),
                                       decoration: const InputDecoration(
                                         border: InputBorder.none,
@@ -2241,7 +2241,7 @@ class _ActivityPageState extends State<ActivityPage> {
                               padding: const EdgeInsets.symmetric(horizontal: 12),
                               decoration: BoxDecoration(
                                 color: isDarkTheme ? const Color(0xFF3a3a3a) : Colors.white,
-                                borderRadius: BorderRadius.circular(UIConstants.borderRadiusSm),
+                                borderRadius: BorderRadius.circular(UIConstants.textFieldBorderRadius),
                                 border: Border.all(
                                   color: isDarkTheme ? Colors.grey[600]! : Colors.grey[300]!,
                                 ),
@@ -2333,7 +2333,7 @@ class _ActivityPageState extends State<ActivityPage> {
                               padding: const EdgeInsets.symmetric(horizontal: 12),
                               decoration: BoxDecoration(
                                 color: isDarkTheme ? const Color(0xFF3a3a3a) : Colors.white,
-                                borderRadius: BorderRadius.circular(UIConstants.borderRadiusSm),
+                                borderRadius: BorderRadius.circular(UIConstants.textFieldBorderRadius),
                                 border: Border.all(
                                   color: isDarkTheme ? Colors.grey[600]! : Colors.grey[300]!,
                                 ),
@@ -2416,7 +2416,7 @@ class _ActivityPageState extends State<ActivityPage> {
                                 padding: const EdgeInsets.symmetric(horizontal: 12),
                                 decoration: BoxDecoration(
                                   color: isDarkTheme ? const Color(0xFF3a3a3a) : Colors.white,
-                                  borderRadius: BorderRadius.circular(UIConstants.borderRadiusSm),
+                                  borderRadius: BorderRadius.circular(UIConstants.textFieldBorderRadius),
                                   border: Border.all(
                                     color: isDarkTheme ? Colors.grey[600]! : Colors.grey[300]!,
                                   ),
@@ -2428,7 +2428,7 @@ class _ActivityPageState extends State<ActivityPage> {
                                         _formatDateTime(_tradeFromDate),
                                         style: TextStyle(
                                           color: isDarkTheme ? Colors.white : Colors.black,
-                                          fontSize: UIConstants.fontSizeBody,
+                                          fontSize: UIConstants.textFieldFontSize,
                                         ),
                                       ),
                                     ),
@@ -2479,7 +2479,7 @@ class _ActivityPageState extends State<ActivityPage> {
                                 padding: const EdgeInsets.symmetric(horizontal: 12),
                                 decoration: BoxDecoration(
                                   color: isDarkTheme ? const Color(0xFF3a3a3a) : Colors.white,
-                                  borderRadius: BorderRadius.circular(UIConstants.borderRadiusSm),
+                                  borderRadius: BorderRadius.circular(UIConstants.textFieldBorderRadius),
                                   border: Border.all(
                                     color: isDarkTheme ? Colors.grey[600]! : Colors.grey[300]!,
                                   ),
@@ -2491,7 +2491,7 @@ class _ActivityPageState extends State<ActivityPage> {
                                         _formatDateTime(_tradeToDate),
                                         style: TextStyle(
                                           color: isDarkTheme ? Colors.white : Colors.black,
-                                          fontSize: UIConstants.fontSizeBody,
+                                          fontSize: UIConstants.textFieldFontSize,
                                         ),
                                       ),
                                     ),
@@ -2556,7 +2556,7 @@ class _ActivityPageState extends State<ActivityPage> {
                         child: Text(
                           'Price',
                           style: TextStyle(
-                            fontSize: UIConstants.fontSizeBody,
+                            fontSize: UIConstants.textFieldFontSize,
                             color: isDarkTheme ? Colors.grey[400] : Colors.grey[600],
                           ),
                         ),
@@ -2570,7 +2570,7 @@ class _ActivityPageState extends State<ActivityPage> {
                           'Quantity',
                           textAlign: TextAlign.right,
                           style: TextStyle(
-                            fontSize: UIConstants.fontSizeBody,
+                            fontSize: UIConstants.textFieldFontSize,
                             color: isDarkTheme ? Colors.grey[400] : Colors.grey[600],
                           ),
                         ),
@@ -2600,7 +2600,7 @@ class _ActivityPageState extends State<ActivityPage> {
                                 'No trades found',
                                 style: TextStyle(
                                   color: isDarkTheme ? Colors.grey[400] : Colors.grey[600],
-                                  fontSize: UIConstants.fontSizeBody,
+                                  fontSize: UIConstants.textFieldFontSize,
                                 ),
                               ),
                             )
@@ -2620,7 +2620,7 @@ class _ActivityPageState extends State<ActivityPage> {
                                           child: Text(
                                             '\$${trade['price']?.toString() ?? 'N/A'}',
                                             style: TextStyle(
-                                              fontSize: UIConstants.fontSizeBody,
+                                              fontSize: UIConstants.textFieldFontSize,
                                               color: isDarkTheme ? Colors.white : Colors.black,
                                               fontWeight: UIConstants.fontWeightNormal,
                                             ),
@@ -2637,7 +2637,7 @@ class _ActivityPageState extends State<ActivityPage> {
                                             trade['quantity']?.toString() ?? 'N/A',
                                             textAlign: TextAlign.right,
                                             style: TextStyle(
-                                              fontSize: UIConstants.fontSizeBody,
+                                              fontSize: UIConstants.textFieldFontSize,
                                               color: isDarkTheme ? Colors.white : Colors.black,
                                             ),
                                             overflow: TextOverflow.ellipsis,
@@ -2757,7 +2757,7 @@ class _ActivityPageState extends State<ActivityPage> {
                   color: isActive
                       ? (isDarkTheme ? Colors.white : Colors.black)
                       : Colors.grey[400],
-                  fontSize: UIConstants.fontSizeBody,
+                  fontSize: UIConstants.textFieldFontSize,
                   fontWeight: isActive ? UIConstants.fontWeightMedium : UIConstants.fontWeightNormal,
                 ),
               ),
@@ -2790,7 +2790,7 @@ class _ActivityPageState extends State<ActivityPage> {
     return Container(
       decoration: BoxDecoration(
         color: isDarkTheme ? const Color(0xFF1e1e1e) : Colors.white,
-        borderRadius: BorderRadius.circular(UIConstants.borderRadiusSm),
+        borderRadius: BorderRadius.circular(UIConstants.textFieldBorderRadius),
       ),
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
@@ -2880,7 +2880,7 @@ class _ActivityPageState extends State<ActivityPage> {
                               padding: const EdgeInsets.symmetric(horizontal: 12),
                               decoration: BoxDecoration(
                                 color: isDarkTheme ? const Color(0xFF3a3a3a) : Colors.white,
-                                borderRadius: BorderRadius.circular(UIConstants.borderRadiusSm),
+                                borderRadius: BorderRadius.circular(UIConstants.textFieldBorderRadius),
                                 border: Border.all(
                                   color: isDarkTheme ? Colors.grey[600]! : Colors.grey[300]!,
                                 ),
@@ -2927,7 +2927,7 @@ class _ActivityPageState extends State<ActivityPage> {
                               padding: const EdgeInsets.symmetric(horizontal: 12),
                               decoration: BoxDecoration(
                                 color: isDarkTheme ? const Color(0xFF3a3a3a) : Colors.white,
-                                borderRadius: BorderRadius.circular(UIConstants.borderRadiusSm),
+                                borderRadius: BorderRadius.circular(UIConstants.textFieldBorderRadius),
                                 border: Border.all(
                                   color: isDarkTheme ? Colors.grey[600]! : Colors.grey[300]!,
                                 ),
@@ -2977,7 +2977,7 @@ class _ActivityPageState extends State<ActivityPage> {
                               padding: const EdgeInsets.symmetric(horizontal: 12),
                               decoration: BoxDecoration(
                                 color: isDarkTheme ? const Color(0xFF3a3a3a) : Colors.white,
-                                borderRadius: BorderRadius.circular(UIConstants.borderRadiusSm),
+                                borderRadius: BorderRadius.circular(UIConstants.textFieldBorderRadius),
                                 border: Border.all(
                                   color: isDarkTheme ? Colors.grey[600]! : Colors.grey[300]!,
                                 ),
@@ -3036,7 +3036,7 @@ class _ActivityPageState extends State<ActivityPage> {
                               padding: const EdgeInsets.symmetric(horizontal: 12),
                               decoration: BoxDecoration(
                                 color: isDarkTheme ? const Color(0xFF3a3a3a) : Colors.white,
-                                borderRadius: BorderRadius.circular(UIConstants.borderRadiusSm),
+                                borderRadius: BorderRadius.circular(UIConstants.textFieldBorderRadius),
                                 border: Border.all(
                                   color: isDarkTheme ? Colors.grey[600]! : Colors.grey[300]!,
                                 ),
@@ -3103,7 +3103,7 @@ class _ActivityPageState extends State<ActivityPage> {
                                 padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 12),
                                 decoration: BoxDecoration(
                                   color: isDarkTheme ? const Color(0xFF3a3a3a) : Colors.white,
-                                  borderRadius: BorderRadius.circular(UIConstants.borderRadiusSm),
+                                  borderRadius: BorderRadius.circular(UIConstants.textFieldBorderRadius),
                                   border: Border.all(
                                     color: isDarkTheme ? Colors.grey[600]! : Colors.grey[300]!,
                                   ),
@@ -3160,7 +3160,7 @@ class _ActivityPageState extends State<ActivityPage> {
                                 padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 12),
                                 decoration: BoxDecoration(
                                   color: isDarkTheme ? const Color(0xFF3a3a3a) : Colors.white,
-                                  borderRadius: BorderRadius.circular(UIConstants.borderRadiusSm),
+                                  borderRadius: BorderRadius.circular(UIConstants.textFieldBorderRadius),
                                   border: Border.all(
                                     color: isDarkTheme ? Colors.grey[600]! : Colors.grey[300]!,
                                   ),
@@ -3208,7 +3208,7 @@ class _ActivityPageState extends State<ActivityPage> {
                               padding: const EdgeInsets.symmetric(horizontal: 12),
                               decoration: BoxDecoration(
                                 color: isDarkTheme ? const Color(0xFF3a3a3a) : Colors.white,
-                                borderRadius: BorderRadius.circular(UIConstants.borderRadiusSm),
+                                borderRadius: BorderRadius.circular(UIConstants.textFieldBorderRadius),
                                 border: Border.all(
                                   color: isDarkTheme ? Colors.grey[600]! : Colors.grey[300]!,
                                 ),
@@ -3288,7 +3288,7 @@ class _ActivityPageState extends State<ActivityPage> {
                         child: Text(
                           'Settlement ID',
                           style: TextStyle(
-                            fontSize: UIConstants.fontSizeBody,
+                            fontSize: UIConstants.textFieldFontSize,
                             color: isDarkTheme ? Colors.grey[400] : Colors.grey[600],
                           ),
                         ),
@@ -3299,7 +3299,7 @@ class _ActivityPageState extends State<ActivityPage> {
                       child: Text(
                         'Status',
                         style: TextStyle(
-                          fontSize: UIConstants.fontSizeBody,
+                          fontSize: UIConstants.textFieldFontSize,
                           color: isDarkTheme ? Colors.grey[400] : Colors.grey[600],
                         ),
                       ),
@@ -3309,7 +3309,7 @@ class _ActivityPageState extends State<ActivityPage> {
                       child: Text(
                         'Asset',
                         style: TextStyle(
-                          fontSize: UIConstants.fontSizeBody,
+                          fontSize: UIConstants.textFieldFontSize,
                           color: isDarkTheme ? Colors.grey[400] : Colors.grey[600],
                         ),
                       ),
@@ -3320,7 +3320,7 @@ class _ActivityPageState extends State<ActivityPage> {
                         'Amount',
                         textAlign: TextAlign.center,
                         style: TextStyle(
-                          fontSize: UIConstants.fontSizeBody,
+                          fontSize: UIConstants.textFieldFontSize,
                           color: isDarkTheme ? Colors.grey[400] : Colors.grey[600],
                         ),
                       ),
@@ -3333,7 +3333,7 @@ class _ActivityPageState extends State<ActivityPage> {
                           'Timestamp',
                           textAlign: TextAlign.right,
                           style: TextStyle(
-                            fontSize: UIConstants.fontSizeBody,
+                            fontSize: UIConstants.textFieldFontSize,
                             color: isDarkTheme ? Colors.grey[400] : Colors.grey[600],
                           ),
                         ),
@@ -3363,7 +3363,7 @@ class _ActivityPageState extends State<ActivityPage> {
                                 'No settlements found',
                                 style: TextStyle(
                                   color: isDarkTheme ? Colors.grey[400] : Colors.grey[600],
-                                  fontSize: UIConstants.fontSizeBody,
+                                  fontSize: UIConstants.textFieldFontSize,
                                 ),
                               ),
                             )
@@ -3383,7 +3383,7 @@ class _ActivityPageState extends State<ActivityPage> {
                                           child: Text(
                                             settlement['settlement_id']?.toString() ?? 'N/A',
                                             style: TextStyle(
-                                              fontSize: UIConstants.fontSizeBody,
+                                              fontSize: UIConstants.textFieldFontSize,
                                               color: isDarkTheme ? Colors.white : Colors.black,
                                               fontWeight: UIConstants.fontWeightNormal,
                                             ),
@@ -3397,7 +3397,7 @@ class _ActivityPageState extends State<ActivityPage> {
                                         child: Text(
                                           settlement['confirmation_status']?.toString().replaceAll('CONFIRMATION_STATUS__', '') ?? 'N/A',
                                           style: TextStyle(
-                                            fontSize: UIConstants.fontSizeBody,
+                                            fontSize: UIConstants.textFieldFontSize,
                                             color: settlement['confirmation_status'] == 'CONFIRMATION_STATUS__CONFIRMED'
                                                 ? Colors.green[600]
                                                 : settlement['confirmation_status'] == 'CONFIRMATION_STATUS__PENDING'
@@ -3413,7 +3413,7 @@ class _ActivityPageState extends State<ActivityPage> {
                                         child: Text(
                                           settlement['asset_transferred']?.toString() ?? 'N/A',
                                           style: TextStyle(
-                                            fontSize: UIConstants.fontSizeBody,
+                                            fontSize: UIConstants.textFieldFontSize,
                                             color: isDarkTheme ? Colors.white : Colors.black,
                                           ),
                                           overflow: TextOverflow.ellipsis,
@@ -3426,7 +3426,7 @@ class _ActivityPageState extends State<ActivityPage> {
                                           settlement['amount_transferred']?.toString() ?? 'N/A',
                                           textAlign: TextAlign.center,
                                           style: TextStyle(
-                                            fontSize: UIConstants.fontSizeBody,
+                                            fontSize: UIConstants.textFieldFontSize,
                                             color: isDarkTheme ? Colors.white : Colors.black,
                                             fontWeight: UIConstants.fontWeightNormal,
                                           ),
@@ -3444,7 +3444,7 @@ class _ActivityPageState extends State<ActivityPage> {
                                                 : 'N/A',
                                             textAlign: TextAlign.right,
                                             style: TextStyle(
-                                              fontSize: UIConstants.fontSizeBody,
+                                              fontSize: UIConstants.textFieldFontSize,
                                               color: isDarkTheme ? Colors.grey[400] : Colors.grey[600],
                                             ),
                                             overflow: TextOverflow.ellipsis,
@@ -3470,7 +3470,7 @@ class _ActivityPageState extends State<ActivityPage> {
     return Container(
       decoration: BoxDecoration(
         color: isDarkTheme ? const Color(0xFF1e1e1e) : Colors.white,
-        borderRadius: BorderRadius.circular(UIConstants.borderRadiusSm),
+        borderRadius: BorderRadius.circular(UIConstants.textFieldBorderRadius),
       ),
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
@@ -3561,7 +3561,7 @@ class _ActivityPageState extends State<ActivityPage> {
                               padding: UIConstants.paddingMinimal,
                               decoration: BoxDecoration(
                                 color: isDarkTheme ? const Color(0xFF3a3a3a) : Colors.white,
-                                borderRadius: BorderRadius.circular(UIConstants.borderRadiusSm),
+                                borderRadius: BorderRadius.circular(UIConstants.textFieldBorderRadius),
                                 border: Border.all(
                                   color: isDarkTheme ? Colors.grey[600]! : Colors.grey[300]!,
                                 ),
@@ -3620,7 +3620,7 @@ class _ActivityPageState extends State<ActivityPage> {
                               padding: const EdgeInsets.symmetric(horizontal: 12),
                               decoration: BoxDecoration(
                                 color: isDarkTheme ? const Color(0xFF3a3a3a) : Colors.white,
-                                borderRadius: BorderRadius.circular(UIConstants.borderRadiusSm),
+                                borderRadius: BorderRadius.circular(UIConstants.textFieldBorderRadius),
                                 border: Border.all(
                                   color: isDarkTheme ? Colors.grey[600]! : Colors.grey[300]!,
                                 ),
@@ -3682,7 +3682,7 @@ class _ActivityPageState extends State<ActivityPage> {
                                 padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 12),
                                 decoration: BoxDecoration(
                                   color: isDarkTheme ? const Color(0xFF3a3a3a) : Colors.white,
-                                  borderRadius: BorderRadius.circular(UIConstants.borderRadiusSm),
+                                  borderRadius: BorderRadius.circular(UIConstants.textFieldBorderRadius),
                                   border: Border.all(
                                     color: isDarkTheme ? Colors.grey[600]! : Colors.grey[300]!,
                                   ),
@@ -3739,7 +3739,7 @@ class _ActivityPageState extends State<ActivityPage> {
                                 padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 12),
                                 decoration: BoxDecoration(
                                   color: isDarkTheme ? const Color(0xFF3a3a3a) : Colors.white,
-                                  borderRadius: BorderRadius.circular(UIConstants.borderRadiusSm),
+                                  borderRadius: BorderRadius.circular(UIConstants.textFieldBorderRadius),
                                   border: Border.all(
                                     color: isDarkTheme ? Colors.grey[600]! : Colors.grey[300]!,
                                   ),
@@ -3787,7 +3787,7 @@ class _ActivityPageState extends State<ActivityPage> {
                               padding: const EdgeInsets.symmetric(horizontal: 12),
                               decoration: BoxDecoration(
                                 color: isDarkTheme ? const Color(0xFF3a3a3a) : Colors.white,
-                                borderRadius: BorderRadius.circular(UIConstants.borderRadiusSm),
+                                borderRadius: BorderRadius.circular(UIConstants.textFieldBorderRadius),
                                 border: Border.all(
                                   color: isDarkTheme ? Colors.grey[600]! : Colors.grey[300]!,
                                 ),
@@ -3866,7 +3866,7 @@ class _ActivityPageState extends State<ActivityPage> {
                         child: Text(
                           'Transaction ID',
                           style: TextStyle(
-                            fontSize: UIConstants.fontSizeBody,
+                            fontSize: UIConstants.textFieldFontSize,
                             color: isDarkTheme ? Colors.grey[400] : Colors.grey[600],
                           ),
                         ),
@@ -3877,7 +3877,7 @@ class _ActivityPageState extends State<ActivityPage> {
                       child: Text(
                         'Type',
                         style: TextStyle(
-                          fontSize: UIConstants.fontSizeBody,
+                          fontSize: UIConstants.textFieldFontSize,
                           color: isDarkTheme ? Colors.grey[400] : Colors.grey[600],
                         ),
                       ),
@@ -3887,7 +3887,7 @@ class _ActivityPageState extends State<ActivityPage> {
                       child: Text(
                         'Asset',
                         style: TextStyle(
-                          fontSize: UIConstants.fontSizeBody,
+                          fontSize: UIConstants.textFieldFontSize,
                           color: isDarkTheme ? Colors.grey[400] : Colors.grey[600],
                         ),
                       ),
@@ -3898,7 +3898,7 @@ class _ActivityPageState extends State<ActivityPage> {
                         'Amount',
                         textAlign: TextAlign.center,
                         style: TextStyle(
-                          fontSize: UIConstants.fontSizeBody,
+                          fontSize: UIConstants.textFieldFontSize,
                           color: isDarkTheme ? Colors.grey[400] : Colors.grey[600],
                         ),
                       ),
@@ -3911,7 +3911,7 @@ class _ActivityPageState extends State<ActivityPage> {
                           'Timestamp',
                           textAlign: TextAlign.right,
                           style: TextStyle(
-                            fontSize: UIConstants.fontSizeBody,
+                            fontSize: UIConstants.textFieldFontSize,
                             color: isDarkTheme ? Colors.grey[400] : Colors.grey[600],
                           ),
                         ),
@@ -3941,7 +3941,7 @@ class _ActivityPageState extends State<ActivityPage> {
                                 'No transactions found',
                                 style: TextStyle(
                                   color: isDarkTheme ? Colors.grey[400] : Colors.grey[600],
-                                  fontSize: UIConstants.fontSizeBody,
+                                  fontSize: UIConstants.textFieldFontSize,
                                 ),
                               ),
                             )
@@ -3961,7 +3961,7 @@ class _ActivityPageState extends State<ActivityPage> {
                                             child: Text(
                                               transaction['transaction_id']?.toString() ?? 'N/A',
                                               style: TextStyle(
-                                                fontSize: UIConstants.fontSizeBody,
+                                                fontSize: UIConstants.textFieldFontSize,
                                                 color: isDarkTheme ? Colors.white : Colors.black,
                                               ),
                                               overflow: TextOverflow.ellipsis,
@@ -3974,7 +3974,7 @@ class _ActivityPageState extends State<ActivityPage> {
                                           child: Text(
                                             transaction['type']?.toString().replaceAll('TRANSACTION_TYPE__', '').replaceAll('_', ' ') ?? 'N/A',
                                             style: TextStyle(
-                                              fontSize: UIConstants.fontSizeBody,
+                                              fontSize: UIConstants.textFieldFontSize,
                                               color: _getTransactionTypeColor(transaction['type']?.toString() ?? ''),
                                             ),
                                             overflow: TextOverflow.ellipsis,
@@ -3986,7 +3986,7 @@ class _ActivityPageState extends State<ActivityPage> {
                                           child: Text(
                                             transaction['asset_id']?.toString() ?? 'N/A',
                                             style: TextStyle(
-                                              fontSize: UIConstants.fontSizeBody,
+                                              fontSize: UIConstants.textFieldFontSize,
                                               color: isDarkTheme ? Colors.white : Colors.black,
                                             ),
                                             overflow: TextOverflow.ellipsis,
@@ -3999,7 +3999,7 @@ class _ActivityPageState extends State<ActivityPage> {
                                             _formatTransactionAmount(transaction['amount']?.toString() ?? '0', transaction['asset_id']?.toString() ?? ''),
                                             textAlign: TextAlign.center,
                                             style: TextStyle(
-                                              fontSize: UIConstants.fontSizeBody,
+                                              fontSize: UIConstants.textFieldFontSize,
                                               color: isDarkTheme ? Colors.white : Colors.black,
                                               fontWeight: UIConstants.fontWeightNormal,
                                             ),
@@ -4015,7 +4015,7 @@ class _ActivityPageState extends State<ActivityPage> {
                                               _formatTransactionTimestamp(transaction['timestamp']),
                                               textAlign: TextAlign.right,
                                               style: TextStyle(
-                                                fontSize: UIConstants.fontSizeBody,
+                                                fontSize: UIConstants.textFieldFontSize,
                                                 color: isDarkTheme ? Colors.grey[400] : Colors.grey[600],
                                               ),
                                               overflow: TextOverflow.ellipsis,
@@ -4506,7 +4506,7 @@ class _ActivityPageState extends State<ActivityPage> {
                   authService.username,
                   style: const TextStyle(
                     color: Colors.white,
-                    fontSize: UIConstants.fontSizeBody,
+                    fontSize: UIConstants.textFieldFontSize,
                     fontWeight: UIConstants.fontWeightNormal,
                   ),
                 ),

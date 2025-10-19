@@ -46,6 +46,25 @@ class UIConstants {
   static const EdgeInsets paddingComfortable = EdgeInsets.all(12.0);
 
   // ============================================================================
+  // TEXT FIELD SETTINGS - Compact input field styling
+  // ============================================================================
+
+  /// Text field content padding for compact height (10px vertical, 12px horizontal)
+  static const EdgeInsets textFieldPadding = EdgeInsets.symmetric(
+    horizontal: 1.0,
+    vertical: 1.0,
+  );
+
+  /// Text field font size
+  static const double textFieldFontSize = fontSizeBody;
+
+  /// Text field border radius
+  static const double textFieldBorderRadius = borderRadiusSm;
+
+  /// Text field icon size
+  static const double textFieldIconSize = 15.0;
+
+  // ============================================================================
   // TYPOGRAPHY - Compact, readable font sizes
   // ============================================================================
 

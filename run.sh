@@ -1,13 +1,13 @@
 #!/bin/bash
 
 # Build and run mini-broker app with full console output
-# This script forces x86_64 architecture for Rosetta 2 environments
+# This script forces x86_64 architecture for Intel Macs
 
 set -e
 
 echo "🔨 Building mini-broker for x86_64..."
 
-# Configure Flutter project
+# Always do a fresh build to ensure latest code
 flutter build macos --config-only
 
 cd macos

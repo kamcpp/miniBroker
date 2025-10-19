@@ -838,7 +838,7 @@ class _CashManagementPageState extends State<CashManagementPage> {
                   authService.username,
                   style: const TextStyle(
                     color: Colors.white,
-                    fontSize: UIConstants.fontSizeBody,
+                    fontSize: UIConstants.textFieldFontSize,
                     fontWeight: UIConstants.fontWeightNormal,
                   ),
                 ),
@@ -935,7 +935,7 @@ class _CashManagementPageState extends State<CashManagementPage> {
       height:220,
       decoration: BoxDecoration(
         color: isDarkTheme ? const Color(0xFF404040) : Colors.grey[50],
-        borderRadius: BorderRadius.circular(UIConstants.borderRadiusSm),
+        borderRadius: BorderRadius.circular(UIConstants.textFieldBorderRadius),
         border: Border.all(
           color: isDarkTheme ? Colors.grey[700]! : Colors.grey[200]!,
           width: 1,
@@ -950,7 +950,7 @@ class _CashManagementPageState extends State<CashManagementPage> {
             Text(
               'Currency: ',
               style: TextStyle(
-                fontSize: UIConstants.fontSizeBody,
+                fontSize: UIConstants.textFieldFontSize,
                 color: isDarkTheme ? Colors.grey[400] : Colors.grey[600],
               ),
             ),
@@ -961,7 +961,7 @@ class _CashManagementPageState extends State<CashManagementPage> {
               height: 40,
               decoration: BoxDecoration(
                 color: isDarkTheme ? const Color(0xFF505050) : Colors.white, // Enhanced background color
-                borderRadius: BorderRadius.circular(UIConstants.borderRadiusSm),
+                borderRadius: BorderRadius.circular(UIConstants.textFieldBorderRadius),
                 border: Border.all(
                   color: isDarkTheme ? Colors.grey[700]! : Colors.grey[200]!,
                   width: 1,
@@ -1015,7 +1015,7 @@ class _CashManagementPageState extends State<CashManagementPage> {
               Text(
                 'Available: ',
                 style: TextStyle(
-                  fontSize: UIConstants.fontSizeBody, // Same as Currency title
+                  fontSize: UIConstants.textFieldFontSize, // Same as Currency title
                   color: isDarkTheme ? Colors.grey[400] : Colors.grey[600], // Same as Currency title
                 ),
               ),
@@ -1063,7 +1063,7 @@ class _CashManagementPageState extends State<CashManagementPage> {
                   backgroundColor: const Color(0xFF4CAF50),
                   padding: const EdgeInsets.symmetric(vertical: 12),
                   shape: RoundedRectangleBorder(
-                    borderRadius: BorderRadius.circular(UIConstants.borderRadiusSm),
+                    borderRadius: BorderRadius.circular(UIConstants.textFieldBorderRadius),
                   ),
                 ),
               ),
@@ -1084,7 +1084,7 @@ class _CashManagementPageState extends State<CashManagementPage> {
                   backgroundColor: const Color(0xFFFF4081),
                   padding: const EdgeInsets.symmetric(vertical: 12),
                   shape: RoundedRectangleBorder(
-                    borderRadius: BorderRadius.circular(UIConstants.borderRadiusSm),
+                    borderRadius: BorderRadius.circular(UIConstants.textFieldBorderRadius),
                   ),
                 ),
               ),
@@ -1131,7 +1131,7 @@ class _CashManagementPageState extends State<CashManagementPage> {
                   hintText: '0.00',
                   suffixText: _selectedCurrency['symbol'] ?? '',
                   border: OutlineInputBorder(
-                    borderRadius: BorderRadius.circular(UIConstants.borderRadiusSm),
+                    borderRadius: BorderRadius.circular(UIConstants.textFieldBorderRadius),
                   ),
                   filled: true,
                   fillColor: isDarkTheme ? Colors.grey[400] : Colors.grey[200],
@@ -1309,7 +1309,7 @@ class _CashManagementPageState extends State<CashManagementPage> {
                   hintText: '0.00',
                   suffixText: _selectedCurrency['symbol'] ?? '',
                   border: OutlineInputBorder(
-                    borderRadius: BorderRadius.circular(UIConstants.borderRadiusSm),
+                    borderRadius: BorderRadius.circular(UIConstants.textFieldBorderRadius),
                   ),
                   filled: true,
                   fillColor: isDarkTheme ? Colors.grey[400] : Colors.grey[200],

@@ -308,25 +308,26 @@ class _LoginPageState extends State<LoginPage> with TickerProviderStateMixin {
                     TextFormField(
                       controller: _userController,
                       keyboardType: TextInputType.text,
-                      style: const TextStyle(color: Colors.black),
+                      style: const TextStyle(color: Colors.black, fontSize: UIConstants.textFieldFontSize),
                       decoration: InputDecoration(
                         hintText: 'Enter your username',
-                        hintStyle: const TextStyle(color: Colors.grey),
+                        hintStyle: const TextStyle(color: Colors.grey, fontSize: UIConstants.textFieldFontSize),
                         filled: true,
                         fillColor: Colors.white.withOpacity(0.9),
+                        contentPadding: UIConstants.textFieldPadding,
                         border: OutlineInputBorder(
-                          borderRadius: BorderRadius.circular(UIConstants.borderRadiusMd),
+                          borderRadius: BorderRadius.circular(UIConstants.textFieldBorderRadius),
                           borderSide: const BorderSide(color: Colors.white),
                         ),
                         enabledBorder: OutlineInputBorder(
-                          borderRadius: BorderRadius.circular(UIConstants.borderRadiusMd),
+                          borderRadius: BorderRadius.circular(UIConstants.textFieldBorderRadius),
                           borderSide: const BorderSide(color: Colors.white),
                         ),
                         focusedBorder: OutlineInputBorder(
-                          borderRadius: BorderRadius.circular(UIConstants.borderRadiusMd),
+                          borderRadius: BorderRadius.circular(UIConstants.textFieldBorderRadius),
                           borderSide: const BorderSide(color: Color(0xFF1a1754), width: 2),
                         ),
-                        prefixIcon: const Icon(Icons.person, color: Colors.grey),
+                        prefixIcon: const Icon(Icons.person, color: Colors.grey, size: UIConstants.textFieldIconSize),
                       ),
                       validator: (value) {
                         if (value == null || value.isEmpty) {
@@ -344,17 +345,18 @@ class _LoginPageState extends State<LoginPage> with TickerProviderStateMixin {
                     TextFormField(
                       controller: _passwordController,
                       obscureText: !_isPasswordVisible,
-                      style: const TextStyle(color: Colors.black),
+                      style: const TextStyle(color: Colors.black, fontSize: UIConstants.textFieldFontSize),
                       decoration: InputDecoration(
                         hintText: 'Enter your password',
-                        hintStyle: const TextStyle(color: Colors.grey),
+                        hintStyle: const TextStyle(color: Colors.grey, fontSize: UIConstants.textFieldFontSize),
                         filled: true,
                         fillColor: Colors.white.withOpacity(0.9),
-                        prefixIcon: const Icon(Icons.lock, color: Colors.grey),
+                        prefixIcon: const Icon(Icons.lock, color: Colors.grey, size: UIConstants.textFieldIconSize),
                         suffixIcon: IconButton(
                           icon: Icon(
                             _isPasswordVisible ? Icons.visibility : Icons.visibility_off,
                             color: Colors.grey,
+                            size: 18,
                           ),
                           onPressed: () {
                             setState(() {
@@ -362,21 +364,18 @@ class _LoginPageState extends State<LoginPage> with TickerProviderStateMixin {
                             });
                           },
                         ),
+                        contentPadding: UIConstants.textFieldPadding,
                         border: OutlineInputBorder(
-                          borderRadius: BorderRadius.circular(UIConstants.borderRadiusMd),
+                          borderRadius: BorderRadius.circular(UIConstants.textFieldBorderRadius),
                           borderSide: const BorderSide(color: Colors.white),
                         ),
                         enabledBorder: OutlineInputBorder(
-                          borderRadius: BorderRadius.circular(UIConstants.borderRadiusMd),
+                          borderRadius: BorderRadius.circular(UIConstants.textFieldBorderRadius),
                           borderSide: const BorderSide(color: Colors.white),
                         ),
                         focusedBorder: OutlineInputBorder(
-                          borderRadius: BorderRadius.circular(UIConstants.borderRadiusMd),
+                          borderRadius: BorderRadius.circular(UIConstants.textFieldBorderRadius),
                           borderSide: const BorderSide(color: Color(0xFF1a1754), width: 2),
-                        ),
-                        contentPadding: const EdgeInsets.symmetric(
-                          horizontal: 16,
-                          vertical: 16,
                         ),
                       ),
                       validator: (value) {
@@ -427,7 +426,7 @@ class _LoginPageState extends State<LoginPage> with TickerProviderStateMixin {
                           backgroundColor: const Color(0xFF1a1754),
                           foregroundColor: Colors.white,
                           shape: RoundedRectangleBorder(
-                            borderRadius: BorderRadius.circular(UIConstants.borderRadiusSm),
+                            borderRadius: BorderRadius.circular(UIConstants.textFieldBorderRadius),
                           ),
                           elevation: 0,
                         ),
@@ -443,7 +442,7 @@ class _LoginPageState extends State<LoginPage> with TickerProviderStateMixin {
                             : const Text(
                                 'Login',
                                 style: TextStyle(
-                                  fontSize: UIConstants.fontSizeBody,
+                                  fontSize: UIConstants.textFieldFontSize,
                                   fontWeight: FontWeight.w600,
                                 ),
                               ),
@@ -501,29 +500,26 @@ class _LoginPageState extends State<LoginPage> with TickerProviderStateMixin {
           TextFormField(
             controller: _signupUserController,
             keyboardType: TextInputType.text,
-            style: const TextStyle(color: Colors.black),
+            style: const TextStyle(color: Colors.black, fontSize: UIConstants.textFieldFontSize),
             decoration: InputDecoration(
               hintText: 'Enter your username',
-              hintStyle: const TextStyle(color: Colors.grey),
+              hintStyle: const TextStyle(color: Colors.grey, fontSize: UIConstants.textFieldFontSize),
               filled: true,
               fillColor: Colors.white.withOpacity(0.9),
-              prefixIcon: const Icon(Icons.person, color: Colors.grey),
+              prefixIcon: const Icon(Icons.person, color: Colors.grey, size: UIConstants.textFieldIconSize),
               border: OutlineInputBorder(
-                borderRadius: BorderRadius.circular(UIConstants.borderRadiusMd),
+                borderRadius: BorderRadius.circular(UIConstants.textFieldBorderRadius),
                 borderSide: const BorderSide(color: Colors.white),
               ),
               enabledBorder: OutlineInputBorder(
-                borderRadius: BorderRadius.circular(UIConstants.borderRadiusMd),
+                borderRadius: BorderRadius.circular(UIConstants.textFieldBorderRadius),
                 borderSide: const BorderSide(color: Colors.white),
               ),
               focusedBorder: OutlineInputBorder(
-                borderRadius: BorderRadius.circular(UIConstants.borderRadiusMd),
+                borderRadius: BorderRadius.circular(UIConstants.textFieldBorderRadius),
                 borderSide: const BorderSide(color: Color(0xFF1a1754), width: 2),
               ),
-              contentPadding: const EdgeInsets.symmetric(
-                horizontal: 16,
-                vertical: 16,
-              ),
+              contentPadding: UIConstants.textFieldPadding,
             ),
             validator: (value) {
               if (value == null || value.trim().isEmpty) {
@@ -541,13 +537,13 @@ class _LoginPageState extends State<LoginPage> with TickerProviderStateMixin {
           TextFormField(
             controller: _signupPasswordController,
             obscureText: !_isSignupPasswordVisible,
-            style: const TextStyle(color: Colors.black),
+            style: const TextStyle(color: Colors.black, fontSize: UIConstants.textFieldFontSize),
             decoration: InputDecoration(
               hintText: 'Create a password',
-              hintStyle: const TextStyle(color: Colors.grey),
+              hintStyle: const TextStyle(color: Colors.grey, fontSize: UIConstants.textFieldFontSize),
               filled: true,
               fillColor: Colors.white.withOpacity(0.9),
-              prefixIcon: const Icon(Icons.lock, color: Colors.grey),
+              prefixIcon: const Icon(Icons.lock, color: Colors.grey, size: UIConstants.textFieldIconSize),
               suffixIcon: IconButton(
                 icon: Icon(
                   _isSignupPasswordVisible ? Icons.visibility : Icons.visibility_off,
@@ -560,21 +556,18 @@ class _LoginPageState extends State<LoginPage> with TickerProviderStateMixin {
                 },
               ),
               border: OutlineInputBorder(
-                borderRadius: BorderRadius.circular(UIConstants.borderRadiusMd),
+                borderRadius: BorderRadius.circular(UIConstants.textFieldBorderRadius),
                 borderSide: const BorderSide(color: Colors.white),
               ),
               enabledBorder: OutlineInputBorder(
-                borderRadius: BorderRadius.circular(UIConstants.borderRadiusMd),
+                borderRadius: BorderRadius.circular(UIConstants.textFieldBorderRadius),
                 borderSide: const BorderSide(color: Colors.white),
               ),
               focusedBorder: OutlineInputBorder(
-                borderRadius: BorderRadius.circular(UIConstants.borderRadiusMd),
+                borderRadius: BorderRadius.circular(UIConstants.textFieldBorderRadius),
                 borderSide: const BorderSide(color: Color(0xFF1a1754), width: 2),
               ),
-              contentPadding: const EdgeInsets.symmetric(
-                horizontal: 16,
-                vertical: 16,
-              ),
+              contentPadding: UIConstants.textFieldPadding,
             ),
             validator: (value) {
               if (value == null || value.isEmpty) {
@@ -592,13 +585,13 @@ class _LoginPageState extends State<LoginPage> with TickerProviderStateMixin {
           TextFormField(
             controller: _confirmPasswordController,
             obscureText: !_isConfirmPasswordVisible,
-            style: const TextStyle(color: Colors.black),
+            style: const TextStyle(color: Colors.black, fontSize: UIConstants.textFieldFontSize),
             decoration: InputDecoration(
               hintText: 'Confirm your password',
-              hintStyle: const TextStyle(color: Colors.grey),
+              hintStyle: const TextStyle(color: Colors.grey, fontSize: UIConstants.textFieldFontSize),
               filled: true,
               fillColor: Colors.white.withOpacity(0.9),
-              prefixIcon: const Icon(Icons.lock_outline, color: Colors.grey),
+              prefixIcon: const Icon(Icons.lock_outline, color: Colors.grey, size: UIConstants.textFieldIconSize),
               suffixIcon: IconButton(
                 icon: Icon(
                   _isConfirmPasswordVisible ? Icons.visibility : Icons.visibility_off,
@@ -611,21 +604,18 @@ class _LoginPageState extends State<LoginPage> with TickerProviderStateMixin {
                 },
               ),
               border: OutlineInputBorder(
-                borderRadius: BorderRadius.circular(UIConstants.borderRadiusMd),
+                borderRadius: BorderRadius.circular(UIConstants.textFieldBorderRadius),
                 borderSide: const BorderSide(color: Colors.white),
               ),
               enabledBorder: OutlineInputBorder(
-                borderRadius: BorderRadius.circular(UIConstants.borderRadiusMd),
+                borderRadius: BorderRadius.circular(UIConstants.textFieldBorderRadius),
                 borderSide: const BorderSide(color: Colors.white),
               ),
               focusedBorder: OutlineInputBorder(
-                borderRadius: BorderRadius.circular(UIConstants.borderRadiusMd),
+                borderRadius: BorderRadius.circular(UIConstants.textFieldBorderRadius),
                 borderSide: const BorderSide(color: Color(0xFF1a1754), width: 2),
               ),
-              contentPadding: const EdgeInsets.symmetric(
-                horizontal: 16,
-                vertical: 16,
-              ),
+              contentPadding: UIConstants.textFieldPadding,
             ),
             validator: (value) {
               if (value == null || value.isEmpty) {
@@ -649,7 +639,7 @@ class _LoginPageState extends State<LoginPage> with TickerProviderStateMixin {
                 backgroundColor: const Color(0xFF1a1754),
                 foregroundColor: Colors.white,
                 shape: RoundedRectangleBorder(
-                  borderRadius: BorderRadius.circular(UIConstants.borderRadiusSm),
+                  borderRadius: BorderRadius.circular(UIConstants.textFieldBorderRadius),
                 ),
                 elevation: 0,
               ),
@@ -665,7 +655,7 @@ class _LoginPageState extends State<LoginPage> with TickerProviderStateMixin {
                   : const Text(
                       'Signup',
                       style: TextStyle(
-                        fontSize: UIConstants.fontSizeBody,
+                        fontSize: UIConstants.textFieldFontSize,
                         fontWeight: FontWeight.w600,
                       ),
                     ),

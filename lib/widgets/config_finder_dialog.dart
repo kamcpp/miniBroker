@@ -277,7 +277,7 @@ class _ConfigFinderDialogState extends State<ConfigFinderDialog> {
                 backgroundColor: Colors.red[600],
                 foregroundColor: Colors.white,
                 shape: RoundedRectangleBorder(
-                  borderRadius: BorderRadius.circular(UIConstants.borderRadiusSm),
+                  borderRadius: BorderRadius.circular(UIConstants.textFieldBorderRadius),
                 ),
               ),
               child: const Text('Delete'),
@@ -314,7 +314,7 @@ class _ConfigFinderDialogState extends State<ConfigFinderDialog> {
             onPressed: () => Navigator.of(context).pop(true),
             style: ElevatedButton.styleFrom(
               shape: RoundedRectangleBorder(
-                borderRadius: BorderRadius.circular(UIConstants.borderRadiusSm),
+                borderRadius: BorderRadius.circular(UIConstants.textFieldBorderRadius),
               ),
             ),
             child: const Text('Create'),
@@ -349,7 +349,7 @@ class _ConfigFinderDialogState extends State<ConfigFinderDialog> {
             },
             style: ElevatedButton.styleFrom(
               shape: RoundedRectangleBorder(
-                borderRadius: BorderRadius.circular(UIConstants.borderRadiusSm),
+                borderRadius: BorderRadius.circular(UIConstants.textFieldBorderRadius),
               ),
             ),
             child: const Text('OK'),
@@ -417,7 +417,7 @@ class _ConfigFinderDialogState extends State<ConfigFinderDialog> {
               style: TextStyle(
                 color: textColor,
                 fontWeight: UIConstants.fontWeightMedium,
-                fontSize: UIConstants.fontSizeBody,
+                fontSize: UIConstants.textFieldFontSize,
               ),
             ),
             const SizedBox(height: UIConstants.spacingSm),
@@ -426,20 +426,17 @@ class _ConfigFinderDialogState extends State<ConfigFinderDialog> {
                 Expanded(
                   child: TextField(
                     controller: _configDirController,
-                    style: TextStyle(color: textColor, fontSize: 13),
+                    style: TextStyle(color: textColor, fontSize: UIConstants.textFieldFontSize),
                     decoration: InputDecoration(
                       hintText: 'Config directory path',
-                      hintStyle: TextStyle(color: hintColor),
+                      hintStyle: TextStyle(color: hintColor, fontSize: UIConstants.textFieldFontSize),
                       filled: true,
                       fillColor: surfaceColor,
                       border: OutlineInputBorder(
-                        borderRadius: BorderRadius.circular(UIConstants.borderRadiusSm),
+                        borderRadius: BorderRadius.circular(UIConstants.textFieldBorderRadius),
                         borderSide: BorderSide.none,
                       ),
-                      contentPadding: const EdgeInsets.symmetric(
-                        horizontal: 16,
-                        vertical: 12,
-                      ),
+                      contentPadding: UIConstants.textFieldPadding,
                     ),
                   ),
                 ),
@@ -450,11 +447,11 @@ class _ConfigFinderDialogState extends State<ConfigFinderDialog> {
                     backgroundColor: primaryColor,
                     foregroundColor: Colors.white,
                     shape: RoundedRectangleBorder(
-                      borderRadius: BorderRadius.circular(UIConstants.borderRadiusSm),
+                      borderRadius: BorderRadius.circular(UIConstants.textFieldBorderRadius),
                     ),
                     padding: UIConstants.paddingCompact,
                   ),
-                  icon: const Icon(Icons.save, size: 18),
+                  icon: const Icon(Icons.save, size: UIConstants.textFieldIconSize),
                   label: const Text('Change'),
                 ),
               ],
@@ -475,7 +472,7 @@ class _ConfigFinderDialogState extends State<ConfigFinderDialog> {
                   style: TextStyle(
                     color: textColor,
                     fontWeight: UIConstants.fontWeightMedium,
-                    fontSize: UIConstants.fontSizeBody,
+                    fontSize: UIConstants.textFieldFontSize,
                   ),
                 ),
                 TextButton.icon(
@@ -483,7 +480,7 @@ class _ConfigFinderDialogState extends State<ConfigFinderDialog> {
                   style: TextButton.styleFrom(
                     foregroundColor: primaryColor,
                     shape: RoundedRectangleBorder(
-                      borderRadius: BorderRadius.circular(UIConstants.borderRadiusSm),
+                      borderRadius: BorderRadius.circular(UIConstants.textFieldBorderRadius),
                     ),
                   ),
                   icon: const Icon(Icons.add_circle_outline, size: 20),
@@ -523,7 +520,7 @@ class _ConfigFinderDialogState extends State<ConfigFinderDialog> {
                                   'No broker configurations found',
                                   style: TextStyle(
                                     color: textColor,
-                                    fontSize: UIConstants.fontSizeBody,
+                                    fontSize: UIConstants.textFieldFontSize,
                                     fontWeight: UIConstants.fontWeightNormal,
                                   ),
                                 ),
@@ -532,7 +529,7 @@ class _ConfigFinderDialogState extends State<ConfigFinderDialog> {
                                   'Click "Create New" to add your first broker',
                                   style: TextStyle(
                                     color: hintColor,
-                                    fontSize: UIConstants.fontSizeBody,
+                                    fontSize: UIConstants.textFieldFontSize,
                                   ),
                                 ),
                               ],
@@ -652,7 +649,7 @@ class _ConfigFinderDialogState extends State<ConfigFinderDialog> {
                                                 brokerName,
                                                 style: TextStyle(
                                                   color: textColor,
-                                                  fontSize: UIConstants.fontSizeBody,
+                                                  fontSize: UIConstants.textFieldFontSize,
                                                   fontWeight: UIConstants.fontWeightMedium,
                                                 ),
                                               ),
@@ -725,7 +722,7 @@ class _ConfigFinderDialogState extends State<ConfigFinderDialog> {
                   style: TextButton.styleFrom(
                     foregroundColor: hintColor,
                     shape: RoundedRectangleBorder(
-                      borderRadius: BorderRadius.circular(UIConstants.borderRadiusSm),
+                      borderRadius: BorderRadius.circular(UIConstants.textFieldBorderRadius),
                     ),
                   ),
                   child: const Text('Cancel'),
@@ -743,7 +740,7 @@ class _ConfigFinderDialogState extends State<ConfigFinderDialog> {
                       vertical: 10,
                     ),
                     shape: RoundedRectangleBorder(
-                      borderRadius: BorderRadius.circular(UIConstants.borderRadiusSm),
+                      borderRadius: BorderRadius.circular(UIConstants.textFieldBorderRadius),
                     ),
                     disabledBackgroundColor: hintColor?.withOpacity(0.3),
                   ),

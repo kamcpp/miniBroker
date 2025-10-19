@@ -93,7 +93,7 @@ class _DuplicateConfigDialogState extends State<DuplicateConfigDialog> {
                 style: TextStyle(
                   color: textColor,
                   fontWeight: UIConstants.fontWeightMedium,
-                  fontSize: UIConstants.fontSizeBody,
+                  fontSize: UIConstants.textFieldFontSize,
                 ),
               ),
               const SizedBox(height: UIConstants.spacingSm),
@@ -107,7 +107,7 @@ class _DuplicateConfigDialogState extends State<DuplicateConfigDialog> {
                   filled: true,
                   fillColor: surfaceColor,
                   border: OutlineInputBorder(
-                    borderRadius: BorderRadius.circular(UIConstants.borderRadiusSm),
+                    borderRadius: BorderRadius.circular(UIConstants.textFieldBorderRadius),
                     borderSide: BorderSide.none,
                   ),
                   helperText: '5-32 characters: letters, numbers, dash, underscore',
@@ -151,7 +151,7 @@ class _DuplicateConfigDialogState extends State<DuplicateConfigDialog> {
                         vertical: 14,
                       ),
                       shape: RoundedRectangleBorder(
-                        borderRadius: BorderRadius.circular(UIConstants.borderRadiusSm),
+                        borderRadius: BorderRadius.circular(UIConstants.textFieldBorderRadius),
                       ),
                     ),
                     child: const Text(
