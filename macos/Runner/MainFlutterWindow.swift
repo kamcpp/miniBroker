@@ -22,8 +22,8 @@ class MainFlutterWindow: NSWindow {
     let newFrame = NSRect(
       x: windowFrame.origin.x,
       y: windowFrame.origin.y,
-      width: minWidth,
-      height: minHeight
+      width: minWidth + 300,
+      height: minHeight + 200
     )
     self.setFrame(newFrame, display: true)
 
