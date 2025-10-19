@@ -315,6 +315,7 @@ class _LoginPageState extends State<LoginPage> with TickerProviderStateMixin {
                         filled: true,
                         fillColor: Colors.white.withOpacity(0.9),
                         contentPadding: UIConstants.textFieldPadding,
+                        isDense: true,
                         border: OutlineInputBorder(
                           borderRadius: BorderRadius.circular(UIConstants.textFieldBorderRadius),
                           borderSide: const BorderSide(color: Colors.white),
@@ -365,6 +366,7 @@ class _LoginPageState extends State<LoginPage> with TickerProviderStateMixin {
                           },
                         ),
                         contentPadding: UIConstants.textFieldPadding,
+                        isDense: true,
                         border: OutlineInputBorder(
                           borderRadius: BorderRadius.circular(UIConstants.textFieldBorderRadius),
                           borderSide: const BorderSide(color: Colors.white),
@@ -520,6 +522,7 @@ class _LoginPageState extends State<LoginPage> with TickerProviderStateMixin {
                 borderSide: const BorderSide(color: Color(0xFF1a1754), width: 2),
               ),
               contentPadding: UIConstants.textFieldPadding,
+                        isDense: true,
             ),
             validator: (value) {
               if (value == null || value.trim().isEmpty) {
@@ -568,6 +571,7 @@ class _LoginPageState extends State<LoginPage> with TickerProviderStateMixin {
                 borderSide: const BorderSide(color: Color(0xFF1a1754), width: 2),
               ),
               contentPadding: UIConstants.textFieldPadding,
+                        isDense: true,
             ),
             validator: (value) {
               if (value == null || value.isEmpty) {
@@ -616,6 +620,7 @@ class _LoginPageState extends State<LoginPage> with TickerProviderStateMixin {
                 borderSide: const BorderSide(color: Color(0xFF1a1754), width: 2),
               ),
               contentPadding: UIConstants.textFieldPadding,
+                        isDense: true,
             ),
             validator: (value) {
               if (value == null || value.isEmpty) {

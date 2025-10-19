@@ -437,6 +437,7 @@ class _ConfigFinderDialogState extends State<ConfigFinderDialog> {
                         borderSide: BorderSide.none,
                       ),
                       contentPadding: UIConstants.textFieldPadding,
+                        isDense: true,
                     ),
                   ),
                 ),
@@ -615,15 +616,15 @@ class _ConfigFinderDialogState extends State<ConfigFinderDialog> {
                                       children: [
                                         // Radio indicator
                                         Container(
-                                          width: 24,
-                                          height: 24,
+                                          width: 16,
+                                          height: 16,
                                           decoration: BoxDecoration(
                                             shape: BoxShape.circle,
                                             border: Border.all(
                                               color: isSelected
                                                   ? selectedColor
                                                   : hintColor,
-                                              width: 2,
+                                              width: 1.5,
                                             ),
                                             color: isSelected
                                                 ? selectedColor
@@ -632,7 +633,7 @@ class _ConfigFinderDialogState extends State<ConfigFinderDialog> {
                                           child: isSelected
                                               ? const Icon(
                                                   Icons.check,
-                                                  size: 16,
+                                                  size: 10,
                                                   color: Colors.white,
                                                 )
                                               : null,

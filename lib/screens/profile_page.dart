@@ -183,6 +183,7 @@ class _ProfilePageState extends State<ProfilePage> {
                   borderRadius: BorderRadius.circular(UIConstants.textFieldBorderRadius),
                 ),
                 contentPadding: UIConstants.textFieldPadding,
+                        isDense: true,
               ),
               validator: (value) {
                 if (value == null || value.trim().isEmpty) {
@@ -282,6 +283,7 @@ class _ProfilePageState extends State<ProfilePage> {
                   borderRadius: BorderRadius.circular(UIConstants.textFieldBorderRadius),
                 ),
                 contentPadding: UIConstants.textFieldPadding,
+                        isDense: true,
                 suffixIcon: IconButton(
                   icon: Icon(_isPasswordVisible ? Icons.visibility_off : Icons.visibility),
                   onPressed: () => setState(() => _isPasswordVisible = !_isPasswordVisible),
@@ -313,6 +315,7 @@ class _ProfilePageState extends State<ProfilePage> {
                   borderRadius: BorderRadius.circular(UIConstants.textFieldBorderRadius),
                 ),
                 contentPadding: UIConstants.textFieldPadding,
+                        isDense: true,
               ),
               validator: (value) {
                 if (value != _passwordController.text) {
