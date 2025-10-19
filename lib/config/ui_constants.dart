@@ -40,7 +40,7 @@ class UIConstants {
   );
 
   /// Standard padding for cards, containers (8px all around)
-  static const EdgeInsets paddingStandard = EdgeInsets.all(8.0);
+  static const EdgeInsets paddingStandard = EdgeInsets.all(10.0);
 
   /// Comfortable padding for dialogs, pages (12px all around)
   static const EdgeInsets paddingComfortable = EdgeInsets.all(12.0);
@@ -49,10 +49,10 @@ class UIConstants {
   // TEXT FIELD SETTINGS - Compact input field styling
   // ============================================================================
 
-  /// Text field content padding for compact height (10px vertical, 12px horizontal)
+  /// Text field content padding for compact height
   static const EdgeInsets textFieldPadding = EdgeInsets.symmetric(
-    horizontal: 1.0,
-    vertical: 1.0,
+    horizontal: 8.0,
+    vertical: 15.0,
   );
 
   /// Text field font size

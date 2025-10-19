@@ -199,10 +199,12 @@ class _EditBrokerConfigDialogState extends State<EditBrokerConfigDialog> {
                       TextFormField(
                         controller: _brokerNameController,
                         enabled: false,
-                        style: TextStyle(color: hintColor),
+                        style: TextStyle(color: hintColor, fontSize: UIConstants.textFieldFontSize),
                         decoration: InputDecoration(
                           filled: true,
                           fillColor: surfaceColor.withOpacity(0.5),
+                          contentPadding: UIConstants.textFieldPadding,
+                          isDense: true,
                           border: OutlineInputBorder(
                             borderRadius: BorderRadius.circular(UIConstants.textFieldBorderRadius),
                             borderSide: BorderSide.none,
@@ -236,12 +238,14 @@ class _EditBrokerConfigDialogState extends State<EditBrokerConfigDialog> {
                       const SizedBox(height: UIConstants.spacingSm),
                       TextFormField(
                         controller: _grpcHostController,
-                        style: TextStyle(color: textColor),
+                        style: TextStyle(color: textColor, fontSize: UIConstants.textFieldFontSize),
                         decoration: InputDecoration(
                           hintText: 'localhost or IP address',
-                          hintStyle: TextStyle(color: hintColor),
+                          hintStyle: TextStyle(color: hintColor, fontSize: UIConstants.textFieldFontSize),
                           filled: true,
                           fillColor: surfaceColor,
+                          contentPadding: UIConstants.textFieldPadding,
+                          isDense: true,
                           border: OutlineInputBorder(
                             borderRadius: BorderRadius.circular(UIConstants.textFieldBorderRadius),
                             borderSide: BorderSide.none,
@@ -268,13 +272,15 @@ class _EditBrokerConfigDialogState extends State<EditBrokerConfigDialog> {
                       const SizedBox(height: UIConstants.spacingSm),
                       TextFormField(
                         controller: _grpcPortController,
-                        style: TextStyle(color: textColor),
+                        style: TextStyle(color: textColor, fontSize: UIConstants.textFieldFontSize),
                         keyboardType: TextInputType.number,
                         decoration: InputDecoration(
                           hintText: '50051',
-                          hintStyle: TextStyle(color: hintColor),
+                          hintStyle: TextStyle(color: hintColor, fontSize: UIConstants.textFieldFontSize),
                           filled: true,
                           fillColor: surfaceColor,
+                          contentPadding: UIConstants.textFieldPadding,
+                          isDense: true,
                           border: OutlineInputBorder(
                             borderRadius: BorderRadius.circular(UIConstants.textFieldBorderRadius),
                             borderSide: BorderSide.none,
@@ -316,12 +322,14 @@ class _EditBrokerConfigDialogState extends State<EditBrokerConfigDialog> {
                       const SizedBox(height: UIConstants.spacingSm),
                       TextFormField(
                         controller: _apiKeyController,
-                        style: TextStyle(color: textColor),
+                        style: TextStyle(color: textColor, fontSize: UIConstants.textFieldFontSize),
                         decoration: InputDecoration(
                           hintText: 'Your API key',
-                          hintStyle: TextStyle(color: hintColor),
+                          hintStyle: TextStyle(color: hintColor, fontSize: UIConstants.textFieldFontSize),
                           filled: true,
                           fillColor: surfaceColor,
+                          contentPadding: UIConstants.textFieldPadding,
+                          isDense: true,
                           border: OutlineInputBorder(
                             borderRadius: BorderRadius.circular(UIConstants.textFieldBorderRadius),
                             borderSide: BorderSide.none,
@@ -348,12 +356,14 @@ class _EditBrokerConfigDialogState extends State<EditBrokerConfigDialog> {
                       const SizedBox(height: UIConstants.spacingSm),
                       TextFormField(
                         controller: _participantIdController,
-                        style: TextStyle(color: textColor),
+                        style: TextStyle(color: textColor, fontSize: UIConstants.textFieldFontSize),
                         decoration: InputDecoration(
                           hintText: 'Auto-generated if empty',
-                          hintStyle: TextStyle(color: hintColor),
+                          hintStyle: TextStyle(color: hintColor, fontSize: UIConstants.textFieldFontSize),
                           filled: true,
                           fillColor: surfaceColor,
+                          contentPadding: UIConstants.textFieldPadding,
+                          isDense: true,
                           border: OutlineInputBorder(
                             borderRadius: BorderRadius.circular(UIConstants.textFieldBorderRadius),
                             borderSide: BorderSide.none,
@@ -374,12 +384,14 @@ class _EditBrokerConfigDialogState extends State<EditBrokerConfigDialog> {
                       const SizedBox(height: UIConstants.spacingSm),
                       TextFormField(
                         controller: _participantNameController,
-                        style: TextStyle(color: textColor),
+                        style: TextStyle(color: textColor, fontSize: UIConstants.textFieldFontSize),
                         decoration: InputDecoration(
                           hintText: 'Display name',
-                          hintStyle: TextStyle(color: hintColor),
+                          hintStyle: TextStyle(color: hintColor, fontSize: UIConstants.textFieldFontSize),
                           filled: true,
                           fillColor: surfaceColor,
+                          contentPadding: UIConstants.textFieldPadding,
+                          isDense: true,
                           border: OutlineInputBorder(
                             borderRadius: BorderRadius.circular(UIConstants.textFieldBorderRadius),
                             borderSide: BorderSide.none,

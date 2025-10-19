@@ -100,13 +100,15 @@ class _DuplicateConfigDialogState extends State<DuplicateConfigDialog> {
               TextFormField(
                 controller: _brokerNameController,
                 autofocus: true,
-                style: TextStyle(color: textColor),
+                style: TextStyle(color: textColor, fontSize: UIConstants.textFieldFontSize),
                 decoration: InputDecoration(
                   hintText: 'e.g., my-broker-2',
-                  hintStyle: TextStyle(color: hintColor),
+                  hintStyle: TextStyle(color: hintColor, fontSize: UIConstants.textFieldFontSize),
                   filled: true,
                   fillColor: surfaceColor,
-                  border: OutlineInputBorder(
+                          contentPadding: UIConstants.textFieldPadding,
+                          isDense: true,
+                          border: OutlineInputBorder(
                     borderRadius: BorderRadius.circular(UIConstants.textFieldBorderRadius),
                     borderSide: BorderSide.none,
                   ),

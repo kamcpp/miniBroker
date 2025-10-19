@@ -5,9 +5,13 @@
 
 set -e
 
+echo "🧹 Cleaning previous build..."
+flutter clean
+
 echo "🔨 Building mini-broker for x86_64..."
 
-# Always do a fresh build to ensure latest code
+# Get dependencies and configure
+flutter pub get
 flutter build macos --config-only
 
 cd macos

@@ -74,6 +74,11 @@ class _ConfigFinderDialogState extends State<ConfigFinderDialog> {
   }
 
   Future<void> _changeConfigDir() async {
+    // Open folder picker dialog
+    String? selectedDirectory;
+
+    // For now, use the text field value
+    // TODO: Add file_picker package to select directory via dialog
     final newDir = _configDirController.text.trim();
 
     if (newDir.isEmpty) {
@@ -82,7 +87,8 @@ class _ConfigFinderDialogState extends State<ConfigFinderDialog> {
     }
 
     if (newDir == _configDir) {
-      return; // No change
+      _showError('Please enter a different directory path');
+      return;
     }
 
     // Validate directory
@@ -269,7 +275,7 @@ class _ConfigFinderDialogState extends State<ConfigFinderDialog> {
           actions: [
             TextButton(
               onPressed: () => Navigator.of(context).pop(false),
-              child: const Text('Cancel'),
+              child: const Text('Cancel', style: TextStyle(fontSize: UIConstants.fontSizeBody)),
             ),
             ElevatedButton(
               onPressed: () => Navigator.of(context).pop(true),
@@ -280,7 +286,7 @@ class _ConfigFinderDialogState extends State<ConfigFinderDialog> {
                   borderRadius: BorderRadius.circular(UIConstants.textFieldBorderRadius),
                 ),
               ),
-              child: const Text('Delete'),
+              child: const Text('Delete', style: TextStyle(fontSize: UIConstants.fontSizeBody)),
             ),
           ],
         );
@@ -291,10 +297,17 @@ class _ConfigFinderDialogState extends State<ConfigFinderDialog> {
   }
 
   void _showError(String message) {
-    ScaffoldMessenger.of(context).showSnackBar(
-      SnackBar(
+    showDialog(
+      context: context,
+      builder: (context) => AlertDialog(
+        title: const Text('Error'),
         content: Text(message),
-        backgroundColor: Colors.red[700],
+        actions: [
+          TextButton(
+            onPressed: () => Navigator.of(context).pop(),
+            child: const Text('OK', style: TextStyle(fontSize: UIConstants.fontSizeBody)),
+          ),
+        ],
       ),
     );
   }
@@ -308,7 +321,7 @@ class _ConfigFinderDialogState extends State<ConfigFinderDialog> {
         actions: [
           TextButton(
             onPressed: () => Navigator.of(context).pop(false),
-            child: const Text('Cancel'),
+            child: const Text('Cancel', style: TextStyle(fontSize: UIConstants.fontSizeBody)),
           ),
           ElevatedButton(
             onPressed: () => Navigator.of(context).pop(true),
@@ -317,7 +330,7 @@ class _ConfigFinderDialogState extends State<ConfigFinderDialog> {
                 borderRadius: BorderRadius.circular(UIConstants.textFieldBorderRadius),
               ),
             ),
-            child: const Text('Create'),
+            child: const Text('Create', style: TextStyle(fontSize: UIConstants.fontSizeBody)),
           ),
         ],
       ),
@@ -352,7 +365,7 @@ class _ConfigFinderDialogState extends State<ConfigFinderDialog> {
                 borderRadius: BorderRadius.circular(UIConstants.textFieldBorderRadius),
               ),
             ),
-            child: const Text('OK'),
+            child: const Text('OK', style: TextStyle(fontSize: UIConstants.fontSizeBody)),
           ),
         ],
       ),
@@ -385,7 +398,7 @@ class _ConfigFinderDialogState extends State<ConfigFinderDialog> {
       ),
       child: SizedBox(
         width: 650,
-        height: 650,
+        height: 500,
         child: Padding(
           padding: UIConstants.paddingStandard,
           child: Column(
@@ -430,6 +443,7 @@ class _ConfigFinderDialogState extends State<ConfigFinderDialog> {
                     decoration: InputDecoration(
                       hintText: 'Config directory path',
                       hintStyle: TextStyle(color: hintColor, fontSize: UIConstants.textFieldFontSize),
+                      prefixIcon: Icon(Icons.folder_open, color: primaryColor, size: UIConstants.textFieldIconSize),
                       filled: true,
                       fillColor: surfaceColor,
                       border: OutlineInputBorder(
@@ -437,7 +451,7 @@ class _ConfigFinderDialogState extends State<ConfigFinderDialog> {
                         borderSide: BorderSide.none,
                       ),
                       contentPadding: UIConstants.textFieldPadding,
-                        isDense: true,
+                      isDense: true,
                     ),
                   ),
                 ),
@@ -452,8 +466,8 @@ class _ConfigFinderDialogState extends State<ConfigFinderDialog> {
                     ),
                     padding: UIConstants.paddingCompact,
                   ),
-                  icon: const Icon(Icons.save, size: UIConstants.textFieldIconSize),
-                  label: const Text('Change'),
+                  icon: const Icon(Icons.folder, size: UIConstants.textFieldIconSize),
+                  label: const Text('Change', style: TextStyle(fontSize: UIConstants.fontSizeBody)),
                 ),
               ],
             ),
@@ -485,7 +499,7 @@ class _ConfigFinderDialogState extends State<ConfigFinderDialog> {
                     ),
                   ),
                   icon: const Icon(Icons.add_circle_outline, size: 20),
-                  label: const Text('Create New'),
+                  label: const Text('Create New', style: TextStyle(fontSize: UIConstants.fontSizeBody)),
                 ),
               ],
             ),
@@ -604,11 +618,11 @@ class _ConfigFinderDialogState extends State<ConfigFinderDialog> {
                                           : null,
                                       borderRadius: index == 0
                                           ? const BorderRadius.vertical(
-                                              top: Radius.circular(12),
+                                              top: Radius.circular(UIConstants.borderRadiusSm),
                                             )
                                           : index == _configFiles.length - 1
                                               ? const BorderRadius.vertical(
-                                                  bottom: Radius.circular(12),
+                                                  bottom: Radius.circular(UIConstants.borderRadiusSm),
                                                 )
                                               : null,
                                     ),
@@ -726,7 +740,7 @@ class _ConfigFinderDialogState extends State<ConfigFinderDialog> {
                       borderRadius: BorderRadius.circular(UIConstants.textFieldBorderRadius),
                     ),
                   ),
-                  child: const Text('Cancel'),
+                  child: const Text('Cancel', style: TextStyle(fontSize: UIConstants.fontSizeBody)),
                 ),
                 const SizedBox(width: UIConstants.spacingSm),
                 ElevatedButton(
@@ -736,18 +750,18 @@ class _ConfigFinderDialogState extends State<ConfigFinderDialog> {
                   style: ElevatedButton.styleFrom(
                     backgroundColor: primaryColor,
                     foregroundColor: Colors.white,
-                    padding: const EdgeInsets.symmetric(
-                      horizontal: 24,
-                      vertical: 10,
-                    ),
+                    padding: UIConstants.paddingCompact,
                     shape: RoundedRectangleBorder(
-                      borderRadius: BorderRadius.circular(UIConstants.textFieldBorderRadius),
+                      borderRadius: BorderRadius.circular(UIConstants.borderRadiusSm),
                     ),
                     disabledBackgroundColor: hintColor?.withOpacity(0.3),
                   ),
                   child: const Text(
                     'Launch',
-                    style: TextStyle(fontWeight: UIConstants.fontWeightMedium),
+                    style: TextStyle(
+                      fontWeight: UIConstants.fontWeightMedium,
+                      fontSize: UIConstants.fontSizeBody,
+                    ),
                   ),
                 ),
               ],
