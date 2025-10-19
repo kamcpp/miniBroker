@@ -6,6 +6,7 @@ import '../services/theme_service.dart';
 import '../services/real_grpc_client.dart';
 import '../services/database_helper.dart';
 import '../utils/connectivity_checker.dart';
+import '../config/ui_constants.dart';
 import 'instruments_page.dart';
 import 'trading_page.dart';
 import 'Cash_management_page.dart';
@@ -262,14 +263,14 @@ class _PortfolioPageState extends State<PortfolioPage> {
             // Main Content
             Expanded(
               child: Padding(
-                padding: const EdgeInsets.all(20),
+                padding: UIConstants.paddingComfortable,
                 child: Column(
                   crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
                     // Portfolio Holdings
                     Expanded(
                       child: Container(
-                        padding: const EdgeInsets.all(20),
+                        padding: UIConstants.paddingComfortable,
                         decoration: BoxDecoration(
                           color: _isDarkTheme ? const Color(0xFF2A2A2A) : Colors.white,
                           borderRadius: BorderRadius.circular(12),
@@ -287,12 +288,12 @@ class _PortfolioPageState extends State<PortfolioPage> {
                             Text(
                               'Instruments Holdings',
                               style: TextStyle(
-                                fontSize: 20,
-                                fontWeight: FontWeight.bold,
+                                fontSize: UIConstants.fontSizeLg,
+                                fontWeight: UIConstants.fontWeightMedium,
                                 color: _isDarkTheme ? Colors.white : Colors.black,
                               ),
                             ),
-                            const SizedBox(height: 20),
+                            SizedBox(height: UIConstants.spacingMd),
                             Expanded(
                               child: _buildPortfolioContent(themeService, _isDarkTheme),
                             ),
@@ -353,7 +354,7 @@ class _PortfolioPageState extends State<PortfolioPage> {
                             style: TextStyle(
                               color: Colors.white,
                               fontSize: 8,
-                              fontWeight: FontWeight.w500,
+                              fontWeight: UIConstants.fontWeightNormal,
                               height: 0.8,
                             ),
                           ),
@@ -362,7 +363,7 @@ class _PortfolioPageState extends State<PortfolioPage> {
                             style: TextStyle(
                               color: Colors.white,
                               fontSize: 8,
-                              fontWeight: FontWeight.bold,
+                              fontWeight: UIConstants.fontWeightMedium,
                               height: 0.8,
                             ),
                           ),
@@ -394,8 +395,8 @@ class _PortfolioPageState extends State<PortfolioPage> {
               MouseRegion(
                 cursor: SystemMouseCursors.click,
                 child: Container(
-                  height: 55,
-                  padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
+                  height: 36,
+                  padding: UIConstants.paddingCompact,
                   decoration: BoxDecoration(
                     color: isDarkTheme ? Colors.black : Colors.grey[100],
                     border: Border(
@@ -403,16 +404,16 @@ class _PortfolioPageState extends State<PortfolioPage> {
                       left: BorderSide(color: Colors.white.withOpacity(0.3), width: 1),
                       right: BorderSide(color: Colors.white.withOpacity(0.3), width: 1),
                     ),
-                    borderRadius: const BorderRadius.only(
-                      topLeft: Radius.circular(8),
-                      topRight: Radius.circular(8),
+                    borderRadius: BorderRadius.only(
+                      topLeft: Radius.circular(UIConstants.borderRadiusMd),
+                      topRight: Radius.circular(UIConstants.borderRadiusMd),
                     ),
                   ),
                   child: Text(
                     'Portfolio',
                     style: TextStyle(
-                      fontSize: 13,
-                      fontWeight: FontWeight.w600,
+                      fontSize: UIConstants.fontSizeBody,
+                      fontWeight: UIConstants.fontWeightMedium,
                       color: isDarkTheme ? Colors.white : Colors.black,
                     ),
                   ),
@@ -518,8 +519,8 @@ class _PortfolioPageState extends State<PortfolioPage> {
                   authService.username,
                   style: const TextStyle(
                     color: Colors.white,
-                    fontSize: 16,
-                    fontWeight: FontWeight.w500,
+                    fontSize: UIConstants.fontSizeBody,
+                    fontWeight: UIConstants.fontWeightNormal,
                   ),
                 ),
                 const SizedBox(width: 4),
@@ -557,7 +558,7 @@ class _PortfolioPageState extends State<PortfolioPage> {
                 size: 20,
               ),
               tooltip: themeService.isDarkTheme ? 'Light Theme' : 'Dark Theme',
-              padding: const EdgeInsets.all(8),
+              padding: UIConstants.paddingStandard,
             ),
           ),
           
@@ -602,7 +603,7 @@ class _PortfolioPageState extends State<PortfolioPage> {
               size: 20,
             ),
             tooltip: 'Logout',
-            padding: const EdgeInsets.all(8),
+            padding: UIConstants.paddingStandard,
           ),
         ],
       ),
@@ -616,11 +617,11 @@ class _PortfolioPageState extends State<PortfolioPage> {
           mainAxisAlignment: MainAxisAlignment.center,
           children: [
             const CircularProgressIndicator(),
-            const SizedBox(height: 16),
+            SizedBox(height: UIConstants.spacingMd),
             Text(
               'Loading portfolio data...',
               style: TextStyle(
-                fontSize: 16,
+                fontSize: UIConstants.fontSizeMd,
                 color: isDarkTheme ? Colors.grey[400] : Colors.grey[600],
               ),
             ),
@@ -636,15 +637,15 @@ class _PortfolioPageState extends State<PortfolioPage> {
           children: [
             Icon(
               Icons.pie_chart,
-              size: 64,
+              size: 48,
               color: isDarkTheme ? Colors.grey[600] : Colors.grey[400],
             ),
-            const SizedBox(height: 16),
+            SizedBox(height: UIConstants.spacingMd),
             Text(
               'No portfolio data available',
               style: TextStyle(
-                fontSize: 18,
-                fontWeight: FontWeight.bold,
+                fontSize: UIConstants.fontSizeLg,
+                fontWeight: UIConstants.fontWeightMedium,
                 color: isDarkTheme ? Colors.white : Colors.black,
               ),
             ),
@@ -664,21 +665,21 @@ class _PortfolioPageState extends State<PortfolioPage> {
               size: 64,
               color: Colors.red,
             ),
-            const SizedBox(height: 16),
+            const SizedBox(height: UIConstants.spacingMd),
             Text(
               'Failed to load portfolio',
               style: TextStyle(
-                fontSize: 18,
-                fontWeight: FontWeight.bold,
+                fontSize: UIConstants.fontSizeMd,
+                fontWeight: UIConstants.fontWeightMedium,
                 color: isDarkTheme ? Colors.white : Colors.black,
               ),
             ),
-            const SizedBox(height: 8),
+            const SizedBox(height: UIConstants.spacingSm),
             Text(
               error,
               textAlign: TextAlign.center,
               style: TextStyle(
-                fontSize: 14,
+                fontSize: UIConstants.fontSizeBody,
                 color: Colors.red,
               ),
             ),
@@ -704,20 +705,20 @@ class _PortfolioPageState extends State<PortfolioPage> {
               size: 64,
               color: isDarkTheme ? Colors.grey[600] : Colors.grey[400],
             ),
-            const SizedBox(height: 16),
+            const SizedBox(height: UIConstants.spacingMd),
             Text(
               'No holdings found',
               style: TextStyle(
-                fontSize: 18,
-                fontWeight: FontWeight.bold,
+                fontSize: UIConstants.fontSizeMd,
+                fontWeight: UIConstants.fontWeightMedium,
                 color: isDarkTheme ? Colors.white : Colors.black,
               ),
             ),
-            const SizedBox(height: 8),
+            const SizedBox(height: UIConstants.spacingSm),
             Text(
               'Your portfolio appears to be empty',
               style: TextStyle(
-                fontSize: 14,
+                fontSize: UIConstants.fontSizeBody,
                 color: isDarkTheme ? Colors.grey[400] : Colors.grey[600],
               ),
             ),
@@ -785,7 +786,7 @@ class _PortfolioPageState extends State<PortfolioPage> {
   ) {
     final _isDarkTheme = themeService.isDarkTheme;
     return Container(
-      padding: const EdgeInsets.all(16),
+      padding: UIConstants.paddingStandard,
       decoration: BoxDecoration(
         color: _isDarkTheme ? const Color(0xFF404040) : Colors.grey[50],
         borderRadius: BorderRadius.circular(8),
@@ -809,8 +810,8 @@ class _PortfolioPageState extends State<PortfolioPage> {
                 symbol.substring(0, 2).toUpperCase(),
                 style: const TextStyle(
                   color: Colors.white,
-                  fontSize: 14,
-                  fontWeight: FontWeight.bold,
+                  fontSize: UIConstants.fontSizeBody,
+                  fontWeight: UIConstants.fontWeightMedium,
                 ),
               ),
             ),
@@ -827,15 +828,15 @@ class _PortfolioPageState extends State<PortfolioPage> {
                 Text(
                   symbol,
                   style: TextStyle(
-                    fontSize: 16,
-                    fontWeight: FontWeight.bold,
+                    fontSize: UIConstants.fontSizeBody,
+                    fontWeight: UIConstants.fontWeightMedium,
                     color: _isDarkTheme ? Colors.white : Colors.black,
                   ),
                 ),
                 Text(
                   name,
                   style: TextStyle(
-                    fontSize: 12,
+                    fontSize: UIConstants.fontSizeSm,
                     color: _isDarkTheme ? Colors.grey[400] : Colors.grey[600],
                   ),
                 ),
@@ -855,7 +856,7 @@ class _PortfolioPageState extends State<PortfolioPage> {
                     Text(
                       'Total: $total',
                       style: TextStyle(
-                        fontSize: 12,
+                        fontSize: UIConstants.fontSizeSm,
                         color: _isDarkTheme ? Colors.grey[300] : Colors.grey[700],
                       ),
                     ),
@@ -865,7 +866,7 @@ class _PortfolioPageState extends State<PortfolioPage> {
                         Text(
                           'SYMBOL',
                           style: TextStyle(
-                            fontSize: 10,
+                            fontSize: UIConstants.fontSizeXs,
                             color: _isDarkTheme ? Colors.grey[400] : Colors.grey[600],
                           ),
                         ),
@@ -873,8 +874,8 @@ class _PortfolioPageState extends State<PortfolioPage> {
                         Text(
                           symbol,
                           style: TextStyle(
-                            fontSize: 10,
-                            fontWeight: FontWeight.bold,
+                            fontSize: UIConstants.fontSizeXs,
+                            fontWeight: UIConstants.fontWeightMedium,
                             color: _isDarkTheme ? Colors.white : Colors.black,
                           ),
                         ),
@@ -886,7 +887,7 @@ class _PortfolioPageState extends State<PortfolioPage> {
                         Text(
                           'VOL.',
                           style: TextStyle(
-                            fontSize: 10,
+                            fontSize: UIConstants.fontSizeXs,
                             color: _isDarkTheme ? Colors.grey[400] : Colors.grey[600],
                           ),
                         ),
@@ -894,8 +895,8 @@ class _PortfolioPageState extends State<PortfolioPage> {
                         Text(
                           total,
                           style: TextStyle(
-                            fontSize: 10,
-                            fontWeight: FontWeight.bold,
+                            fontSize: UIConstants.fontSizeXs,
+                            fontWeight: UIConstants.fontWeightMedium,
                             color: _isDarkTheme ? Colors.white : Colors.black,
                           ),
                         ),
@@ -909,7 +910,7 @@ class _PortfolioPageState extends State<PortfolioPage> {
                     Text(
                       'Available: $available',
                       style: TextStyle(
-                        fontSize: 12,
+                        fontSize: UIConstants.fontSizeSm,
                         color: _isDarkTheme ? Colors.grey[300] : Colors.grey[700],
                       ),
                     ),
@@ -919,7 +920,7 @@ class _PortfolioPageState extends State<PortfolioPage> {
                         Text(
                           'HIGH',
                           style: TextStyle(
-                            fontSize: 10,
+                            fontSize: UIConstants.fontSizeXs,
                             color: _isDarkTheme ? Colors.grey[400] : Colors.grey[600],
                           ),
                         ),
@@ -927,8 +928,8 @@ class _PortfolioPageState extends State<PortfolioPage> {
                         Text(
                           '$high \$',
                           style: TextStyle(
-                            fontSize: 10,
-                            fontWeight: FontWeight.bold,
+                            fontSize: UIConstants.fontSizeXs,
+                            fontWeight: UIConstants.fontWeightMedium,
                             color: _isDarkTheme ? Colors.white : Colors.black,
                           ),
                         ),
@@ -940,7 +941,7 @@ class _PortfolioPageState extends State<PortfolioPage> {
                         Text(
                           'LOW',
                           style: TextStyle(
-                            fontSize: 10,
+                            fontSize: UIConstants.fontSizeXs,
                             color: _isDarkTheme ? Colors.grey[400] : Colors.grey[600],
                           ),
                         ),
@@ -948,8 +949,8 @@ class _PortfolioPageState extends State<PortfolioPage> {
                         Text(
                           '$low \$',
                           style: TextStyle(
-                            fontSize: 10,
-                            fontWeight: FontWeight.bold,
+                            fontSize: UIConstants.fontSizeXs,
+                            fontWeight: UIConstants.fontWeightMedium,
                             color: _isDarkTheme ? Colors.white : Colors.black,
                           ),
                         ),
@@ -963,7 +964,7 @@ class _PortfolioPageState extends State<PortfolioPage> {
                     Text(
                       'In order: $inOrder',
                       style: TextStyle(
-                        fontSize: 12,
+                        fontSize: UIConstants.fontSizeSm,
                         color: _isDarkTheme ? Colors.grey[300] : Colors.grey[700],
                       ),
                     ),
@@ -973,7 +974,7 @@ class _PortfolioPageState extends State<PortfolioPage> {
                         Text(
                           'CHANGE',
                           style: TextStyle(
-                            fontSize: 10,
+                            fontSize: UIConstants.fontSizeXs,
                             color: _isDarkTheme ? Colors.grey[400] : Colors.grey[600],
                           ),
                         ),
@@ -981,8 +982,8 @@ class _PortfolioPageState extends State<PortfolioPage> {
                         Text(
                           change,
                           style: TextStyle(
-                            fontSize: 10,
-                            fontWeight: FontWeight.bold,
+                            fontSize: UIConstants.fontSizeXs,
+                            fontWeight: UIConstants.fontWeightMedium,
                             color: _isDarkTheme ? Colors.white : Colors.black,
                           ),
                         ),
@@ -994,7 +995,7 @@ class _PortfolioPageState extends State<PortfolioPage> {
                         Text(
                           'MKT VALUE',
                           style: TextStyle(
-                            fontSize: 10,
+                            fontSize: UIConstants.fontSizeXs,
                             color: _isDarkTheme ? Colors.grey[400] : Colors.grey[600],
                           ),
                         ),
@@ -1002,8 +1003,8 @@ class _PortfolioPageState extends State<PortfolioPage> {
                         Text(
                           '$marketValue \$',
                           style: TextStyle(
-                            fontSize: 10,
-                            fontWeight: FontWeight.bold,
+                            fontSize: UIConstants.fontSizeXs,
+                            fontWeight: UIConstants.fontWeightMedium,
                             color: _isDarkTheme ? Colors.white : Colors.black,
                           ),
                         ),
@@ -1046,15 +1047,15 @@ class _NavigationButton extends StatelessWidget {
           );
         },
         child: ClipRRect(
-          borderRadius: const BorderRadius.only(
-            topLeft: Radius.circular(8),
-            topRight: Radius.circular(8),
+          borderRadius: BorderRadius.only(
+            topLeft: Radius.circular(UIConstants.borderRadiusMd),
+            topRight: Radius.circular(UIConstants.borderRadiusMd),
           ),
           child: BackdropFilter(
             filter: ImageFilter.blur(sigmaX: 2, sigmaY: 2),
             child: Container(
-              height: 45,
-              padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 9),
+              height: 32,
+              padding: UIConstants.paddingCompact,
               decoration: BoxDecoration(
                 color: Colors.white.withOpacity(0.1),
                 border: Border(
@@ -1063,16 +1064,16 @@ class _NavigationButton extends StatelessWidget {
                   right: BorderSide(color: Colors.white.withOpacity(0.3), width: 1),
                   bottom: BorderSide(color: Colors.white.withOpacity(0.3), width: 1),
                 ),
-                borderRadius: const BorderRadius.only(
-                  topLeft: Radius.circular(8),
-                  topRight: Radius.circular(8),
+                borderRadius: BorderRadius.only(
+                  topLeft: Radius.circular(UIConstants.borderRadiusMd),
+                  topRight: Radius.circular(UIConstants.borderRadiusMd),
                 ),
               ),
               child: Text(
                 label,
                 style: const TextStyle(
-                  fontSize: 13,
-                  fontWeight: FontWeight.w500,
+                  fontSize: UIConstants.fontSizeBody,
+                  fontWeight: UIConstants.fontWeightNormal,
                   color: Colors.white70,
                 ),
               ),

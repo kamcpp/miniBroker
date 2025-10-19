@@ -4,6 +4,7 @@ import 'dart:ui';
 import '../services/auth_service.dart';
 import '../utils/connectivity_checker.dart';
 import '../main.dart';
+import '../config/ui_constants.dart';
 
 class LoginPage extends StatefulWidget {
   const LoginPage({super.key});
@@ -296,8 +297,8 @@ class _LoginPageState extends State<LoginPage> with TickerProviderStateMixin {
                     const Text(
                       'Login to mini Broker',
                       style: TextStyle(
-                        fontSize: 32,
-                        fontWeight: FontWeight.bold,
+                        fontSize: UIConstants.fontSizeXl,
+                        fontWeight: UIConstants.fontWeightMedium,
                         color: Colors.white,
                       ),
                     ),
@@ -408,7 +409,7 @@ class _LoginPageState extends State<LoginPage> with TickerProviderStateMixin {
                             'Forgot password?',
                             style: TextStyle(
                               color: Color(0xFF1a1754),
-                              fontSize: 14,
+                              fontSize: UIConstants.fontSizeSm,
                             ),
                           ),
                         ),
@@ -442,7 +443,7 @@ class _LoginPageState extends State<LoginPage> with TickerProviderStateMixin {
                             : const Text(
                                 'Login',
                                 style: TextStyle(
-                                  fontSize: 16,
+                                  fontSize: UIConstants.fontSizeBody,
                                   fontWeight: FontWeight.w600,
                                 ),
                               ),
@@ -458,7 +459,7 @@ class _LoginPageState extends State<LoginPage> with TickerProviderStateMixin {
                           "Don't have an account? ",
                           style: TextStyle(
                             color: Colors.white,
-                            fontSize: 14,
+                            fontSize: UIConstants.fontSizeSm,
                           ),
                         ),
                         TextButton(
@@ -467,7 +468,7 @@ class _LoginPageState extends State<LoginPage> with TickerProviderStateMixin {
                             'Signup',
                             style: TextStyle(
                               color: Color(0xFF1a1754),
-                              fontSize: 14,
+                              fontSize: UIConstants.fontSizeSm,
                               fontWeight: FontWeight.w600,
                             ),
                           ),
@@ -489,8 +490,8 @@ class _LoginPageState extends State<LoginPage> with TickerProviderStateMixin {
           const Text(
             'Signup',
             style: TextStyle(
-              fontSize: 32,
-              fontWeight: FontWeight.bold,
+              fontSize: UIConstants.fontSizeXl,
+              fontWeight: UIConstants.fontWeightMedium,
               color: Colors.white,
             ),
           ),
@@ -664,7 +665,7 @@ class _LoginPageState extends State<LoginPage> with TickerProviderStateMixin {
                   : const Text(
                       'Signup',
                       style: TextStyle(
-                        fontSize: 16,
+                        fontSize: UIConstants.fontSizeBody,
                         fontWeight: FontWeight.w600,
                       ),
                     ),
@@ -680,7 +681,7 @@ class _LoginPageState extends State<LoginPage> with TickerProviderStateMixin {
                 "Already have an account? ",
                 style: TextStyle(
                   color: Colors.white,
-                  fontSize: 14,
+                  fontSize: UIConstants.fontSizeSm,
                 ),
               ),
               TextButton(
@@ -689,7 +690,7 @@ class _LoginPageState extends State<LoginPage> with TickerProviderStateMixin {
                   'Login',
                   style: TextStyle(
                     color: Color(0xFF1a1754),
-                    fontSize: 14,
+                    fontSize: UIConstants.fontSizeSm,
                     fontWeight: FontWeight.w600,
                   ),
                 ),

@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 import 'dart:io';
+import '../config/ui_constants.dart';
 import 'package:path/path.dart' as path;
 import '../services/theme_service.dart';
 import '../utils/config_rc_manager.dart';
@@ -371,9 +372,9 @@ class _ConfigFinderDialogState extends State<ConfigFinderDialog> {
       ),
       child: SizedBox(
         width: 700,
-        height: 700,
+        height: 800,
         child: Padding(
-          padding: const EdgeInsets.all(24),
+          padding: UIConstants.paddingComfortable,
           child: Column(
             mainAxisSize: MainAxisSize.max,
             crossAxisAlignment: CrossAxisAlignment.start,
@@ -388,25 +389,25 @@ class _ConfigFinderDialogState extends State<ConfigFinderDialog> {
                     'Broker Configuration Finder',
                     style: TextStyle(
                       color: textColor,
-                      fontSize: 20,
-                      fontWeight: FontWeight.bold,
+                      fontSize: UIConstants.fontSizeMd,
+                      fontWeight: UIConstants.fontWeightMedium,
                     ),
                   ),
                 ),
               ],
             ),
-            const SizedBox(height: 24),
+            const SizedBox(height: UIConstants.spacingLg),
 
             // Config Directory Section
             Text(
               'Configuration Directory',
               style: TextStyle(
                 color: textColor,
-                fontWeight: FontWeight.w600,
-                fontSize: 14,
+                fontWeight: UIConstants.fontWeightMedium,
+                fontSize: UIConstants.fontSizeBody,
               ),
             ),
-            const SizedBox(height: 8),
+            const SizedBox(height: UIConstants.spacingSm),
             Row(
               children: [
                 Expanded(
@@ -445,12 +446,12 @@ class _ConfigFinderDialogState extends State<ConfigFinderDialog> {
                 ),
               ],
             ),
-            const SizedBox(height: 8),
+            const SizedBox(height: UIConstants.spacingSm),
             Text(
               'Changes to config directory require app restart',
               style: TextStyle(color: hintColor, fontSize: 12),
             ),
-            const SizedBox(height: 24),
+            const SizedBox(height: UIConstants.spacingLg),
 
             // Broker Configs Section
             Row(
@@ -460,8 +461,8 @@ class _ConfigFinderDialogState extends State<ConfigFinderDialog> {
                   'Broker Configurations',
                   style: TextStyle(
                     color: textColor,
-                    fontWeight: FontWeight.w600,
-                    fontSize: 14,
+                    fontWeight: UIConstants.fontWeightMedium,
+                    fontSize: UIConstants.fontSizeBody,
                   ),
                 ),
                 TextButton.icon(
@@ -474,7 +475,7 @@ class _ConfigFinderDialogState extends State<ConfigFinderDialog> {
                 ),
               ],
             ),
-            const SizedBox(height: 12),
+            const SizedBox(height: UIConstants.spacingSm),
 
             // Config Files List
             Flexible(
@@ -501,21 +502,21 @@ class _ConfigFinderDialogState extends State<ConfigFinderDialog> {
                                   size: 48,
                                   color: hintColor,
                                 ),
-                                const SizedBox(height: 16),
+                                const SizedBox(height: UIConstants.spacingMd),
                                 Text(
                                   'No broker configurations found',
                                   style: TextStyle(
                                     color: textColor,
-                                    fontSize: 16,
+                                    fontSize: UIConstants.fontSizeBody,
                                     fontWeight: FontWeight.w500,
                                   ),
                                 ),
-                                const SizedBox(height: 8),
+                                const SizedBox(height: UIConstants.spacingSm),
                                 Text(
                                   'Click "Create New" to add your first broker',
                                   style: TextStyle(
                                     color: hintColor,
-                                    fontSize: 14,
+                                    fontSize: UIConstants.fontSizeBody,
                                   ),
                                 ),
                               ],
@@ -574,7 +575,7 @@ class _ConfigFinderDialogState extends State<ConfigFinderDialog> {
                                     });
                                   },
                                   child: Container(
-                                    padding: const EdgeInsets.all(16),
+                                    padding: UIConstants.paddingStandard,
                                     decoration: BoxDecoration(
                                       color: isSelected
                                           ? selectedColor.withOpacity(0.1)
@@ -635,8 +636,8 @@ class _ConfigFinderDialogState extends State<ConfigFinderDialog> {
                                                 brokerName,
                                                 style: TextStyle(
                                                   color: textColor,
-                                                  fontSize: 16,
-                                                  fontWeight: FontWeight.w600,
+                                                  fontSize: UIConstants.fontSizeBody,
+                                                  fontWeight: UIConstants.fontWeightMedium,
                                                 ),
                                               ),
                                               const SizedBox(height: 4),
@@ -644,7 +645,7 @@ class _ConfigFinderDialogState extends State<ConfigFinderDialog> {
                                                 summary,
                                                 style: TextStyle(
                                                   color: hintColor,
-                                                  fontSize: 13,
+                                                  fontSize: UIConstants.fontSizeSm,
                                                 ),
                                               ),
                                             ],
@@ -697,7 +698,7 @@ class _ConfigFinderDialogState extends State<ConfigFinderDialog> {
                         ),
             ),
 
-            const SizedBox(height: 24),
+            const SizedBox(height: UIConstants.spacingLg),
 
             // Action buttons
             Row(
@@ -729,7 +730,7 @@ class _ConfigFinderDialogState extends State<ConfigFinderDialog> {
                   ),
                   child: const Text(
                     'Launch',
-                    style: TextStyle(fontWeight: FontWeight.bold),
+                    style: TextStyle(fontWeight: UIConstants.fontWeightMedium),
                   ),
                 ),
               ],
