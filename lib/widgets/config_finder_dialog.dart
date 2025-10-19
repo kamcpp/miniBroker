@@ -25,6 +25,9 @@ class _ConfigFinderDialogState extends State<ConfigFinderDialog> {
   bool _isLoading = true;
   int? _hoveredIndex;
 
+  // Cache for config file contents to avoid re-reading on every scroll
+  final Map<String, Map<String, dynamic>?> _configCache = {};
+
   @override
   void initState() {
     super.initState();
@@ -46,6 +49,17 @@ class _ConfigFinderDialogState extends State<ConfigFinderDialog> {
     });
 
     final files = BrokerConfigHelper.findAllConfigFiles(configDir: _configDir);
+
+    // Clear cache when loading new files
+    _configCache.clear();
+
+    // Pre-load all config files into cache
+    for (final fileName in files) {
+      _configCache[fileName] = BrokerConfigHelper.readConfigFile(
+        fileName,
+        configDir: _configDir,
+      );
+    }
 
     setState(() {
       _configFiles = files;
@@ -355,14 +369,15 @@ class _ConfigFinderDialogState extends State<ConfigFinderDialog> {
       shape: RoundedRectangleBorder(
         borderRadius: BorderRadius.circular(16),
       ),
-      child: Container(
+      child: SizedBox(
         width: 700,
-        constraints: const BoxConstraints(maxHeight: 700),
-        padding: const EdgeInsets.all(24),
-        child: Column(
-          mainAxisSize: MainAxisSize.min,
-          crossAxisAlignment: CrossAxisAlignment.start,
-          children: [
+        height: 700,
+        child: Padding(
+          padding: const EdgeInsets.all(24),
+          child: Column(
+            mainAxisSize: MainAxisSize.max,
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
             // Header
             Row(
               children: [
@@ -530,11 +545,8 @@ class _ConfigFinderDialogState extends State<ConfigFinderDialog> {
                               final isSelected = _selectedConfig == fileName;
                               final isHovered = _hoveredIndex == index;
 
-                              // Load config summary
-                              final config = BrokerConfigHelper.readConfigFile(
-                                fileName,
-                                configDir: _configDir,
-                              );
+                              // Get config from cache (already loaded in _loadConfigFiles)
+                              final config = _configCache[fileName];
                               final grpcConfig = config?['grpc'] as Map<String, dynamic>?;
                               final participantConfig = config?['participant'] as Map<String, dynamic>?;
                               final appConfig = config?['app'] as Map<String, dynamic>?;
@@ -685,34 +697,6 @@ class _ConfigFinderDialogState extends State<ConfigFinderDialog> {
                         ),
             ),
 
-            if (_configFiles.isNotEmpty) ...[
-              const SizedBox(height: 16),
-              Container(
-                padding: const EdgeInsets.all(12),
-                decoration: BoxDecoration(
-                  color: primaryColor.withOpacity(0.1),
-                  borderRadius: BorderRadius.circular(8),
-                  border: Border.all(color: primaryColor.withOpacity(0.3)),
-                ),
-                child: Row(
-                  children: [
-                    Icon(Icons.info_outline, color: primaryColor, size: 20),
-                    const SizedBox(width: 8),
-                    Expanded(
-                      child: Text(
-                        'Tip: Select a configuration and click Launch button',
-                        style: TextStyle(
-                          color:
-                              isDarkTheme ? Colors.blue[200] : primaryColor,
-                          fontSize: 13,
-                        ),
-                      ),
-                    ),
-                  ],
-                ),
-              ),
-            ],
-
             const SizedBox(height: 24),
 
             // Action buttons
@@ -750,7 +734,8 @@ class _ConfigFinderDialogState extends State<ConfigFinderDialog> {
                 ),
               ],
             ),
-          ],
+            ],
+          ),
         ),
       ),
     );

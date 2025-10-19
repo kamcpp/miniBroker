@@ -1,9 +1,6 @@
 import 'dart:async';
-import 'dart:io';
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
-import 'screens/instruments_page.dart';
-import 'screens/trading_page.dart';
 import 'screens/portfolio_page.dart';
 import 'screens/login_page.dart';
 import 'services/auth_service.dart';

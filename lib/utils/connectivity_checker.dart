@@ -78,13 +78,12 @@ class ConnectivityChecker {
       context: context,
       barrierDismissible: false,
       builder: (BuildContext context) {
+        final isDark = Theme.of(context).brightness == Brightness.dark;
         return AlertDialog(
-          backgroundColor: Theme.of(context).brightness == Brightness.dark 
-              ? const Color(0xFF2a2a2a) 
-              : Colors.white,
+          backgroundColor: isDark ? const Color(0xFF2a2a2a) : Colors.white,
           title: Row(
             children: [
-              Icon(
+              const Icon(
                 Icons.error_outline,
                 color: Colors.red,
                 size: 28,
@@ -92,11 +91,9 @@ class ConnectivityChecker {
               const SizedBox(width: 8),
               Expanded(
                 child: Text(
-                  'Server Error',
+                  'Server Connection Error',
                   style: TextStyle(
-                    color: Theme.of(context).brightness == Brightness.dark 
-                        ? Colors.white 
-                        : Colors.black,
+                    color: isDark ? Colors.white : Colors.black,
                     fontWeight: FontWeight.bold,
                   ),
                 ),
@@ -115,13 +112,77 @@ class ConnectivityChecker {
               ),
             ],
           ),
-          content: Text(
-            'No response from the server',
-            style: TextStyle(
-              color: Theme.of(context).brightness == Brightness.dark 
-                  ? Colors.white 
-                  : Colors.black,
-            ),
+          content: Column(
+            mainAxisSize: MainAxisSize.min,
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              Text(
+                'Cannot connect to the gRPC server:',
+                style: TextStyle(
+                  color: isDark ? Colors.white : Colors.black,
+                  fontWeight: FontWeight.w600,
+                ),
+              ),
+              const SizedBox(height: 12),
+              Container(
+                padding: const EdgeInsets.all(12),
+                decoration: BoxDecoration(
+                  color: Colors.red.withOpacity(0.1),
+                  borderRadius: BorderRadius.circular(8),
+                  border: Border.all(color: Colors.red.withOpacity(0.3)),
+                ),
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    Row(
+                      children: [
+                        const Icon(Icons.dns, size: 16, color: Colors.red),
+                        const SizedBox(width: 8),
+                        Text(
+                          'Host: $_host',
+                          style: TextStyle(
+                            color: isDark ? Colors.white : Colors.black,
+                            fontFamily: 'monospace',
+                          ),
+                        ),
+                      ],
+                    ),
+                    const SizedBox(height: 8),
+                    Row(
+                      children: [
+                        const Icon(Icons.power, size: 16, color: Colors.red),
+                        const SizedBox(width: 8),
+                        Text(
+                          'Port: $_port',
+                          style: TextStyle(
+                            color: isDark ? Colors.white : Colors.black,
+                            fontFamily: 'monospace',
+                          ),
+                        ),
+                      ],
+                    ),
+                  ],
+                ),
+              ),
+              const SizedBox(height: 16),
+              Text(
+                'Please check that:',
+                style: TextStyle(
+                  color: isDark ? Colors.white : Colors.black,
+                  fontWeight: FontWeight.w600,
+                ),
+              ),
+              const SizedBox(height: 8),
+              Text(
+                '• The server is running\n'
+                '• The host and port are correct\n'
+                '• Your network connection is active',
+                style: TextStyle(
+                  color: isDark ? Colors.grey[300] : Colors.grey[700],
+                  fontSize: 13,
+                ),
+              ),
+            ],
           ),
         );
       },

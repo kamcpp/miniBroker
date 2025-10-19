@@ -4,8 +4,6 @@ import 'dart:ui';
 import '../services/auth_service.dart';
 import '../utils/connectivity_checker.dart';
 import '../main.dart';
-import 'signup_page.dart';
-import '../config/app_config.dart';
 
 class LoginPage extends StatefulWidget {
   const LoginPage({super.key});
@@ -186,6 +184,16 @@ class _LoginPageState extends State<LoginPage> with TickerProviderStateMixin {
     }
   }
 
+  Future<void> _goBackToConfigSelection() async {
+    // Navigate back to config selection by restarting the app initialization
+    if (mounted) {
+      Navigator.of(context).pushAndRemoveUntil(
+        MaterialPageRoute(builder: (context) => const MyApp()),
+        (route) => false,
+      );
+    }
+  }
+
   @override
   Widget build(BuildContext context) {
     return Scaffold(
@@ -203,6 +211,20 @@ class _LoginPageState extends State<LoginPage> with TickerProviderStateMixin {
           // Semi-transparent overlay for fading
           Container(
             color: const Color(0xFF1a1754).withOpacity(0.9), // 90% fade with dark blue
+          ),
+          // Back to Config button in top-right corner
+          Positioned(
+            top: 20,
+            right: 20,
+            child: IconButton(
+              onPressed: _goBackToConfigSelection,
+              icon: const Icon(Icons.settings, color: Colors.white, size: 28),
+              tooltip: 'Change Configuration',
+              style: IconButton.styleFrom(
+                backgroundColor: Colors.white.withOpacity(0.1),
+                padding: const EdgeInsets.all(12),
+              ),
+            ),
           ),
           // Main content
           Center(

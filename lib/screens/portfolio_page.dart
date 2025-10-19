@@ -29,20 +29,21 @@ class _PortfolioPageState extends State<PortfolioPage> {
   @override
   void initState() {
     super.initState();
-    
-    // Check server connectivity when page opens
+
+    // Defer initialization to avoid blocking the UI
     WidgetsBinding.instance.addPostFrameCallback((_) {
-      ConnectivityChecker.checkAndShowErrorIfNeeded(context, 'Portfolio');
+      _initializePortfolioData();
     });
-    
-    // Automatically fetch portfolio data when page loads
-    _initializePortfolioData();
   }
 
   Future<void> _initializePortfolioData() async {
-    if (mounted) {
-      _fetchPortfolioData();
-    }
+    if (!mounted) return;
+
+    // Check connectivity in parallel with data fetch (non-blocking)
+    ConnectivityChecker.checkAndShowErrorIfNeeded(context, 'Portfolio');
+
+    // Start fetching data immediately
+    await _fetchPortfolioData();
   }
 
   Future<void> _fetchAccountList() async {
@@ -80,59 +81,58 @@ class _PortfolioPageState extends State<PortfolioPage> {
   }
 
   Future<void> _fetchPortfolioData() async {
-    try {
-      setState(() {
-        _isLoadingPortfolio = true;
-      });
+    if (!mounted) return;
 
+    setState(() {
+      _isLoadingPortfolio = true;
+    });
+
+    try {
       // Get the current logged-in username from AuthService
       final authService = Provider.of<AuthService>(context, listen: false);
       final currentUsername = authService.username;
-      
+
       print('🔍 Looking for account belonging to logged-in user: $currentUsername');
 
-      // First, get the account ID that belongs to the logged-in user
+      // Fetch account list if not already loaded
+      if (_accountListData == null) {
+        await _fetchAccountList();
+      }
+
+      // Find account ID for the logged-in user
       String? accountId;
       if (_accountListData != null && _accountListData!['success'] == true) {
         final accounts = _accountListData!['output']['accounts'] as List<dynamic>;
         accountId = _findUserAccount(accounts, currentUsername);
-      } else {
-        // Fetch account list first to get account ID
-        await _fetchAccountList();
-        if (_accountListData != null && _accountListData!['success'] == true) {
-          final accounts = _accountListData!['output']['accounts'] as List<dynamic>;
-          // The sync is already called in _fetchAccountList, so we just find the user
-          accountId = _findUserAccount(accounts, currentUsername);
-        }
       }
 
-      print('🔍 Final account ID selected: "$accountId" for user: $currentUsername');
-
       if (accountId == null || accountId.isEmpty) {
-        print('❌ Portfolio: Account ID is null, will retry in 2 seconds...');
+        print('❌ Portfolio: No account found for user: $currentUsername');
         if (mounted) {
           setState(() {
             _isLoadingPortfolio = false;
-          });
-          // Retry after a short delay to allow grpcurl path to be cached
-          Future.delayed(const Duration(seconds: 2), () {
-            if (mounted) {
-              print('🔄 Portfolio: Retrying account lookup...');
-              _fetchPortfolioData();
-            }
+            _portfolioData = {
+              'success': false,
+              'output': {
+                'error': 'No account found',
+                'message': 'No account found for user $currentUsername',
+              },
+            };
           });
         }
         return;
       }
 
-      // Fetch portfolio data with comprehensive crash protection
+      print('✅ Found account ID: "$accountId" for user: $currentUsername');
+
+      // Fetch portfolio data
       final portfolioResponse = await realGrpcClient.getAccountMarketPortfolio(
         accountId: accountId,
       ).timeout(
-        const Duration(seconds: 15),
+        const Duration(seconds: 10),
         onTimeout: () => {
           'input': {'proposed_execution_id': 'timeout'},
-          'output': {'error': 'Request timed out', 'message': 'Portfolio request timed out after 15 seconds'},
+          'output': {'error': 'Request timed out', 'message': 'Portfolio request timed out'},
           'requestTime': (DateTime.now().millisecondsSinceEpoch ~/ 1000).toString(),
           'serverType': 'timeout',
           'success': false,
@@ -146,15 +146,18 @@ class _PortfolioPageState extends State<PortfolioPage> {
         });
       }
     } catch (e) {
-      // Ultimate crash protection
-      try {
-        if (mounted) {
-          setState(() {
-            _isLoadingPortfolio = false;
-          });
-        }
-      } catch (innerE) {
-        print('❌ Critical error in _fetchPortfolioData: $e, UI update failed: $innerE');
+      print('❌ Error fetching portfolio: $e');
+      if (mounted) {
+        setState(() {
+          _isLoadingPortfolio = false;
+          _portfolioData = {
+            'success': false,
+            'output': {
+              'error': 'Failed to load portfolio',
+              'message': e.toString(),
+            },
+          };
+        });
       }
     }
   }
@@ -373,7 +376,7 @@ class _PortfolioPageState extends State<PortfolioPage> {
           ),
           
           const SizedBox(width: 16),
-          
+
           // Navigation Tabs - Left side beside logo
           Padding(
             padding: const EdgeInsets.only(top: 10),
@@ -382,53 +385,9 @@ class _PortfolioPageState extends State<PortfolioPage> {
               crossAxisAlignment: CrossAxisAlignment.end,
               children: [
               // Instruments Button
-              MouseRegion(
-                cursor: SystemMouseCursors.click,
-                child: GestureDetector(
-                  onTap: () {
-                    Navigator.of(context).push(
-                      PageRouteBuilder(
-                        pageBuilder: (context, animation, secondaryAnimation) => const InstrumentsPage(),
-                        transitionDuration: Duration.zero,
-                        reverseTransitionDuration: Duration.zero,
-                      ),
-                    );
-                  },
-                  child: ClipRRect(
-                    borderRadius: const BorderRadius.only(
-                      topLeft: Radius.circular(8),
-                      topRight: Radius.circular(8),
-                    ),
-                    child: BackdropFilter(
-                      filter: ImageFilter.blur(sigmaX: 2, sigmaY: 2),
-                      child: Container(
-                        height: 45,
-                        padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 9),
-                        decoration: BoxDecoration(
-                          color: Colors.white.withOpacity(0.1),
-                          border: Border(
-                            top: BorderSide(color: Colors.white.withOpacity(0.3), width: 1),
-                            left: BorderSide(color: Colors.white.withOpacity(0.3), width: 1),
-                            right: BorderSide(color: Colors.white.withOpacity(0.3), width: 1),
-                            bottom: BorderSide(color: Colors.white.withOpacity(0.3), width: 1),
-                          ),
-                          borderRadius: const BorderRadius.only(
-                            topLeft: Radius.circular(8),
-                            topRight: Radius.circular(8),
-                          ),
-                        ),
-                        child: const Text(
-                          'Instruments',
-                          style: TextStyle(
-                            fontSize: 13,
-                            fontWeight: FontWeight.w500,
-                            color: Colors.white70,
-                          ),
-                        ),
-                      ),
-                    ),
-                  ),
-                ),
+              _NavigationButton(
+                label: 'Instruments',
+                destination: const InstrumentsPage(),
               ),
 
               // Portfolio Button (current page)
@@ -461,153 +420,21 @@ class _PortfolioPageState extends State<PortfolioPage> {
               ),
 
               // Trading Button
-              MouseRegion(
-                cursor: SystemMouseCursors.click,
-                child: GestureDetector(
-                  onTap: () {
-                    Navigator.of(context).push(
-                      PageRouteBuilder(
-                        pageBuilder: (context, animation, secondaryAnimation) => const TradingPage(),
-                        transitionDuration: Duration.zero,
-                        reverseTransitionDuration: Duration.zero,
-                      ),
-                    );
-                  },
-                  child: ClipRRect(
-                    borderRadius: const BorderRadius.only(
-                      topLeft: Radius.circular(8),
-                      topRight: Radius.circular(8),
-                    ),
-                    child: BackdropFilter(
-                      filter: ImageFilter.blur(sigmaX: 2, sigmaY: 2),
-                      child: Container(
-                        height: 45,
-                        padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 9),
-                        decoration: BoxDecoration(
-                          color: Colors.white.withOpacity(0.1),
-                          border: Border(
-                            top: BorderSide(color: Colors.white.withOpacity(0.3), width: 1),
-                            left: BorderSide(color: Colors.white.withOpacity(0.3), width: 1),
-                            right: BorderSide(color: Colors.white.withOpacity(0.3), width: 1),
-                            bottom: BorderSide(color: Colors.white.withOpacity(0.3), width: 1),
-                          ),
-                          borderRadius: const BorderRadius.only(
-                            topLeft: Radius.circular(8),
-                            topRight: Radius.circular(8),
-                          ),
-                        ),
-                        child: const Text(
-                          'Trading',
-                          style: TextStyle(
-                            fontSize: 13,
-                            fontWeight: FontWeight.w500,
-                            color: Colors.white70,
-                          ),
-                        ),
-                      ),
-                    ),
-                  ),
-                ),
+              _NavigationButton(
+                label: 'Trading',
+                destination: const TradingPage(),
               ),
 
               // Activity Button
-              MouseRegion(
-                cursor: SystemMouseCursors.click,
-                child: GestureDetector(
-                  onTap: () {
-                    Navigator.of(context).push(
-                      PageRouteBuilder(
-                        pageBuilder: (context, animation, secondaryAnimation) => const ActivityPage(),
-                        transitionDuration: Duration.zero,
-                        reverseTransitionDuration: Duration.zero,
-                      ),
-                    );
-                  },
-                  child: ClipRRect(
-                    borderRadius: const BorderRadius.only(
-                      topLeft: Radius.circular(8),
-                      topRight: Radius.circular(8),
-                    ),
-                    child: BackdropFilter(
-                      filter: ImageFilter.blur(sigmaX: 2, sigmaY: 2),
-                      child: Container(
-                        height: 45,
-                        padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 9),
-                        decoration: BoxDecoration(
-                          color: Colors.white.withOpacity(0.1),
-                          border: Border(
-                            top: BorderSide(color: Colors.white.withOpacity(0.3), width: 1),
-                            left: BorderSide(color: Colors.white.withOpacity(0.3), width: 1),
-                            right: BorderSide(color: Colors.white.withOpacity(0.3), width: 1),
-                            bottom: BorderSide(color: Colors.white.withOpacity(0.3), width: 1),
-                          ),
-                          borderRadius: const BorderRadius.only(
-                            topLeft: Radius.circular(8),
-                            topRight: Radius.circular(8),
-                          ),
-                        ),
-                        child: const Text(
-                          'Activity',
-                          style: TextStyle(
-                            fontSize: 13,
-                            fontWeight: FontWeight.w500,
-                            color: Colors.white70,
-                          ),
-                        ),
-                      ),
-                    ),
-                  ),
-                ),
+              _NavigationButton(
+                label: 'Activity',
+                destination: const ActivityPage(),
               ),
 
               // Cash Management Button
-              MouseRegion(
-                cursor: SystemMouseCursors.click,
-                child: GestureDetector(
-                  onTap: () {
-                    Navigator.of(context).push(
-                      PageRouteBuilder(
-                        pageBuilder: (context, animation, secondaryAnimation) => const CashManagementPage(),
-                        transitionDuration: Duration.zero,
-                        reverseTransitionDuration: Duration.zero,
-                      ),
-                    );
-                  },
-                  child: ClipRRect(
-                    borderRadius: const BorderRadius.only(
-                      topLeft: Radius.circular(8),
-                      topRight: Radius.circular(8),
-                    ),
-                    child: BackdropFilter(
-                      filter: ImageFilter.blur(sigmaX: 2, sigmaY: 2),
-                      child: Container(
-                        height: 45,
-                        padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 9),
-                        decoration: BoxDecoration(
-                          color: Colors.white.withOpacity(0.1),
-                          border: Border(
-                            top: BorderSide(color: Colors.white.withOpacity(0.3), width: 1),
-                            left: BorderSide(color: Colors.white.withOpacity(0.3), width: 1),
-                            right: BorderSide(color: Colors.white.withOpacity(0.3), width: 1),
-                            bottom: BorderSide(color: Colors.white.withOpacity(0.3), width: 1),
-                          ),
-                          borderRadius: const BorderRadius.only(
-                            topLeft: Radius.circular(8),
-                            topRight: Radius.circular(8),
-                          ),
-                        ),
-                        child: const Text(
-                          'Cash Management',
-                          style: TextStyle(
-                            fontSize: 13,
-                            fontWeight: FontWeight.w500,
-                            color: Colors.white70,
-                          ),
-                        ),
-                      ),
-                    ),
-                  ),
-                ),
+              _NavigationButton(
+                label: 'Cash Management',
+                destination: const CashManagementPage(),
               ),
               ],
             ),
@@ -641,7 +468,7 @@ class _PortfolioPageState extends State<PortfolioPage> {
             itemBuilder: (BuildContext context) {
               final isAdmin = authService.username.toLowerCase() == 'admin';
               return [
-                PopupMenuItem<String>(
+                const PopupMenuItem<String>(
                   value: 'profile',
                   child: Row(
                     children: [
@@ -657,7 +484,7 @@ class _PortfolioPageState extends State<PortfolioPage> {
                     color: Colors.white.withOpacity(0.3),
                   ),
                 if (isAdmin)
-                  PopupMenuItem<String>(
+                  const PopupMenuItem<String>(
                     value: 'users',
                     child: Row(
                       children: [
@@ -1192,4 +1019,67 @@ class _PortfolioPageState extends State<PortfolioPage> {
     );
   }
 
+}
+
+/// Reusable navigation button widget for inactive tabs
+class _NavigationButton extends StatelessWidget {
+  final String label;
+  final Widget destination;
+
+  const _NavigationButton({
+    required this.label,
+    required this.destination,
+  });
+
+  @override
+  Widget build(BuildContext context) {
+    return MouseRegion(
+      cursor: SystemMouseCursors.click,
+      child: GestureDetector(
+        onTap: () {
+          Navigator.of(context).push(
+            PageRouteBuilder(
+              pageBuilder: (context, animation, secondaryAnimation) => destination,
+              transitionDuration: Duration.zero,
+              reverseTransitionDuration: Duration.zero,
+            ),
+          );
+        },
+        child: ClipRRect(
+          borderRadius: const BorderRadius.only(
+            topLeft: Radius.circular(8),
+            topRight: Radius.circular(8),
+          ),
+          child: BackdropFilter(
+            filter: ImageFilter.blur(sigmaX: 2, sigmaY: 2),
+            child: Container(
+              height: 45,
+              padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 9),
+              decoration: BoxDecoration(
+                color: Colors.white.withOpacity(0.1),
+                border: Border(
+                  top: BorderSide(color: Colors.white.withOpacity(0.3), width: 1),
+                  left: BorderSide(color: Colors.white.withOpacity(0.3), width: 1),
+                  right: BorderSide(color: Colors.white.withOpacity(0.3), width: 1),
+                  bottom: BorderSide(color: Colors.white.withOpacity(0.3), width: 1),
+                ),
+                borderRadius: const BorderRadius.only(
+                  topLeft: Radius.circular(8),
+                  topRight: Radius.circular(8),
+                ),
+              ),
+              child: Text(
+                label,
+                style: const TextStyle(
+                  fontSize: 13,
+                  fontWeight: FontWeight.w500,
+                  color: Colors.white70,
+                ),
+              ),
+            ),
+          ),
+        ),
+      ),
+    );
+  }
 }

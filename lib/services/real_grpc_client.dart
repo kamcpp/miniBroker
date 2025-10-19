@@ -82,12 +82,13 @@ class RealGrpcClient {
       } else {
         _isConnected = false;
         print('⚠️ gRPC client configured for $host:$port but server is not reachable');
-        // Don't throw exception - let the app continue but show disconnected state
+        // Keep clients initialized - they can still attempt reconnection later
       }
     } catch (e) {
       _isConnected = false;
       print('❌ Failed to configure gRPC client: $e');
-      throw Exception('Failed to configure gRPC client: $e');
+      // DON'T throw - allow reconnection attempts later
+      // The clients are still initialized and can try to connect when called
     }
   }
 
@@ -139,34 +140,56 @@ class RealGrpcClient {
     }
   }
 
+  /// Attempt to reconnect to the server
+  /// This can be called at any time to retry connection
+  Future<bool> reconnect() async {
+    try {
+      print('🔄 Attempting to reconnect to $_host:$_port...');
+
+      // Test connectivity first
+      final isReachable = await testServerConnectivity();
+
+      if (isReachable) {
+        _isConnected = true;
+        print('✅ Reconnection successful');
+        return true;
+      } else {
+        _isConnected = false;
+        print('⚠️ Reconnection failed - server not reachable');
+        return false;
+      }
+    } catch (e) {
+      _isConnected = false;
+      print('❌ Reconnection error: $e');
+      return false;
+    }
+  }
+
   /// Ping call to AgentService.Ping
   Future<Map<String, dynamic>> ping({
     String stringToBePonged = 'Hello from Flutter!',
     Duration? timeout,
   }) async {
-    print('🔍 Testing server connectivity before ping...');
-    final isServerReachable = await testServerConnectivity();
+    // If not connected, try to reconnect first
+    if (!_isConnected && _agentClient != null) {
+      print('🔄 Not connected - attempting auto-reconnect...');
+      await reconnect();
+    }
 
-    if (!isServerReachable) {
-      _isConnected = false;
+    if (_agentClient == null) {
       return {
         'input': {
           'proposed_execution_id': 'ping_${DateTime.now().millisecondsSinceEpoch}',
           'string_to_be_ponged': stringToBePonged,
         },
         'output': {
-          'error': 'Server not reachable',
-          'message': 'Cannot connect to the gRPC server at $_host:$_port',
+          'error': 'Not initialized',
+          'message': 'gRPC client not initialized. Call connect() first.',
         },
         'requestTime': _toUnixTimestamp(DateTime.now()).toString(),
-        'serverType': 'not-reachable',
+        'serverType': 'not-initialized',
         'success': false,
       };
-    }
-
-    if (!_isConnected) {
-      _isConnected = true;
-      print('✅ Server connection restored');
     }
 
     try {
@@ -196,6 +219,8 @@ class RealGrpcClient {
       };
     } catch (e) {
       print('❌ Ping failed: $e');
+      // Mark as disconnected on error
+      _isConnected = false;
       return {
         'input': {
           'proposed_execution_id': 'ping_${DateTime.now().millisecondsSinceEpoch}',
@@ -218,12 +243,18 @@ class RealGrpcClient {
     int pageSize = 0,
     Duration? timeout,
   }) async {
-    if (!_isConnected || _instrumentClient == null) {
+    // If not connected, try to reconnect first
+    if (!_isConnected && _instrumentClient != null) {
+      print('🔄 Not connected - attempting auto-reconnect...');
+      await reconnect();
+    }
+
+    if (_instrumentClient == null) {
       return {
         'input': {},
-        'output': {'error': 'Not connected to server'},
+        'output': {'error': 'gRPC client not initialized'},
         'requestTime': _toUnixTimestamp(DateTime.now()).toString(),
-        'serverType': 'disconnected',
+        'serverType': 'not-initialized',
         'success': false,
       };
     }
@@ -296,25 +327,18 @@ class RealGrpcClient {
     int pageSize = 0,
     Duration? timeout,
   }) async {
-    print('🔍 Testing server connectivity before GetAccountList...');
-    final isServerReachable = await testServerConnectivity();
-
-    if (!isServerReachable) {
-      return {
-        'input': {},
-        'output': {'error': 'Server not reachable'},
-        'requestTime': _toUnixTimestamp(DateTime.now()).toString(),
-        'serverType': 'not-reachable',
-        'success': false,
-      };
+    // If not connected, try to reconnect first
+    if (!_isConnected && _accountClient != null) {
+      print('🔄 Not connected - attempting auto-reconnect...');
+      await reconnect();
     }
 
-    if (!_isConnected || _accountClient == null) {
+    if (_accountClient == null) {
       return {
         'input': {},
-        'output': {'error': 'Not connected to server'},
+        'output': {'error': 'gRPC client not initialized'},
         'requestTime': _toUnixTimestamp(DateTime.now()).toString(),
-        'serverType': 'disconnected',
+        'serverType': 'not-initialized',
         'success': false,
       };
     }
@@ -367,6 +391,8 @@ class RealGrpcClient {
       };
     } catch (e) {
       print('❌ GetAccountList failed: $e');
+      // Mark as disconnected on error
+      _isConnected = false;
       return {
         'input': {
           'account_iid_or_external_id_regex': accountIdRegex ?? '',
