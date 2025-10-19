@@ -403,7 +403,7 @@ class _ConfigFinderDialogState extends State<ConfigFinderDialog> {
           filter: ImageFilter.blur(sigmaX: 10, sigmaY: 10),
           child: Container(
             width: 650,
-            height: 750,
+            height: 500,
             padding: UIConstants.paddingComfortable,
             decoration: BoxDecoration(
               color: backgroundColor.withOpacity(0.85),
