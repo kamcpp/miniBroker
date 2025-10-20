@@ -1,8 +1,11 @@
 import 'package:flutter/material.dart';
+import 'package:provider/provider.dart';
 import '../services/database_helper.dart';
 import '../services/user_sync_service.dart';
+import '../services/theme_service.dart';
 import '../config/ui_constants.dart';
-import '../widgets/copyright_bar.dart';
+import '../utils/menu_items_helper.dart';
+import '../widgets/base_page.dart';
 class UsersAdminPage extends StatefulWidget {
   const UsersAdminPage({super.key});
 
@@ -146,33 +149,52 @@ class _UsersAdminPageState extends State<UsersAdminPage> {
 
   @override
   Widget build(BuildContext context) {
-    return Scaffold(
-      backgroundColor: const Color(0xFF1a1754),
-      appBar: AppBar(
-        title: const Text('Registered Users'),
-        backgroundColor: const Color(0xFF1a1754),
-        foregroundColor: Colors.white,
-        actions: [
-          IconButton(
-            icon: const Icon(Icons.refresh),
-            onPressed: _loadUsers,
-          ),
-        ],
-      ),
-      body: Column(
+    final themeService = Provider.of<ThemeService>(context);
+    final isDarkTheme = themeService.isDarkTheme;
+
+    return BasePage(
+      menuItems: MenuItemsHelper.buildMenuItems(context, 'users'),
+      content: Column(
         children: [
+          // Title and Refresh Button
+          Padding(
+            padding: UIConstants.paddingStandard,
+            child: Row(
+              mainAxisAlignment: MainAxisAlignment.spaceBetween,
+              children: [
+                Text(
+                  'Registered Users',
+                  style: TextStyle(
+                    fontSize: UIConstants.fontSizeLg,
+                    fontWeight: UIConstants.fontWeightMedium,
+                    color: isDarkTheme ? Colors.white : Colors.black,
+                  ),
+                ),
+                IconButton(
+                  icon: Icon(
+                    Icons.refresh,
+                    color: isDarkTheme ? Colors.white : Colors.black,
+                  ),
+                  onPressed: _loadUsers,
+                  tooltip: 'Refresh',
+                ),
+              ],
+            ),
+          ),
           Expanded(
             child: _isLoading
                 ? Center(
                     child: Column(
                       mainAxisAlignment: MainAxisAlignment.center,
                       children: [
-                        const CircularProgressIndicator(color: Colors.white),
+                        CircularProgressIndicator(
+                          color: isDarkTheme ? Colors.white : const Color(0xFF1a1754),
+                        ),
                         const SizedBox(height: UIConstants.spacingMd),
                         Text(
                           _isSyncing ? 'Syncing with server...' : 'Loading users...',
-                          style: const TextStyle(
-                            color: Colors.white,
+                          style: TextStyle(
+                            color: isDarkTheme ? Colors.white : Colors.black,
                             fontSize: UIConstants.fontSizeBody,
                           ),
                         ),
@@ -180,11 +202,11 @@ class _UsersAdminPageState extends State<UsersAdminPage> {
                     ),
                   )
                 : _users.isEmpty
-                    ? const Center(
+                    ? Center(
                         child: Text(
                           'No users registered yet',
                           style: TextStyle(
-                            color: Colors.white,
+                            color: isDarkTheme ? Colors.white : Colors.black,
                             fontSize: UIConstants.fontSizeMd,
                           ),
                         ),
@@ -264,9 +286,6 @@ class _UsersAdminPageState extends State<UsersAdminPage> {
                         },
                       ),
           ),
-
-          // Copyright Status Bar
-          CopyrightBar(isDarkTheme: true),
         ],
       ),
     );

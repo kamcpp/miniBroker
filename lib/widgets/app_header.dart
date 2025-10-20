@@ -180,12 +180,10 @@ class AppHeader extends StatelessWidget {
             ),
           );
 
-          if (shouldLogout == true && context.mounted) {
+          if (shouldLogout == true) {
             await authService.logout();
-            // Navigate back to root to trigger login page
-            if (context.mounted) {
-              Navigator.of(context).popUntil((route) => route.isFirst);
-            }
+            // The Consumer in main.dart will automatically rebuild
+            // and show the login page when isLoggedIn becomes false
           }
         },
         icon: const Icon(Icons.logout, size: UIConstants.textFieldIconSize),
