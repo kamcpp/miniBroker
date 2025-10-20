@@ -4,13 +4,8 @@ import '../services/theme_service.dart';
 import '../services/real_grpc_client.dart';
 import '../config/ui_constants.dart';
 import '../utils/connectivity_checker.dart';
+import '../utils/menu_items_helper.dart';
 import '../widgets/base_page.dart';
-import '../widgets/left_menu.dart';
-import 'portfolio_page.dart';
-import 'trading_page.dart';
-import 'cash_management_page.dart';
-import 'activity_page.dart';
-import 'users_admin_page.dart';
 
 class InstrumentsPage extends StatefulWidget {
   const InstrumentsPage({super.key});
@@ -148,84 +143,6 @@ class _InstrumentsPageState extends State<InstrumentsPage> {
     }
   }
 
-  List<MenuItem> _buildMenuItems(BuildContext context) {
-    return [
-      MenuItem(
-        label: 'Instruments',
-        icon: Icons.list_alt,
-        isSelected: true,
-        onTap: () {}, // Already on this page
-      ),
-      MenuItem(
-        label: 'Portfolio',
-        icon: Icons.account_balance_wallet,
-        isSelected: false,
-        onTap: () {
-          Navigator.of(context).pushReplacement(
-            PageRouteBuilder(
-              pageBuilder: (context, animation, secondaryAnimation) => const PortfolioPage(),
-              transitionDuration: Duration.zero,
-              reverseTransitionDuration: Duration.zero,
-            ),
-          );
-        },
-      ),
-      MenuItem(
-        label: 'Trading',
-        icon: Icons.candlestick_chart,
-        isSelected: false,
-        onTap: () {
-          Navigator.of(context).pushReplacement(
-            PageRouteBuilder(
-              pageBuilder: (context, animation, secondaryAnimation) => const TradingPage(),
-              transitionDuration: Duration.zero,
-              reverseTransitionDuration: Duration.zero,
-            ),
-          );
-        },
-      ),
-      MenuItem(
-        label: 'Activity',
-        icon: Icons.history,
-        isSelected: false,
-        onTap: () {
-          Navigator.of(context).pushReplacement(
-            PageRouteBuilder(
-              pageBuilder: (context, animation, secondaryAnimation) => const ActivityPage(),
-              transitionDuration: Duration.zero,
-              reverseTransitionDuration: Duration.zero,
-            ),
-          );
-        },
-      ),
-      MenuItem(
-        label: 'Cash Management',
-        icon: Icons.payments,
-        isSelected: false,
-        onTap: () {
-          Navigator.of(context).pushReplacement(
-            PageRouteBuilder(
-              pageBuilder: (context, animation, secondaryAnimation) => const CashManagementPage(),
-              transitionDuration: Duration.zero,
-              reverseTransitionDuration: Duration.zero,
-            ),
-          );
-        },
-      ),
-      MenuItem(
-        label: 'Users Admin',
-        icon: Icons.admin_panel_settings,
-        isSelected: false,
-        onTap: () {
-          Navigator.of(context).push(
-            MaterialPageRoute(
-              builder: (context) => const UsersAdminPage(),
-            ),
-          );
-        },
-      ),
-    ];
-  }
 
   @override
   Widget build(BuildContext context) {
@@ -233,7 +150,7 @@ class _InstrumentsPageState extends State<InstrumentsPage> {
     final isDarkTheme = themeService.isDarkTheme;
 
     return BasePage(
-      menuItems: _buildMenuItems(context),
+      menuItems: MenuItemsHelper.buildMenuItems(context, 'instruments'),
       content: Column(
         children: [
           // Network Error Bar (if error exists)

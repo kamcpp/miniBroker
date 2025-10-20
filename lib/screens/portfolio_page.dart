@@ -1,4 +1,3 @@
-import 'dart:ui';
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 import '../services/auth_service.dart';
@@ -6,14 +5,9 @@ import '../services/theme_service.dart';
 import '../services/real_grpc_client.dart';
 import '../services/database_helper.dart';
 import '../utils/connectivity_checker.dart';
+import '../utils/menu_items_helper.dart';
 import '../config/ui_constants.dart';
-import '../widgets/copyright_bar.dart';
-import 'instruments_page.dart';
-import 'trading_page.dart';
-import 'Cash_management_page.dart';
-import 'activity_page.dart';
-import 'profile_page.dart';
-import 'users_admin_page.dart';
+import '../widgets/base_page.dart';
 
 class PortfolioPage extends StatefulWidget {
   const PortfolioPage({super.key});
@@ -248,371 +242,56 @@ class _PortfolioPageState extends State<PortfolioPage> {
 
   @override
   Widget build(BuildContext context) {
-    final authService = Provider.of<AuthService>(context);
     final themeService = Provider.of<ThemeService>(context);
-    final _isDarkTheme = themeService.isDarkTheme; // Use theme from service
-    
-    return Theme(
-      data: _isDarkTheme ? ThemeData.dark() : ThemeData.light(),
-      child: Scaffold(
-        backgroundColor: _isDarkTheme ? const Color(0x000000) : Colors.grey[100],
-        body: Column(
-          children: [
-            // Header Section
-            _buildHeader(authService, themeService),
+    final isDarkTheme = themeService.isDarkTheme;
 
-            // Main Content
+    return BasePage(
+      menuItems: MenuItemsHelper.buildMenuItems(context, 'portfolio'),
+      content: Padding(
+        padding: UIConstants.paddingComfortable,
+        child: Column(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            // Portfolio Holdings
             Expanded(
-              child: Padding(
+              child: Container(
                 padding: UIConstants.paddingComfortable,
+                decoration: BoxDecoration(
+                  color: isDarkTheme ? const Color(0xFF2A2A2A) : Colors.white,
+                  borderRadius: BorderRadius.circular(12),
+                  boxShadow: [
+                    BoxShadow(
+                      color: Colors.black.withOpacity(0.1),
+                      blurRadius: 8,
+                      offset: const Offset(0, 2),
+                    ),
+                  ],
+                ),
                 child: Column(
                   crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
-                    // Portfolio Holdings
-                    Expanded(
-                      child: Container(
-                        padding: UIConstants.paddingComfortable,
-                        decoration: BoxDecoration(
-                          color: _isDarkTheme ? const Color(0xFF2A2A2A) : Colors.white,
-                          borderRadius: BorderRadius.circular(12),
-                          boxShadow: [
-                            BoxShadow(
-                              color: Colors.black.withOpacity(0.1),
-                              blurRadius: 8,
-                              offset: const Offset(0, 2),
-                            ),
-                          ],
-                        ),
-                        child: Column(
-                          crossAxisAlignment: CrossAxisAlignment.start,
-                          children: [
-                            Text(
-                              'Instruments Holdings',
-                              style: TextStyle(
-                                fontSize: UIConstants.fontSizeLg,
-                                fontWeight: UIConstants.fontWeightMedium,
-                                color: _isDarkTheme ? Colors.white : Colors.black,
-                              ),
-                            ),
-                            SizedBox(height: UIConstants.spacingMd),
-                            Expanded(
-                              child: _buildPortfolioContent(themeService, _isDarkTheme),
-                            ),
-                          ],
-                        ),
+                    Text(
+                      'Instruments Holdings',
+                      style: TextStyle(
+                        fontSize: UIConstants.fontSizeLg,
+                        fontWeight: UIConstants.fontWeightMedium,
+                        color: isDarkTheme ? Colors.white : Colors.black,
                       ),
+                    ),
+                    SizedBox(height: UIConstants.spacingMd),
+                    Expanded(
+                      child: _buildPortfolioContent(themeService, isDarkTheme),
                     ),
                   ],
                 ),
               ),
             ),
-
-            // Copyright Status Bar
-            CopyrightBar(isDarkTheme: _isDarkTheme),
           ],
         ),
       ),
     );
   }
 
-  Widget _buildHeader(AuthService authService, ThemeService themeService) {
-    final isDarkTheme = themeService.isDarkTheme;
-    return Container(
-      height: 60,
-      padding: const EdgeInsets.symmetric(horizontal: 20),
-      decoration: BoxDecoration(
-        color: const Color(0xFF1a1754),
-        boxShadow: [
-          BoxShadow(
-            color: Colors.black.withOpacity(0.2),
-            blurRadius: 4,
-            offset: const Offset(0, 2),
-          ),
-        ],
-      ),
-      child: Row(
-        children: [
-          // Logo on the left
-          Container(
-            width: 40,
-            height: 40,
-            decoration: BoxDecoration(
-              shape: BoxShape.circle,
-              color: const Color(0xFF1E88E5),
-            ),
-            child: ClipOval(
-              child: Padding(
-                padding: const EdgeInsets.all(4.0),
-                child: Container(
-                  decoration: const BoxDecoration(
-                    color: Color(0xFF1E88E5),
-                    shape: BoxShape.circle,
-                  ),
-                  child: Center(
-                    child: RichText(
-                      textAlign: TextAlign.center,
-                      text: const TextSpan(
-                        children: [
-                          TextSpan(
-                            text: 'mini\n',
-                            style: TextStyle(
-                              color: Colors.white,
-                              fontSize: 8,
-                              fontWeight: UIConstants.fontWeightNormal,
-                              height: 0.8,
-                            ),
-                          ),
-                          TextSpan(
-                            text: 'Broker',
-                            style: TextStyle(
-                              color: Colors.white,
-                              fontSize: 8,
-                              fontWeight: UIConstants.fontWeightMedium,
-                              height: 0.8,
-                            ),
-                          ),
-                        ],
-                      ),
-                    ),
-                  ),
-                ),
-              ),
-            ),
-          ),
-          
-          const SizedBox(width: 16),
-
-          // Navigation Tabs - Left side beside logo
-          Padding(
-            padding: const EdgeInsets.only(top: 10),
-            child: Row(
-              mainAxisSize: MainAxisSize.min,
-              crossAxisAlignment: CrossAxisAlignment.end,
-              children: [
-              // Instruments Button
-              _NavigationButton(
-                label: 'Instruments',
-                destination: const InstrumentsPage(),
-              ),
-
-              // Portfolio Button (current page)
-              MouseRegion(
-                cursor: SystemMouseCursors.click,
-                child: Container(
-                  height: 36,
-                  padding: UIConstants.paddingCompact,
-                  decoration: BoxDecoration(
-                    color: isDarkTheme ? Colors.black : Colors.grey[100],
-                    border: Border(
-                      top: BorderSide(color: Colors.white.withOpacity(0.3), width: 1),
-                      left: BorderSide(color: Colors.white.withOpacity(0.3), width: 1),
-                      right: BorderSide(color: Colors.white.withOpacity(0.3), width: 1),
-                    ),
-                    borderRadius: BorderRadius.only(
-                      topLeft: Radius.circular(UIConstants.borderRadiusMd),
-                      topRight: Radius.circular(UIConstants.borderRadiusMd),
-                    ),
-                  ),
-                  child: Text(
-                    'Portfolio',
-                    style: TextStyle(
-                      fontSize: UIConstants.fontSizeBody,
-                      fontWeight: UIConstants.fontWeightMedium,
-                      color: isDarkTheme ? Colors.white : Colors.black,
-                    ),
-                  ),
-                ),
-              ),
-
-              // Trading Button
-              _NavigationButton(
-                label: 'Trading',
-                destination: const TradingPage(),
-              ),
-
-              // Activity Button
-              _NavigationButton(
-                label: 'Activity',
-                destination: const ActivityPage(),
-              ),
-
-              // Cash Management Button
-              _NavigationButton(
-                label: 'Cash Management',
-                destination: const CashManagementPage(),
-              ),
-              ],
-            ),
-          ),
-          
-          // Spacer to push user menu to the right
-          const Spacer(),
-          
-          // User Profile with Dropdown
-          PopupMenuButton<String>(
-            offset: const Offset(18, 40),
-            color: const Color(0xFF1a1754),
-            surfaceTintColor: const Color(0xFF1a1754),
-            shadowColor: Colors.black.withOpacity(0.3),
-            elevation: 8,
-            onSelected: (value) {
-              if (value == 'profile') {
-                Navigator.of(context).push(
-                  MaterialPageRoute(
-                    builder: (context) => const ProfilePage(),
-                  ),
-                );
-              } else if (value == 'users') {
-                Navigator.of(context).push(
-                  MaterialPageRoute(
-                    builder: (context) => const UsersAdminPage(),
-                  ),
-                );
-              }
-            },
-            itemBuilder: (BuildContext context) {
-              final isAdmin = authService.username.toLowerCase() == 'admin';
-              return [
-                const PopupMenuItem<String>(
-                  value: 'profile',
-                  child: Row(
-                    children: [
-                      Icon(Icons.person, size: 18, color: Colors.white),
-                      SizedBox(width: 8),
-                      Text('Profile', style: TextStyle(color: Colors.white)),
-                    ],
-                  ),
-                ),
-                if (isAdmin)
-                  PopupMenuDivider(
-                    height: 1,
-                    color: Colors.white.withOpacity(0.3),
-                  ),
-                if (isAdmin)
-                  const PopupMenuItem<String>(
-                    value: 'users',
-                    child: Row(
-                      children: [
-                        Icon(Icons.people, size: 18, color: Colors.white),
-                        SizedBox(width: 8),
-                        Text('View Users', style: TextStyle(color: Colors.white)),
-                      ],
-                    ),
-                  ),
-              ];
-            },
-            child: Row(
-              mainAxisSize: MainAxisSize.min,
-              children: [
-                Container(
-                  width: 24,
-                  height: 24,
-                  decoration: BoxDecoration(
-                    shape: BoxShape.circle,
-                    color: Colors.white.withOpacity(0.2),
-                    border: Border.all(color: Colors.white, width: 1),
-                  ),
-                  child: const Icon(
-                    Icons.person,
-                    color: Colors.white,
-                    size: 14,
-                  ),
-                ),
-                const SizedBox(width: 8),
-                Text(
-                  authService.username,
-                  style: const TextStyle(
-                    color: Colors.white,
-                    fontSize: UIConstants.fontSizeBody,
-                    fontWeight: UIConstants.fontWeightNormal,
-                  ),
-                ),
-                const SizedBox(width: 4),
-                const Icon(
-                  Icons.keyboard_arrow_down,
-                  color: Colors.white,
-                  size: 18,
-                ),
-              ],
-            ),
-          ),
-          
-          const SizedBox(width: 16),
-          
-          // Vertical divider line
-          Container(
-            height: 30,
-            width: 1,
-            color: Colors.white.withOpacity(0.3),
-          ),
-          
-          const SizedBox(width: 16),
-          
-          // Theme toggle button (centered)
-          Container(
-            width: 36,
-            alignment: Alignment.center,
-            child: IconButton(
-              onPressed: () {
-                themeService.toggleTheme();
-              },
-              icon: Icon(
-                themeService.isDarkTheme ? Icons.wb_sunny : Icons.nights_stay,
-                color: Colors.white,
-                size: 20,
-              ),
-              tooltip: themeService.isDarkTheme ? 'Light Theme' : 'Dark Theme',
-              padding: UIConstants.paddingStandard,
-            ),
-          ),
-          
-          const SizedBox(width: 8),
-          
-          // Vertical divider line
-          Container(
-            height: 30,
-            width: 1,
-            color: Colors.white.withOpacity(0.3),
-          ),
-          
-          const SizedBox(width: 8),
-          
-          // Logout icon button
-          IconButton(
-            onPressed: () async {
-              try {
-                print('🚪 Portfolio page logout initiated...');
-                await authService.logout();
-                print('✅ Logout completed, should redirect to login');
-                
-                // Navigate back to root to ensure proper app state reset
-                if (mounted) {
-                  Navigator.of(context).popUntil((route) => route.isFirst);
-                }
-              } catch (e) {
-                print('❌ Error during logout: $e');
-                if (mounted) {
-                  ScaffoldMessenger.of(context).showSnackBar(
-                    SnackBar(
-                      content: Text('Logout failed: $e'),
-                      backgroundColor: Colors.red,
-                    ),
-                  );
-                }
-              }
-            },
-            icon: const Icon(
-              Icons.logout,
-              color: Colors.white,
-              size: 20,
-            ),
-            tooltip: 'Logout',
-            padding: UIConstants.paddingStandard,
-          ),
-        ],
-      ),
-    );
-  }
 
   Widget _buildPortfolioContent(ThemeService themeService, bool isDarkTheme) {
     if (_isLoadingPortfolio) {
@@ -1027,64 +706,3 @@ class _PortfolioPageState extends State<PortfolioPage> {
 }
 
 /// Reusable navigation button widget for inactive tabs
-class _NavigationButton extends StatelessWidget {
-  final String label;
-  final Widget destination;
-
-  const _NavigationButton({
-    required this.label,
-    required this.destination,
-  });
-
-  @override
-  Widget build(BuildContext context) {
-    return MouseRegion(
-      cursor: SystemMouseCursors.click,
-      child: GestureDetector(
-        onTap: () {
-          Navigator.of(context).push(
-            PageRouteBuilder(
-              pageBuilder: (context, animation, secondaryAnimation) => destination,
-              transitionDuration: Duration.zero,
-              reverseTransitionDuration: Duration.zero,
-            ),
-          );
-        },
-        child: ClipRRect(
-          borderRadius: BorderRadius.only(
-            topLeft: Radius.circular(UIConstants.borderRadiusMd),
-            topRight: Radius.circular(UIConstants.borderRadiusMd),
-          ),
-          child: BackdropFilter(
-            filter: ImageFilter.blur(sigmaX: 2, sigmaY: 2),
-            child: Container(
-              height: 32,
-              padding: UIConstants.paddingCompact,
-              decoration: BoxDecoration(
-                color: Colors.white.withOpacity(0.1),
-                border: Border(
-                  top: BorderSide(color: Colors.white.withOpacity(0.3), width: 1),
-                  left: BorderSide(color: Colors.white.withOpacity(0.3), width: 1),
-                  right: BorderSide(color: Colors.white.withOpacity(0.3), width: 1),
-                  bottom: BorderSide(color: Colors.white.withOpacity(0.3), width: 1),
-                ),
-                borderRadius: BorderRadius.only(
-                  topLeft: Radius.circular(UIConstants.borderRadiusMd),
-                  topRight: Radius.circular(UIConstants.borderRadiusMd),
-                ),
-              ),
-              child: Text(
-                label,
-                style: const TextStyle(
-                  fontSize: UIConstants.fontSizeBody,
-                  fontWeight: UIConstants.fontWeightNormal,
-                  color: Colors.white70,
-                ),
-              ),
-            ),
-          ),
-        ),
-      ),
-    );
-  }
-}
