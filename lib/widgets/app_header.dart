@@ -4,6 +4,7 @@ import '../services/auth_service.dart';
 import '../services/theme_service.dart';
 import '../config/ui_constants.dart';
 import '../screens/profile_page.dart';
+import '../screens/login_page.dart';
 
 /// Reusable application header component
 /// Displays logo, profile button, theme toggle, and logout button
@@ -180,7 +181,7 @@ class AppHeader extends StatelessWidget {
             ),
           );
 
-          if (shouldLogout == true) {
+          if (shouldLogout == true && context.mounted) {
             await authService.logout();
             // Navigate to root and clear navigation stack
             if (context.mounted) {
