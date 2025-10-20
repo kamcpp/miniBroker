@@ -3,7 +3,6 @@ import '../services/database_helper.dart';
 import '../services/user_sync_service.dart';
 import '../config/ui_constants.dart';
 import '../widgets/copyright_bar.dart';
-
 class UsersAdminPage extends StatefulWidget {
   const UsersAdminPage({super.key});
 

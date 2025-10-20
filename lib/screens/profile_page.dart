@@ -6,7 +6,6 @@ import '../services/database_helper.dart';
 import '../utils/connectivity_checker.dart';
 import '../config/ui_constants.dart';
 import '../widgets/copyright_bar.dart';
-
 class ProfilePage extends StatefulWidget {
   const ProfilePage({super.key});
 
@@ -55,12 +54,12 @@ class _ProfilePageState extends State<ProfilePage> {
   Widget build(BuildContext context) {
     final authService = Provider.of<AuthService>(context);
     final themeService = Provider.of<ThemeService>(context);
-    final _isDarkTheme = themeService.isDarkTheme;
+    final isDarkTheme = themeService.isDarkTheme;
 
     return Theme(
-      data: _isDarkTheme ? ThemeData.dark() : ThemeData.light(),
+      data: isDarkTheme ? ThemeData.dark() : ThemeData.light(),
       child: Scaffold(
-        backgroundColor: _isDarkTheme ? const Color(0xFF1A1A1A) : Colors.grey[100],
+        backgroundColor: isDarkTheme ? const Color(0xFF1A1A1A) : Colors.grey[100],
         appBar: AppBar(
           title: const Text('Profile'),
           backgroundColor: const Color(0xFF1a1754),
@@ -87,7 +86,7 @@ class _ProfilePageState extends State<ProfilePage> {
                         style: TextStyle(
                           fontSize: UIConstants.fontSizeLg,
                           fontWeight: UIConstants.fontWeightMedium,
-                          color: _isDarkTheme ? Colors.white : Colors.black,
+                          color: isDarkTheme ? Colors.white : Colors.black,
                         ),
                       ),
 
@@ -105,7 +104,7 @@ class _ProfilePageState extends State<ProfilePage> {
                           setState(() => _isEditingUsername = false);
                           _usernameController.text = authService.username;
                         },
-                        isDarkTheme: _isDarkTheme,
+                        isDarkTheme: isDarkTheme,
                         canEdit: !_databaseHelper.isAdminUser(authService.username),
                       ),
 
@@ -113,7 +112,7 @@ class _ProfilePageState extends State<ProfilePage> {
 
                       // Password Section
                       _buildPasswordSection(
-                        isDarkTheme: _isDarkTheme,
+                        isDarkTheme: isDarkTheme,
                       ),
                     ],
                   ),
@@ -122,7 +121,7 @@ class _ProfilePageState extends State<ProfilePage> {
             ),
 
             // Copyright Status Bar
-            CopyrightBar(isDarkTheme: _isDarkTheme),
+            CopyrightBar(isDarkTheme: isDarkTheme),
           ],
         ),
       ),

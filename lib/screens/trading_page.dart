@@ -2,7 +2,6 @@
 import 'dart:math';
 import 'dart:async';
 import 'dart:convert';
-import 'dart:ui';
 import 'package:flutter/material.dart';
 import '../config/ui_constants.dart';
 import 'package:provider/provider.dart';
@@ -14,13 +13,8 @@ import '../services/real_grpc_client.dart';
 import '../services/grpcurl_helper.dart';
 import '../services/chart_service.dart';
 import '../utils/connectivity_checker.dart';
-import '../widgets/copyright_bar.dart';
-import 'instruments_page.dart';
-import 'portfolio_page.dart';
-import 'Cash_management_page.dart';
-import 'activity_page.dart';
-import 'profile_page.dart';
-import 'users_admin_page.dart';
+import '../utils/menu_items_helper.dart';
+import '../widgets/base_page.dart';
 
 class TradingPage extends StatefulWidget {
   const TradingPage({super.key});
@@ -2662,21 +2656,12 @@ class _TradingPageState extends State<TradingPage> {
 
   @override
   Widget build(BuildContext context) {
-    final authService = Provider.of<AuthService>(context);
     final themeService = Provider.of<ThemeService>(context);
-    final _isDarkTheme = themeService.isDarkTheme; // Use theme from service
-    
-    return Theme(
-      data: _isDarkTheme ? ThemeData.dark() : ThemeData.light(),
-      child: Scaffold(
-        backgroundColor: _isDarkTheme ? const Color(0xFF1A1A1A) : Colors.grey[100],
-        body: Column(
-          children: [
-            // Header Section
-            _buildHeader(authService, themeService),
-            
-            // Main Content
-            Expanded(
+    final isDarkTheme = themeService.isDarkTheme;
+
+    return BasePage(
+      menuItems: MenuItemsHelper.buildMenuItems(context, 'trading'),
+      content: Expanded(
               child: LayoutBuilder(
                 builder: (context, constraints) {
                   final maxWidth = constraints.maxWidth;
@@ -2811,12 +2796,6 @@ class _TradingPageState extends State<TradingPage> {
                 },
               ),
             ),
-
-            // Copyright Status Bar
-            CopyrightBar(isDarkTheme: _isDarkTheme),
-          ],
-        ),
-      ),
     );
   }
 
@@ -2827,7 +2806,7 @@ class _TradingPageState extends State<TradingPage> {
     required bool isDragging,
     required ThemeService themeService,
   }) {
-    final _isDarkTheme = themeService.isDarkTheme;
+    final isDarkTheme = themeService.isDarkTheme;
     return MouseRegion(
       cursor: SystemMouseCursors.resizeColumn,
       child: GestureDetector(
@@ -2843,7 +2822,7 @@ class _TradingPageState extends State<TradingPage> {
               decoration: BoxDecoration(
                 color: isDragging
                     ? Colors.blue.withOpacity(0.3)
-                    : (_isDarkTheme ? Colors.grey[700] : Colors.grey[300]),
+                    : (isDarkTheme ? Colors.grey[700] : Colors.grey[300]),
                 border: isDragging
                     ? Border.all(color: Colors.blue, width: 1)
                     : null,
@@ -2862,7 +2841,7 @@ class _TradingPageState extends State<TradingPage> {
     required bool isDragging,
     required ThemeService themeService,
   }) {
-    final _isDarkTheme = themeService.isDarkTheme;
+    final isDarkTheme = themeService.isDarkTheme;
     return MouseRegion(
       cursor: SystemMouseCursors.resizeRow,
       child: GestureDetector(
@@ -2881,7 +2860,7 @@ class _TradingPageState extends State<TradingPage> {
               decoration: BoxDecoration(
                 color: isDragging
                     ? Colors.blue.withOpacity(0.3)
-                    : (_isDarkTheme ? Colors.grey[700] : Colors.grey[300]),
+                    : (isDarkTheme ? Colors.grey[700] : Colors.grey[300]),
                 border: isDragging
                     ? Border.all(color: Colors.blue, width: 1)
                     : null,
@@ -2893,494 +2872,20 @@ class _TradingPageState extends State<TradingPage> {
     );
   }
 
-  Widget _buildHeader(AuthService authService, ThemeService themeService) {
-    final isDarkTheme = themeService.isDarkTheme;
-    return Container(
-      height: 60,
-      padding: const EdgeInsets.symmetric(horizontal: 20),
-      decoration: BoxDecoration(
-        color: const Color(0xFF1a1754),
-        boxShadow: [
-          BoxShadow(
-            color: Colors.black.withOpacity(0.2),
-            blurRadius: 4,
-            offset: const Offset(0, 2),
-          ),
-        ],
-      ),
-      child: Row(
-        children: [
-          // Logo on the left
-          Container(
-            width: 40,
-            height: 40,
-            decoration: BoxDecoration(
-              shape: BoxShape.circle,
-              color: const Color(0xFF1E88E5),
-            ),
-            child: ClipOval(
-              child: Padding(
-                padding: const EdgeInsets.all(4.0),
-                child: Container(
-                  decoration: const BoxDecoration(
-                    color: Color(0xFF1E88E5),
-                    shape: BoxShape.circle,
-                  ),
-                  child: Center(
-                    child: RichText(
-                      textAlign: TextAlign.center,
-                      text: const TextSpan(
-                        children: [
-                          TextSpan(
-                            text: 'mini\n',
-                            style: TextStyle(
-                              color: Colors.white,
-                              fontSize: 8,
-                              fontWeight: UIConstants.fontWeightNormal,
-                              height: 0.8,
-                            ),
-                          ),
-                          TextSpan(
-                            text: 'Broker',
-                            style: TextStyle(
-                              color: Colors.white,
-                              fontSize: 8,
-                              fontWeight: UIConstants.fontWeightMedium,
-                              height: 0.8,
-                            ),
-                          ),
-                        ],
-                      ),
-                    ),
-                  ),
-                ),
-              ),
-            ),
-          ),
-          
-          const SizedBox(width: UIConstants.spacingMd),
-          
-          // Navigation Tabs - Left side beside logo
-          Padding(
-            padding: const EdgeInsets.only(top: 10),
-            child: Row(
-              mainAxisSize: MainAxisSize.min,
-              crossAxisAlignment: CrossAxisAlignment.end,
-              children: [
-              // Instruments Button
-              MouseRegion(
-                cursor: SystemMouseCursors.click,
-                child: GestureDetector(
-                  onTap: () {
-                    Navigator.of(context).push(
-                      PageRouteBuilder(
-                        pageBuilder: (context, animation, secondaryAnimation) => const InstrumentsPage(),
-                        transitionDuration: Duration.zero,
-                        reverseTransitionDuration: Duration.zero,
-                      ),
-                    );
-                  },
-                  child: ClipRRect(
-                    borderRadius: const BorderRadius.only(
-                      topLeft: Radius.circular(8),
-                      topRight: Radius.circular(8),
-                    ),
-                    child: BackdropFilter(
-                      filter: ImageFilter.blur(sigmaX: 2, sigmaY: 2),
-                      child: Container(
-                        height: 45,
-                        padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 9),
-                        decoration: BoxDecoration(
-                          color: Colors.white.withOpacity(0.1),
-                          border: Border(
-                            top: BorderSide(color: Colors.white.withOpacity(0.3), width: 1),
-                            left: BorderSide(color: Colors.white.withOpacity(0.3), width: 1),
-                            right: BorderSide(color: Colors.white.withOpacity(0.3), width: 1),
-                            bottom: BorderSide(color: Colors.white.withOpacity(0.3), width: 1),
-                          ),
-                          borderRadius: const BorderRadius.only(
-                            topLeft: Radius.circular(8),
-                            topRight: Radius.circular(8),
-                          ),
-                        ),
-                        child: const Text(
-                          'Instruments',
-                          style: TextStyle(
-                            fontSize: UIConstants.fontSizeSm,
-                            fontWeight: UIConstants.fontWeightNormal,
-                            color: Colors.white70,
-                          ),
-                        ),
-                      ),
-                    ),
-                  ),
-                ),
-              ),
-
-              // Portfolio Button
-              MouseRegion(
-                cursor: SystemMouseCursors.click,
-                child: GestureDetector(
-                  onTap: () {
-                    Navigator.of(context).push(
-                      PageRouteBuilder(
-                        pageBuilder: (context, animation, secondaryAnimation) => const PortfolioPage(),
-                        transitionDuration: Duration.zero,
-                        reverseTransitionDuration: Duration.zero,
-                      ),
-                    );
-                  },
-                  child: ClipRRect(
-                    borderRadius: const BorderRadius.only(
-                      topLeft: Radius.circular(8),
-                      topRight: Radius.circular(8),
-                    ),
-                    child: BackdropFilter(
-                      filter: ImageFilter.blur(sigmaX: 2, sigmaY: 2),
-                      child: Container(
-                        height: 45,
-                        padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 9),
-                        decoration: BoxDecoration(
-                          color: Colors.white.withOpacity(0.1),
-                          border: Border(
-                            top: BorderSide(color: Colors.white.withOpacity(0.3), width: 1),
-                            left: BorderSide(color: Colors.white.withOpacity(0.3), width: 1),
-                            right: BorderSide(color: Colors.white.withOpacity(0.3), width: 1),
-                            bottom: BorderSide(color: Colors.white.withOpacity(0.3), width: 1),
-                          ),
-                          borderRadius: const BorderRadius.only(
-                            topLeft: Radius.circular(8),
-                            topRight: Radius.circular(8),
-                          ),
-                        ),
-                        child: const Text(
-                          'Portfolio',
-                          style: TextStyle(
-                            fontSize: UIConstants.fontSizeSm,
-                            fontWeight: UIConstants.fontWeightNormal,
-                            color: Colors.white70,
-                          ),
-                        ),
-                      ),
-                    ),
-                  ),
-                ),
-              ),
-              
-              // Trading Button (current page)
-              MouseRegion(
-                cursor: SystemMouseCursors.click,
-                child: Container(
-                  height: 55,
-                  padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
-                  decoration: BoxDecoration(
-                    color: isDarkTheme ? Colors.black : Colors.white,
-                    border: Border(
-                      top: BorderSide(color: Colors.white.withOpacity(0.3), width: 1),
-                      left: BorderSide(color: Colors.white.withOpacity(0.3), width: 1),
-                      right: BorderSide(color: Colors.white.withOpacity(0.3), width: 1),
-                    ),
-                    borderRadius: const BorderRadius.only(
-                      topLeft: Radius.circular(8),
-                      topRight: Radius.circular(8),
-                    ),
-                  ),
-                  child: Text(
-                    'Trading',
-                    style: TextStyle(
-                      fontSize: UIConstants.fontSizeSm,
-                      fontWeight: UIConstants.fontWeightMedium,
-                      color: isDarkTheme ? Colors.white : Colors.black,
-                    ),
-                  ),
-                ),
-              ),
-
-              // Activity Button
-              MouseRegion(
-                cursor: SystemMouseCursors.click,
-                child: GestureDetector(
-                  onTap: () {
-                    Navigator.of(context).push(
-                      PageRouteBuilder(
-                        pageBuilder: (context, animation, secondaryAnimation) => const ActivityPage(),
-                        transitionDuration: Duration.zero,
-                        reverseTransitionDuration: Duration.zero,
-                      ),
-                    );
-                  },
-                  child: ClipRRect(
-                    borderRadius: const BorderRadius.only(
-                      topLeft: Radius.circular(8),
-                      topRight: Radius.circular(8),
-                    ),
-                    child: BackdropFilter(
-                      filter: ImageFilter.blur(sigmaX: 2, sigmaY: 2),
-                      child: Container(
-                        height: 45,
-                        padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 9),
-                        decoration: BoxDecoration(
-                          color: Colors.white.withOpacity(0.1),
-                          border: Border(
-                            top: BorderSide(color: Colors.white.withOpacity(0.3), width: 1),
-                            left: BorderSide(color: Colors.white.withOpacity(0.3), width: 1),
-                            right: BorderSide(color: Colors.white.withOpacity(0.3), width: 1),
-                            bottom: BorderSide(color: Colors.white.withOpacity(0.3), width: 1),
-                          ),
-                          borderRadius: const BorderRadius.only(
-                            topLeft: Radius.circular(8),
-                            topRight: Radius.circular(8),
-                          ),
-                        ),
-                        child: const Text(
-                          'Activity',
-                          style: TextStyle(
-                            fontSize: UIConstants.fontSizeSm,
-                            fontWeight: UIConstants.fontWeightNormal,
-                            color: Colors.white70,
-                          ),
-                        ),
-                      ),
-                    ),
-                  ),
-                ),
-              ),
-
-              // Cash Management Button
-              MouseRegion(
-                cursor: SystemMouseCursors.click,
-                child: GestureDetector(
-                  onTap: () {
-                    Navigator.of(context).push(
-                      PageRouteBuilder(
-                        pageBuilder: (context, animation, secondaryAnimation) => const CashManagementPage(),
-                        transitionDuration: Duration.zero,
-                        reverseTransitionDuration: Duration.zero,
-                      ),
-                    );
-                  },
-                  child: ClipRRect(
-                    borderRadius: const BorderRadius.only(
-                      topLeft: Radius.circular(8),
-                      topRight: Radius.circular(8),
-                    ),
-                    child: BackdropFilter(
-                      filter: ImageFilter.blur(sigmaX: 2, sigmaY: 2),
-                      child: Container(
-                        height: 45,
-                        padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 9),
-                        decoration: BoxDecoration(
-                          color: Colors.white.withOpacity(0.1),
-                          border: Border(
-                            top: BorderSide(color: Colors.white.withOpacity(0.3), width: 1),
-                            left: BorderSide(color: Colors.white.withOpacity(0.3), width: 1),
-                            right: BorderSide(color: Colors.white.withOpacity(0.3), width: 1),
-                            bottom: BorderSide(color: Colors.white.withOpacity(0.3), width: 1),
-                          ),
-                          borderRadius: const BorderRadius.only(
-                            topLeft: Radius.circular(8),
-                            topRight: Radius.circular(8),
-                          ),
-                        ),
-                        child: const Text(
-                          'Cash Management',
-                          style: TextStyle(
-                            fontSize: UIConstants.fontSizeSm,
-                            fontWeight: UIConstants.fontWeightNormal,
-                            color: Colors.white70,
-                          ),
-                        ),
-                      ),
-                    ),
-                  ),
-                ),
-              ),
-            ],
-            ),
-          ),
-          
-          // Spacer to push user menu to the right
-          const Spacer(),
-          
-          // User Profile with Dropdown
-          PopupMenuButton<String>(
-            offset: const Offset(18, 40),
-            color: const Color(0xFF1a1754),
-            surfaceTintColor: const Color(0xFF1a1754),
-            shadowColor: Colors.black.withOpacity(0.3),
-            elevation: 8,
-            onSelected: (value) {
-              if (value == 'profile') {
-                Navigator.of(context).push(
-                  MaterialPageRoute(
-                    builder: (context) => const ProfilePage(),
-                  ),
-                );
-              } else if (value == 'users') {
-                Navigator.of(context).push(
-                  MaterialPageRoute(
-                    builder: (context) => const UsersAdminPage(),
-                  ),
-                );
-              }
-            },
-            itemBuilder: (BuildContext context) {
-              final isAdmin = authService.username.toLowerCase() == 'admin';
-              return [
-                PopupMenuItem<String>(
-                  value: 'profile',
-                  child: Row(
-                    children: [
-                      Icon(Icons.person, size: 18, color: Colors.white),
-                      SizedBox(width: UIConstants.spacingSm),
-                      Text('Profile', style: TextStyle(color: Colors.white)),
-                    ],
-                  ),
-                ),
-                if (isAdmin)
-                  PopupMenuDivider(
-                    height: 1,
-                    color: Colors.white.withOpacity(0.3),
-                  ),
-                if (isAdmin)
-                  PopupMenuItem<String>(
-                    value: 'users',
-                    child: Row(
-                      children: [
-                        Icon(Icons.people, size: 18, color: Colors.white),
-                        SizedBox(width: UIConstants.spacingSm),
-                        Text('View Users', style: TextStyle(color: Colors.white)),
-                      ],
-                    ),
-                  ),
-              ];
-            },
-            child: Row(
-              mainAxisSize: MainAxisSize.min,
-              children: [
-                Container(
-                  width: 24,
-                  height: 24,
-                  decoration: BoxDecoration(
-                    shape: BoxShape.circle,
-                    color: Colors.white.withOpacity(0.2),
-                    border: Border.all(color: Colors.white, width: 1),
-                  ),
-                  child: const Icon(
-                    Icons.person,
-                    color: Colors.white,
-                    size: 14,
-                  ),
-                ),
-                const SizedBox(width: UIConstants.spacingSm),
-                Text(
-                  authService.username,
-                  style: const TextStyle(
-                    color: Colors.white,
-                    fontSize: UIConstants.textFieldFontSize,
-                    fontWeight: UIConstants.fontWeightNormal,
-                  ),
-                ),
-                const SizedBox(width: 4),
-                const Icon(
-                  Icons.keyboard_arrow_down,
-                  color: Colors.white,
-                  size: 18,
-                ),
-              ],
-            ),
-          ),
-          
-          const SizedBox(width: UIConstants.spacingMd),
-          
-          // Vertical divider line
-          Container(
-            height: 30,
-            width: 1,
-            color: Colors.white.withOpacity(0.3),
-          ),
-          
-          const SizedBox(width: UIConstants.spacingMd),
-          
-          // Theme toggle button (centered)
-          Container(
-            width: 36,
-            alignment: Alignment.center,
-            child: IconButton(
-              onPressed: () {
-                themeService.toggleTheme();
-              },
-              icon: Icon(
-                themeService.isDarkTheme ? Icons.wb_sunny : Icons.nights_stay,
-                color: Colors.white,
-                size: 20,
-              ),
-              tooltip: themeService.isDarkTheme ? 'Light Theme' : 'Dark Theme',
-              padding: UIConstants.paddingMinimal,
-            ),
-          ),
-          
-          const SizedBox(width: UIConstants.spacingSm),
-          
-          // Vertical divider line
-          Container(
-            height: 30,
-            width: 1,
-            color: Colors.white.withOpacity(0.3),
-          ),
-          
-          const SizedBox(width: UIConstants.spacingSm),
-          
-          // Logout icon button
-          IconButton(
-            onPressed: () async {
-              try {
-                print('🔓 Trading page logout initiated...');
-                await authService.logout();
-                print('✅ Logout completed, should redirect to login');
-                
-                // Navigate back to root to ensure proper app state reset
-                if (mounted) {
-                  Navigator.of(context).popUntil((route) => route.isFirst);
-                }
-              } catch (e) {
-                print('❌ Error during logout: $e');
-                if (mounted) {
-                  ScaffoldMessenger.of(context).showSnackBar(
-                    SnackBar(
-                      content: Text('Logout failed: $e'),
-                      backgroundColor: Colors.red,
-                    ),
-                  );
-                }
-              }
-            },
-            icon: const Icon(
-              Icons.logout,
-              color: Colors.white,
-              size: 20,
-            ),
-            tooltip: 'Logout',
-            padding: UIConstants.paddingMinimal,
-          ),
-        ],
-      ),
-    );
-  }
   
   Widget _buildTradingPanel(ThemeService themeService) {
-    final _isDarkTheme = themeService.isDarkTheme;
+    final isDarkTheme = themeService.isDarkTheme;
     return Container(
       padding: UIConstants.paddingStandard,
       decoration: BoxDecoration(
-        color: _isDarkTheme ? Colors.black : Colors.white,
+        color: isDarkTheme ? Colors.black : Colors.white,
       ),
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
           // Trade Orders Tabs Section
           Expanded(
-            child: _buildTradeOrdersTabs(_isDarkTheme),
+            child: _buildTradeOrdersTabs(isDarkTheme),
           ),
 
         ],
@@ -3455,14 +2960,14 @@ class _TradingPageState extends State<TradingPage> {
   }
 
   Widget _buildAssetSection(ThemeService themeService) {
-    final _isDarkTheme = themeService.isDarkTheme;
+    final isDarkTheme = themeService.isDarkTheme;
     return Container(
       padding: UIConstants.paddingStandard,
       decoration: BoxDecoration(
-        color: _isDarkTheme ? const Color(0xFF1e1e1e) : Colors.white,
+        color: isDarkTheme ? const Color(0xFF1e1e1e) : Colors.white,
         border: Border(
           bottom: BorderSide(
-            color: _isDarkTheme ? Colors.grey[700]! : Colors.grey[300]!,
+            color: isDarkTheme ? Colors.grey[700]! : Colors.grey[300]!,
             width: 1,
           ),
         ),
@@ -3480,13 +2985,13 @@ class _TradingPageState extends State<TradingPage> {
                   style: TextStyle(
                     fontSize: UIConstants.textFieldFontSize,
                     fontWeight: UIConstants.fontWeightNormal,
-                    color: _isDarkTheme ? Colors.white : Colors.black,
+                    color: isDarkTheme ? Colors.white : Colors.black,
                   ),
                 ),
               ),
               Expanded(
                 child: _HoverDropdownField(
-                  isDarkTheme: _isDarkTheme,
+                  isDarkTheme: isDarkTheme,
                   child: DropdownButtonHideUnderline(
                     child: DropdownButton<Map<String, String>>(
                       value: _markets.isEmpty
@@ -3514,9 +3019,9 @@ class _TradingPageState extends State<TradingPage> {
                           }
                         }
                       },
-                      dropdownColor: _isDarkTheme ? const Color(0xFF1e1e1e) : Colors.white,
+                      dropdownColor: isDarkTheme ? const Color(0xFF1e1e1e) : Colors.white,
                       style: TextStyle(
-                        color: _isDarkTheme ? Colors.white : Colors.black,
+                        color: isDarkTheme ? Colors.white : Colors.black,
                         fontSize: UIConstants.textFieldFontSize,
                       ),
                       items: _markets.isEmpty
@@ -3549,13 +3054,13 @@ class _TradingPageState extends State<TradingPage> {
                   style: TextStyle(
                     fontSize: UIConstants.textFieldFontSize,
                     fontWeight: UIConstants.fontWeightNormal,
-                    color: _isDarkTheme ? Colors.white : Colors.black,
+                    color: isDarkTheme ? Colors.white : Colors.black,
                   ),
                 ),
               ),
               Expanded(
                 child: _HoverDropdownField(
-                  isDarkTheme: _isDarkTheme,
+                  isDarkTheme: isDarkTheme,
                   child: DropdownButtonHideUnderline(
                     child: DropdownButton<Map<String, String>>(
                       value: _venues.isEmpty
@@ -3573,9 +3078,9 @@ class _TradingPageState extends State<TradingPage> {
                           print('📍 Selected venue: ${newValue['display']} (${newValue['id']})');
                         }
                       },
-                      dropdownColor: _isDarkTheme ? const Color(0xFF1e1e1e) : Colors.white,
+                      dropdownColor: isDarkTheme ? const Color(0xFF1e1e1e) : Colors.white,
                       style: TextStyle(
-                        color: _isDarkTheme ? Colors.white : Colors.black,
+                        color: isDarkTheme ? Colors.white : Colors.black,
                         fontSize: UIConstants.textFieldFontSize,
                       ),
                       items: _venues.isEmpty
@@ -3605,7 +3110,7 @@ class _TradingPageState extends State<TradingPage> {
                       children: [
                         CircularProgressIndicator(
                           valueColor: AlwaysStoppedAnimation<Color>(
-                            _isDarkTheme ? Colors.white : const Color(0xFF1a1754),
+                            isDarkTheme ? Colors.white : const Color(0xFF1a1754),
                           ),
                         ),
                         SizedBox(height: UIConstants.spacingMd),
@@ -3613,7 +3118,7 @@ class _TradingPageState extends State<TradingPage> {
                           'Loading...',
                           style: TextStyle(
                             fontSize: UIConstants.textFieldFontSize,
-                            color: _isDarkTheme ? Colors.grey[400] : Colors.grey[600],
+                            color: isDarkTheme ? Colors.grey[400] : Colors.grey[600],
                           ),
                         ),
                       ],
@@ -3627,14 +3132,14 @@ class _TradingPageState extends State<TradingPage> {
                             Icon(
                               Icons.search_off,
                               size: 48,
-                              color: _isDarkTheme ? Colors.grey[400] : Colors.grey[600],
+                              color: isDarkTheme ? Colors.grey[400] : Colors.grey[600],
                             ),
                             SizedBox(height: UIConstants.spacingSm),
                             Text(
                               'No asset found',
                               style: TextStyle(
                                 fontSize: UIConstants.textFieldFontSize,
-                                color: _isDarkTheme ? Colors.grey[400] : Colors.grey[600],
+                                color: isDarkTheme ? Colors.grey[400] : Colors.grey[600],
                               ),
                             ),
                           ],
@@ -3680,13 +3185,13 @@ class _TradingPageState extends State<TradingPage> {
                                       border: isSelected 
                                           ? Border.all(color: const Color(0xFF00b8fb), width: 2)
                                           : Border.all(
-                                              color: _isDarkTheme ? Colors.grey[700]! : Colors.grey[300]!,
+                                              color: isDarkTheme ? Colors.grey[700]! : Colors.grey[300]!,
                                               width: 1,
                                             ),
                                       borderRadius: BorderRadius.circular(UIConstants.textFieldBorderRadius),
                                       color: isSelected 
-                                          ? (_isDarkTheme ? const Color(0xFF00b8fb).withOpacity(0.1) : const Color(0xFF00b8fb).withOpacity(0.05))
-                                          : (_isDarkTheme ? Colors.black : Colors.white),
+                                          ? (isDarkTheme ? const Color(0xFF00b8fb).withOpacity(0.1) : const Color(0xFF00b8fb).withOpacity(0.05))
+                                          : (isDarkTheme ? Colors.black : Colors.white),
                                     ),
                                   child: Column(
                                     crossAxisAlignment: CrossAxisAlignment.start,
@@ -3699,7 +3204,7 @@ class _TradingPageState extends State<TradingPage> {
                                           fontSize: UIConstants.textFieldFontSize,
                                           fontWeight: UIConstants.fontWeightMedium,
                                           color: isSelected
-                                              ? (_isDarkTheme ? Colors.white : Colors.black)
+                                              ? (isDarkTheme ? Colors.white : Colors.black)
                                               : Colors.grey,
                                         ),
                                         maxLines: 1,
@@ -3711,7 +3216,7 @@ class _TradingPageState extends State<TradingPage> {
                                         asset['description'] ?? '',
                                         style: TextStyle(
                                           fontSize: 7,
-                                          color: _isDarkTheme ? Colors.grey[400] : Colors.grey[600],
+                                          color: isDarkTheme ? Colors.grey[400] : Colors.grey[600],
                                         ),
                                         maxLines: 2,
                                         overflow: TextOverflow.ellipsis,
@@ -3737,8 +3242,8 @@ class _TradingPageState extends State<TradingPage> {
                                 begin: Alignment.centerLeft,
                                 end: Alignment.centerRight,
                                 colors: [
-                                  _isDarkTheme ? const Color(0xFF1e1e1e) : Colors.grey[50]!,
-                                  (_isDarkTheme ? const Color(0xFF1e1e1e) : Colors.grey[50]!).withOpacity(0),
+                                  isDarkTheme ? const Color(0xFF1e1e1e) : Colors.grey[50]!,
+                                  (isDarkTheme ? const Color(0xFF1e1e1e) : Colors.grey[50]!).withOpacity(0),
                                 ],
                               ),
                             ),
@@ -3751,7 +3256,7 @@ class _TradingPageState extends State<TradingPage> {
                                   width: 32,
                                   height: 32,
                                   decoration: BoxDecoration(
-                                    color: _isDarkTheme ? Colors.grey[800] : Colors.white,
+                                    color: isDarkTheme ? Colors.grey[800] : Colors.white,
                                     borderRadius: BorderRadius.circular(UIConstants.borderRadiusLg),
                                     boxShadow: [
                                       BoxShadow(
@@ -3763,7 +3268,7 @@ class _TradingPageState extends State<TradingPage> {
                                   ),
                                   child: Icon(
                                     Icons.chevron_left,
-                                    color: _isDarkTheme ? Colors.white : Colors.black,
+                                    color: isDarkTheme ? Colors.white : Colors.black,
                                     size: 20,
                                   ),
                                 ),
@@ -3785,8 +3290,8 @@ class _TradingPageState extends State<TradingPage> {
                                 begin: Alignment.centerRight,
                                 end: Alignment.centerLeft,
                                 colors: [
-                                  _isDarkTheme ? const Color(0xFF1e1e1e) : Colors.grey[50]!,
-                                  (_isDarkTheme ? const Color(0xFF1e1e1e) : Colors.grey[50]!).withOpacity(0),
+                                  isDarkTheme ? const Color(0xFF1e1e1e) : Colors.grey[50]!,
+                                  (isDarkTheme ? const Color(0xFF1e1e1e) : Colors.grey[50]!).withOpacity(0),
                                 ],
                               ),
                             ),
@@ -3799,7 +3304,7 @@ class _TradingPageState extends State<TradingPage> {
                                   width: 32,
                                   height: 32,
                                   decoration: BoxDecoration(
-                                    color: _isDarkTheme ? Colors.grey[800] : Colors.white,
+                                    color: isDarkTheme ? Colors.grey[800] : Colors.white,
                                     borderRadius: BorderRadius.circular(UIConstants.borderRadiusLg),
                                     boxShadow: [
                                       BoxShadow(
@@ -3811,7 +3316,7 @@ class _TradingPageState extends State<TradingPage> {
                                   ),
                                   child: Icon(
                                     Icons.chevron_right,
-                                    color: _isDarkTheme ? Colors.white : Colors.black,
+                                    color: isDarkTheme ? Colors.white : Colors.black,
                                     size: 20,
                                   ),
                                 ),
@@ -3830,11 +3335,11 @@ class _TradingPageState extends State<TradingPage> {
   }
 
   Widget _buildChartSection(ThemeService themeService) {
-    final _isDarkTheme = themeService.isDarkTheme;
+    final isDarkTheme = themeService.isDarkTheme;
     return Container(
       padding: UIConstants.paddingMinimal,
       decoration: BoxDecoration(
-        color: _isDarkTheme ? Colors.black : Colors.white,
+        color: isDarkTheme ? Colors.black : Colors.white,
       ),
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
@@ -3843,10 +3348,10 @@ class _TradingPageState extends State<TradingPage> {
             child: Container(
               width: double.infinity,
               decoration: BoxDecoration(
-                color: _isDarkTheme ? const Color(0xFF3d3d3d) : Colors.grey[200],
+                color: isDarkTheme ? const Color(0xFF3d3d3d) : Colors.grey[200],
                 borderRadius: BorderRadius.circular(UIConstants.textFieldBorderRadius),
               ),
-              child: _buildChartContent(_isDarkTheme),
+              child: _buildChartContent(isDarkTheme),
             ),
           ),
         ],
@@ -4094,22 +3599,22 @@ class _TradingPageState extends State<TradingPage> {
   }
 
   Widget _buildActivitySection(ThemeService themeService) {
-    final _isDarkTheme = themeService.isDarkTheme;
+    final isDarkTheme = themeService.isDarkTheme;
     return Container(
-      color: _isDarkTheme ? Colors.black : Colors.white, // Section background matches table background
+      color: isDarkTheme ? Colors.black : Colors.white, // Section background matches table background
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start, // Align column content to the left
         children: [
           // Connected tab headers
-          _buildActivityTabHeaders(_isDarkTheme),
+          _buildActivityTabHeaders(isDarkTheme),
           // Connected content area with padding
           Expanded(
             child: Container(
               margin: const EdgeInsets.only(left: 8, right: 8, bottom: 8), // Space between table and section edge
               decoration: BoxDecoration(
-                color: _isDarkTheme ? Colors.grey[800] : Colors.grey[200], // Table background: dark gray / light gray
+                color: isDarkTheme ? Colors.grey[800] : Colors.grey[200], // Table background: dark gray / light gray
                 border: Border.all(
-                  color: _isDarkTheme ? Colors.grey[800]! : Colors.grey[200]!, // Same as selected tab background
+                  color: isDarkTheme ? Colors.grey[800]! : Colors.grey[200]!, // Same as selected tab background
                 ),
                 borderRadius: const BorderRadius.only(
                   topRight: Radius.circular(8),
@@ -4117,7 +3622,7 @@ class _TradingPageState extends State<TradingPage> {
                   bottomRight: Radius.circular(8),
                 ),
               ),
-              child: _buildActivityTabContent(_isDarkTheme),
+              child: _buildActivityTabContent(isDarkTheme),
             ),
           ),
         ],
@@ -4667,22 +4172,22 @@ class _TradingPageState extends State<TradingPage> {
   }
 
   Widget _buildOrdersSection(ThemeService themeService) {
-    final _isDarkTheme = themeService.isDarkTheme;
+    final isDarkTheme = themeService.isDarkTheme;
     return Container(
-      color: _isDarkTheme ? Colors.black : Colors.white, // Section background follows theme
+      color: isDarkTheme ? Colors.black : Colors.white, // Section background follows theme
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start, // Align column content to the left
         children: [
           // Connected tab headers
-          _buildOrdersTabHeaders(_isDarkTheme),
+          _buildOrdersTabHeaders(isDarkTheme),
           // Connected content area with padding
           Expanded(
             child: Container(
               margin: const EdgeInsets.only(left: 8, right: 8, bottom: 8),
               decoration: BoxDecoration(
-                color: _isDarkTheme ? Colors.grey[800] : Colors.grey[200], // Table background: dark gray / light gray
+                color: isDarkTheme ? Colors.grey[800] : Colors.grey[200], // Table background: dark gray / light gray
                 border: Border.all(
-                  color: _isDarkTheme ? Colors.grey[800]! : Colors.grey[200]!, // Same as selected tab background
+                  color: isDarkTheme ? Colors.grey[800]! : Colors.grey[200]!, // Same as selected tab background
                 ),
                 borderRadius: const BorderRadius.only(
                   topRight: Radius.circular(8),
@@ -4690,7 +4195,7 @@ class _TradingPageState extends State<TradingPage> {
                   bottomRight: Radius.circular(8),
                 ),
               ),
-              child: _buildOrdersTabContent(_isDarkTheme),
+              child: _buildOrdersTabContent(isDarkTheme),
             ),
           ),
         ],
@@ -5226,14 +4731,14 @@ class _TradingPageState extends State<TradingPage> {
   }
 
   Widget _buildOrderbookSection(ThemeService themeService) {
-    final _isDarkTheme = themeService.isDarkTheme;
+    final isDarkTheme = themeService.isDarkTheme;
     return Container(
       padding: UIConstants.paddingStandard,
       decoration: BoxDecoration(
-        color: _isDarkTheme ? Colors.black : Colors.white,
+        color: isDarkTheme ? Colors.black : Colors.white,
         border: Border(
           top: BorderSide(
-            color: _isDarkTheme ? Colors.grey[700]! : Colors.grey[300]!,
+            color: isDarkTheme ? Colors.grey[700]! : Colors.grey[300]!,
             width: 1,
           ),
         ),
@@ -5246,7 +4751,7 @@ class _TradingPageState extends State<TradingPage> {
             style: TextStyle(
               fontSize: UIConstants.fontSizeMd,
               fontWeight: UIConstants.fontWeightMedium,
-              color: _isDarkTheme ? Colors.white : Colors.black,
+              color: isDarkTheme ? Colors.white : Colors.black,
             ),
           ),
           const SizedBox(height: UIConstants.spacingMd),
@@ -5263,7 +4768,7 @@ class _TradingPageState extends State<TradingPage> {
                         style: TextStyle(
                           fontSize: UIConstants.fontSizeMd,
                           fontWeight: UIConstants.fontWeightMedium,
-                          color: _isDarkTheme ? Colors.white : Colors.black,
+                          color: isDarkTheme ? Colors.white : Colors.black,
                         ),
                       ),
                       const SizedBox(height: UIConstants.spacingSm),
@@ -5274,7 +4779,7 @@ class _TradingPageState extends State<TradingPage> {
                               'Price',
                               style: TextStyle(
                                 fontSize: UIConstants.textFieldFontSize,
-                                color: _isDarkTheme ? Colors.grey[400] : Colors.grey[600],
+                                color: isDarkTheme ? Colors.grey[400] : Colors.grey[600],
                               ),
                             ),
                           ),
@@ -5284,7 +4789,7 @@ class _TradingPageState extends State<TradingPage> {
                               textAlign: TextAlign.center,
                               style: TextStyle(
                                 fontSize: UIConstants.textFieldFontSize,
-                                color: _isDarkTheme ? Colors.grey[400] : Colors.grey[600],
+                                color: isDarkTheme ? Colors.grey[400] : Colors.grey[600],
                               ),
                             ),
                           ),
@@ -5294,7 +4799,7 @@ class _TradingPageState extends State<TradingPage> {
                               textAlign: TextAlign.right,
                               style: TextStyle(
                                 fontSize: UIConstants.textFieldFontSize,
-                                color: _isDarkTheme ? Colors.grey[400] : Colors.grey[600],
+                                color: isDarkTheme ? Colors.grey[400] : Colors.grey[600],
                               ),
                             ),
                           ),
@@ -5303,7 +4808,7 @@ class _TradingPageState extends State<TradingPage> {
                       const SizedBox(height: UIConstants.spacingSm),
                       Container(
                         height: 1,
-                        color: _isDarkTheme ? Colors.grey[700] : Colors.grey[300],
+                        color: isDarkTheme ? Colors.grey[700] : Colors.grey[300],
                       ),
                       const SizedBox(height: UIConstants.spacingSm),
                       Expanded(
@@ -5316,7 +4821,7 @@ class _TradingPageState extends State<TradingPage> {
                                     child: Text(
                                       'No sell orders',
                                       style: TextStyle(
-                                        color: _isDarkTheme ? Colors.grey[400] : Colors.grey[600],
+                                        color: isDarkTheme ? Colors.grey[400] : Colors.grey[600],
                                         fontSize: UIConstants.textFieldFontSize,
                                       ),
                                     ),
@@ -5348,7 +4853,7 @@ class _TradingPageState extends State<TradingPage> {
                                                       textAlign: TextAlign.center,
                                                       style: TextStyle(
                                                         fontSize: UIConstants.textFieldFontSize,
-                                                        color: _isDarkTheme ? Colors.white : Colors.black,
+                                                        color: isDarkTheme ? Colors.white : Colors.black,
                                                       ),
                                                     ),
                                                   ),
@@ -5358,7 +4863,7 @@ class _TradingPageState extends State<TradingPage> {
                                                       textAlign: TextAlign.right,
                                                       style: TextStyle(
                                                         fontSize: UIConstants.textFieldFontSize,
-                                                        color: _isDarkTheme ? Colors.white : Colors.black,
+                                                        color: isDarkTheme ? Colors.white : Colors.black,
                                                       ),
                                                     ),
                                                   ),
@@ -5387,7 +4892,7 @@ class _TradingPageState extends State<TradingPage> {
                                                   child: Text(
                                                     'Load More',
                                                     style: TextStyle(
-                                                      color: _isDarkTheme ? Colors.blue[300] : Colors.blue,
+                                                      color: isDarkTheme ? Colors.blue[300] : Colors.blue,
                                                       fontSize: UIConstants.textFieldFontSize,
                                                     ),
                                                   ),
@@ -5412,7 +4917,7 @@ class _TradingPageState extends State<TradingPage> {
                         style: TextStyle(
                           fontSize: UIConstants.fontSizeMd,
                           fontWeight: UIConstants.fontWeightMedium,
-                          color: _isDarkTheme ? Colors.white : Colors.black,
+                          color: isDarkTheme ? Colors.white : Colors.black,
                         ),
                       ),
                       const SizedBox(height: UIConstants.spacingSm),
@@ -5423,7 +4928,7 @@ class _TradingPageState extends State<TradingPage> {
                               'Price',
                               style: TextStyle(
                                 fontSize: UIConstants.textFieldFontSize,
-                                color: _isDarkTheme ? Colors.grey[400] : Colors.grey[600],
+                                color: isDarkTheme ? Colors.grey[400] : Colors.grey[600],
                               ),
                             ),
                           ),
@@ -5433,7 +4938,7 @@ class _TradingPageState extends State<TradingPage> {
                               textAlign: TextAlign.center,
                               style: TextStyle(
                                 fontSize: UIConstants.textFieldFontSize,
-                                color: _isDarkTheme ? Colors.grey[400] : Colors.grey[600],
+                                color: isDarkTheme ? Colors.grey[400] : Colors.grey[600],
                               ),
                             ),
                           ),
@@ -5443,7 +4948,7 @@ class _TradingPageState extends State<TradingPage> {
                               textAlign: TextAlign.right,
                               style: TextStyle(
                                 fontSize: UIConstants.textFieldFontSize,
-                                color: _isDarkTheme ? Colors.grey[400] : Colors.grey[600],
+                                color: isDarkTheme ? Colors.grey[400] : Colors.grey[600],
                               ),
                             ),
                           ),
@@ -5452,7 +4957,7 @@ class _TradingPageState extends State<TradingPage> {
                       const SizedBox(height: UIConstants.spacingSm),
                       Container(
                         height: 1,
-                        color: _isDarkTheme ? Colors.grey[700] : Colors.grey[300],
+                        color: isDarkTheme ? Colors.grey[700] : Colors.grey[300],
                       ),
                       const SizedBox(height: UIConstants.spacingSm),
                       Expanded(
@@ -5465,7 +4970,7 @@ class _TradingPageState extends State<TradingPage> {
                                     child: Text(
                                       'No buy orders',
                                       style: TextStyle(
-                                        color: _isDarkTheme ? Colors.grey[400] : Colors.grey[600],
+                                        color: isDarkTheme ? Colors.grey[400] : Colors.grey[600],
                                         fontSize: UIConstants.textFieldFontSize,
                                       ),
                                     ),
@@ -5497,7 +5002,7 @@ class _TradingPageState extends State<TradingPage> {
                                                       textAlign: TextAlign.center,
                                                       style: TextStyle(
                                                         fontSize: UIConstants.textFieldFontSize,
-                                                        color: _isDarkTheme ? Colors.white : Colors.black,
+                                                        color: isDarkTheme ? Colors.white : Colors.black,
                                                       ),
                                                     ),
                                                   ),
@@ -5507,7 +5012,7 @@ class _TradingPageState extends State<TradingPage> {
                                                       textAlign: TextAlign.right,
                                                       style: TextStyle(
                                                         fontSize: UIConstants.textFieldFontSize,
-                                                        color: _isDarkTheme ? Colors.white : Colors.black,
+                                                        color: isDarkTheme ? Colors.white : Colors.black,
                                                       ),
                                                     ),
                                                   ),
@@ -5536,7 +5041,7 @@ class _TradingPageState extends State<TradingPage> {
                                                   child: Text(
                                                     'Load More',
                                                     style: TextStyle(
-                                                      color: _isDarkTheme ? Colors.blue[300] : Colors.blue,
+                                                      color: isDarkTheme ? Colors.blue[300] : Colors.blue,
                                                       fontSize: UIConstants.textFieldFontSize,
                                                     ),
                                                   ),
