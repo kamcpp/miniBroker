@@ -127,7 +127,7 @@ class AuthService extends ChangeNotifier {
       final success = await _databaseHelper.createUser(user, password);
 
       if (success) {
-        // Try to create account on server as well
+        // Try to create account on server as well (but don't fail signup if this fails)
         try {
           print('🌐 Creating server account for user: $user');
           final serverResponse = await realGrpcClient.newAccount(
@@ -155,20 +155,12 @@ class AuthService extends ChangeNotifier {
               }
             }
 
-            print('❌ Server account creation failed: $errorMessage');
-
-            // Delete the local user since server account creation failed
-            await _databaseHelper.deleteUser(user);
-
-            throw 'Server account creation failed: $errorMessage';
+            print('⚠️  Server account creation failed: $errorMessage');
+            print('ℹ️  Local account created successfully. Server account can be created later.');
           }
         } catch (e) {
-          print('❌ Server account creation failed with exception: $e');
-
-          // Delete the local user since server account creation failed
-          await _databaseHelper.deleteUser(user);
-
-          rethrow;
+          print('⚠️  Server account creation failed with exception: $e');
+          print('ℹ️  Local account created successfully. Server account can be created later.');
         }
 
         // Don't auto-login - user should login manually

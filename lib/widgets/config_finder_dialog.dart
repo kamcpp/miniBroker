@@ -10,6 +10,7 @@ import '../utils/broker_config_helper.dart';
 import 'create_broker_config_dialog.dart';
 import 'edit_broker_config_dialog.dart';
 import 'duplicate_config_dialog.dart';
+import 'package:file_picker/file_picker.dart';
 
 /// Config Finder Dialog - main entry point for config management
 class ConfigFinderDialog extends StatefulWidget {
@@ -75,22 +76,23 @@ class _ConfigFinderDialogState extends State<ConfigFinderDialog> {
   }
 
   Future<void> _changeConfigDir() async {
-    // Open folder picker dialog
-    String? selectedDirectory;
+    // Open directory picker dialog starting from current config directory
+    String? selectedDirectory = await FilePicker.platform.getDirectoryPath(
+      dialogTitle: 'Select Config Directory',
+      initialDirectory: _configDir,
+    );
 
-    // For now, use the text field value
-    // TODO: Add file_picker package to select directory via dialog
-    final newDir = _configDirController.text.trim();
-
-    if (newDir.isEmpty) {
-      _showError('Config directory cannot be empty');
+    // User cancelled the picker
+    if (selectedDirectory == null) {
       return;
     }
 
-    if (newDir == _configDir) {
-      _showError('Please enter a different directory path');
+    // Same directory selected
+    if (selectedDirectory == _configDir) {
       return;
     }
+
+    final newDir = selectedDirectory;
 
     // Validate directory
     try {
@@ -400,23 +402,29 @@ class _ConfigFinderDialogState extends State<ConfigFinderDialog> {
       child: ClipRRect(
         borderRadius: BorderRadius.circular(UIConstants.borderRadiusLg),
         child: BackdropFilter(
-          filter: ImageFilter.blur(sigmaX: 10, sigmaY: 10),
+          filter: ImageFilter.blur(sigmaX: 2, sigmaY: 2),
           child: Container(
             width: 650,
             height: 500,
             padding: UIConstants.paddingComfortable,
             decoration: BoxDecoration(
-              color: backgroundColor.withOpacity(0.85),
+              color: Colors.white.withOpacity(0.1),
               borderRadius: BorderRadius.circular(UIConstants.borderRadiusLg),
               border: Border.all(
-                color: isDarkTheme ? Colors.white.withOpacity(0.2) : Colors.white.withOpacity(0.4),
-                width: 1,
+                color: Colors.white,
+                width: 0.4,
               ),
               boxShadow: [
                 BoxShadow(
-                  color: Colors.black.withOpacity(0.2),
-                  blurRadius: 20,
-                  offset: const Offset(0, 10),
+                  color: Colors.white.withOpacity(0.1),
+                  blurRadius: 5,
+                  offset: const Offset(0, 0),
+                  spreadRadius: 3,
+                ),
+                BoxShadow(
+                  color: Colors.black.withOpacity(0.05),
+                  blurRadius: 8,
+                  offset: const Offset(0, 3),
                 ),
               ],
             ),
@@ -749,19 +757,22 @@ class _ConfigFinderDialogState extends State<ConfigFinderDialog> {
 
             // Action buttons
             Row(
-              mainAxisAlignment: MainAxisAlignment.end,
+              mainAxisAlignment: MainAxisAlignment.spaceBetween,
               children: [
-                TextButton(
-                  onPressed: () => Navigator.of(context).pop(null),
+                TextButton.icon(
+                  onPressed: () {
+                    // Exit the application
+                    exit(0);
+                  },
                   style: TextButton.styleFrom(
-                    foregroundColor: hintColor,
+                    foregroundColor: Colors.red,
                     shape: RoundedRectangleBorder(
-                      borderRadius: BorderRadius.circular(UIConstants.textFieldBorderRadius),
+                      borderRadius: BorderRadius.circular(UIConstants.borderRadiusSm),
                     ),
                   ),
-                  child: const Text('Cancel', style: TextStyle(fontSize: UIConstants.fontSizeBody)),
+                  icon: const Icon(Icons.exit_to_app, size: UIConstants.textFieldIconSize),
+                  label: const Text('Exit App', style: TextStyle(fontSize: UIConstants.fontSizeBody)),
                 ),
-                const SizedBox(width: UIConstants.spacingSm),
                 ElevatedButton(
                   onPressed: _selectedConfig != null
                       ? () => Navigator.of(context).pop(_selectedConfig)
