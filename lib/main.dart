@@ -1,7 +1,7 @@
 import 'dart:async';
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
-import 'screens/portfolio_page.dart';
+import 'screens/instruments_page.dart';
 import 'screens/login_page.dart';
 import 'services/auth_service.dart';
 import 'services/theme_service.dart';
@@ -257,7 +257,7 @@ class _AppInitializerState extends State<AppInitializer> with SingleTickerProvid
               );
             }
 
-            return const PortfolioPage();
+            return const InstrumentsPage();
           },
         );
       },

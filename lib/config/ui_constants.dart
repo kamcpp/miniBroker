@@ -45,6 +45,12 @@ class UIConstants {
   /// Comfortable padding for dialogs, pages (12px all around)
   static const EdgeInsets paddingComfortable = EdgeInsets.all(12.0);
 
+  /// Small padding value (6px)
+  static const double paddingSm = 6.0;
+
+  /// Medium padding value (12px)
+  static const double paddingMd = 12.0;
+
   // ============================================================================
   // TEXT FIELD SETTINGS - Compact input field styling
   // ============================================================================

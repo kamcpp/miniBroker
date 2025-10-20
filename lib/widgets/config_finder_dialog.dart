@@ -457,6 +457,12 @@ class _ConfigFinderDialogState extends State<ConfigFinderDialog> {
             ),
             const SizedBox(height: UIConstants.spacingMd),
 
+            // Main content area (with Expanded to fill available space)
+            Expanded(
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+
             // Config Directory Section
             Text(
               'Configuration Directory',
@@ -758,10 +764,18 @@ class _ConfigFinderDialogState extends State<ConfigFinderDialog> {
                           ),
                         ),
             ),
+              ],
+            ),
+          ),
 
-            const SizedBox(height: UIConstants.spacingMd),
+            // Separator line
+            Container(
+              height: 1,
+              color: isDarkTheme ? Colors.grey[700] : Colors.grey[300],
+              margin: const EdgeInsets.only(top: UIConstants.spacingMd, bottom: UIConstants.spacingMd),
+            ),
 
-            // Action buttons
+            // Action buttons anchored at bottom
             Row(
               mainAxisAlignment: MainAxisAlignment.spaceBetween,
               children: [

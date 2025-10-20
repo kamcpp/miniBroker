@@ -1,17 +1,15 @@
-import 'dart:ui';
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
-import '../services/auth_service.dart';
 import '../services/theme_service.dart';
 import '../services/real_grpc_client.dart';
 import '../config/ui_constants.dart';
 import '../utils/connectivity_checker.dart';
-import '../widgets/copyright_bar.dart';
+import '../widgets/base_page.dart';
+import '../widgets/left_menu.dart';
 import 'portfolio_page.dart';
 import 'trading_page.dart';
-import 'Cash_management_page.dart';
+import 'cash_management_page.dart';
 import 'activity_page.dart';
-import 'profile_page.dart';
 import 'users_admin_page.dart';
 
 class InstrumentsPage extends StatefulWidget {
@@ -150,117 +148,186 @@ class _InstrumentsPageState extends State<InstrumentsPage> {
     }
   }
 
+  List<MenuItem> _buildMenuItems(BuildContext context) {
+    return [
+      MenuItem(
+        label: 'Instruments',
+        icon: Icons.list_alt,
+        isSelected: true,
+        onTap: () {}, // Already on this page
+      ),
+      MenuItem(
+        label: 'Portfolio',
+        icon: Icons.account_balance_wallet,
+        isSelected: false,
+        onTap: () {
+          Navigator.of(context).pushReplacement(
+            PageRouteBuilder(
+              pageBuilder: (context, animation, secondaryAnimation) => const PortfolioPage(),
+              transitionDuration: Duration.zero,
+              reverseTransitionDuration: Duration.zero,
+            ),
+          );
+        },
+      ),
+      MenuItem(
+        label: 'Trading',
+        icon: Icons.candlestick_chart,
+        isSelected: false,
+        onTap: () {
+          Navigator.of(context).pushReplacement(
+            PageRouteBuilder(
+              pageBuilder: (context, animation, secondaryAnimation) => const TradingPage(),
+              transitionDuration: Duration.zero,
+              reverseTransitionDuration: Duration.zero,
+            ),
+          );
+        },
+      ),
+      MenuItem(
+        label: 'Activity',
+        icon: Icons.history,
+        isSelected: false,
+        onTap: () {
+          Navigator.of(context).pushReplacement(
+            PageRouteBuilder(
+              pageBuilder: (context, animation, secondaryAnimation) => const ActivityPage(),
+              transitionDuration: Duration.zero,
+              reverseTransitionDuration: Duration.zero,
+            ),
+          );
+        },
+      ),
+      MenuItem(
+        label: 'Cash Management',
+        icon: Icons.payments,
+        isSelected: false,
+        onTap: () {
+          Navigator.of(context).pushReplacement(
+            PageRouteBuilder(
+              pageBuilder: (context, animation, secondaryAnimation) => const CashManagementPage(),
+              transitionDuration: Duration.zero,
+              reverseTransitionDuration: Duration.zero,
+            ),
+          );
+        },
+      ),
+      MenuItem(
+        label: 'Users Admin',
+        icon: Icons.admin_panel_settings,
+        isSelected: false,
+        onTap: () {
+          Navigator.of(context).push(
+            MaterialPageRoute(
+              builder: (context) => const UsersAdminPage(),
+            ),
+          );
+        },
+      ),
+    ];
+  }
+
   @override
   Widget build(BuildContext context) {
-    final authService = Provider.of<AuthService>(context);
     final themeService = Provider.of<ThemeService>(context);
     final isDarkTheme = themeService.isDarkTheme;
 
-    return Theme(
-      data: isDarkTheme ? ThemeData.dark() : ThemeData.light(),
-      child: Scaffold(
-        backgroundColor: isDarkTheme ? const Color(0x000000) : Colors.grey[100],
-        body: Column(
-          children: [
-            // Header Section
-            _buildHeader(authService, themeService),
-
-            // Network Error Bar (if error exists)
-            if (_showNetworkError)
-              Container(
-                width: double.infinity,
-                padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 12),
-                decoration: const BoxDecoration(
-                  color: Colors.red,
-                  boxShadow: [
-                    BoxShadow(
-                      color: Colors.black26,
-                      blurRadius: 4,
-                      offset: Offset(0, 2),
-                    ),
-                  ],
-                ),
-                child: Row(
-                  children: [
-                    const Icon(Icons.error_outline, color: Colors.white, size: 20),
-                    const SizedBox(width: UIConstants.spacingSm),
-                    Expanded(
-                      child: Text(
-                        'Network Error: $_networkErrorMessage',
-                        style: const TextStyle(color: Colors.white, fontSize: 14),
-                      ),
-                    ),
-                    IconButton(
-                      icon: const Icon(Icons.refresh, color: Colors.white, size: 20),
-                      onPressed: () => _checkConnectivityAndLoadData(),
-                      tooltip: 'Retry',
-                      padding: EdgeInsets.zero,
-                      constraints: const BoxConstraints(),
-                    ),
-                  ],
-                ),
+    return BasePage(
+      menuItems: _buildMenuItems(context),
+      content: Column(
+        children: [
+          // Network Error Bar (if error exists)
+          if (_showNetworkError)
+            Container(
+              width: double.infinity,
+              padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 12),
+              decoration: const BoxDecoration(
+                color: Colors.red,
+                boxShadow: [
+                  BoxShadow(
+                    color: Colors.black26,
+                    blurRadius: 4,
+                    offset: Offset(0, 2),
+                  ),
+                ],
               ),
-
-            // Main Content
-            Expanded(
-              child: Padding(
-                padding: UIConstants.paddingComfortable,
-                child: Column(
-                  crossAxisAlignment: CrossAxisAlignment.start,
-                  children: [
-                    // Market Selector and Title Row
-                    Row(
-                      mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                      children: [
-                        Text(
-                          'Instruments',
-                          style: TextStyle(
-                            fontSize: UIConstants.fontSizeLg,
-                            fontWeight: UIConstants.fontWeightMedium,
-                            color: isDarkTheme ? Colors.white : Colors.black,
-                          ),
-                        ),
-                      ],
+              child: Row(
+                children: [
+                  const Icon(Icons.error_outline, color: Colors.white, size: 20),
+                  const SizedBox(width: UIConstants.spacingSm),
+                  Expanded(
+                    child: Text(
+                      'Network Error: $_networkErrorMessage',
+                      style: const TextStyle(color: Colors.white, fontSize: 14),
                     ),
-                    const SizedBox(height: UIConstants.spacingMd),
-
-                    // Instruments List
-                    Expanded(
-                      child: Container(
-                        padding: UIConstants.paddingComfortable,
-                        decoration: BoxDecoration(
-                          color: isDarkTheme ? const Color(0xFF2A2A2A) : Colors.white,
-                          borderRadius: BorderRadius.circular(UIConstants.borderRadiusMd),
-                          boxShadow: [
-                            BoxShadow(
-                              color: Colors.black.withOpacity(0.1),
-                              blurRadius: 8,
-                              offset: const Offset(0, 2),
-                            ),
-                          ],
-                        ),
-                        child: Column(
-                          crossAxisAlignment: CrossAxisAlignment.start,
-                          children: [
-                            Expanded(
-                              child: _buildInstrumentsContent(themeService, isDarkTheme),
-                            ),
-                            // Pagination Controls
-                            if (_instrumentsData != null && _instrumentsData!['success'] == true)
-                              _buildPaginationControls(isDarkTheme),
-                          ],
-                        ),
-                      ),
-                    ),
-                  ],
-                ),
+                  ),
+                  IconButton(
+                    icon: const Icon(Icons.refresh, color: Colors.white, size: 20),
+                    onPressed: () => _checkConnectivityAndLoadData(),
+                    tooltip: 'Retry',
+                    padding: EdgeInsets.zero,
+                    constraints: const BoxConstraints(),
+                  ),
+                ],
               ),
             ),
 
-            // Copyright Status Bar
-            CopyrightBar(isDarkTheme: isDarkTheme),
-          ],
-        ),
+          // Main Content
+          Expanded(
+            child: Padding(
+              padding: UIConstants.paddingComfortable,
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  // Title Row
+                  Row(
+                    mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                    children: [
+                      Text(
+                        'Instruments',
+                        style: TextStyle(
+                          fontSize: UIConstants.fontSizeLg,
+                          fontWeight: UIConstants.fontWeightMedium,
+                          color: isDarkTheme ? Colors.white : Colors.black,
+                        ),
+                      ),
+                    ],
+                  ),
+                  const SizedBox(height: UIConstants.spacingMd),
+
+                  // Instruments List
+                  Expanded(
+                    child: Container(
+                      padding: UIConstants.paddingComfortable,
+                      decoration: BoxDecoration(
+                        color: isDarkTheme ? const Color(0xFF2A2A2A) : Colors.white,
+                        borderRadius: BorderRadius.circular(UIConstants.borderRadiusMd),
+                        boxShadow: [
+                          BoxShadow(
+                            color: Colors.black.withOpacity(0.1),
+                            blurRadius: 8,
+                            offset: const Offset(0, 2),
+                          ),
+                        ],
+                      ),
+                      child: Column(
+                        crossAxisAlignment: CrossAxisAlignment.start,
+                        children: [
+                          Expanded(
+                            child: _buildInstrumentsContent(themeService, isDarkTheme),
+                          ),
+                          // Pagination Controls
+                          if (_instrumentsData != null && _instrumentsData!['success'] == true)
+                            _buildPaginationControls(isDarkTheme),
+                        ],
+                      ),
+                    ),
+                  ),
+                ],
+              ),
+            ),
+          ),
+        ],
       ),
     );
   }
@@ -435,17 +502,13 @@ class _InstrumentsPageState extends State<InstrumentsPage> {
         final instrument = instruments[index] as Map<String, dynamic>;
         return Padding(
           padding: EdgeInsets.only(bottom: index < instruments.length - 1 ? 12 : 0),
-          child: _buildInstrumentItem(instrument, themeService, isDarkTheme),
+          child: _buildInstrumentItem(instrument, isDarkTheme),
         );
       },
     );
   }
 
-  Widget _buildInstrumentItem(
-    Map<String, dynamic> instrument,
-    ThemeService themeService,
-    bool isDarkTheme,
-  ) {
+  Widget _buildInstrumentItem(Map<String, dynamic> instrument, bool isDarkTheme) {
     final instrumentId = instrument['id'] ?? instrument['iid'] ?? 'Unknown';
     final cfiCode = instrument['cfi_code'] ?? instrument['cfiCode'] ?? '';
     final issueCurrency = instrument['issue_currency'] ?? instrument['issueCurrency'] ?? '';
@@ -463,7 +526,6 @@ class _InstrumentsPageState extends State<InstrumentsPage> {
       }
     }
 
-    // Instrument doesn't have these fields - they're on InstrumentListing
     final status = 'active';
     final minOrderSize = cfiCode.isNotEmpty ? cfiCode : 'N/A';
     final maxOrderSize = issueCurrency.isNotEmpty ? issueCurrency : 'N/A';
@@ -653,481 +715,6 @@ class _InstrumentsPageState extends State<InstrumentsPage> {
                 disabledColor: Colors.grey,
               ),
             ],
-          ),
-        ],
-      ),
-    );
-  }
-
-  Widget _buildHeader(AuthService authService, ThemeService themeService) {
-    final isDarkTheme = themeService.isDarkTheme;
-    return Container(
-      height: 60,
-      padding: const EdgeInsets.symmetric(horizontal: 20),
-      decoration: BoxDecoration(
-        color: const Color(0xFF1a1754),
-        boxShadow: [
-          BoxShadow(
-            color: Colors.black.withOpacity(0.2),
-            blurRadius: 4,
-            offset: const Offset(0, 2),
-          ),
-        ],
-      ),
-      child: Row(
-        children: [
-          // Logo on the left
-          Container(
-            width: 40,
-            height: 40,
-            decoration: const BoxDecoration(
-              shape: BoxShape.circle,
-              color: Color(0xFF1E88E5),
-            ),
-            child: ClipOval(
-              child: Padding(
-                padding: const EdgeInsets.all(4.0),
-                child: Container(
-                  decoration: const BoxDecoration(
-                    color: Color(0xFF1E88E5),
-                    shape: BoxShape.circle,
-                  ),
-                  child: Center(
-                    child: RichText(
-                      textAlign: TextAlign.center,
-                      text: const TextSpan(
-                        children: [
-                          TextSpan(
-                            text: 'mini\n',
-                            style: TextStyle(
-                              color: Colors.white,
-                              fontSize: 8,
-                              fontWeight: UIConstants.fontWeightNormal,
-                              height: 0.8,
-                            ),
-                          ),
-                          TextSpan(
-                            text: 'Broker',
-                            style: TextStyle(
-                              color: Colors.white,
-                              fontSize: 8,
-                              fontWeight: UIConstants.fontWeightMedium,
-                              height: 0.8,
-                            ),
-                          ),
-                        ],
-                      ),
-                    ),
-                  ),
-                ),
-              ),
-            ),
-          ),
-
-          const SizedBox(width: 16),
-
-          // Navigation Tabs - Left side beside logo
-          Padding(
-            padding: const EdgeInsets.only(top: 10),
-            child: Row(
-              mainAxisSize: MainAxisSize.min,
-              crossAxisAlignment: CrossAxisAlignment.end,
-              children: [
-                // Instruments Button (current page)
-                MouseRegion(
-                  cursor: SystemMouseCursors.click,
-                  child: Container(
-                    height: 55,
-                    padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
-                    decoration: BoxDecoration(
-                      color: isDarkTheme ? Colors.black : Colors.grey[100],
-                      border: Border(
-                        top: BorderSide(color: Colors.white.withOpacity(0.3), width: 1),
-                        left: BorderSide(color: Colors.white.withOpacity(0.3), width: 1),
-                        right: BorderSide(color: Colors.white.withOpacity(0.3), width: 1),
-                      ),
-                      borderRadius: const BorderRadius.only(
-                        topLeft: Radius.circular(8),
-                        topRight: Radius.circular(8),
-                      ),
-                    ),
-                    child: Text(
-                      'Instruments',
-                      style: TextStyle(
-                        fontSize: UIConstants.fontSizeSm,
-                        fontWeight: UIConstants.fontWeightMedium,
-                        color: isDarkTheme ? Colors.white : Colors.black,
-                      ),
-                    ),
-                  ),
-                ),
-
-                // Portfolio Button
-                MouseRegion(
-                  cursor: SystemMouseCursors.click,
-                  child: GestureDetector(
-                    onTap: () {
-                      Navigator.of(context).push(
-                        PageRouteBuilder(
-                          pageBuilder: (context, animation, secondaryAnimation) => const PortfolioPage(),
-                          transitionDuration: Duration.zero,
-                          reverseTransitionDuration: Duration.zero,
-                        ),
-                      );
-                    },
-                    child: ClipRRect(
-                      borderRadius: const BorderRadius.only(
-                        topLeft: Radius.circular(8),
-                        topRight: Radius.circular(8),
-                      ),
-                      child: BackdropFilter(
-                        filter: ImageFilter.blur(sigmaX: 2, sigmaY: 2),
-                        child: Container(
-                          height: 45,
-                          padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 9),
-                          decoration: BoxDecoration(
-                            color: Colors.white.withOpacity(0.1),
-                            border: Border(
-                              top: BorderSide(color: Colors.white.withOpacity(0.3), width: 1),
-                              left: BorderSide(color: Colors.white.withOpacity(0.3), width: 1),
-                              right: BorderSide(color: Colors.white.withOpacity(0.3), width: 1),
-                              bottom: BorderSide(color: Colors.white.withOpacity(0.3), width: 1),
-                            ),
-                            borderRadius: const BorderRadius.only(
-                              topLeft: Radius.circular(8),
-                              topRight: Radius.circular(8),
-                            ),
-                          ),
-                          child: const Text(
-                            'Portfolio',
-                            style: TextStyle(
-                              fontSize: UIConstants.fontSizeSm,
-                              fontWeight: UIConstants.fontWeightNormal,
-                              color: Colors.white70,
-                            ),
-                          ),
-                        ),
-                      ),
-                    ),
-                  ),
-                ),
-
-                // Trading Button
-                MouseRegion(
-                  cursor: SystemMouseCursors.click,
-                  child: GestureDetector(
-                    onTap: () {
-                      Navigator.of(context).push(
-                        PageRouteBuilder(
-                          pageBuilder: (context, animation, secondaryAnimation) => const TradingPage(),
-                          transitionDuration: Duration.zero,
-                          reverseTransitionDuration: Duration.zero,
-                        ),
-                      );
-                    },
-                    child: ClipRRect(
-                      borderRadius: const BorderRadius.only(
-                        topLeft: Radius.circular(8),
-                        topRight: Radius.circular(8),
-                      ),
-                      child: BackdropFilter(
-                        filter: ImageFilter.blur(sigmaX: 2, sigmaY: 2),
-                        child: Container(
-                          height: 45,
-                          padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 9),
-                          decoration: BoxDecoration(
-                            color: Colors.white.withOpacity(0.1),
-                            border: Border(
-                              top: BorderSide(color: Colors.white.withOpacity(0.3), width: 1),
-                              left: BorderSide(color: Colors.white.withOpacity(0.3), width: 1),
-                              right: BorderSide(color: Colors.white.withOpacity(0.3), width: 1),
-                              bottom: BorderSide(color: Colors.white.withOpacity(0.3), width: 1),
-                            ),
-                            borderRadius: const BorderRadius.only(
-                              topLeft: Radius.circular(8),
-                              topRight: Radius.circular(8),
-                            ),
-                          ),
-                          child: const Text(
-                            'Trading',
-                            style: TextStyle(
-                              fontSize: UIConstants.fontSizeSm,
-                              fontWeight: UIConstants.fontWeightNormal,
-                              color: Colors.white70,
-                            ),
-                          ),
-                        ),
-                      ),
-                    ),
-                  ),
-                ),
-
-                // Activity Button
-                MouseRegion(
-                  cursor: SystemMouseCursors.click,
-                  child: GestureDetector(
-                    onTap: () {
-                      Navigator.of(context).push(
-                        PageRouteBuilder(
-                          pageBuilder: (context, animation, secondaryAnimation) => const ActivityPage(),
-                          transitionDuration: Duration.zero,
-                          reverseTransitionDuration: Duration.zero,
-                        ),
-                      );
-                    },
-                    child: ClipRRect(
-                      borderRadius: const BorderRadius.only(
-                        topLeft: Radius.circular(8),
-                        topRight: Radius.circular(8),
-                      ),
-                      child: BackdropFilter(
-                        filter: ImageFilter.blur(sigmaX: 2, sigmaY: 2),
-                        child: Container(
-                          height: 45,
-                          padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 9),
-                          decoration: BoxDecoration(
-                            color: Colors.white.withOpacity(0.1),
-                            border: Border(
-                              top: BorderSide(color: Colors.white.withOpacity(0.3), width: 1),
-                              left: BorderSide(color: Colors.white.withOpacity(0.3), width: 1),
-                              right: BorderSide(color: Colors.white.withOpacity(0.3), width: 1),
-                              bottom: BorderSide(color: Colors.white.withOpacity(0.3), width: 1),
-                            ),
-                            borderRadius: const BorderRadius.only(
-                              topLeft: Radius.circular(8),
-                              topRight: Radius.circular(8),
-                            ),
-                          ),
-                          child: const Text(
-                            'Activity',
-                            style: TextStyle(
-                              fontSize: UIConstants.fontSizeSm,
-                              fontWeight: UIConstants.fontWeightNormal,
-                              color: Colors.white70,
-                            ),
-                          ),
-                        ),
-                      ),
-                    ),
-                  ),
-                ),
-
-                // Cash Management Button
-                MouseRegion(
-                  cursor: SystemMouseCursors.click,
-                  child: GestureDetector(
-                    onTap: () {
-                      Navigator.of(context).push(
-                        PageRouteBuilder(
-                          pageBuilder: (context, animation, secondaryAnimation) => const CashManagementPage(),
-                          transitionDuration: Duration.zero,
-                          reverseTransitionDuration: Duration.zero,
-                        ),
-                      );
-                    },
-                    child: ClipRRect(
-                      borderRadius: const BorderRadius.only(
-                        topLeft: Radius.circular(8),
-                        topRight: Radius.circular(8),
-                      ),
-                      child: BackdropFilter(
-                        filter: ImageFilter.blur(sigmaX: 2, sigmaY: 2),
-                        child: Container(
-                          height: 45,
-                          padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 9),
-                          decoration: BoxDecoration(
-                            color: Colors.white.withOpacity(0.1),
-                            border: Border(
-                              top: BorderSide(color: Colors.white.withOpacity(0.3), width: 1),
-                              left: BorderSide(color: Colors.white.withOpacity(0.3), width: 1),
-                              right: BorderSide(color: Colors.white.withOpacity(0.3), width: 1),
-                              bottom: BorderSide(color: Colors.white.withOpacity(0.3), width: 1),
-                            ),
-                            borderRadius: const BorderRadius.only(
-                              topLeft: Radius.circular(8),
-                              topRight: Radius.circular(8),
-                            ),
-                          ),
-                          child: const Text(
-                            'Cash Management',
-                            style: TextStyle(
-                              fontSize: UIConstants.fontSizeSm,
-                              fontWeight: UIConstants.fontWeightNormal,
-                              color: Colors.white70,
-                            ),
-                          ),
-                        ),
-                      ),
-                    ),
-                  ),
-                ),
-              ],
-            ),
-          ),
-
-          // Spacer to push user menu to the right
-          const Spacer(),
-
-          // User Profile with Dropdown
-          PopupMenuButton<String>(
-            offset: const Offset(18, 40),
-            color: const Color(0xFF1a1754),
-            surfaceTintColor: const Color(0xFF1a1754),
-            shadowColor: Colors.black.withOpacity(0.3),
-            elevation: 8,
-            onSelected: (value) {
-              if (value == 'profile') {
-                Navigator.of(context).push(
-                  MaterialPageRoute(
-                    builder: (context) => const ProfilePage(),
-                  ),
-                );
-              } else if (value == 'users') {
-                Navigator.of(context).push(
-                  MaterialPageRoute(
-                    builder: (context) => const UsersAdminPage(),
-                  ),
-                );
-              }
-            },
-            itemBuilder: (BuildContext context) {
-              final isAdmin = authService.username.toLowerCase() == 'admin';
-              return [
-                const PopupMenuItem<String>(
-                  value: 'profile',
-                  child: Row(
-                    children: [
-                      Icon(Icons.person, size: 18, color: Colors.white),
-                      SizedBox(width: UIConstants.spacingSm),
-                      Text('Profile', style: TextStyle(color: Colors.white)),
-                    ],
-                  ),
-                ),
-                if (isAdmin)
-                  PopupMenuDivider(
-                    height: 1,
-                    color: Colors.white.withOpacity(0.3),
-                  ),
-                if (isAdmin)
-                  const PopupMenuItem<String>(
-                    value: 'users',
-                    child: Row(
-                      children: [
-                        Icon(Icons.people, size: 18, color: Colors.white),
-                        SizedBox(width: UIConstants.spacingSm),
-                        Text('View Users', style: TextStyle(color: Colors.white)),
-                      ],
-                    ),
-                  ),
-              ];
-            },
-            child: Row(
-              mainAxisSize: MainAxisSize.min,
-              children: [
-                Container(
-                  width: 24,
-                  height: 24,
-                  decoration: BoxDecoration(
-                    shape: BoxShape.circle,
-                    color: Colors.white.withOpacity(0.2),
-                    border: Border.all(color: Colors.white, width: 1),
-                  ),
-                  child: const Icon(
-                    Icons.person,
-                    color: Colors.white,
-                    size: 14,
-                  ),
-                ),
-                const SizedBox(width: UIConstants.spacingSm),
-                Text(
-                  authService.username,
-                  style: const TextStyle(
-                    color: Colors.white,
-                    fontSize: UIConstants.fontSizeBody,
-                    fontWeight: UIConstants.fontWeightNormal,
-                  ),
-                ),
-                const SizedBox(width: 4),
-                const Icon(
-                  Icons.keyboard_arrow_down,
-                  color: Colors.white,
-                  size: 18,
-                ),
-              ],
-            ),
-          ),
-
-          const SizedBox(width: 16),
-
-          // Vertical divider line
-          Container(
-            height: 30,
-            width: 1,
-            color: Colors.white.withOpacity(0.3),
-          ),
-
-          const SizedBox(width: 16),
-
-          // Theme toggle button (centered)
-          Container(
-            width: 36,
-            alignment: Alignment.center,
-            child: IconButton(
-              onPressed: () {
-                themeService.toggleTheme();
-              },
-              icon: Icon(
-                themeService.isDarkTheme ? Icons.wb_sunny : Icons.nights_stay,
-                color: Colors.white,
-                size: 20,
-              ),
-              tooltip: themeService.isDarkTheme ? 'Light Theme' : 'Dark Theme',
-              padding: UIConstants.paddingMinimal,
-            ),
-          ),
-
-          const SizedBox(width: UIConstants.spacingSm),
-
-          // Vertical divider line
-          Container(
-            height: 30,
-            width: 1,
-            color: Colors.white.withOpacity(0.3),
-          ),
-
-          const SizedBox(width: UIConstants.spacingSm),
-
-          // Logout icon button
-          IconButton(
-            onPressed: () async {
-              try {
-                print('🚪 Instruments page logout initiated...');
-                await authService.logout();
-                print('✅ Logout completed, should redirect to login');
-
-                // Navigate back to root to ensure proper app state reset
-                if (mounted) {
-                  Navigator.of(context).popUntil((route) => route.isFirst);
-                }
-              } catch (e) {
-                print('❌ Error during logout: $e');
-                if (mounted) {
-                  ScaffoldMessenger.of(context).showSnackBar(
-                    SnackBar(
-                      content: Text('Logout failed: $e'),
-                      backgroundColor: Colors.red,
-                    ),
-                  );
-                }
-              }
-            },
-            icon: const Icon(
-              Icons.logout,
-              color: Colors.white,
-              size: 20,
-            ),
-            tooltip: 'Logout',
-            padding: UIConstants.paddingMinimal,
           ),
         ],
       ),
