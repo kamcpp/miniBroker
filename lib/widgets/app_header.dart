@@ -64,10 +64,20 @@ class AppHeader extends StatelessWidget {
   Widget _buildLogo(bool isDarkTheme) {
     return Row(
       children: [
-        Icon(
-          Icons.account_balance,
-          color: isDarkTheme ? Colors.white : const Color(0xFF1a1754),
-          size: 28,
+        Container(
+          width: 32,
+          height: 32,
+          decoration: const BoxDecoration(
+            shape: BoxShape.circle,
+          ),
+          child: ClipOval(
+            child: Image.asset(
+              'assets/logo.png',
+              width: 32,
+              height: 32,
+              fit: BoxFit.cover,
+            ),
+          ),
         ),
         const SizedBox(width: UIConstants.spacingSm),
         Text(
@@ -172,6 +182,10 @@ class AppHeader extends StatelessWidget {
 
           if (shouldLogout == true && context.mounted) {
             await authService.logout();
+            // Navigate back to root to trigger login page
+            if (context.mounted) {
+              Navigator.of(context).popUntil((route) => route.isFirst);
+            }
           }
         },
         icon: const Icon(Icons.logout, size: UIConstants.textFieldIconSize),

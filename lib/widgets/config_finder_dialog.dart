@@ -67,11 +67,7 @@ class _ConfigFinderDialogState extends State<ConfigFinderDialog> {
     setState(() {
       _configFiles = files;
       _isLoading = false;
-
-      // Auto-select if only one config
-      if (_configFiles.length == 1) {
-        _selectedConfig = _configFiles.first;
-      }
+      // Don't auto-select any config - user must explicitly choose
     });
   }
 

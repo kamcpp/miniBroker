@@ -52,16 +52,20 @@ class _LeftMenuState extends State<LeftMenu> with SingleTickerProviderStateMixin
       duration: const Duration(milliseconds: 200),
     );
 
+    // Animation goes from collapsed to expanded
     _widthAnimation = Tween<double>(
-      begin: widget.initiallyExpanded ? _expandedWidth : _collapsedWidth,
-      end: widget.initiallyExpanded ? _expandedWidth : _collapsedWidth,
+      begin: _collapsedWidth,
+      end: _expandedWidth,
     ).animate(CurvedAnimation(
       parent: _animationController,
       curve: Curves.easeInOut,
     ));
 
+    // Set initial state
     if (widget.initiallyExpanded) {
-      _animationController.value = 1.0;
+      _animationController.value = 1.0; // Fully expanded
+    } else {
+      _animationController.value = 0.0; // Fully collapsed
     }
   }
 
@@ -75,22 +79,8 @@ class _LeftMenuState extends State<LeftMenu> with SingleTickerProviderStateMixin
     setState(() {
       _isExpanded = !_isExpanded;
       if (_isExpanded) {
-        _widthAnimation = Tween<double>(
-          begin: _collapsedWidth,
-          end: _expandedWidth,
-        ).animate(CurvedAnimation(
-          parent: _animationController,
-          curve: Curves.easeInOut,
-        ));
         _animationController.forward();
       } else {
-        _widthAnimation = Tween<double>(
-          begin: _expandedWidth,
-          end: _collapsedWidth,
-        ).animate(CurvedAnimation(
-          parent: _animationController,
-          curve: Curves.easeInOut,
-        ));
         _animationController.reverse();
       }
     });
