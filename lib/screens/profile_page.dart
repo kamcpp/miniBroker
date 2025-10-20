@@ -5,6 +5,7 @@ import '../services/theme_service.dart';
 import '../services/database_helper.dart';
 import '../utils/connectivity_checker.dart';
 import '../config/ui_constants.dart';
+import '../widgets/copyright_bar.dart';
 
 class ProfilePage extends StatefulWidget {
   const ProfilePage({super.key});
@@ -70,50 +71,59 @@ class _ProfilePageState extends State<ProfilePage> {
             onPressed: () => Navigator.of(context).pop(),
           ),
         ),
-        body: SingleChildScrollView(
-          padding: UIConstants.paddingComfortable,
-          child: Form(
-            key: _formKey,
-            child: Column(
-              crossAxisAlignment: CrossAxisAlignment.start,
-              children: [
-                // Header
-                Text(
-                  'Personal Information',
-                  style: TextStyle(
-                    fontSize: UIConstants.fontSizeLg,
-                    fontWeight: UIConstants.fontWeightMedium,
-                    color: _isDarkTheme ? Colors.white : Colors.black,
+        body: Column(
+          children: [
+            Expanded(
+              child: SingleChildScrollView(
+                padding: UIConstants.paddingComfortable,
+                child: Form(
+                  key: _formKey,
+                  child: Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      // Header
+                      Text(
+                        'Personal Information',
+                        style: TextStyle(
+                          fontSize: UIConstants.fontSizeLg,
+                          fontWeight: UIConstants.fontWeightMedium,
+                          color: _isDarkTheme ? Colors.white : Colors.black,
+                        ),
+                      ),
+
+                      const SizedBox(height: UIConstants.spacingLg),
+
+                      // Username Section
+                      _buildInfoSection(
+                        label: 'Username',
+                        value: authService.username,
+                        isEditing: _isEditingUsername,
+                        controller: _usernameController,
+                        onEdit: () => setState(() => _isEditingUsername = true),
+                        onSave: _saveUsername,
+                        onCancel: () {
+                          setState(() => _isEditingUsername = false);
+                          _usernameController.text = authService.username;
+                        },
+                        isDarkTheme: _isDarkTheme,
+                        canEdit: !_databaseHelper.isAdminUser(authService.username),
+                      ),
+
+                      const SizedBox(height: UIConstants.spacingLg),
+
+                      // Password Section
+                      _buildPasswordSection(
+                        isDarkTheme: _isDarkTheme,
+                      ),
+                    ],
                   ),
                 ),
-                
-                const SizedBox(height: UIConstants.spacingLg),
-                
-                // Username Section
-                _buildInfoSection(
-                  label: 'Username',
-                  value: authService.username,
-                  isEditing: _isEditingUsername,
-                  controller: _usernameController,
-                  onEdit: () => setState(() => _isEditingUsername = true),
-                  onSave: _saveUsername,
-                  onCancel: () {
-                    setState(() => _isEditingUsername = false);
-                    _usernameController.text = authService.username;
-                  },
-                  isDarkTheme: _isDarkTheme,
-                  canEdit: !_databaseHelper.isAdminUser(authService.username),
-                ),
-                
-                const SizedBox(height: UIConstants.spacingLg),
-                
-                // Password Section
-                _buildPasswordSection(
-                  isDarkTheme: _isDarkTheme,
-                ),
-              ],
+              ),
             ),
-          ),
+
+            // Copyright Status Bar
+            CopyrightBar(isDarkTheme: _isDarkTheme),
+          ],
         ),
       ),
     );

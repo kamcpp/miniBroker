@@ -6,6 +6,7 @@ import '../services/theme_service.dart';
 import '../services/real_grpc_client.dart';
 import '../config/ui_constants.dart';
 import '../utils/connectivity_checker.dart';
+import '../widgets/copyright_bar.dart';
 import 'portfolio_page.dart';
 import 'trading_page.dart';
 import 'Cash_management_page.dart';
@@ -255,6 +256,9 @@ class _InstrumentsPageState extends State<InstrumentsPage> {
                 ),
               ),
             ),
+
+            // Copyright Status Bar
+            CopyrightBar(isDarkTheme: isDarkTheme),
           ],
         ),
       ),

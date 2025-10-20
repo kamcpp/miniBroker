@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import '../services/database_helper.dart';
 import '../services/user_sync_service.dart';
 import '../config/ui_constants.dart';
+import '../widgets/copyright_bar.dart';
 
 class UsersAdminPage extends StatefulWidget {
   const UsersAdminPage({super.key});
@@ -159,107 +160,116 @@ class _UsersAdminPageState extends State<UsersAdminPage> {
           ),
         ],
       ),
-      body: _isLoading
-          ? Center(
-              child: Column(
-                mainAxisAlignment: MainAxisAlignment.center,
-                children: [
-                  const CircularProgressIndicator(color: Colors.white),
-                  const SizedBox(height: UIConstants.spacingMd),
-                  Text(
-                    _isSyncing ? 'Syncing with server...' : 'Loading users...',
-                    style: const TextStyle(
-                      color: Colors.white,
-                      fontSize: UIConstants.fontSizeBody,
-                    ),
-                  ),
-                ],
-              ),
-            )
-          : _users.isEmpty
-              ? const Center(
-                  child: Text(
-                    'No users registered yet',
-                    style: TextStyle(
-                      color: Colors.white,
-                      fontSize: UIConstants.fontSizeMd,
-                    ),
-                  ),
-                )
-              : ListView.builder(
-                  padding: UIConstants.paddingStandard,
-                  itemCount: _users.length,
-                  itemBuilder: (context, index) {
-                    final user = _users[index];
-                    final createdAt = _parseUnixTimestamp(user['created_at']);
-                    final lastLogin = _parseUnixTimestamp(user['last_login']);
-
-                    return Card(
-                      margin: const EdgeInsets.only(bottom: 12),
-                      child: ListTile(
-                        leading: CircleAvatar(
-                          backgroundColor: const Color(0xFF1a1754),
-                          child: Text(
-                            user['username']?.substring(0, 1).toUpperCase() ?? 'U',
-                            style: const TextStyle(
-                              color: Colors.white,
-                              fontWeight: UIConstants.fontWeightMedium,
-                            ),
+      body: Column(
+        children: [
+          Expanded(
+            child: _isLoading
+                ? Center(
+                    child: Column(
+                      mainAxisAlignment: MainAxisAlignment.center,
+                      children: [
+                        const CircularProgressIndicator(color: Colors.white),
+                        const SizedBox(height: UIConstants.spacingMd),
+                        Text(
+                          _isSyncing ? 'Syncing with server...' : 'Loading users...',
+                          style: const TextStyle(
+                            color: Colors.white,
+                            fontSize: UIConstants.fontSizeBody,
                           ),
                         ),
-                        title: Row(
-                          children: [
-                            Text(
-                              user['username'] ?? 'Unknown',
-                              style: const TextStyle(fontWeight: UIConstants.fontWeightMedium),
+                      ],
+                    ),
+                  )
+                : _users.isEmpty
+                    ? const Center(
+                        child: Text(
+                          'No users registered yet',
+                          style: TextStyle(
+                            color: Colors.white,
+                            fontSize: UIConstants.fontSizeMd,
+                          ),
+                        ),
+                      )
+                    : ListView.builder(
+                        padding: UIConstants.paddingStandard,
+                        itemCount: _users.length,
+                        itemBuilder: (context, index) {
+                          final user = _users[index];
+                          final createdAt = _parseUnixTimestamp(user['created_at']);
+                          final lastLogin = _parseUnixTimestamp(user['last_login']);
+
+                          return Card(
+                            margin: const EdgeInsets.only(bottom: 12),
+                            child: ListTile(
+                              leading: CircleAvatar(
+                                backgroundColor: const Color(0xFF1a1754),
+                                child: Text(
+                                  user['username']?.substring(0, 1).toUpperCase() ?? 'U',
+                                  style: const TextStyle(
+                                    color: Colors.white,
+                                    fontWeight: UIConstants.fontWeightMedium,
+                                  ),
+                                ),
+                              ),
+                              title: Row(
+                                children: [
+                                  Text(
+                                    user['username'] ?? 'Unknown',
+                                    style: const TextStyle(fontWeight: UIConstants.fontWeightMedium),
+                                  ),
+                                  if (_databaseHelper.isAdminUser(user['username'] ?? '')) ...[
+                                    const SizedBox(width: UIConstants.spacingSm),
+                                    const Icon(
+                                      Icons.admin_panel_settings,
+                                      color: Colors.amber,
+                                      size: 20,
+                                    ),
+                                    const Text(
+                                      ' (Admin)',
+                                      style: TextStyle(
+                                        color: Colors.amber,
+                                        fontWeight: UIConstants.fontWeightNormal,
+                                        fontSize: UIConstants.fontSizeSm,
+                                      ),
+                                    ),
+                                  ],
+                                ],
+                              ),
+                              subtitle: Column(
+                                crossAxisAlignment: CrossAxisAlignment.start,
+                                children: [
+                                  Text('ID: ${user['id']}'),
+                                  if (createdAt != null)
+                                    Text('Created: ${_formatDate(createdAt)}'),
+                                  if (lastLogin != null)
+                                    Text('Last Login: ${_formatDate(lastLogin)}')
+                                  else
+                                    const Text('Last Login: Never'),
+                                ],
+                              ),
+                              trailing: _databaseHelper.isAdminUser(user['username'] ?? '')
+                                  ? const Tooltip(
+                                      message: 'Admin user cannot be deleted',
+                                      child: Icon(
+                                        Icons.shield,
+                                        color: Colors.amber,
+                                      ),
+                                    )
+                                  : IconButton(
+                                      icon: const Icon(Icons.delete, color: Colors.red),
+                                      onPressed: () => _deleteUser(user['username']),
+                                    ),
+                              isThreeLine: true,
                             ),
-                            if (_databaseHelper.isAdminUser(user['username'] ?? '')) ...[
-                              const SizedBox(width: UIConstants.spacingSm),
-                              const Icon(
-                                Icons.admin_panel_settings,
-                                color: Colors.amber,
-                                size: 20,
-                              ),
-                              const Text(
-                                ' (Admin)',
-                                style: TextStyle(
-                                  color: Colors.amber,
-                                  fontWeight: UIConstants.fontWeightNormal,
-                                  fontSize: UIConstants.fontSizeSm,
-                                ),
-                              ),
-                            ],
-                          ],
-                        ),
-                        subtitle: Column(
-                          crossAxisAlignment: CrossAxisAlignment.start,
-                          children: [
-                            Text('ID: ${user['id']}'),
-                            if (createdAt != null)
-                              Text('Created: ${_formatDate(createdAt)}'),
-                            if (lastLogin != null)
-                              Text('Last Login: ${_formatDate(lastLogin)}')
-                            else
-                              const Text('Last Login: Never'),
-                          ],
-                        ),
-                        trailing: _databaseHelper.isAdminUser(user['username'] ?? '')
-                            ? const Tooltip(
-                                message: 'Admin user cannot be deleted',
-                                child: Icon(
-                                  Icons.shield,
-                                  color: Colors.amber,
-                                ),
-                              )
-                            : IconButton(
-                                icon: const Icon(Icons.delete, color: Colors.red),
-                                onPressed: () => _deleteUser(user['username']),
-                              ),
-                        isThreeLine: true,
+                          );
+                        },
                       ),
-                    );
-                  },
-                ),
+          ),
+
+          // Copyright Status Bar
+          CopyrightBar(isDarkTheme: true),
+        ],
+      ),
     );
   }
 

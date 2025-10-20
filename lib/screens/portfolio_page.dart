@@ -7,6 +7,7 @@ import '../services/real_grpc_client.dart';
 import '../services/database_helper.dart';
 import '../utils/connectivity_checker.dart';
 import '../config/ui_constants.dart';
+import '../widgets/copyright_bar.dart';
 import 'instruments_page.dart';
 import 'trading_page.dart';
 import 'Cash_management_page.dart';
@@ -259,7 +260,7 @@ class _PortfolioPageState extends State<PortfolioPage> {
           children: [
             // Header Section
             _buildHeader(authService, themeService),
-            
+
             // Main Content
             Expanded(
               child: Padding(
@@ -305,6 +306,9 @@ class _PortfolioPageState extends State<PortfolioPage> {
                 ),
               ),
             ),
+
+            // Copyright Status Bar
+            CopyrightBar(isDarkTheme: _isDarkTheme),
           ],
         ),
       ),

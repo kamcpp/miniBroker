@@ -100,7 +100,7 @@ class _AppInitializerState extends State<AppInitializer> with SingleTickerProvid
 
   @override
   Widget build(BuildContext context) {
-    // Show Config Finder dialog if needed
+    // Show Config Finder dialog if needed - don't show login form behind it
     if (_needsConfigSelection && _configCheckDone) {
       WidgetsBinding.instance.addPostFrameCallback((_) async {
         final result = await showDialog<String>(
@@ -117,12 +117,23 @@ class _AppInitializerState extends State<AppInitializer> with SingleTickerProvid
             final authService = Provider.of<AuthService>(context, listen: false);
             _initFuture = _initializeWithConfig(authService, result);
           });
-        } else {
-          // User cancelled - show dialog again (config is required)
-          // Don't exit, just stay in config selection mode
-          print('⚠️ Config selection cancelled - config is required to continue');
         }
       });
+
+      // Return a simple background while config dialog is shown
+      return Scaffold(
+        body: Container(
+          decoration: const BoxDecoration(
+            image: DecorationImage(
+              image: AssetImage('assets/chart-background.jpg'),
+              fit: BoxFit.cover,
+            ),
+          ),
+          child: Container(
+            color: const Color(0xFF1a1754).withOpacity(0.9),
+          ),
+        ),
+      );
     }
 
     return Consumer<AuthService>(

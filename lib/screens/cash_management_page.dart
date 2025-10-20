@@ -6,6 +6,7 @@ import '../services/theme_service.dart';
 import '../services/real_grpc_client.dart';
 import '../config/ui_constants.dart';
 import '../utils/connectivity_checker.dart';
+import '../widgets/copyright_bar.dart';
 import 'instruments_page.dart';
 import 'trading_page.dart';
 import 'portfolio_page.dart';
@@ -448,6 +449,9 @@ class _CashManagementPageState extends State<CashManagementPage> {
                 ),
               ),
             ),
+
+            // Copyright Status Bar
+            CopyrightBar(isDarkTheme: _isDarkTheme),
           ],
         ),
       ),

@@ -27,6 +27,7 @@ class BrokerConfigHelper {
   }
 
   /// Find all broker config files in the config directory
+  /// Files are sorted by last modified time (most recent first)
   static List<String> findAllConfigFiles({String? configDir}) {
     try {
       final dir = configDir ?? ConfigRcManager.getCurrentConfigDir();
@@ -37,18 +38,27 @@ class BrokerConfigHelper {
         return [];
       }
 
-      final files = directory
+      final fileEntities = directory
           .listSync()
           .whereType<File>()
           .where((file) {
             final fileName = path.basename(file.path);
             return getBrokerNameFromFileName(fileName) != null;
           })
+          .toList();
+
+      // Sort by last modified time (most recent first)
+      fileEntities.sort((a, b) {
+        final aModified = a.lastModifiedSync();
+        final bModified = b.lastModifiedSync();
+        return bModified.compareTo(aModified); // Descending order
+      });
+
+      final files = fileEntities
           .map((file) => path.basename(file.path))
           .toList();
 
-      files.sort(); // Sort alphabetically
-      print('✅ Found ${files.length} config file(s) in $dir');
+      print('✅ Found ${files.length} config file(s) in $dir (sorted by last usage)');
       return files;
     } catch (e) {
       print('❌ Error finding config files: $e');
@@ -66,6 +76,26 @@ class BrokerConfigHelper {
   static bool configFileExists(String fileName, {String? configDir}) {
     final filePath = getConfigFilePath(fileName, configDir: configDir);
     return File(filePath).existsSync();
+  }
+
+  /// Update the last modified time of a config file
+  /// This is used to track last usage and sort configs by recency
+  static void touchConfigFile(String fileName, {String? configDir}) {
+    try {
+      final filePath = getConfigFilePath(fileName, configDir: configDir);
+      final file = File(filePath);
+
+      if (!file.existsSync()) {
+        print('⚠️ Cannot touch non-existent config file: $filePath');
+        return;
+      }
+
+      // Update last modified time to now
+      file.setLastModifiedSync(DateTime.now());
+      print('✅ Updated last usage time for: $fileName');
+    } catch (e) {
+      print('❌ Error touching config file $fileName: $e');
+    }
   }
 
   /// Read and parse a config file

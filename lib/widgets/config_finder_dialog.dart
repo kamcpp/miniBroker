@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:flutter/services.dart';
 import 'package:provider/provider.dart';
 import 'dart:io';
 import 'dart:ui';
@@ -10,7 +11,6 @@ import '../utils/broker_config_helper.dart';
 import 'create_broker_config_dialog.dart';
 import 'edit_broker_config_dialog.dart';
 import 'duplicate_config_dialog.dart';
-import 'package:file_picker/file_picker.dart';
 
 /// Config Finder Dialog - main entry point for config management
 class ConfigFinderDialog extends StatefulWidget {
@@ -76,11 +76,20 @@ class _ConfigFinderDialogState extends State<ConfigFinderDialog> {
   }
 
   Future<void> _changeConfigDir() async {
-    // Open directory picker dialog starting from current config directory
-    String? selectedDirectory = await FilePicker.platform.getDirectoryPath(
-      dialogTitle: 'Select Config Directory',
-      initialDirectory: _configDir,
-    );
+    // Use custom native directory picker with hidden files and folder creation
+    const platform = MethodChannel('com.minibroker.directory_picker');
+
+    String? selectedDirectory;
+    try {
+      selectedDirectory = await platform.invokeMethod<String>('pickDirectory', {
+        'title': 'Select Config Directory',
+        'initialDirectory': _configDir,
+      });
+    } catch (e) {
+      print('Error picking directory: $e');
+      _showError('Failed to open directory picker: $e');
+      return;
+    }
 
     // User cancelled the picker
     if (selectedDirectory == null) {
@@ -349,26 +358,23 @@ class _ConfigFinderDialogState extends State<ConfigFinderDialog> {
       builder: (context) => AlertDialog(
         title: const Text('Restart Required'),
         content: const Text(
-          'Config directory has been changed. The application needs to restart to apply changes.',
+          'Config directory has been changed. The application will now exit. Please restart to apply changes.',
         ),
         actions: [
-          ElevatedButton(
+          ElevatedButton.icon(
             onPressed: () {
-              Navigator.of(context).pop();
-              // Show message that user needs to restart manually
-              ScaffoldMessenger.of(context).showSnackBar(
-                const SnackBar(
-                  content: Text('Please restart the app to apply changes'),
-                  duration: Duration(seconds: 5),
-                ),
-              );
+              // Exit the application
+              exit(0);
             },
             style: ElevatedButton.styleFrom(
+              backgroundColor: Colors.red,
+              foregroundColor: Colors.white,
               shape: RoundedRectangleBorder(
-                borderRadius: BorderRadius.circular(UIConstants.textFieldBorderRadius),
+                borderRadius: BorderRadius.circular(UIConstants.borderRadiusSm),
               ),
             ),
-            child: const Text('OK', style: TextStyle(fontSize: UIConstants.fontSizeBody)),
+            icon: const Icon(Icons.exit_to_app, size: UIConstants.textFieldIconSize),
+            label: const Text('Exit App', style: TextStyle(fontSize: UIConstants.fontSizeBody)),
           ),
         ],
       ),
@@ -759,13 +765,15 @@ class _ConfigFinderDialogState extends State<ConfigFinderDialog> {
             Row(
               mainAxisAlignment: MainAxisAlignment.spaceBetween,
               children: [
-                TextButton.icon(
+                ElevatedButton.icon(
                   onPressed: () {
                     // Exit the application
                     exit(0);
                   },
-                  style: TextButton.styleFrom(
-                    foregroundColor: Colors.red,
+                  style: ElevatedButton.styleFrom(
+                    backgroundColor: Colors.red,
+                    foregroundColor: Colors.white,
+                    padding: UIConstants.paddingCompact,
                     shape: RoundedRectangleBorder(
                       borderRadius: BorderRadius.circular(UIConstants.borderRadiusSm),
                     ),
@@ -775,7 +783,16 @@ class _ConfigFinderDialogState extends State<ConfigFinderDialog> {
                 ),
                 ElevatedButton(
                   onPressed: _selectedConfig != null
-                      ? () => Navigator.of(context).pop(_selectedConfig)
+                      ? () {
+                          // Update last usage time before launching
+                          if (_selectedConfig != null) {
+                            BrokerConfigHelper.touchConfigFile(
+                              _selectedConfig!,
+                              configDir: _configDir,
+                            );
+                          }
+                          Navigator.of(context).pop(_selectedConfig);
+                        }
                       : null,
                   style: ElevatedButton.styleFrom(
                     backgroundColor: primaryColor,

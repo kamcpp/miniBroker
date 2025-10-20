@@ -5,6 +5,7 @@ import '../services/auth_service.dart';
 import '../utils/connectivity_checker.dart';
 import '../main.dart';
 import '../config/ui_constants.dart';
+import '../widgets/copyright_bar.dart';
 
 class LoginPage extends StatefulWidget {
   const LoginPage({super.key});
@@ -267,7 +268,7 @@ class _LoginPageState extends State<LoginPage> with TickerProviderStateMixin {
                           ),
                         ],
                       ),
-                      child: _showSignup 
+                      child: _showSignup
                           ? Transform(
                               alignment: Alignment.center,
                               transform: Matrix4.identity()..rotateY(3.14159),
@@ -282,6 +283,13 @@ class _LoginPageState extends State<LoginPage> with TickerProviderStateMixin {
           ),
         ),
           ),
+          // Copyright status bar at bottom
+          const Positioned(
+            bottom: 0,
+            left: 0,
+            right: 0,
+            child: CopyrightBar(isDarkTheme: true),
+          ),
         ],
       ),
     );
@@ -295,7 +303,7 @@ class _LoginPageState extends State<LoginPage> with TickerProviderStateMixin {
         children: [
           // Login Title
                     const Text(
-                      'Login to mini Broker',
+                      'Welcome Back Investor!',
                       style: TextStyle(
                         fontSize: UIConstants.fontSizeXl,
                         fontWeight: UIConstants.fontWeightMedium,

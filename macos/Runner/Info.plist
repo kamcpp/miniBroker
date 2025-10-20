@@ -13,9 +13,9 @@
 	<key>CFBundleInfoDictionaryVersion</key>
 	<string>6.0</string>
 	<key>CFBundleName</key>
-	<string>mini Broker</string>
+	<string>Agora miniBroker</string>
 	<key>CFBundleDisplayName</key>
-	<string>mini Broker V1.0</string>
+	<string>Agora miniBroker (v1.0.0) | VeroPulse</string>
 	<key>CFBundlePackageType</key>
 	<string>APPL</string>
 	<key>CFBundleShortVersionString</key>

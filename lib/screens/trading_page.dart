@@ -14,6 +14,7 @@ import '../services/real_grpc_client.dart';
 import '../services/grpcurl_helper.dart';
 import '../services/chart_service.dart';
 import '../utils/connectivity_checker.dart';
+import '../widgets/copyright_bar.dart';
 import 'instruments_page.dart';
 import 'portfolio_page.dart';
 import 'Cash_management_page.dart';
@@ -2810,6 +2811,9 @@ class _TradingPageState extends State<TradingPage> {
                 },
               ),
             ),
+
+            // Copyright Status Bar
+            CopyrightBar(isDarkTheme: _isDarkTheme),
           ],
         ),
       ),
