@@ -101,8 +101,10 @@ class MenuItemsHelper {
         isSelected: currentPage == 'users',
         onTap: () {
           Navigator.of(context).push(
-            MaterialPageRoute(
-              builder: (context) => const UsersAdminPage(),
+            PageRouteBuilder(
+              pageBuilder: (context, animation, secondaryAnimation) => const UsersAdminPage(),
+              transitionDuration: Duration.zero,
+              reverseTransitionDuration: Duration.zero,
             ),
           );
         },
