@@ -196,46 +196,45 @@ class _InstrumentsPageState extends State<InstrumentsPage> {
               child: Column(
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
-                  // Title Row
-                  Row(
-                    mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                    children: [
-                      Text(
-                        'Instruments',
-                        style: TextStyle(
-                          fontSize: UIConstants.fontSizeLg,
-                          fontWeight: UIConstants.fontWeightMedium,
-                          color: isDarkTheme ? Colors.white : Colors.black,
-                        ),
-                      ),
-                    ],
-                  ),
-                  const SizedBox(height: UIConstants.spacingMd),
-
                   // Instruments List
                   Expanded(
                     child: Container(
-                      padding: UIConstants.paddingComfortable,
                       decoration: BoxDecoration(
-                        color: isDarkTheme ? const Color(0xFF2A2A2A) : Colors.white,
-                        borderRadius: BorderRadius.circular(UIConstants.borderRadiusMd),
-                        boxShadow: [
-                          BoxShadow(
-                            color: Colors.black.withOpacity(0.1),
-                            blurRadius: 8,
-                            offset: const Offset(0, 2),
-                          ),
-                        ],
+                        color: isDarkTheme ? const Color(0xFF1e1e1e) : Colors.white,
+                        borderRadius: BorderRadius.circular(UIConstants.textFieldBorderRadius),
                       ),
                       child: Column(
                         crossAxisAlignment: CrossAxisAlignment.start,
                         children: [
-                          Expanded(
-                            child: _buildInstrumentsContent(themeService, isDarkTheme),
+                          // Table header
+                          Container(
+                            padding: UIConstants.paddingStandard,
+                            decoration: BoxDecoration(
+                              color: isDarkTheme ? const Color(0xFF2d2d2d) : Colors.grey[50],
+                              borderRadius: const BorderRadius.only(
+                                topLeft: Radius.circular(8),
+                                topRight: Radius.circular(8),
+                              ),
+                            ),
+                            child: Row(
+                              children: [
+                                Text(
+                                  'Instruments List',
+                                  style: TextStyle(
+                                    fontSize: UIConstants.fontSizeMd,
+                                    fontWeight: UIConstants.fontWeightMedium,
+                                    color: isDarkTheme ? Colors.white : Colors.black,
+                                  ),
+                                ),
+                              ],
+                            ),
                           ),
-                          // Pagination Controls
-                          if (_instrumentsData != null && _instrumentsData!['success'] == true)
-                            _buildPaginationControls(isDarkTheme),
+                          Expanded(
+                            child: Padding(
+                              padding: UIConstants.paddingComfortable,
+                              child: _buildInstrumentsContent(themeService, isDarkTheme),
+                            ),
+                          ),
                         ],
                       ),
                     ),
@@ -345,7 +344,7 @@ class _InstrumentsPageState extends State<InstrumentsPage> {
                   padding: UIConstants.paddingStandard,
                   decoration: BoxDecoration(
                     color: Colors.blue.withOpacity(0.1),
-                    borderRadius: BorderRadius.circular(UIConstants.borderRadiusSm),
+                    borderRadius: BorderRadius.circular(8),
                     border: Border.all(color: Colors.blue.withOpacity(0.3)),
                   ),
                   child: Row(
@@ -437,7 +436,7 @@ class _InstrumentsPageState extends State<InstrumentsPage> {
       for (var id in identifiers) {
         final ids = id['ids'] as List<dynamic>?;
         if (ids != null && ids.isNotEmpty) {
-          symbol = ids.first.toString();
+          symbol = ids.first['value'];
           break;
         }
       }
@@ -451,7 +450,7 @@ class _InstrumentsPageState extends State<InstrumentsPage> {
       padding: UIConstants.paddingStandard,
       decoration: BoxDecoration(
         color: isDarkTheme ? const Color(0xFF404040) : Colors.grey[50],
-        borderRadius: BorderRadius.circular(UIConstants.borderRadiusSm),
+        borderRadius: BorderRadius.circular(8),
         border: Border.all(
           color: isDarkTheme ? Colors.grey[700]! : Colors.grey[200]!,
           width: 1,
@@ -465,7 +464,7 @@ class _InstrumentsPageState extends State<InstrumentsPage> {
             height: 48,
             decoration: BoxDecoration(
               color: _getColorForInstrument(symbol),
-              borderRadius: BorderRadius.circular(UIConstants.borderRadiusSm),
+              borderRadius: BorderRadius.circular(8),
             ),
             child: Center(
               child: Text(
@@ -501,7 +500,7 @@ class _InstrumentsPageState extends State<InstrumentsPage> {
                       padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
                       decoration: BoxDecoration(
                         color: _getStatusColor(status),
-                        borderRadius: BorderRadius.circular(4),
+                        borderRadius: BorderRadius.circular(8),
                       ),
                       child: Text(
                         status.toString().toUpperCase(),
@@ -583,58 +582,5 @@ class _InstrumentsPageState extends State<InstrumentsPage> {
       default:
         return Colors.grey;
     }
-  }
-
-  Widget _buildPaginationControls(bool isDarkTheme) {
-    final totalItems = (_instrumentsData?['output']?['total_count'] ?? 0) as int;
-    final totalPages = (totalItems / _pageSize).ceil();
-
-    return Container(
-      margin: const EdgeInsets.only(top: 16),
-      padding: const EdgeInsets.symmetric(vertical: 12),
-      decoration: BoxDecoration(
-        border: Border(
-          top: BorderSide(
-            color: isDarkTheme ? Colors.grey[700]! : Colors.grey[300]!,
-            width: 1,
-          ),
-        ),
-      ),
-      child: Row(
-        mainAxisAlignment: MainAxisAlignment.spaceBetween,
-        children: [
-          Text(
-            'Page ${_currentPage + 1} of ${totalPages > 0 ? totalPages : 1} (Total: $totalItems items)',
-            style: TextStyle(
-              fontSize: UIConstants.fontSizeBody,
-              color: isDarkTheme ? Colors.grey[400] : Colors.grey[600],
-            ),
-          ),
-          Row(
-            children: [
-              IconButton(
-                onPressed: _currentPage > 0
-                    ? () => _fetchInstruments(page: _currentPage - 1)
-                    : null,
-                icon: const Icon(Icons.chevron_left),
-                tooltip: 'Previous Page',
-                color: isDarkTheme ? Colors.white : Colors.black,
-                disabledColor: Colors.grey,
-              ),
-              const SizedBox(width: UIConstants.spacingSm),
-              IconButton(
-                onPressed: _currentPage < totalPages - 1
-                    ? () => _fetchInstruments(page: _currentPage + 1)
-                    : null,
-                icon: const Icon(Icons.chevron_right),
-                tooltip: 'Next Page',
-                color: isDarkTheme ? Colors.white : Colors.black,
-                disabledColor: Colors.grey,
-              ),
-            ],
-          ),
-        ],
-      ),
-    );
   }
 }

@@ -287,7 +287,7 @@ class GrpcurlHelper {
       try {
         result = await Process.run(
           grpcurlPath, 
-          ['-plaintext', '-d', jsonEncode(request), '$_host:$_port', 'qomet.agora.daemons.prtagent.v1.AgentService.Ping'],
+          ['-plaintext', '-d', jsonEncode(request), '$_host:$_port', 'tech.qomet.agora.api.grpc.prtagent.v1.AgentService.Ping'],
         ).timeout(
           const Duration(seconds: 3),
           onTimeout: () {
@@ -483,7 +483,7 @@ class GrpcurlHelper {
 
         result = await Process.run(
           grpcurlPath,
-          ['-plaintext', '-d', jsonRequest, '$_host:$_port', 'qomet.agora.daemons.prtagent.v1.AccountService.NewAccount'],
+          ['-plaintext', '-d', jsonRequest, '$_host:$_port', 'tech.qomet.agora.api.grpc.prtagent.v1.AccountService.NewAccount'],
         ).timeout(
           const Duration(seconds: 10),
           onTimeout: () {
@@ -592,7 +592,6 @@ class GrpcurlHelper {
           'pagination': {
             'page_nr': pageNumber,
             'page_size': pageSize,
-            'page_token': '',
           },
           if (accountIdRegex != null && accountIdRegex.isNotEmpty)
             'account_iid_or_external_id_regex': accountIdRegex,
@@ -626,7 +625,6 @@ class GrpcurlHelper {
           'pagination': {
             'page_nr': pageNumber,
             'page_size': pageSize,
-            'page_token': '',
           },
           if (accountIdRegex != null && accountIdRegex.isNotEmpty)
             'account_iid_or_external_id_regex': accountIdRegex,
@@ -662,7 +660,6 @@ class GrpcurlHelper {
       'pagination': {
         'page_nr': pageNumber,
         'page_size': pageSize,
-        'page_token': '', // Empty for now, can be used for token-based pagination
       },
       if (accountIdRegex != null && accountIdRegex.isNotEmpty)
         'account_iid_or_external_id_regex': accountIdRegex,
@@ -703,7 +700,7 @@ class GrpcurlHelper {
       try {
         result = await Process.run(
           grpcurlPath,
-          ['-plaintext', '-d', jsonEncode(request), '$_host:$_port', 'qomet.agora.daemons.prtagent.v1.AccountService.GetAccountList'],
+          ['-plaintext', '-d', jsonEncode(request), '$_host:$_port', 'tech.qomet.agora.api.grpc.prtagent.v1.AccountService.GetAccountList'],
         ).timeout(
           const Duration(seconds: 3),
           onTimeout: () {
@@ -839,7 +836,7 @@ class GrpcurlHelper {
       // Log the full request
       print('━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━');
       print('📤 GetAccountInstrumentHoldings REQUEST:');
-      print('Service: qomet.agora.daemons.prtagent.v1.AccountService.GetAccountInstrumentHoldings');
+      print('Service: tech.qomet.agora.api.grpc.prtagent.v1.AccountService.GetAccountInstrumentHoldings');
       print('Host: $_host:$_port');
       print('Request Body:');
       print(const JsonEncoder.withIndent('  ').convert(request));
@@ -849,7 +846,7 @@ class GrpcurlHelper {
       try {
         result = await Process.run(
           grpcurlPath,
-          ['-plaintext', '-d', jsonEncode(request), '$_host:$_port', 'qomet.agora.daemons.prtagent.v1.AccountService.GetAccountInstrumentHoldings'],
+          ['-plaintext', '-d', jsonEncode(request), '$_host:$_port', 'tech.qomet.agora.api.grpc.prtagent.v1.AccountService.GetAccountInstrumentHoldings'],
         ).timeout(
           const Duration(seconds: 5),
           onTimeout: () {
@@ -1006,7 +1003,7 @@ class GrpcurlHelper {
       // Log the full request
       print('━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━');
       print('📤 GetAccountCashHoldings REQUEST:');
-      print('Service: qomet.agora.daemons.prtagent.v1.AccountService.GetAccountCashHoldings');
+      print('Service: tech.qomet.agora.api.grpc.prtagent.v1.AccountService.GetAccountCashHoldings');
       print('Host: $_host:$_port');
       print('Request Body:');
       print(const JsonEncoder.withIndent('  ').convert(request));
@@ -1016,7 +1013,7 @@ class GrpcurlHelper {
       try {
         result = await Process.run(
           grpcurlPath,
-          ['-plaintext', '-d', jsonEncode(request), '$_host:$_port', 'qomet.agora.daemons.prtagent.v1.AccountService.GetAccountCashHoldings'],
+          ['-plaintext', '-d', jsonEncode(request), '$_host:$_port', 'tech.qomet.agora.api.grpc.prtagent.v1.AccountService.GetAccountCashHoldings'],
         ).timeout(
           const Duration(seconds: 5),
           onTimeout: () {
@@ -1180,7 +1177,7 @@ class GrpcurlHelper {
       // Log the full request
       print('━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━');
       print('📤 DepositCash REQUEST:');
-      print('Service: qomet.agora.daemons.prtagent.v1.AccountService.DepositCash');
+      print('Service: tech.qomet.agora.api.grpc.prtagent.v1.AccountService.DepositCash');
       print('Host: $_host:$_port');
       print('Request Body:');
       print(const JsonEncoder.withIndent('  ').convert(request));
@@ -1190,7 +1187,7 @@ class GrpcurlHelper {
       try {
         result = await Process.run(
           grpcurlPath,
-          ['-plaintext', '-d', jsonEncode(request), '$_host:$_port', 'qomet.agora.daemons.prtagent.v1.AccountService.DepositCash'],
+          ['-plaintext', '-d', jsonEncode(request), '$_host:$_port', 'tech.qomet.agora.api.grpc.prtagent.v1.AccountService.DepositCash'],
         ).timeout(
           const Duration(seconds: 10),
           onTimeout: () {
@@ -1353,7 +1350,7 @@ class GrpcurlHelper {
       // Log the full request
       print('━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━');
       print('📤 WithdrawCash REQUEST:');
-      print('Service: qomet.agora.daemons.prtagent.v1.AccountService.WithdrawCash');
+      print('Service: tech.qomet.agora.api.grpc.prtagent.v1.AccountService.WithdrawCash');
       print('Host: $_host:$_port');
       print('Request Body:');
       print(const JsonEncoder.withIndent('  ').convert(request));
@@ -1363,7 +1360,7 @@ class GrpcurlHelper {
       try {
         result = await Process.run(
           grpcurlPath,
-          ['-plaintext', '-d', jsonEncode(request), '$_host:$_port', 'qomet.agora.daemons.prtagent.v1.AccountService.WithdrawCash'],
+          ['-plaintext', '-d', jsonEncode(request), '$_host:$_port', 'tech.qomet.agora.api.grpc.prtagent.v1.AccountService.WithdrawCash'],
         ).timeout(
           const Duration(seconds: 10),
           onTimeout: () {
@@ -1525,7 +1522,6 @@ class GrpcurlHelper {
     String? toTime,
     String? side, // "BUY" or "SELL"
     List<bool>? statusFilters, // [is_filled, is_cancelled, is_expired]
-    List<String>? instrumentIdOrSymbolRegexes,
   }) async {
     try {
       print('📋 Getting orders for account: $accountId');
@@ -1556,54 +1552,54 @@ class GrpcurlHelper {
         requestPayload['pagination'] = pagination;
       }
       
+      // Build order_query_filter if we have any filter parameters
+      final orderQueryFilter = <String, dynamic>{};
+      bool hasOrderFilter = false;
+      
       if (fromTime != null) {
-        // Check if fromTime is a JSON string containing a timestamp object
+        // Parse fromTime as JSON and add to order_query_filter
         try {
           final parsedFromTime = jsonDecode(fromTime);
-          if (parsedFromTime is Map<String, dynamic> && parsedFromTime.containsKey('ts')) {
-            requestPayload['from_time'] = parsedFromTime;
-          } else {
-            requestPayload['from_time'] = fromTime;
+          if (parsedFromTime is Map<String, dynamic>) {
+            orderQueryFilter['from_dt'] = parsedFromTime;
+            hasOrderFilter = true;
           }
         } catch (e) {
-          // If not valid JSON, treat as regular string
-          requestPayload['from_time'] = fromTime;
+          // If not valid JSON, skip it
+          print('⚠️ Could not parse fromTime: $fromTime');
         }
       }
       
       if (toTime != null) {
-        // Check if toTime is a JSON string containing a timestamp object
+        // Parse toTime as JSON and add to order_query_filter
         try {
           final parsedToTime = jsonDecode(toTime);
-          if (parsedToTime is Map<String, dynamic> && parsedToTime.containsKey('ts')) {
-            requestPayload['to_time'] = parsedToTime;
-          } else {
-            requestPayload['to_time'] = toTime;
+          if (parsedToTime is Map<String, dynamic>) {
+            orderQueryFilter['to_dt'] = parsedToTime;
+            hasOrderFilter = true;
           }
         } catch (e) {
-          // If not valid JSON, treat as regular string
-          requestPayload['to_time'] = toTime;
+          // If not valid JSON, skip it
+          print('⚠️ Could not parse toTime: $toTime');
         }
       }
       
       if (side != null) {
-        requestPayload['side'] = side;
+        orderQueryFilter['side'] = side;
+        hasOrderFilter = true;
       }
       
       if (statusFilters != null) {
-        requestPayload['status_filters'] = statusFilters;
+        orderQueryFilter['status_filters'] = statusFilters;
+        hasOrderFilter = true;
       }
       
-      if (instrumentIdOrSymbolRegexes != null && instrumentIdOrSymbolRegexes.isNotEmpty) {
-        requestPayload['instrument_id_or_symbol_regexes'] = instrumentIdOrSymbolRegexes;
+      // Only add order_query_filter if it has any parameters
+      if (hasOrderFilter) {
+        requestPayload['order_query_filter'] = orderQueryFilter;
       }
 
       final jsonPayload = jsonEncode(requestPayload);
-
-      // Print request details
-      print('📤 GetAccountOrders Request:');
-      print('   Account ID: $accountId');
-      print('   Payload: $jsonPayload');
 
       ProcessResult result;
       try {
@@ -1613,7 +1609,7 @@ class GrpcurlHelper {
             '-plaintext',
             '-d', jsonPayload,
             '$_host:$_port',
-            'qomet.agora.daemons.prtagent.v1.AccountService/GetAccountOrders'
+            'tech.qomet.agora.api.grpc.prtagent.v1.AccountService/GetAccountOrders'
           ],
         ).timeout(const Duration(seconds: 10));
       } catch (e) {
@@ -1705,45 +1701,41 @@ class GrpcurlHelper {
       if (marketIdOrNameRegexes != null && marketIdOrNameRegexes.isNotEmpty) {
         requestPayload['venue_id_or_symbol_regexes'] = marketIdOrNameRegexes;
       }
-      
+
       if (pagination != null) {
         requestPayload['pagination'] = pagination;
       }
-      
+
       if (fromTime != null) {
-        // Check if fromTime is a JSON string containing a timestamp object
+        // Parse fromTime as JSON and add directly to request
         try {
           final parsedFromTime = jsonDecode(fromTime);
-          if (parsedFromTime is Map<String, dynamic> && parsedFromTime.containsKey('ts')) {
-            requestPayload['from_time'] = parsedFromTime;
-          } else {
-            requestPayload['from_time'] = fromTime;
+          if (parsedFromTime is Map<String, dynamic>) {
+            requestPayload['from_dt'] = parsedFromTime;
           }
         } catch (e) {
-          // If not valid JSON, treat as regular string
-          requestPayload['from_time'] = fromTime;
+          // If not valid JSON, skip it
+          print('⚠️ Could not parse fromTime: $fromTime');
         }
       }
-      
+
       if (toTime != null) {
-        // Check if toTime is a JSON string containing a timestamp object
+        // Parse toTime as JSON and add directly to request
         try {
           final parsedToTime = jsonDecode(toTime);
-          if (parsedToTime is Map<String, dynamic> && parsedToTime.containsKey('ts')) {
-            requestPayload['to_time'] = parsedToTime;
-          } else {
-            requestPayload['to_time'] = toTime;
+          if (parsedToTime is Map<String, dynamic>) {
+            requestPayload['to_dt'] = parsedToTime;
           }
         } catch (e) {
-          // If not valid JSON, treat as regular string
-          requestPayload['to_time'] = toTime;
+          // If not valid JSON, skip it
+          print('⚠️ Could not parse toTime: $toTime');
         }
       }
-      
+
       if (side != null) {
         requestPayload['side'] = side;
       }
-      
+
       if (instrumentIdOrSymbolRegexes != null && instrumentIdOrSymbolRegexes.isNotEmpty) {
         requestPayload['instrument_id_or_symbol_regexes'] = instrumentIdOrSymbolRegexes;
       }
@@ -1758,7 +1750,7 @@ class GrpcurlHelper {
             '-plaintext',
             '-d', jsonPayload,
             '$_host:$_port',
-            'qomet.agora.daemons.prtagent.v1.AccountService/GetAccountTrades'
+            'tech.qomet.agora.api.grpc.prtagent.v1.AccountService/GetAccountTrades'
           ],
         ).timeout(const Duration(seconds: 10));
       } catch (e) {
@@ -1846,7 +1838,6 @@ class GrpcurlHelper {
         'pagination': {
           'page_nr': 0,
           'page_size': 0,
-          'page_token': '',
         },
       };
 
@@ -1856,7 +1847,7 @@ class GrpcurlHelper {
           '-plaintext',
           '-d', jsonEncode(inputParams),
           '$_host:$_port',
-          'qomet.agora.daemons.prtagent.v1.MarketService/GetMarketList'
+          'tech.qomet.agora.api.grpc.prtagent.v1.MarketService/GetMarketList'
         ],
         environment: {'PATH': '/usr/local/bin:/opt/homebrew/bin:${Platform.environment['PATH']}'},
       ).timeout(const Duration(seconds: 10));
@@ -1928,7 +1919,6 @@ class GrpcurlHelper {
         'pagination': {
           'page_nr': pageNumber,
           'page_size': pageSize,
-          'page_token': '',
         },
         'market_id_or_symbol_regex': '', // Empty market filter - returns all instruments
       };
@@ -1936,7 +1926,7 @@ class GrpcurlHelper {
       // Log the full request
       print('━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━');
       print('📤 GetInstrumentList REQUEST:');
-      print('Service: qomet.agora.daemons.prtagent.v1.InstrumentService/GetInstrumentList');
+      print('Service: tech.qomet.agora.api.grpc.prtagent.v1.InstrumentService/GetInstrumentList');
       print('Host: $_host:$_port');
       print('Request Body:');
       print(const JsonEncoder.withIndent('  ').convert(inputParams));
@@ -1948,7 +1938,7 @@ class GrpcurlHelper {
           '-plaintext',
           '-d', jsonEncode(inputParams),
           '$_host:$_port',
-          'qomet.agora.daemons.prtagent.v1.InstrumentService/GetInstrumentList'
+          'tech.qomet.agora.api.grpc.prtagent.v1.InstrumentService/GetInstrumentList'
         ],
         environment: {'PATH': '/usr/local/bin:/opt/homebrew/bin:${Platform.environment['PATH']}'},
       ).timeout(const Duration(seconds: 10));
@@ -2036,7 +2026,6 @@ class GrpcurlHelper {
         'pagination': {
           'page_nr': pageNumber,
           'page_size': pageSize,
-          'page_token': '',
         },
         'market_id_or_symbol_regex': marketId,
       };
@@ -2044,7 +2033,7 @@ class GrpcurlHelper {
       // Log the full request
       print('━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━');
       print('📤 GetInstrumentList REQUEST:');
-      print('Service: qomet.agora.daemons.prtagent.v1.InstrumentService/GetInstrumentList');
+      print('Service: tech.qomet.agora.api.grpc.prtagent.v1.InstrumentService/GetInstrumentList');
       print('Host: $_host:$_port');
       print('Request Body:');
       print(const JsonEncoder.withIndent('  ').convert(inputParams));
@@ -2056,7 +2045,7 @@ class GrpcurlHelper {
           '-plaintext',
           '-d', jsonEncode(inputParams),
           '$_host:$_port',
-          'qomet.agora.daemons.prtagent.v1.InstrumentService/GetInstrumentList'
+          'tech.qomet.agora.api.grpc.prtagent.v1.InstrumentService/GetInstrumentList'
         ],
         environment: {'PATH': '/usr/local/bin:/opt/homebrew/bin:${Platform.environment['PATH']}'},
       ).timeout(const Duration(seconds: 10));
@@ -2139,7 +2128,6 @@ class GrpcurlHelper {
         'pagination': {
           'page_nr': pageNumber,
           'page_size': pageSize,
-          'page_token': '',
         },
         // Removed aux_data completely to avoid server marshaling issues
       };
@@ -2149,7 +2137,7 @@ class GrpcurlHelper {
 
       final result = await Process.run(
         grpcurlPath,
-        ['-plaintext', '-d', jsonEncode(request), '$_host:$_port', 'qomet.agora.daemons.prtagent.v1.AgentService/GetSupportedCurrencies'],
+        ['-plaintext', '-d', jsonEncode(request), '$_host:$_port', 'tech.qomet.agora.api.grpc.prtagent.v1.AgentService/GetSupportedCurrencies'],
       ).timeout(const Duration(seconds: 10));
 
       print('📤 GetSupportedCurrencies gRPC exit code: ${result.exitCode}');
@@ -2212,15 +2200,14 @@ class GrpcurlHelper {
         'pagination': {
           'page_nr': pageNumber,
           'page_size': pageSize,
-          'page_token': '',
         },
         // Removed aux_data completely to avoid server marshaling issues
       };
 
       print('📨 GetSupportedCurrencies Request: $inputParams');
-      print('🔗 Calling: qomet.agora.daemons.prtagent.v1.AgentService/GetSupportedCurrencies');
+      print('🔗 Calling: tech.qomet.agora.api.grpc.prtagent.v1.AgentService/GetSupportedCurrencies');
       print('🌐 Server: $_host:$_port');
-      print('🔧 Full grpcurl command: $grpcurlPath -plaintext -d \'${jsonEncode(inputParams)}\' $_host:$_port qomet.agora.daemons.prtagent.v1.AgentService/GetSupportedCurrencies');
+      print('🔧 Full grpcurl command: $grpcurlPath -plaintext -d \'${jsonEncode(inputParams)}\' $_host:$_port tech.qomet.agora.api.grpc.prtagent.v1.AgentService/GetSupportedCurrencies');
 
       final result = await Process.run(
         grpcurlPath,
@@ -2228,7 +2215,7 @@ class GrpcurlHelper {
           '-plaintext',
           '-d', jsonEncode(inputParams),
           '$_host:$_port',
-          'qomet.agora.daemons.prtagent.v1.AgentService/GetSupportedCurrencies'
+          'tech.qomet.agora.api.grpc.prtagent.v1.AgentService/GetSupportedCurrencies'
         ],
         environment: {'PATH': '/usr/local/bin:/opt/homebrew/bin:${Platform.environment['PATH']}'},
       ).timeout(const Duration(seconds: 10));
@@ -2315,7 +2302,7 @@ class GrpcurlHelper {
           '-plaintext',
           '-d', jsonEncode(inputParams),
           '$_host:$_port',
-          'qomet.agora.daemons.prtagent.v1.TradingService/GetOrderFees'
+          'tech.qomet.agora.api.grpc.prtagent.v1.TradingService/GetOrderFees'
         ],
         environment: {'PATH': '/usr/local/bin:/opt/homebrew/bin:${Platform.environment['PATH']}'},
       ).timeout(const Duration(seconds: 10));
@@ -2441,7 +2428,7 @@ class GrpcurlHelper {
           '-d',
           jsonRequest,
           '$_host:$_port',
-          'qomet.agora.daemons.prtagent.v1.TradingService/CreateOrderAsync',
+          'tech.qomet.agora.api.grpc.prtagent.v1.TradingService/CreateOrderAsync',
         ],
       );
 
@@ -2566,7 +2553,7 @@ class GrpcurlHelper {
             '-plaintext',
             '-d', jsonPayload,
             '$_host:$_port',
-            'qomet.agora.daemons.prtagent.v1.TradingService/ReplaceOrderAsync'
+            'tech.qomet.agora.api.grpc.prtagent.v1.TradingService/ReplaceOrderAsync'
           ],
         ).timeout(const Duration(seconds: 10));
       } catch (e) {
@@ -2669,7 +2656,7 @@ class GrpcurlHelper {
             '-plaintext',
             '-d', jsonPayload,
             '$_host:$_port',
-            'qomet.agora.daemons.prtagent.v1.TradingService/CancelOrderAsync'
+            'tech.qomet.agora.api.grpc.prtagent.v1.TradingService/CancelOrderAsync'
           ],
         ).timeout(const Duration(seconds: 10));
       } catch (e) {
@@ -2762,7 +2749,6 @@ class GrpcurlHelper {
         'pagination': {
           'page_nr': pageNumber,
           'page_size': pageSize,
-          'page_token': '',
         },
         'instrument_iid': instrumentIid,
         'orderbook_query_filter': {
@@ -2784,7 +2770,7 @@ class GrpcurlHelper {
           '-plaintext',
           '-d', jsonEncode(inputParams),
           '$_host:$_port',
-          'qomet.agora.daemons.prtagent.v1.TradingService/GetOrderbook'
+          'tech.qomet.agora.api.grpc.prtagent.v1.TradingService/GetOrderbook'
         ],
         environment: {'PATH': '/usr/local/bin:/opt/homebrew/bin:${Platform.environment['PATH']}'},
       ).timeout(const Duration(seconds: 10));
@@ -2853,7 +2839,6 @@ class GrpcurlHelper {
         'pagination': {
           'page_nr': pageNumber,
           'page_size': pageSize,
-          'page_token': '',
         },
         'instrument_id_and_symbol_regexes': [instrumentId],
         'trade_query_filter': {
@@ -2874,7 +2859,7 @@ class GrpcurlHelper {
           '-plaintext',
           '-d', jsonEncode(inputParams),
           '$_host:$_port',
-          'qomet.agora.daemons.prtagent.v1.InstrumentService/GetInstrumentTrades'
+          'tech.qomet.agora.api.grpc.prtagent.v1.InstrumentService/GetInstrumentTrades'
         ],
         environment: {'PATH': '/usr/local/bin:/opt/homebrew/bin:${Platform.environment['PATH']}'},
       ).timeout(const Duration(seconds: 10));
@@ -2941,7 +2926,6 @@ class GrpcurlHelper {
         'pagination': {
           'page_nr': pageNumber,
           'page_size': pageSize,
-          'page_token': '',
         },
         if (marketIdOrSymbolRegex != null && marketIdOrSymbolRegex.isNotEmpty)
           'market_id_or_symbol_regex': marketIdOrSymbolRegex,
@@ -2950,7 +2934,7 @@ class GrpcurlHelper {
       // Log the full request
       print('━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━');
       print('📤 GetVenueList REQUEST:');
-      print('Service: qomet.agora.daemons.prtagent.v1.VenueService/GetVenueList');
+      print('Service: tech.qomet.agora.api.grpc.prtagent.v1.VenueService/GetVenueList');
       print('Host: $_host:$_port');
       print('Request Body:');
       print(const JsonEncoder.withIndent('  ').convert(inputParams));
@@ -2962,7 +2946,7 @@ class GrpcurlHelper {
           '-plaintext',
           '-d', jsonEncode(inputParams),
           '$_host:$_port',
-          'qomet.agora.daemons.prtagent.v1.VenueService/GetVenueList'
+          'tech.qomet.agora.api.grpc.prtagent.v1.VenueService/GetVenueList'
         ],
         environment: {'PATH': '/usr/local/bin:/opt/homebrew/bin:${Platform.environment['PATH']}'},
       ).timeout(const Duration(seconds: 10));
@@ -3064,7 +3048,7 @@ class GrpcurlHelper {
           '-d',
           requestJson,
           '$_host:$_port',
-          'qomet.agora.daemons.prtagent.v1.TradingService/GetHistoricalOhlcData',
+          'tech.qomet.agora.api.grpc.prtagent.v1.TradingService/GetHistoricalOhlcData',
         ],
         runInShell: false,
       ).timeout(
