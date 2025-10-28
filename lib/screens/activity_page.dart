@@ -47,7 +47,7 @@ class _ActivityPageState extends State<ActivityPage> {
   DateTime? _fromDate;
   DateTime? _toDate;
   String _selectedOrderStatus = 'All';
-  int? _pageSize = 50;
+  int? _pageSize = 15;
   int _pageNumber = 1;
   bool _showFilters = false;
 
@@ -57,7 +57,7 @@ class _ActivityPageState extends State<ActivityPage> {
   List<String> _tradeInstrumentFilters = [];
   DateTime? _tradeFromDate;
   DateTime? _tradeToDate;
-  int? _tradePageSize = 50;
+  int? _tradePageSize = 15;
   int _tradePageNumber = 1;
   bool _showTradeFilters = false;
 
@@ -66,7 +66,7 @@ class _ActivityPageState extends State<ActivityPage> {
   String? _selectedSettlementTransactionType; // Transaction type for settlements
   DateTime? _settlementFromDate;
   DateTime? _settlementToDate;
-  int? _settlementPageSize = 50;
+  int? _settlementPageSize = 15;
   int _settlementPageNumber = 1;
   bool _showSettlementFilters = false;
 
@@ -75,7 +75,7 @@ class _ActivityPageState extends State<ActivityPage> {
   List<String> _transactionAssetFilters = [];
   DateTime? _transactionFromDate;
   DateTime? _transactionToDate;
-  int? _transactionPageSize = 50;
+  int? _transactionPageSize = 15;
   int _transactionPageNumber = 1;
   bool _showTransactionFilters = false;
 
@@ -366,16 +366,18 @@ class _ActivityPageState extends State<ActivityPage> {
       Map<String, dynamic>? toTimeFormatted;
       
       if (_fromDate != null) {
-        // Use exact time selected by user
+        // Use DateTime with utc_unix_epoch_ts_millis format
+        final timestamp = _fromDate!.toUtc().millisecondsSinceEpoch.toString();
         fromTimeFormatted = {
-          "ts": _fromDate!.toUtc().toIso8601String()
+          "utc_unix_epoch_ts_millis": timestamp
         };
       }
       
       if (_toDate != null) {
-        // Use exact time selected by user
+        // Use DateTime with utc_unix_epoch_ts_millis format
+        final timestamp = _toDate!.toUtc().millisecondsSinceEpoch.toString();
         toTimeFormatted = {
-          "ts": _toDate!.toUtc().toIso8601String()
+          "utc_unix_epoch_ts_millis": timestamp
         };
       }
       
@@ -408,10 +410,7 @@ class _ActivityPageState extends State<ActivityPage> {
         toTime: toTimeFormatted != null ? jsonEncode(toTimeFormatted) : null,
         side: _selectedSide,
         statusFilters: statusFilters,
-        instrumentIdOrSymbolRegexes: _instrumentFilters.isNotEmpty ? _instrumentFilters : null,
       );
-
-      print('📤 GetAccountOrders OUTPUT: ${jsonEncode(ordersResponse)}');
 
       if (mounted) {
         setState(() {
@@ -484,16 +483,18 @@ class _ActivityPageState extends State<ActivityPage> {
       Map<String, dynamic>? toTimeFormatted;
       
       if (_tradeFromDate != null) {
-        // Use exact time selected by user
+        // Use DateTime with utc_unix_epoch_ts_millis format
+        final timestamp = _tradeFromDate!.toUtc().millisecondsSinceEpoch.toString();
         fromTimeFormatted = {
-          "ts": _tradeFromDate!.toUtc().toIso8601String()
+          "utc_unix_epoch_ts_millis": timestamp
         };
       }
       
       if (_tradeToDate != null) {
-        // Use exact time selected by user
+        // Use DateTime with utc_unix_epoch_ts_millis format
+        final timestamp = _tradeToDate!.toUtc().millisecondsSinceEpoch.toString();
         toTimeFormatted = {
-          "ts": _tradeToDate!.toUtc().toIso8601String()
+          "utc_unix_epoch_ts_millis": timestamp
         };
       }
       
@@ -624,11 +625,13 @@ class _ActivityPageState extends State<ActivityPage> {
       Map<String, dynamic>? toTimeFormatted;
 
       if (_settlementFromDate != null) {
-        fromTimeFormatted = {"ts": _settlementFromDate!.toUtc().toIso8601String()};
+        final timestamp = _settlementFromDate!.toUtc().millisecondsSinceEpoch.toString();
+        fromTimeFormatted = {"utc_unix_epoch_ts_millis": timestamp};
       }
 
       if (_settlementToDate != null) {
-        toTimeFormatted = {"ts": _settlementToDate!.toUtc().toIso8601String()};
+        final timestamp = _settlementToDate!.toUtc().millisecondsSinceEpoch.toString();
+        toTimeFormatted = {"utc_unix_epoch_ts_millis": timestamp};
       }
 
       final settlementMarketFilters = _selectedSettlementsMarket != null ? [_selectedSettlementsMarket!] : <String>[];
@@ -755,11 +758,13 @@ class _ActivityPageState extends State<ActivityPage> {
       Map<String, dynamic>? toTimeFormatted;
 
       if (_transactionFromDate != null) {
-        fromTimeFormatted = {"ts": _transactionFromDate!.toUtc().toIso8601String()};
+        final timestamp = _transactionFromDate!.toUtc().millisecondsSinceEpoch.toString();
+        fromTimeFormatted = {"utc_unix_epoch_ts_millis": timestamp};
       }
 
       if (_transactionToDate != null) {
-        toTimeFormatted = {"ts": _transactionToDate!.toUtc().toIso8601String()};
+        final timestamp = _transactionToDate!.toUtc().millisecondsSinceEpoch.toString();
+        toTimeFormatted = {"utc_unix_epoch_ts_millis": timestamp};
       }
 
       final transactionAssetFilters = _selectedTransactionsAsset != null ? [_selectedTransactionsAsset!] : <String>[];
@@ -968,6 +973,12 @@ class _ActivityPageState extends State<ActivityPage> {
       _selectedOrdersAsset = _tempSelectedOrdersAsset;
       _selectedTradesMarket = _tempSelectedTradesMarket;
       _selectedTradesAsset = _tempSelectedTradesAsset;
+      
+      // Reset pagination when filters are applied
+      _pageSize = 15;
+      _pageNumber = 1;
+      _tradePageSize = 15;
+      _tradePageNumber = 1;
     });
 
     // Refresh data only for the active tab
@@ -983,7 +994,7 @@ class _ActivityPageState extends State<ActivityPage> {
       _fromDate = null;
       _toDate = null;
       _selectedOrderStatus = 'All';
-      _pageSize = 50;
+      _pageSize = 15;
       _pageNumber = 1;
       _selectedOrdersMarket = null;
       _selectedOrdersAsset = null;
@@ -1001,7 +1012,7 @@ class _ActivityPageState extends State<ActivityPage> {
       _tradeInstrumentFilters = [];
       _tradeFromDate = null;
       _tradeToDate = null;
-      _tradePageSize = 50;
+      _tradePageSize = 15;
       _tradePageNumber = 1;
       _selectedTradesMarket = null;
       _selectedTradesAsset = null;
@@ -1022,7 +1033,7 @@ class _ActivityPageState extends State<ActivityPage> {
       _tempSelectedSettlementsAsset = null;
       _settlementFromDate = null;
       _settlementToDate = null;
-      _settlementPageSize = 50;
+      _settlementPageSize = 15;
       _settlementPageNumber = 1;
     });
     _settlementPageNumberController.text = '1';
@@ -1036,7 +1047,7 @@ class _ActivityPageState extends State<ActivityPage> {
       _tempSelectedTransactionsAsset = null;
       _transactionFromDate = null;
       _transactionToDate = null;
-      _transactionPageSize = 50;
+      _transactionPageSize = 15;
       _transactionPageNumber = 1;
     });
     _transactionPageNumberController.text = '1';
@@ -1079,27 +1090,46 @@ class _ActivityPageState extends State<ActivityPage> {
                 final processedAssets = <Map<String, dynamic>>[];
                 for (final instrument in instruments) {
                   if (instrument is Map<String, dynamic>) {
-                    // Navigate through the nested structure: instrument -> zonedSymbols -> symbols -> value
-                    final zonedSymbols = instrument['zonedSymbols'] ?? [];
-                    if (zonedSymbols is List && zonedSymbols.isNotEmpty) {
-                      for (final zonedSymbol in zonedSymbols) {
-                        if (zonedSymbol is Map<String, dynamic>) {
-                          final symbols = zonedSymbol['symbols'] ?? [];
-                          if (symbols is List && symbols.isNotEmpty) {
-                            for (final symbol in symbols) {
-                              if (symbol is Map<String, dynamic> && symbol.containsKey('value')) {
-                                final symbolValue = symbol['value'];
-                                processedAssets.add({
-                                  'id': symbolValue,
-                                  'symbol': symbolValue,
-                                  'instrument_id': symbolValue,
-                                  'description': instrument['description'] ?? symbolValue,
-                                });
-                              }
+                    // Extract from identifiers structure: identifiers -> ids -> value
+                    String assetId = '';
+                    String assetName = '';
+                    
+                    // Get the iid as asset ID
+                    assetId = instrument['iid']?.toString() ?? '';
+                    
+                    // Extract from identifiers -> ids -> value
+                    final identifiers = instrument['identifiers'] as List?;
+                    if (identifiers != null && identifiers.isNotEmpty) {
+                      final firstIdentifier = identifiers.first;
+                      if (firstIdentifier is Map) {
+                        final idsArray = firstIdentifier['ids'] as List?;
+                        if (idsArray != null && idsArray.isNotEmpty) {
+                          final firstId = idsArray.first;
+                          if (firstId is Map && firstId.containsKey('value')) {
+                            final symbolValue = firstId['value'].toString();
+                            if (assetId.isEmpty) {
+                              assetId = symbolValue;
                             }
+                            assetName = symbolValue;
                           }
                         }
                       }
+                    }
+                    
+                    // Extract display name
+                    final displayNames = instrument['displayNames'] as Map?;
+                    if (displayNames != null && displayNames.isNotEmpty) {
+                      assetName = displayNames['en']?.toString() ?? 
+                                  displayNames.values.first?.toString() ?? assetName;
+                    }
+                    
+                    if (assetId.isNotEmpty) {
+                      processedAssets.add({
+                        'id': assetId,
+                        'symbol': assetName.isNotEmpty ? assetName : assetId,
+                        'instrument_id': assetId,
+                        'description': assetName.isNotEmpty ? assetName : assetId,
+                      });
                     }
                   }
                 }
@@ -1150,14 +1180,13 @@ class _ActivityPageState extends State<ActivityPage> {
             decoration: BoxDecoration(
               color: isDarkTheme ? const Color(0xFF2d2d2d) : Colors.grey[50],
               borderRadius: const BorderRadius.only(
-                topLeft: Radius.circular(8),
                 topRight: Radius.circular(8),
               ),
             ),
             child: Row(
               children: [
                 Text(
-                  'Orders',
+                  'Filters',
                   style: TextStyle(
                     fontSize: UIConstants.fontSizeMd,
                     fontWeight: UIConstants.fontWeightMedium,
@@ -1203,196 +1232,6 @@ class _ActivityPageState extends State<ActivityPage> {
               child: Column(
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
-                  // First row of filters
-                  Row(
-                    children: [
-                      // Side filter
-                      Expanded(
-                        child: Column(
-                          crossAxisAlignment: CrossAxisAlignment.start,
-                          children: [
-                            Text(
-                              'Side',
-                              style: TextStyle(
-                                fontSize: UIConstants.fontSizeSm,
-                                fontWeight: UIConstants.fontWeightNormal,
-                                color: isDarkTheme ? Colors.grey[300] : Colors.grey[700],
-                              ),
-                            ),
-                            const SizedBox(height: 4),
-                            Container(
-                              height: 48,
-                              padding: const EdgeInsets.symmetric(horizontal: 12),
-                              decoration: BoxDecoration(
-                                color: isDarkTheme ? const Color(0xFF3a3a3a) : Colors.white,
-                                borderRadius: BorderRadius.circular(UIConstants.textFieldBorderRadius),
-                                border: Border.all(
-                                  color: isDarkTheme ? Colors.grey[600]! : Colors.grey[300]!,
-                                ),
-                              ),
-                              child: DropdownButton<String?>(
-                                value: _selectedSide,
-                                isExpanded: true,
-                                underline: SizedBox.shrink(),
-                                dropdownColor: isDarkTheme ? const Color(0xFF2a2a2a) : Colors.white,
-                                iconEnabledColor: isDarkTheme ? Colors.grey[300] : Colors.grey[600],
-                                iconDisabledColor: isDarkTheme ? Colors.grey[600] : Colors.grey[400],
-                                items: [
-                                  DropdownMenuItem(value: null, child: Text('All', style: TextStyle(color: isDarkTheme ? Colors.white : Colors.black))),
-                                  DropdownMenuItem(value: '1', child: Text('Buy', style: TextStyle(color: Colors.green))),
-                                  DropdownMenuItem(value: '2', child: Text('Sell', style: TextStyle(color: Colors.red))),
-                                ],
-                                onChanged: (value) {
-                                  setState(() {
-                                    _selectedSide = value;
-                                  });
-                                },
-                              ),
-                            ),
-                          ],
-                        ),
-                      ),
-                      const SizedBox(width: UIConstants.spacingMd),
-                      // Page size filter
-                      Expanded(
-                        child: Column(
-                          crossAxisAlignment: CrossAxisAlignment.start,
-                          children: [
-                            Text(
-                              'Page Size',
-                              style: TextStyle(
-                                fontSize: UIConstants.fontSizeSm,
-                                fontWeight: UIConstants.fontWeightNormal,
-                                color: isDarkTheme ? Colors.grey[300] : Colors.grey[700],
-                              ),
-                            ),
-                            const SizedBox(height: 4),
-                            Container(
-                              height: 48,
-                              padding: const EdgeInsets.symmetric(horizontal: 12),
-                              decoration: BoxDecoration(
-                                color: isDarkTheme ? const Color(0xFF3a3a3a) : Colors.white,
-                                borderRadius: BorderRadius.circular(UIConstants.textFieldBorderRadius),
-                                border: Border.all(
-                                  color: isDarkTheme ? Colors.grey[600]! : Colors.grey[300]!,
-                                ),
-                              ),
-                              child: DropdownButton<int?>(
-                                value: _pageSize,
-                                isExpanded: true,
-                                underline: SizedBox.shrink(),
-                                dropdownColor: isDarkTheme ? const Color(0xFF2a2a2a) : Colors.white,
-                                iconEnabledColor: isDarkTheme ? Colors.grey[300] : Colors.grey[600],
-                                iconDisabledColor: isDarkTheme ? Colors.grey[600] : Colors.grey[400],
-                                items: [
-                                  DropdownMenuItem(
-                                    value: null,
-                                    child: Text('All', style: TextStyle(color: isDarkTheme ? Colors.white : Colors.black))
-                                  ),
-                                  ...[10, 25, 50, 100].map((size) =>
-                                    DropdownMenuItem(
-                                      value: size,
-                                      child: Text('$size', style: TextStyle(color: isDarkTheme ? Colors.white : Colors.black))
-                                    )
-                                  ).toList(),
-                                ],
-                                onChanged: (value) {
-                                  setState(() {
-                                    _pageSize = value;
-                                  });
-                                },
-                              ),
-                            ),
-                          ],
-                        ),
-                      ),
-                      const SizedBox(width: UIConstants.spacingMd),
-                      // Page number filter
-                      Expanded(
-                        child: Column(
-                          crossAxisAlignment: CrossAxisAlignment.start,
-                          children: [
-                            Text(
-                              'Page Number',
-                              style: TextStyle(
-                                fontSize: UIConstants.fontSizeSm,
-                                fontWeight: UIConstants.fontWeightNormal,
-                                color: isDarkTheme ? Colors.grey[300] : Colors.grey[700],
-                              ),
-                            ),
-                            const SizedBox(height: 4),
-                            Row(
-                              children: [
-                                Expanded(
-                                  child: Container(
-                                    height: 48,
-                                    padding: const EdgeInsets.symmetric(horizontal: 12),
-                                    decoration: BoxDecoration(
-                                      color: isDarkTheme ? const Color(0xFF3a3a3a) : Colors.white,
-                                      borderRadius: BorderRadius.circular(UIConstants.textFieldBorderRadius),
-                                      border: Border.all(
-                                        color: isDarkTheme ? Colors.grey[600]! : Colors.grey[300]!,
-                                      ),
-                                    ),
-                                    child: TextFormField(
-                                      controller: _pageNumberController,
-                                      keyboardType: TextInputType.number,
-                                      style: TextStyle(
-                                        color: isDarkTheme ? Colors.white : Colors.black,
-                                        fontSize: UIConstants.textFieldFontSize,
-                                      ),
-                                      decoration: const InputDecoration(
-                                        border: InputBorder.none,
-                                        isDense: true,
-                                        contentPadding: EdgeInsets.symmetric(vertical: 14),
-                                      ),
-                                      onChanged: (value) {
-                                        final pageNum = int.tryParse(value);
-                                        if (pageNum != null && pageNum > 0) {
-                                          setState(() {
-                                            _pageNumber = pageNum;
-                                          });
-                                        }
-                                      },
-                                    ),
-                                  ),
-                                ),
-                                const SizedBox(width: UIConstants.spacingSm),
-                                IconButton(
-                                  onPressed: _pageNumber > 1 ? () {
-                                    setState(() {
-                                      _pageNumber = _pageNumber - 1;
-                                      _pageNumberController.text = _pageNumber.toString();
-                                    });
-                                  } : null,
-                                  icon: Icon(
-                                    Icons.keyboard_arrow_left,
-                                    color: _pageNumber > 1 
-                                        ? (isDarkTheme ? Colors.white : Colors.black)
-                                        : Colors.grey,
-                                  ),
-                                  iconSize: 20,
-                                ),
-                                IconButton(
-                                  onPressed: () {
-                                    setState(() {
-                                      _pageNumber = _pageNumber + 1;
-                                      _pageNumberController.text = _pageNumber.toString();
-                                    });
-                                  },
-                                  icon: Icon(
-                                    Icons.keyboard_arrow_right,
-                                    color: isDarkTheme ? Colors.white : Colors.black,
-                                  ),
-                                  iconSize: 20,
-                                ),
-                              ],
-                            ),
-                          ],
-                        ),
-                      ),
-                    ],
-                  ),
                   const SizedBox(height: UIConstants.spacingMd),
                   // Market, Asset and Status filters row
                   Row(
@@ -1432,30 +1271,49 @@ class _ActivityPageState extends State<ActivityPage> {
                                   DropdownMenuItem(value: null, child: Text('All Markets', style: TextStyle(color: isDarkTheme ? Colors.white : Colors.black))),
                                   ..._availableMarkets.map<DropdownMenuItem<String?>>((market) {
                                     // Extract identifier string from nested structure
-                                    String marketId = '';
-                                    final identifiers = market['identifiers'] as List?;
-                                    if (identifiers != null && identifiers.isNotEmpty) {
-                                      final firstIdentifier = identifiers.first;
-                                      if (firstIdentifier is Map) {
-                                        marketId = firstIdentifier['value']?.toString() ?? firstIdentifier['id']?.toString() ?? '';
-                                      } else if (firstIdentifier is String) {
-                                        marketId = firstIdentifier;
+                                    // Try iid first as it seems to be the unique identifier in the API
+                                    String marketId = market['iid']?.toString() ?? '';
+                                    
+                                    // If no iid, try extracting from identifiers structure
+                                    if (marketId.isEmpty) {
+                                      final identifiers = market['identifiers'] as List?;
+                                      if (identifiers != null && identifiers.isNotEmpty) {
+                                        final firstIdentifier = identifiers.first;
+                                        if (firstIdentifier is Map) {
+                                          // Check if there's an 'ids' array with nested 'value'
+                                          final idsArray = firstIdentifier['ids'] as List?;
+                                          if (idsArray != null && idsArray.isNotEmpty) {
+                                            final firstId = idsArray.first;
+                                            if (firstId is Map) {
+                                              marketId = firstId['value']?.toString() ?? '';
+                                            } else if (firstId is String) {
+                                              marketId = firstId;
+                                            }
+                                          }
+                                          // Fallback to direct value/id fields
+                                          if (marketId.isEmpty) {
+                                            marketId = firstIdentifier['value']?.toString() ?? firstIdentifier['id']?.toString() ?? '';
+                                          }
+                                        } else if (firstIdentifier is String) {
+                                          marketId = firstIdentifier;
+                                        }
                                       }
                                     }
+                                    
+                                    // Final fallback
                                     if (marketId.isEmpty) {
                                       marketId = market['id']?.toString() ?? '';
                                     }
 
                                     // Extract name string from nested structure
                                     String marketName = 'Unknown';
-                                    final names = market['names'] as List?;
-                                    if (names != null && names.isNotEmpty) {
-                                      final firstName = names.first;
-                                      if (firstName is Map) {
-                                        marketName = firstName['value']?.toString() ?? firstName['name']?.toString() ?? 'Unknown';
-                                      } else if (firstName is String) {
-                                        marketName = firstName;
-                                      }
+                                    final displayNames = market['displayNames'] as Map?;
+                                    if (displayNames != null && displayNames.isNotEmpty) {
+                                      // displayNames is an object like {"en": "Cryptocurrency Market"}
+                                      // Try to get the 'en' key first, then try any key
+                                      final enName = displayNames['en']?.toString();
+                                      final anyName = displayNames.values.first?.toString();
+                                      marketName = enName ?? anyName ?? 'Unknown';
                                     }
                                     if (marketName == 'Unknown') {
                                       marketName = market['name']?.toString() ?? 'Unknown';
@@ -1545,6 +1403,53 @@ class _ActivityPageState extends State<ActivityPage> {
                         ),
                       ),
                       const SizedBox(width: UIConstants.spacingMd),
+                      // Side filter
+                      Expanded(
+                        child: Column(
+                          crossAxisAlignment: CrossAxisAlignment.start,
+                          children: [
+                            Text(
+                              'Side',
+                              style: TextStyle(
+                                fontSize: UIConstants.fontSizeSm,
+                                fontWeight: UIConstants.fontWeightNormal,
+                                color: isDarkTheme ? Colors.grey[300] : Colors.grey[700],
+                              ),
+                            ),
+                            const SizedBox(height: 4),
+                            Container(
+                              height: 48,
+                              padding: const EdgeInsets.symmetric(horizontal: 12),
+                              decoration: BoxDecoration(
+                                color: isDarkTheme ? const Color(0xFF3a3a3a) : Colors.white,
+                                borderRadius: BorderRadius.circular(UIConstants.textFieldBorderRadius),
+                                border: Border.all(
+                                  color: isDarkTheme ? Colors.grey[600]! : Colors.grey[300]!,
+                                ),
+                              ),
+                              child: DropdownButton<String?>(
+                                value: _selectedSide,
+                                isExpanded: true,
+                                underline: SizedBox.shrink(),
+                                dropdownColor: isDarkTheme ? const Color(0xFF2a2a2a) : Colors.white,
+                                iconEnabledColor: isDarkTheme ? Colors.grey[300] : Colors.grey[600],
+                                iconDisabledColor: isDarkTheme ? Colors.grey[600] : Colors.grey[400],
+                                items: [
+                                  DropdownMenuItem(value: null, child: Text('All', style: TextStyle(color: isDarkTheme ? Colors.white : Colors.black))),
+                                  DropdownMenuItem(value: '1', child: Text('Buy', style: TextStyle(color: Colors.green))),
+                                  DropdownMenuItem(value: '2', child: Text('Sell', style: TextStyle(color: Colors.red))),
+                                ],
+                                onChanged: (value) {
+                                  setState(() {
+                                    _selectedSide = value;
+                                  });
+                                },
+                              ),
+                            ),
+                          ],
+                        ),
+                      ),
+                      const SizedBox(width: UIConstants.spacingMd),
                       // Status filter
                       Expanded(
                         child: Column(
@@ -1605,7 +1510,7 @@ class _ActivityPageState extends State<ActivityPage> {
                           crossAxisAlignment: CrossAxisAlignment.start,
                           children: [
                             Text(
-                              'From Time',
+                              'From Date',
                               style: TextStyle(
                                 fontSize: UIConstants.fontSizeSm,
                                 fontWeight: UIConstants.fontWeightNormal,
@@ -1672,7 +1577,7 @@ class _ActivityPageState extends State<ActivityPage> {
                           crossAxisAlignment: CrossAxisAlignment.start,
                           children: [
                             Text(
-                              'To Time',
+                              'To Date',
                               style: TextStyle(
                                 fontSize: UIConstants.fontSizeSm,
                                 fontWeight: UIConstants.fontWeightNormal,
@@ -1948,6 +1853,33 @@ class _ActivityPageState extends State<ActivityPage> {
               ],
             ),
           ),
+          // Show More button for orders
+          if (_orders.isNotEmpty)
+            Padding(
+              padding: const EdgeInsets.all(16.0),
+              child: Center(
+                child: ElevatedButton.icon(
+                  onPressed: () async {
+                    if (_cachedAccountId != null && _cachedAccountId!.isNotEmpty) {
+                      setState(() {
+                        _pageSize = (_pageSize ?? 15) + 15;
+                      });
+                      await _fetchOrdersWithAccountId(_cachedAccountId!);
+                    }
+                  },
+                  icon: const Icon(Icons.add),
+                  label: const Text('Show More'),
+                  style: ElevatedButton.styleFrom(
+                    backgroundColor: isDarkTheme
+                        ? const Color(0xFF2d2d2d)
+                        : Colors.grey[100],
+                    foregroundColor: isDarkTheme
+                        ? Colors.white
+                        : Colors.black,
+                  ),
+                ),
+              ),
+            ),
         ],
       ),
     );
@@ -1969,14 +1901,13 @@ class _ActivityPageState extends State<ActivityPage> {
             decoration: BoxDecoration(
               color: isDarkTheme ? const Color(0xFF2d2d2d) : Colors.grey[50],
               borderRadius: const BorderRadius.only(
-                topLeft: Radius.circular(8),
                 topRight: Radius.circular(8),
               ),
             ),
             child: Row(
               children: [
                 Text(
-                  'Trades',
+                  'Filters',
                   style: TextStyle(
                     fontSize: UIConstants.fontSizeMd,
                     fontWeight: UIConstants.fontWeightMedium,
@@ -1995,7 +1926,7 @@ class _ActivityPageState extends State<ActivityPage> {
                     _showTradeFilters ? Icons.filter_alt : Icons.filter_alt_outlined,
                     color: isDarkTheme ? Colors.white : Colors.black,
                   ),
-                  tooltip: 'Toggle Trade Filters',
+                  tooltip: 'Toggle Filters',
                 ),
                 const Spacer(),
                 if (_isLoadingTrades)
@@ -2022,198 +1953,7 @@ class _ActivityPageState extends State<ActivityPage> {
               child: Column(
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
-                  // First row of filters
-                  Row(
-                    children: [
-                      // Side filter for trades
-                      Expanded(
-                        child: Column(
-                          crossAxisAlignment: CrossAxisAlignment.start,
-                          children: [
-                            Text(
-                              'Side',
-                              style: TextStyle(
-                                fontSize: UIConstants.fontSizeSm,
-                                fontWeight: UIConstants.fontWeightNormal,
-                                color: isDarkTheme ? Colors.grey[300] : Colors.grey[700],
-                              ),
-                            ),
-                            const SizedBox(height: 4),
-                            Container(
-                              height: 48,
-                              padding: const EdgeInsets.symmetric(horizontal: 12),
-                              decoration: BoxDecoration(
-                                color: isDarkTheme ? const Color(0xFF3a3a3a) : Colors.white,
-                                borderRadius: BorderRadius.circular(UIConstants.textFieldBorderRadius),
-                                border: Border.all(
-                                  color: isDarkTheme ? Colors.grey[600]! : Colors.grey[300]!,
-                                ),
-                              ),
-                              child: DropdownButton<String?>(
-                                value: _selectedTradeSide,
-                                isExpanded: true,
-                                underline: SizedBox.shrink(),
-                                dropdownColor: isDarkTheme ? const Color(0xFF2a2a2a) : Colors.white,
-                                iconEnabledColor: isDarkTheme ? Colors.grey[300] : Colors.grey[600],
-                                iconDisabledColor: isDarkTheme ? Colors.grey[600] : Colors.grey[400],
-                                items: [
-                                  DropdownMenuItem(value: null, child: Text('All', style: TextStyle(color: isDarkTheme ? Colors.white : Colors.black))),
-                                  DropdownMenuItem(value: '1', child: Text('Buy', style: TextStyle(color: Colors.green))),
-                                  DropdownMenuItem(value: '2', child: Text('Sell', style: TextStyle(color: Colors.red))),
-                                ],
-                                onChanged: (value) {
-                                  setState(() {
-                                    _selectedTradeSide = value;
-                                  });
-                                },
-                              ),
-                            ),
-                          ],
-                        ),
-                      ),
-                      const SizedBox(width: UIConstants.spacingMd),
-                      // Page size filter for trades
-                      Expanded(
-                        child: Column(
-                          crossAxisAlignment: CrossAxisAlignment.start,
-                          children: [
-                            Text(
-                              'Page Size',
-                              style: TextStyle(
-                                fontSize: UIConstants.fontSizeSm,
-                                fontWeight: UIConstants.fontWeightNormal,
-                                color: isDarkTheme ? Colors.grey[300] : Colors.grey[700],
-                              ),
-                            ),
-                            const SizedBox(height: 4),
-                            Container(
-                              height: 48,
-                              padding: const EdgeInsets.symmetric(horizontal: 12),
-                              decoration: BoxDecoration(
-                                color: isDarkTheme ? const Color(0xFF3a3a3a) : Colors.white,
-                                borderRadius: BorderRadius.circular(UIConstants.textFieldBorderRadius),
-                                border: Border.all(
-                                  color: isDarkTheme ? Colors.grey[600]! : Colors.grey[300]!,
-                                ),
-                              ),
-                              child: DropdownButton<int?>(
-                                value: _tradePageSize,
-                                isExpanded: true,
-                                underline: SizedBox.shrink(),
-                                dropdownColor: isDarkTheme ? const Color(0xFF2a2a2a) : Colors.white,
-                                iconEnabledColor: isDarkTheme ? Colors.grey[300] : Colors.grey[600],
-                                iconDisabledColor: isDarkTheme ? Colors.grey[600] : Colors.grey[400],
-                                items: [
-                                  DropdownMenuItem(
-                                    value: null,
-                                    child: Text('All', style: TextStyle(color: isDarkTheme ? Colors.white : Colors.black))
-                                  ),
-                                  ...[10, 25, 50, 100].map((size) =>
-                                    DropdownMenuItem(
-                                      value: size,
-                                      child: Text('$size', style: TextStyle(color: isDarkTheme ? Colors.white : Colors.black))
-                                    )
-                                  ).toList(),
-                                ],
-                                onChanged: (value) {
-                                  setState(() {
-                                    _tradePageSize = value;
-                                  });
-                                },
-                              ),
-                            ),
-                          ],
-                        ),
-                      ),
-                      const SizedBox(width: UIConstants.spacingMd),
-                      // Page number filter
-                      Expanded(
-                        child: Column(
-                          crossAxisAlignment: CrossAxisAlignment.start,
-                          children: [
-                            Text(
-                              'Page Number',
-                              style: TextStyle(
-                                fontSize: UIConstants.fontSizeSm,
-                                fontWeight: UIConstants.fontWeightNormal,
-                                color: isDarkTheme ? Colors.grey[300] : Colors.grey[700],
-                              ),
-                            ),
-                            const SizedBox(height: 4),
-                            Row(
-                              children: [
-                                Expanded(
-                                  child: Container(
-                                    height: 48,
-                                    padding: const EdgeInsets.symmetric(horizontal: 12),
-                                    decoration: BoxDecoration(
-                                      color: isDarkTheme ? const Color(0xFF3a3a3a) : Colors.white,
-                                      borderRadius: BorderRadius.circular(UIConstants.textFieldBorderRadius),
-                                      border: Border.all(
-                                        color: isDarkTheme ? Colors.grey[600]! : Colors.grey[300]!,
-                                      ),
-                                    ),
-                                    child: TextFormField(
-                                      controller: _tradePageNumberController,
-                                      keyboardType: TextInputType.number,
-                                      style: TextStyle(
-                                        color: isDarkTheme ? Colors.white : Colors.black,
-                                        fontSize: UIConstants.textFieldFontSize,
-                                      ),
-                                      decoration: const InputDecoration(
-                                        border: InputBorder.none,
-                                        isDense: true,
-                                        contentPadding: EdgeInsets.symmetric(vertical: 14),
-                                      ),
-                                      onChanged: (value) {
-                                        final pageNum = int.tryParse(value);
-                                        if (pageNum != null && pageNum > 0) {
-                                          setState(() {
-                                            _tradePageNumber = pageNum;
-                                          });
-                                        }
-                                      },
-                                    ),
-                                  ),
-                                ),
-                                const SizedBox(width: UIConstants.spacingSm),
-                                IconButton(
-                                  onPressed: _tradePageNumber > 1 ? () {
-                                    setState(() {
-                                      _tradePageNumber = _tradePageNumber - 1;
-                                      _tradePageNumberController.text = _tradePageNumber.toString();
-                                    });
-                                  } : null,
-                                  icon: Icon(
-                                    Icons.keyboard_arrow_left,
-                                    color: _tradePageNumber > 1 
-                                        ? (isDarkTheme ? Colors.white : Colors.black)
-                                        : Colors.grey,
-                                  ),
-                                  iconSize: 20,
-                                ),
-                                IconButton(
-                                  onPressed: () {
-                                    setState(() {
-                                      _tradePageNumber = _tradePageNumber + 1;
-                                      _tradePageNumberController.text = _tradePageNumber.toString();
-                                    });
-                                  },
-                                  icon: Icon(
-                                    Icons.keyboard_arrow_right,
-                                    color: isDarkTheme ? Colors.white : Colors.black,
-                                  ),
-                                  iconSize: 20,
-                                ),
-                              ],
-                            ),
-                          ],
-                        ),
-                      ),
-                    ],
-                  ),
-                  const SizedBox(height: UIConstants.spacingMd),
-                  // Market and Asset filters row for trades
+                  // Market and Asset and Side filters row for trades
                   Row(
                     children: [
                       // Market filter for trades
@@ -2251,30 +1991,49 @@ class _ActivityPageState extends State<ActivityPage> {
                                   DropdownMenuItem(value: null, child: Text('All Markets', style: TextStyle(color: isDarkTheme ? Colors.white : Colors.black))),
                                   ..._availableMarkets.map<DropdownMenuItem<String?>>((market) {
                                     // Extract identifier string from nested structure
-                                    String marketId = '';
-                                    final identifiers = market['identifiers'] as List?;
-                                    if (identifiers != null && identifiers.isNotEmpty) {
-                                      final firstIdentifier = identifiers.first;
-                                      if (firstIdentifier is Map) {
-                                        marketId = firstIdentifier['value']?.toString() ?? firstIdentifier['id']?.toString() ?? '';
-                                      } else if (firstIdentifier is String) {
-                                        marketId = firstIdentifier;
+                                    // Try iid first as it seems to be the unique identifier in the API
+                                    String marketId = market['iid']?.toString() ?? '';
+                                    
+                                    // If no iid, try extracting from identifiers structure
+                                    if (marketId.isEmpty) {
+                                      final identifiers = market['identifiers'] as List?;
+                                      if (identifiers != null && identifiers.isNotEmpty) {
+                                        final firstIdentifier = identifiers.first;
+                                        if (firstIdentifier is Map) {
+                                          // Check if there's an 'ids' array with nested 'value'
+                                          final idsArray = firstIdentifier['ids'] as List?;
+                                          if (idsArray != null && idsArray.isNotEmpty) {
+                                            final firstId = idsArray.first;
+                                            if (firstId is Map) {
+                                              marketId = firstId['value']?.toString() ?? '';
+                                            } else if (firstId is String) {
+                                              marketId = firstId;
+                                            }
+                                          }
+                                          // Fallback to direct value/id fields
+                                          if (marketId.isEmpty) {
+                                            marketId = firstIdentifier['value']?.toString() ?? firstIdentifier['id']?.toString() ?? '';
+                                          }
+                                        } else if (firstIdentifier is String) {
+                                          marketId = firstIdentifier;
+                                        }
                                       }
                                     }
+                                    
+                                    // Final fallback
                                     if (marketId.isEmpty) {
                                       marketId = market['id']?.toString() ?? '';
                                     }
 
                                     // Extract name string from nested structure
                                     String marketName = 'Unknown';
-                                    final names = market['names'] as List?;
-                                    if (names != null && names.isNotEmpty) {
-                                      final firstName = names.first;
-                                      if (firstName is Map) {
-                                        marketName = firstName['value']?.toString() ?? firstName['name']?.toString() ?? 'Unknown';
-                                      } else if (firstName is String) {
-                                        marketName = firstName;
-                                      }
+                                    final displayNames = market['displayNames'] as Map?;
+                                    if (displayNames != null && displayNames.isNotEmpty) {
+                                      // displayNames is an object like {"en": "Cryptocurrency Market"}
+                                      // Try to get the 'en' key first, then try any key
+                                      final enName = displayNames['en']?.toString();
+                                      final anyName = displayNames.values.first?.toString();
+                                      marketName = enName ?? anyName ?? 'Unknown';
                                     }
                                     if (marketName == 'Unknown') {
                                       marketName = market['name']?.toString() ?? 'Unknown';
@@ -2364,8 +2123,53 @@ class _ActivityPageState extends State<ActivityPage> {
                         ),
                       ),
                       const SizedBox(width: UIConstants.spacingMd),
-                      // Empty space to balance the row
-                      Expanded(child: Container()),
+                      // Side filter for trades
+                      Expanded(
+                        child: Column(
+                          crossAxisAlignment: CrossAxisAlignment.start,
+                          children: [
+                            Text(
+                              'Side',
+                              style: TextStyle(
+                                fontSize: UIConstants.fontSizeSm,
+                                fontWeight: UIConstants.fontWeightNormal,
+                                color: isDarkTheme ? Colors.grey[300] : Colors.grey[700],
+                              ),
+                            ),
+                            const SizedBox(height: 4),
+                            Container(
+                              height: 48,
+                              padding: const EdgeInsets.symmetric(horizontal: 12),
+                              decoration: BoxDecoration(
+                                color: isDarkTheme ? const Color(0xFF3a3a3a) : Colors.white,
+                                borderRadius: BorderRadius.circular(UIConstants.textFieldBorderRadius),
+                                border: Border.all(
+                                  color: isDarkTheme ? Colors.grey[600]! : Colors.grey[300]!,
+                                ),
+                              ),
+                              child: DropdownButton<String?>(
+                                value: _selectedTradeSide,
+                                isExpanded: true,
+                                underline: SizedBox.shrink(),
+                                dropdownColor: isDarkTheme ? const Color(0xFF2a2a2a) : Colors.white,
+                                iconEnabledColor: isDarkTheme ? Colors.grey[300] : Colors.grey[600],
+                                iconDisabledColor: isDarkTheme ? Colors.grey[600] : Colors.grey[400],
+                                items: [
+                                  DropdownMenuItem(value: null, child: Text('All', style: TextStyle(color: isDarkTheme ? Colors.white : Colors.black))),
+                                  DropdownMenuItem(value: '1', child: Text('Buy', style: TextStyle(color: Colors.green))),
+                                  DropdownMenuItem(value: '2', child: Text('Sell', style: TextStyle(color: Colors.red))),
+                                ],
+                                onChanged: (value) {
+                                  setState(() {
+                                    _selectedTradeSide = value;
+                                  });
+                                },
+                              ),
+                            ),
+                          ],
+                        ),
+                      ),
+                      const SizedBox(width: UIConstants.spacingMd),
                     ],
                   ),
                   const SizedBox(height: UIConstants.spacingMd),
@@ -2378,7 +2182,7 @@ class _ActivityPageState extends State<ActivityPage> {
                           crossAxisAlignment: CrossAxisAlignment.start,
                           children: [
                             Text(
-                              'From Time',
+                              'From Date',
                               style: TextStyle(
                                 fontSize: UIConstants.fontSizeSm,
                                 fontWeight: UIConstants.fontWeightNormal,
@@ -2445,7 +2249,7 @@ class _ActivityPageState extends State<ActivityPage> {
                           crossAxisAlignment: CrossAxisAlignment.start,
                           children: [
                             Text(
-                              'To Time',
+                              'To Date',
                               style: TextStyle(
                                 fontSize: UIConstants.fontSizeSm,
                                 fontWeight: UIConstants.fontWeightNormal,
@@ -2647,6 +2451,33 @@ class _ActivityPageState extends State<ActivityPage> {
               ],
             ),
           ),
+          // Show More button for trades
+          if (_trades.isNotEmpty)
+            Padding(
+              padding: const EdgeInsets.all(16.0),
+              child: Center(
+                child: ElevatedButton.icon(
+                  onPressed: () async {
+                    if (_cachedAccountId != null && _cachedAccountId!.isNotEmpty) {
+                      setState(() {
+                        _tradePageSize = (_tradePageSize ?? 15) + 15;
+                      });
+                      await _fetchTradesWithAccountId(_cachedAccountId!);
+                    }
+                  },
+                  icon: const Icon(Icons.add),
+                  label: const Text('Show More'),
+                  style: ElevatedButton.styleFrom(
+                    backgroundColor: isDarkTheme 
+                        ? const Color(0xFF2d2d2d) 
+                        : Colors.grey[100],
+                    foregroundColor: isDarkTheme 
+                        ? Colors.white 
+                        : Colors.black,
+                  ),
+                ),
+              ),
+            ),
         ],
       ),
     );
@@ -2795,14 +2626,13 @@ class _ActivityPageState extends State<ActivityPage> {
             decoration: BoxDecoration(
               color: isDarkTheme ? const Color(0xFF2d2d2d) : Colors.grey[50],
               borderRadius: const BorderRadius.only(
-                topLeft: Radius.circular(8),
                 topRight: Radius.circular(8),
               ),
             ),
             child: Row(
               children: [
                 Text(
-                  'Settlements',
+                  'Filters',
                   style: TextStyle(
                     fontSize: UIConstants.fontSizeMd,
                     fontWeight: UIConstants.fontWeightMedium,
@@ -2856,103 +2686,6 @@ class _ActivityPageState extends State<ActivityPage> {
                   // First row: Status, Market, Asset
                   Row(
                     children: [
-                      // Status filter
-                      Expanded(
-                        child: Column(
-                          crossAxisAlignment: CrossAxisAlignment.start,
-                          children: [
-                            Text(
-                              'Status',
-                              style: TextStyle(
-                                fontSize: UIConstants.fontSizeSm,
-                                fontWeight: UIConstants.fontWeightNormal,
-                                color: isDarkTheme ? Colors.grey[300] : Colors.grey[700],
-                              ),
-                            ),
-                            const SizedBox(height: 4),
-                            Container(
-                              padding: const EdgeInsets.symmetric(horizontal: 12),
-                              decoration: BoxDecoration(
-                                color: isDarkTheme ? const Color(0xFF3a3a3a) : Colors.white,
-                                borderRadius: BorderRadius.circular(UIConstants.textFieldBorderRadius),
-                                border: Border.all(
-                                  color: isDarkTheme ? Colors.grey[600]! : Colors.grey[300]!,
-                                ),
-                              ),
-                              child: DropdownButton<String>(
-                                value: _selectedSettlementStatus,
-                                isExpanded: true,
-                                underline: SizedBox.shrink(),
-                                dropdownColor: isDarkTheme ? const Color(0xFF2a2a2a) : Colors.white,
-                                iconEnabledColor: isDarkTheme ? Colors.grey[300] : Colors.grey[600],
-                                iconDisabledColor: isDarkTheme ? Colors.grey[600] : Colors.grey[400],
-                                items: [
-                                  DropdownMenuItem(value: null, child: Text('All Status', style: TextStyle(color: isDarkTheme ? Colors.white : Colors.black))),
-                                  DropdownMenuItem(value: 'CONFIRMATION_STATUS__CONFIRMED', child: Text('Confirmed', style: TextStyle(color: isDarkTheme ? Colors.white : Colors.black))),
-                                  DropdownMenuItem(value: 'CONFIRMATION_STATUS__PENDING', child: Text('Pending', style: TextStyle(color: isDarkTheme ? Colors.white : Colors.black))),
-                                  DropdownMenuItem(value: 'CONFIRMATION_STATUS__DECLINED', child: Text('Declined', style: TextStyle(color: isDarkTheme ? Colors.white : Colors.black))),
-                                ],
-                                onChanged: (value) {
-                                  setState(() {
-                                    _selectedSettlementStatus = value;
-                                  });
-                                },
-                              ),
-                            ),
-                          ],
-                        ),
-                      ),
-                      const SizedBox(width: UIConstants.spacingSm),
-                      // Transaction Type filter
-                      Expanded(
-                        child: Column(
-                          crossAxisAlignment: CrossAxisAlignment.start,
-                          children: [
-                            Text(
-                              'Transaction Type',
-                              style: TextStyle(
-                                fontSize: UIConstants.fontSizeSm,
-                                fontWeight: UIConstants.fontWeightNormal,
-                                color: isDarkTheme ? Colors.grey[300] : Colors.grey[700],
-                              ),
-                            ),
-                            const SizedBox(height: 4),
-                            Container(
-                              padding: const EdgeInsets.symmetric(horizontal: 12),
-                              decoration: BoxDecoration(
-                                color: isDarkTheme ? const Color(0xFF3a3a3a) : Colors.white,
-                                borderRadius: BorderRadius.circular(UIConstants.textFieldBorderRadius),
-                                border: Border.all(
-                                  color: isDarkTheme ? Colors.grey[600]! : Colors.grey[300]!,
-                                ),
-                              ),
-                              child: DropdownButton<String>(
-                                value: _selectedSettlementTransactionType,
-                                isExpanded: true,
-                                underline: SizedBox.shrink(),
-                                dropdownColor: isDarkTheme ? const Color(0xFF2a2a2a) : Colors.white,
-                                iconEnabledColor: isDarkTheme ? Colors.grey[300] : Colors.grey[600],
-                                iconDisabledColor: isDarkTheme ? Colors.grey[600] : Colors.grey[400],
-                                items: [
-                                  DropdownMenuItem(value: null, child: Text('All Types', style: TextStyle(color: isDarkTheme ? Colors.white : Colors.black))),
-                                  DropdownMenuItem(value: 'TRANSACTION_TYPE__TRADE_BUY', child: Text('Trade Buy', style: TextStyle(color: isDarkTheme ? Colors.white : Colors.black))),
-                                  DropdownMenuItem(value: 'TRANSACTION_TYPE__TRADE_SELL', child: Text('Trade Sell', style: TextStyle(color: isDarkTheme ? Colors.white : Colors.black))),
-                                  DropdownMenuItem(value: 'TRANSACTION_TYPE__DEPOSIT_CASH', child: Text('Deposit Cash', style: TextStyle(color: isDarkTheme ? Colors.white : Colors.black))),
-                                  DropdownMenuItem(value: 'TRANSACTION_TYPE__SETTLEMENT', child: Text('Settlement', style: TextStyle(color: isDarkTheme ? Colors.white : Colors.black))),
-                                  DropdownMenuItem(value: 'TRANSACTION_TYPE__FEE', child: Text('Fee', style: TextStyle(color: isDarkTheme ? Colors.white : Colors.black))),
-                                  DropdownMenuItem(value: 'TRANSACTION_TYPE__TRANSFER_IN', child: Text('Transfer In', style: TextStyle(color: isDarkTheme ? Colors.white : Colors.black))),
-                                ],
-                                onChanged: (value) {
-                                  setState(() {
-                                    _selectedSettlementTransactionType = value;
-                                  });
-                                },
-                              ),
-                            ),
-                          ],
-                        ),
-                      ),
-                      const SizedBox(width: UIConstants.spacingSm),
                       // Market filter
                       Expanded(
                         child: Column(
@@ -2985,13 +2718,47 @@ class _ActivityPageState extends State<ActivityPage> {
                                 iconDisabledColor: isDarkTheme ? Colors.grey[600] : Colors.grey[400],
                                 items: [
                                   DropdownMenuItem(value: null, child: Text('All Markets', style: TextStyle(color: isDarkTheme ? Colors.white : Colors.black))),
-                                  ..._availableMarkets.map((market) => DropdownMenuItem(
-                                    value: market['id']?.toString() ?? market['name']?.toString() ?? '',
-                                    child: Text(
-                                      market['name']?.toString() ?? market['id']?.toString() ?? 'Unknown Market',
-                                      style: TextStyle(color: isDarkTheme ? Colors.white : Colors.black),
-                                    ),
-                                  )),
+                                  ..._availableMarkets.map((market) {
+                                    // Extract identifier - try iid first
+                                    String marketId = market['iid']?.toString() ?? '';
+                                    if (marketId.isEmpty) {
+                                      final identifiers = market['identifiers'] as List?;
+                                      if (identifiers != null && identifiers.isNotEmpty) {
+                                        final firstIdentifier = identifiers.first;
+                                        if (firstIdentifier is Map) {
+                                          final idsArray = firstIdentifier['ids'] as List?;
+                                          if (idsArray != null && idsArray.isNotEmpty) {
+                                            final firstId = idsArray.first;
+                                            if (firstId is Map) {
+                                              marketId = firstId['value']?.toString() ?? '';
+                                            }
+                                          }
+                                        }
+                                      }
+                                    }
+                                    if (marketId.isEmpty) {
+                                      marketId = market['id']?.toString() ?? '';
+                                    }
+                                    
+                                    // Extract name from displayNames
+                                    String marketName = 'Unknown';
+                                    final displayNames = market['displayNames'] as Map?;
+                                    if (displayNames != null && displayNames.isNotEmpty) {
+                                      marketName = displayNames['en']?.toString() ?? 
+                                                   displayNames.values.first?.toString() ?? 'Unknown';
+                                    }
+                                    if (marketName == 'Unknown') {
+                                      marketName = market['name']?.toString() ?? 'Unknown Market';
+                                    }
+                                    
+                                    return DropdownMenuItem(
+                                      value: marketId,
+                                      child: Text(
+                                        marketName,
+                                        style: TextStyle(color: isDarkTheme ? Colors.white : Colors.black),
+                                      ),
+                                    );
+                                  }).toList(),
                                 ],
                                 onChanged: (value) {
                                   setState(() {
@@ -3057,6 +2824,103 @@ class _ActivityPageState extends State<ActivityPage> {
                                 onChanged: (value) {
                                   setState(() {
                                     _tempSelectedSettlementsAsset = value;
+                                  });
+                                },
+                              ),
+                            ),
+                          ],
+                        ),
+                      ),
+                      const SizedBox(width: UIConstants.spacingSm),
+                      // Status filter
+                      Expanded(
+                        child: Column(
+                          crossAxisAlignment: CrossAxisAlignment.start,
+                          children: [
+                            Text(
+                              'Status',
+                              style: TextStyle(
+                                fontSize: UIConstants.fontSizeSm,
+                                fontWeight: UIConstants.fontWeightNormal,
+                                color: isDarkTheme ? Colors.grey[300] : Colors.grey[700],
+                              ),
+                            ),
+                            const SizedBox(height: 4),
+                            Container(
+                              padding: const EdgeInsets.symmetric(horizontal: 12),
+                              decoration: BoxDecoration(
+                                color: isDarkTheme ? const Color(0xFF3a3a3a) : Colors.white,
+                                borderRadius: BorderRadius.circular(UIConstants.textFieldBorderRadius),
+                                border: Border.all(
+                                  color: isDarkTheme ? Colors.grey[600]! : Colors.grey[300]!,
+                                ),
+                              ),
+                              child: DropdownButton<String>(
+                                value: _selectedSettlementStatus,
+                                isExpanded: true,
+                                underline: SizedBox.shrink(),
+                                dropdownColor: isDarkTheme ? const Color(0xFF2a2a2a) : Colors.white,
+                                iconEnabledColor: isDarkTheme ? Colors.grey[300] : Colors.grey[600],
+                                iconDisabledColor: isDarkTheme ? Colors.grey[600] : Colors.grey[400],
+                                items: [
+                                  DropdownMenuItem(value: null, child: Text('All Status', style: TextStyle(color: isDarkTheme ? Colors.white : Colors.black))),
+                                  DropdownMenuItem(value: 'CONFIRMATION_STATUS__CONFIRMED', child: Text('Confirmed', style: TextStyle(color: isDarkTheme ? Colors.white : Colors.black))),
+                                  DropdownMenuItem(value: 'CONFIRMATION_STATUS__PENDING', child: Text('Pending', style: TextStyle(color: isDarkTheme ? Colors.white : Colors.black))),
+                                  DropdownMenuItem(value: 'CONFIRMATION_STATUS__DECLINED', child: Text('Declined', style: TextStyle(color: isDarkTheme ? Colors.white : Colors.black))),
+                                ],
+                                onChanged: (value) {
+                                  setState(() {
+                                    _selectedSettlementStatus = value;
+                                  });
+                                },
+                              ),
+                            ),
+                          ],
+                        ),
+                      ),
+                      const SizedBox(width: UIConstants.spacingSm),
+                      // Transaction Type filter
+                      Expanded(
+                        child: Column(
+                          crossAxisAlignment: CrossAxisAlignment.start,
+                          children: [
+                            Text(
+                              'Type',
+                              style: TextStyle(
+                                fontSize: UIConstants.fontSizeSm,
+                                fontWeight: UIConstants.fontWeightNormal,
+                                color: isDarkTheme ? Colors.grey[300] : Colors.grey[700],
+                              ),
+                            ),
+                            const SizedBox(height: 4),
+                            Container(
+                              padding: const EdgeInsets.symmetric(horizontal: 12),
+                              decoration: BoxDecoration(
+                                color: isDarkTheme ? const Color(0xFF3a3a3a) : Colors.white,
+                                borderRadius: BorderRadius.circular(UIConstants.textFieldBorderRadius),
+                                border: Border.all(
+                                  color: isDarkTheme ? Colors.grey[600]! : Colors.grey[300]!,
+                                ),
+                              ),
+                              child: DropdownButton<String>(
+                                value: _selectedSettlementTransactionType,
+                                isExpanded: true,
+                                underline: SizedBox.shrink(),
+                                dropdownColor: isDarkTheme ? const Color(0xFF2a2a2a) : Colors.white,
+                                iconEnabledColor: isDarkTheme ? Colors.grey[300] : Colors.grey[600],
+                                iconDisabledColor: isDarkTheme ? Colors.grey[600] : Colors.grey[400],
+                                items: [
+                                  DropdownMenuItem(value: null, child: Text('All Types', style: TextStyle(color: isDarkTheme ? Colors.white : Colors.black))),
+                                  DropdownMenuItem(value: 'TRANSACTION_TYPE__TRADE_BUY', child: Text('Trade Buy', style: TextStyle(color: isDarkTheme ? Colors.white : Colors.black))),
+                                  DropdownMenuItem(value: 'TRANSACTION_TYPE__TRADE_SELL', child: Text('Trade Sell', style: TextStyle(color: isDarkTheme ? Colors.white : Colors.black))),
+                                  DropdownMenuItem(value: 'TRANSACTION_TYPE__DEPOSIT_CASH', child: Text('Deposit Cash', style: TextStyle(color: isDarkTheme ? Colors.white : Colors.black))),
+                                  DropdownMenuItem(value: 'TRANSACTION_TYPE__SETTLEMENT', child: Text('Settlement', style: TextStyle(color: isDarkTheme ? Colors.white : Colors.black))),
+                                  DropdownMenuItem(value: 'TRANSACTION_TYPE__FEE', child: Text('Fee', style: TextStyle(color: isDarkTheme ? Colors.white : Colors.black))),
+                                  DropdownMenuItem(value: 'TRANSACTION_TYPE__TRANSFER_IN', child: Text('Transfer In', style: TextStyle(color: isDarkTheme ? Colors.white : Colors.black))),
+                                ],
+                                onChanged: (value) {
+                                  setState(() {
+                                    _selectedSettlementTransactionType = value;
                                   });
                                 },
                               ),
@@ -3178,51 +3042,6 @@ class _ActivityPageState extends State<ActivityPage> {
                                     ),
                                   ],
                                 ),
-                              ),
-                            ),
-                          ],
-                        ),
-                      ),
-                      const SizedBox(width: UIConstants.spacingSm),
-                      // Page Size
-                      Expanded(
-                        child: Column(
-                          crossAxisAlignment: CrossAxisAlignment.start,
-                          children: [
-                            Text(
-                              'Page Size',
-                              style: TextStyle(
-                                fontSize: UIConstants.fontSizeSm,
-                                fontWeight: UIConstants.fontWeightNormal,
-                                color: isDarkTheme ? Colors.grey[300] : Colors.grey[700],
-                              ),
-                            ),
-                            const SizedBox(height: 4),
-                            Container(
-                              padding: const EdgeInsets.symmetric(horizontal: 12),
-                              decoration: BoxDecoration(
-                                color: isDarkTheme ? const Color(0xFF3a3a3a) : Colors.white,
-                                borderRadius: BorderRadius.circular(UIConstants.textFieldBorderRadius),
-                                border: Border.all(
-                                  color: isDarkTheme ? Colors.grey[600]! : Colors.grey[300]!,
-                                ),
-                              ),
-                              child: DropdownButton<int>(
-                                value: _settlementPageSize,
-                                isExpanded: true,
-                                underline: SizedBox.shrink(),
-                                dropdownColor: isDarkTheme ? const Color(0xFF2a2a2a) : Colors.white,
-                                iconEnabledColor: isDarkTheme ? Colors.grey[300] : Colors.grey[600],
-                                iconDisabledColor: isDarkTheme ? Colors.grey[600] : Colors.grey[400],
-                                items: [10, 25, 50, 100].map((size) => DropdownMenuItem(
-                                  value: size,
-                                  child: Text('$size', style: TextStyle(color: isDarkTheme ? Colors.white : Colors.black)),
-                                )).toList(),
-                                onChanged: (value) {
-                                  setState(() {
-                                    _settlementPageSize = value;
-                                  });
-                                },
                               ),
                             ),
                           ],
@@ -3475,14 +3294,13 @@ class _ActivityPageState extends State<ActivityPage> {
             decoration: BoxDecoration(
               color: isDarkTheme ? const Color(0xFF2d2d2d) : Colors.grey[50],
               borderRadius: const BorderRadius.only(
-                topLeft: Radius.circular(8),
                 topRight: Radius.circular(8),
               ),
             ),
             child: Row(
               children: [
                 Text(
-                  'Transactions',
+                  'Filters',
                   style: TextStyle(
                     fontSize: UIConstants.fontSizeMd,
                     fontWeight: UIConstants.fontWeightMedium,
@@ -3552,7 +3370,7 @@ class _ActivityPageState extends State<ActivityPage> {
                             ),
                             const SizedBox(height: 4),
                             Container(
-                              padding: UIConstants.paddingMinimal,
+                              padding: UIConstants.paddingStandard,
                               decoration: BoxDecoration(
                                 color: isDarkTheme ? const Color(0xFF3a3a3a) : Colors.white,
                                 borderRadius: BorderRadius.circular(UIConstants.textFieldBorderRadius),
@@ -3757,51 +3575,6 @@ class _ActivityPageState extends State<ActivityPage> {
                                     ),
                                   ],
                                 ),
-                              ),
-                            ),
-                          ],
-                        ),
-                      ),
-                      const SizedBox(width: UIConstants.spacingSm),
-                      // Page Size
-                      Expanded(
-                        child: Column(
-                          crossAxisAlignment: CrossAxisAlignment.start,
-                          children: [
-                            Text(
-                              'Page Size',
-                              style: TextStyle(
-                                fontSize: UIConstants.fontSizeSm,
-                                fontWeight: UIConstants.fontWeightNormal,
-                                color: isDarkTheme ? Colors.grey[300] : Colors.grey[700],
-                              ),
-                            ),
-                            const SizedBox(height: 4),
-                            Container(
-                              padding: const EdgeInsets.symmetric(horizontal: 12),
-                              decoration: BoxDecoration(
-                                color: isDarkTheme ? const Color(0xFF3a3a3a) : Colors.white,
-                                borderRadius: BorderRadius.circular(UIConstants.textFieldBorderRadius),
-                                border: Border.all(
-                                  color: isDarkTheme ? Colors.grey[600]! : Colors.grey[300]!,
-                                ),
-                              ),
-                              child: DropdownButton<int>(
-                                value: _transactionPageSize,
-                                isExpanded: true,
-                                underline: SizedBox.shrink(),
-                                dropdownColor: isDarkTheme ? const Color(0xFF2a2a2a) : Colors.white,
-                                iconEnabledColor: isDarkTheme ? Colors.grey[300] : Colors.grey[600],
-                                iconDisabledColor: isDarkTheme ? Colors.grey[600] : Colors.grey[400],
-                                items: [10, 25, 50, 100].map((size) => DropdownMenuItem(
-                                  value: size,
-                                  child: Text('$size', style: TextStyle(color: isDarkTheme ? Colors.white : Colors.black)),
-                                )).toList(),
-                                onChanged: (value) {
-                                  setState(() {
-                                    _transactionPageSize = value;
-                                  });
-                                },
                               ),
                             ),
                           ],

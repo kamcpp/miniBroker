@@ -392,41 +392,50 @@ class _CashManagementPageState extends State<CashManagementPage> {
     return BasePage(
       menuItems: MenuItemsHelper.buildMenuItems(context, 'cash'),
       content: Padding(
-        padding: UIConstants.paddingStandard,
+        padding: UIConstants.paddingComfortable,
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
             // Cash Management Section
             Expanded(
-                      child: Container(
-                        padding: UIConstants.paddingStandard,
-                        decoration: BoxDecoration(
-                          color: isDarkTheme ? const Color(0xFF2A2A2A) : Colors.white,
-                          borderRadius: BorderRadius.circular(UIConstants.borderRadiusMd),
-                          boxShadow: [
-                            BoxShadow(
-                              color: Colors.black.withOpacity(0.1),
-                              blurRadius: 8,
-                              offset: const Offset(0, 2),
-                            ),
-                          ],
-                        ),
-                        child: Column(
-                          crossAxisAlignment: CrossAxisAlignment.start,
-                          children: [
-                            Text(
-                              'Cash Management',
-                              style: TextStyle(
-                                fontSize: UIConstants.fontSizeMd,
-                                fontWeight: UIConstants.fontWeightMedium,
-                                color: isDarkTheme ? Colors.white : Colors.black,
-                              ),
-                            ),
-                            const SizedBox(height: UIConstants.spacingMd),
-                            _buildBalanceContent(themeService, isDarkTheme),
-                          ],
+              child: Container(
+                decoration: BoxDecoration(
+                  color: isDarkTheme ? const Color(0xFF1e1e1e) : Colors.white,
+                  borderRadius: BorderRadius.circular(12),
+                ),
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    // Table header
+                    Container(
+                      padding: UIConstants.paddingStandard,
+                      decoration: BoxDecoration(
+                        color: isDarkTheme ? const Color(0xFF2d2d2d) : Colors.grey[50],
+                        borderRadius: const BorderRadius.only(
+                          topLeft: Radius.circular(8),
+                          topRight: Radius.circular(8),
                         ),
                       ),
+                      child: Row(
+                        children: [
+                          Text(
+                            'Cash Management',
+                            style: TextStyle(
+                              fontSize: UIConstants.fontSizeMd,
+                              fontWeight: UIConstants.fontWeightMedium,
+                              color: isDarkTheme ? Colors.white : Colors.black,
+                            ),
+                          ),
+                        ],
+                      ),
+                    ),
+                    Padding(
+                      padding: UIConstants.paddingStandard,
+                      child: _buildBalanceContent(themeService, isDarkTheme),
+                    ),
+                  ],
+                ),
+              ),
             ),
           ],
         ),
@@ -436,11 +445,11 @@ class _CashManagementPageState extends State<CashManagementPage> {
 
   Widget _buildBalanceContent(ThemeService themeService, bool isDarkTheme) {
     return Container(
-      padding: UIConstants.paddingStandard,
+      padding: UIConstants.paddingComfortable,
       height:220,
       decoration: BoxDecoration(
         color: isDarkTheme ? const Color(0xFF404040) : Colors.grey[50],
-        borderRadius: BorderRadius.circular(UIConstants.textFieldBorderRadius),
+        borderRadius: BorderRadius.circular(8),
         border: Border.all(
           color: isDarkTheme ? Colors.grey[700]! : Colors.grey[200]!,
           width: 1,
@@ -466,7 +475,7 @@ class _CashManagementPageState extends State<CashManagementPage> {
               height: 40,
               decoration: BoxDecoration(
                 color: isDarkTheme ? const Color(0xFF505050) : Colors.white, // Enhanced background color
-                borderRadius: BorderRadius.circular(UIConstants.textFieldBorderRadius),
+                borderRadius: BorderRadius.circular(8),
                 border: Border.all(
                   color: isDarkTheme ? Colors.grey[700]! : Colors.grey[200]!,
                   width: 1,
@@ -568,7 +577,7 @@ class _CashManagementPageState extends State<CashManagementPage> {
                   backgroundColor: const Color(0xFF4CAF50),
                   padding: const EdgeInsets.symmetric(vertical: 12),
                   shape: RoundedRectangleBorder(
-                    borderRadius: BorderRadius.circular(UIConstants.textFieldBorderRadius),
+                    borderRadius: BorderRadius.circular(8),
                   ),
                 ),
               ),
@@ -589,7 +598,7 @@ class _CashManagementPageState extends State<CashManagementPage> {
                   backgroundColor: const Color(0xFFFF4081),
                   padding: const EdgeInsets.symmetric(vertical: 12),
                   shape: RoundedRectangleBorder(
-                    borderRadius: BorderRadius.circular(UIConstants.textFieldBorderRadius),
+                    borderRadius: BorderRadius.circular(8),
                   ),
                 ),
               ),
@@ -636,7 +645,7 @@ class _CashManagementPageState extends State<CashManagementPage> {
                   hintText: '0.00',
                   suffixText: _selectedCurrency['symbol'] ?? '',
                   border: OutlineInputBorder(
-                    borderRadius: BorderRadius.circular(UIConstants.textFieldBorderRadius),
+                    borderRadius: BorderRadius.circular(8),
                   ),
                   filled: true,
                   fillColor: isDarkTheme ? Colors.grey[400] : Colors.grey[200],
@@ -814,7 +823,7 @@ class _CashManagementPageState extends State<CashManagementPage> {
                   hintText: '0.00',
                   suffixText: _selectedCurrency['symbol'] ?? '',
                   border: OutlineInputBorder(
-                    borderRadius: BorderRadius.circular(UIConstants.textFieldBorderRadius),
+                    borderRadius: BorderRadius.circular(8),
                   ),
                   filled: true,
                   fillColor: isDarkTheme ? Colors.grey[400] : Colors.grey[200],

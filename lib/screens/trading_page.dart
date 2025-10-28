@@ -798,46 +798,6 @@ class _TradingPageState extends State<TradingPage> {
   int _ordersTabIndex = 0; // 0 = Orders (default), 1 = History
   final List<String> _ordersTabNames = ['Orders', 'History'];
 
-  // Sample orders data
-  final List<Map<String, dynamic>> _sampleOrders = [
-    {
-      "order_id": "ord_789abc",
-      "side": "ORDER_SIDE__BUY",
-      "symbol": "BTC/USD",
-      "quantity": "0.5",
-      "price": "67500.00",
-      "create_timestamp": "1726580536",
-      "expire_timestamp": "1727185337",
-      "is_filled": false,
-      "is_cancelled": false,
-      "is_expired": false,
-    },
-    {
-      "order_id": "ord_456def",
-      "side": "ORDER_SIDE__SELL",
-      "symbol": "ETH/USD",
-      "quantity": "2.0",
-      "price": "0.00",
-      "create_timestamp": "1726580200",
-      "expire_timestamp": null,
-      "is_filled": false,
-      "is_cancelled": false,
-      "is_expired": false,
-    },
-    {
-      "order_id": "ord_123ghi",
-      "side": "ORDER_SIDE__SELL",
-      "symbol": "BTC/USD",
-      "quantity": "0.25",
-      "price": "68000.00",
-      "create_timestamp": "1726579800",
-      "expire_timestamp": null,
-      "is_filled": false,
-      "is_cancelled": false,
-      "is_expired": false,
-    },
-  ];
-
   // Real orders data from GetAccountOrders API
   List<Map<String, dynamic>> _realOrders = [];
   bool _isLoadingRealOrders = false;
@@ -1172,7 +1132,6 @@ class _TradingPageState extends State<TradingPage> {
         pagination: {
           'page_nr': 1,
           'page_size': _ordersPageSize > _historyPageSize ? _ordersPageSize : _historyPageSize, // Use the larger page size to get enough data for both tables
-          'page_token': '',
         },
       ).timeout(const Duration(seconds: 10));
 
@@ -3534,8 +3493,8 @@ class _TradingPageState extends State<TradingPage> {
                               volumeColor: Colors.teal.withOpacity(0.5),
                               trendLineStyles: [],
                               priceGridLineColor: isDarkTheme ? Colors.white10 : Colors.black12,
-                              priceLabelStyle: TextStyle(color: isDarkTheme ? Colors.white70 : Colors.black87),
-                              timeLabelStyle: TextStyle(color: isDarkTheme ? Colors.white70 : Colors.black87),
+                              priceLabelStyle: TextStyle(color: isDarkTheme ? Colors.white70 : Colors.black87, fontSize: 8),
+                              timeLabelStyle: TextStyle(color: isDarkTheme ? Colors.white70 : Colors.black87, fontSize: 8),
                               selectionHighlightColor: Colors.blue.withOpacity(0.2),
                               overlayBackgroundColor: isDarkTheme ? Colors.grey[850]! : Colors.white,
                               overlayTextStyle: TextStyle(color: isDarkTheme ? Colors.white : Colors.black),
@@ -4323,7 +4282,7 @@ class _TradingPageState extends State<TradingPage> {
         mainAxisAlignment: MainAxisAlignment.spaceBetween,
         children: [
           SizedBox(
-            width: 110,
+            width: 75,
             child: Text(side, style: TextStyle(color: sideColor, fontSize: UIConstants.fontSizeSm, fontWeight: UIConstants.fontWeightMedium), textAlign: TextAlign.left),
           ),
           SizedBox(
@@ -4394,7 +4353,7 @@ class _TradingPageState extends State<TradingPage> {
             mainAxisAlignment: MainAxisAlignment.spaceBetween,
             children: [
               SizedBox(
-                width: 110,
+                width: 75,
                 child: Text('Side', style: TextStyle(color: Colors.grey[400], fontWeight: UIConstants.fontWeightMedium, fontSize: 13), textAlign: TextAlign.left),
               ),
               SizedBox(
@@ -4568,7 +4527,7 @@ class _TradingPageState extends State<TradingPage> {
             mainAxisAlignment: MainAxisAlignment.spaceBetween,
             children: [
               SizedBox(
-                width: 110,
+                width: 75,
                 child: Text('Side', style: TextStyle(color: Colors.grey[400], fontWeight: UIConstants.fontWeightMedium, fontSize: 13), textAlign: TextAlign.left),
               ),
               SizedBox(
@@ -4698,7 +4657,7 @@ class _TradingPageState extends State<TradingPage> {
         mainAxisAlignment: MainAxisAlignment.spaceBetween,
         children: [
           SizedBox(
-            width: 110,
+            width: 75,
             child: Text(side, style: TextStyle(color: sideColor, fontSize: UIConstants.fontSizeSm, fontWeight: UIConstants.fontWeightMedium), textAlign: TextAlign.left),
           ),
           SizedBox(

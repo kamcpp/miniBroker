@@ -255,32 +255,41 @@ class _PortfolioPageState extends State<PortfolioPage> {
             // Portfolio Holdings
             Expanded(
               child: Container(
-                padding: UIConstants.paddingComfortable,
                 decoration: BoxDecoration(
-                  color: isDarkTheme ? const Color(0xFF2A2A2A) : Colors.white,
-                  borderRadius: BorderRadius.circular(12),
-                  boxShadow: [
-                    BoxShadow(
-                      color: Colors.black.withOpacity(0.1),
-                      blurRadius: 8,
-                      offset: const Offset(0, 2),
-                    ),
-                  ],
+                  color: isDarkTheme ? const Color(0xFF1e1e1e) : Colors.white,
+                  borderRadius: BorderRadius.circular(UIConstants.textFieldBorderRadius),
                 ),
                 child: Column(
                   crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
-                    Text(
-                      'Instruments Holdings',
-                      style: TextStyle(
-                        fontSize: UIConstants.fontSizeLg,
-                        fontWeight: UIConstants.fontWeightMedium,
-                        color: isDarkTheme ? Colors.white : Colors.black,
+                    // Table header
+                    Container(
+                      padding: UIConstants.paddingStandard,
+                      decoration: BoxDecoration(
+                        color: isDarkTheme ? const Color(0xFF2d2d2d) : Colors.grey[50],
+                        borderRadius: const BorderRadius.only(
+                          topLeft: Radius.circular(8),
+                          topRight: Radius.circular(8),
+                        ),
+                      ),
+                      child: Row(
+                        children: [
+                          Text(
+                            'Instruments Holdings',
+                            style: TextStyle(
+                              fontSize: UIConstants.fontSizeMd,
+                              fontWeight: UIConstants.fontWeightMedium,
+                              color: isDarkTheme ? Colors.white : Colors.black,
+                            ),
+                          ),
+                        ],
                       ),
                     ),
-                    SizedBox(height: UIConstants.spacingMd),
                     Expanded(
-                      child: _buildPortfolioContent(themeService, isDarkTheme),
+                      child: Padding(
+                        padding: UIConstants.paddingComfortable,
+                        child: _buildPortfolioContent(themeService, isDarkTheme),
+                      ),
                     ),
                   ],
                 ),

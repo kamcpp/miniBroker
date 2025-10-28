@@ -12,8 +12,8 @@ class MainFlutterWindow: NSWindow {
     let screenFrame = NSScreen.main?.visibleFrame ?? NSRect(x: 0, y: 0, width: 1440, height: 900)
 
     // Set reasonable minimum window size
-    let minWidth: CGFloat = 800
-    let minHeight: CGFloat = 600
+    let minWidth: CGFloat = 950
+    let minHeight: CGFloat = 700
 
     // Set minimum window size
     self.minSize = NSSize(width: minWidth, height: minHeight)

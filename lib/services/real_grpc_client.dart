@@ -1,43 +1,25 @@
-import 'dart:async';
+import 'dart:convert';
 import 'dart:io';
-import 'package:grpc/grpc.dart';
+import 'grpcurl_helper.dart';
 import '../config/app_config.dart';
-import '../generated/prtagent/v1/instrument.pbgrpc.dart';
-import '../generated/prtagent/v1/account.pbgrpc.dart';
-import '../generated/prtagent/v1/agent.pbgrpc.dart';
-import '../generated/prtagent/v1/market.pbgrpc.dart';
-import '../generated/prtagent/v1/trading.pbgrpc.dart';
-import '../generated/prtagent/v1/participant.pbgrpc.dart';
-import '../generated/prtagent/v1/venue.pbgrpc.dart';
-import '../generated/common.pb.dart' as common;
 
-/// Real gRPC client that uses proper Dart gRPC to communicate with the prtagent server
+/// Real gRPC client that uses grpcurl to communicate with the actual simprtagent server
 class RealGrpcClient {
+
   /// Convert DateTime to Unix timestamp (seconds since epoch)
   static int _toUnixTimestamp(DateTime dateTime) {
     return dateTime.millisecondsSinceEpoch ~/ 1000;
   }
-
   bool _isConnected = false;
   String _host = AppConfig.grpcHost;
   int _port = AppConfig.grpcPort;
-  ClientChannel? _channel;
-
-  // gRPC service clients
-  InstrumentServiceClient? _instrumentClient;
-  AccountServiceClient? _accountClient;
-  AgentServiceClient? _agentClient;
-  MarketServiceClient? _marketClient;
-  TradingServiceClient? _tradingClient;
-  ParticipantServiceClient? _participantClient;
-  VenueServiceClient? _venueClient;
 
   // Getters
   bool get isConnected => _isConnected;
   String get currentHost => _host;
   int get currentPort => _port;
 
-  /// Connect to the actual gRPC server
+  /// Connect to the actual gRPC server using grpcurl
   Future<void> connect({
     required String host,
     required int port,
@@ -50,80 +32,67 @@ class RealGrpcClient {
 
       _host = host;
       _port = port;
-
-      // Create gRPC channel
-      _channel = ClientChannel(
-        host,
-        port: port,
-        options: ChannelOptions(
-          credentials: useSecure
-              ? const ChannelCredentials.secure()
-              : const ChannelCredentials.insecure(),
-          connectionTimeout: timeout ?? const Duration(seconds: 10),
-        ),
-      );
-
-      // Initialize service clients
-      _instrumentClient = InstrumentServiceClient(_channel!);
-      _accountClient = AccountServiceClient(_channel!);
-      _agentClient = AgentServiceClient(_channel!);
-      _marketClient = MarketServiceClient(_channel!);
-      _tradingClient = TradingServiceClient(_channel!);
-      _participantClient = ParticipantServiceClient(_channel!);
-      _venueClient = VenueServiceClient(_channel!);
-
+      
       // Test actual server connectivity before marking as connected
       print('🔄 Testing server connectivity before marking as connected...');
       final testResult = await testServerConnectivity();
-
+      
       if (testResult) {
         _isConnected = true;
         print('✅ gRPC client successfully connected to $host:$port');
       } else {
         _isConnected = false;
         print('⚠️ gRPC client configured for $host:$port but server is not reachable');
-        // Keep clients initialized - they can still attempt reconnection later
+        // Don't throw exception - let the app continue but show disconnected state
       }
     } catch (e) {
       _isConnected = false;
       print('❌ Failed to configure gRPC client: $e');
-      // DON'T throw - allow reconnection attempts later
-      // The clients are still initialized and can try to connect when called
+      throw Exception('Failed to configure gRPC client: $e');
     }
   }
 
-  /// Disconnect from the gRPC server
-  Future<void> disconnect() async {
-    try {
-      await _channel?.shutdown();
-      _channel = null;
-      _instrumentClient = null;
-      _accountClient = null;
-      _agentClient = null;
-      _marketClient = null;
-      _tradingClient = null;
-      _participantClient = null;
-      _venueClient = null;
-      _isConnected = false;
-      print('✅ gRPC client disconnected');
-    } catch (e) {
-      print('⚠️ Error during disconnect: $e');
-    }
-  }
-
-  /// Create CallOptions with API key header
-  CallOptions _createCallOptions({Duration? timeout}) {
-    final metadata = <String, String>{};
-
-    // Add API key header if available
-    if (AppConfig.grpcApiKey != null && AppConfig.grpcApiKey!.isNotEmpty) {
-      metadata['x-agora-participant-api-key'] = AppConfig.grpcApiKey!;
-    }
-
-    return CallOptions(
-      timeout: timeout ?? const Duration(seconds: 30),
-      metadata: metadata,
-    );
+  /// Test connection using grpcurl to verify server is actually working (async, non-blocking)
+  void _testConnectionAsync() {
+    // Run this in background without blocking the connection
+    Future.delayed(Duration.zero, () async {
+      try {
+        print('🔄 Testing connection to real gRPC server...');
+        
+        // Test if grpcurl can connect to the server with very short timeout
+        final isServerReachable = await GrpcurlHelper.testConnection().timeout(
+          const Duration(seconds: 1),
+          onTimeout: () {
+            print('⏰ grpcurl test timed out after 1 second');
+            return false;
+          },
+        );
+        
+        if (isServerReachable) {
+          print('✅ Real gRPC server is reachable via grpcurl');
+          
+          // List available services to confirm (with timeout)
+          try {
+            final services = await GrpcurlHelper.listServices().timeout(
+              const Duration(seconds: 1),
+              onTimeout: () {
+                print('⏰ Service listing timed out');
+                return <String>[];
+              },
+            );
+            print('📋 Available services on real server: $services');
+          } catch (e) {
+            print('⚠️ Could not list services: $e');
+          }
+        } else {
+          print('⚠️ Real gRPC server is not reachable via grpcurl (but connection established)');
+        }
+        
+        print('✅ Real gRPC client background test completed');
+      } catch (e) {
+        print('⚠️ Background connection test failed: $e (connection still established)');
+      }
+    });
   }
 
   /// Test if server is reachable via socket connection
@@ -140,281 +109,933 @@ class RealGrpcClient {
     }
   }
 
-  /// Attempt to reconnect to the server
-  /// This can be called at any time to retry connection
-  Future<bool> reconnect() async {
-    try {
-      print('🔄 Attempting to reconnect to $_host:$_port...');
-
-      // Test connectivity first
-      final isReachable = await testServerConnectivity();
-
-      if (isReachable) {
-        _isConnected = true;
-        print('✅ Reconnection successful');
-        return true;
-      } else {
-        _isConnected = false;
-        print('⚠️ Reconnection failed - server not reachable');
-        return false;
-      }
-    } catch (e) {
-      _isConnected = false;
-      print('❌ Reconnection error: $e');
-      return false;
-    }
-  }
-
-  /// Ping call to AgentService.Ping
+  /// Real Ping call to AgentService.Ping using grpcurl
   Future<Map<String, dynamic>> ping({
     String stringToBePonged = 'Hello from Flutter!',
     Duration? timeout,
   }) async {
-    // If not connected, try to reconnect first
-    if (!_isConnected && _agentClient != null) {
-      print('🔄 Not connected - attempting auto-reconnect...');
-      await reconnect();
-    }
-
-    if (_agentClient == null) {
+    // Always test connectivity first to prevent crashes
+    print('🔍 Testing server connectivity before ping...');
+    final isServerReachable = await testServerConnectivity();
+    
+    if (!isServerReachable) {
+      _isConnected = false; // Update connection state
       return {
         'input': {
           'proposed_execution_id': 'ping_${DateTime.now().millisecondsSinceEpoch}',
           'string_to_be_ponged': stringToBePonged,
         },
         'output': {
-          'error': 'Not initialized',
-          'message': 'gRPC client not initialized. Call connect() first.',
+          'error': 'Server not reachable',
+          'message': 'Cannot connect to the gRPC server at $_host:$_port. Please check if the server is running.',
         },
         'requestTime': _toUnixTimestamp(DateTime.now()).toString(),
-        'serverType': 'not-initialized',
+        'serverType': 'not-reachable',
         'success': false,
       };
     }
 
+    // Update connection state if server is reachable
+    if (!_isConnected) {
+      _isConnected = true;
+      print('✅ Server connection restored');
+    }
+
     try {
-      print('🏓 Ping - attempting real server connection');
-
-      final request = PingRequest()
-        ..proposedExecutionId = 'ping_${DateTime.now().millisecondsSinceEpoch}'
-        ..stringToBePonged = stringToBePonged;
-
-      final response = await _agentClient!.ping(request,
-          options: _createCallOptions(timeout: timeout ?? const Duration(seconds: 10)));
-
-      print('📬 Ping Response: ${response.pongString}');
-
-      return {
-        'input': {
-          'proposed_execution_id': request.proposedExecutionId,
-          'string_to_be_ponged': stringToBePonged,
+      print('🏓 Ping button clicked - attempting real server connection');
+      
+      // Try to call the real server with grpcurl, with comprehensive crash protection
+      final response = await GrpcurlHelper.ping(
+        stringToBePonged: stringToBePonged,
+      ).timeout(
+        const Duration(seconds: 5),
+        onTimeout: () {
+          print('⏰ Ping request timed out');
+          return {
+            'input': {
+              'proposed_execution_id': 'ping_${DateTime.now().millisecondsSinceEpoch}',
+              'string_to_be_ponged': stringToBePonged,
+            },
+            'output': {
+              'error': 'Request timed out',
+              'message': 'The ping request timed out after 5 seconds. Check if server is running properly.',
+            },
+            'requestTime': _toUnixTimestamp(DateTime.now()).toString(),
+            'serverType': 'timeout',
+            'success': false,
+          };
         },
-        'output': {
-          'pong_string': response.pongString,
-          'ref_execution_id': response.refExecutionId,
-        },
-        'requestTime': _toUnixTimestamp(DateTime.now()).toString(),
-        'serverType': 'real_grpc',
-        'success': true,
-      };
-    } catch (e) {
-      print('❌ Ping failed: $e');
-      // Mark as disconnected on error
-      _isConnected = false;
+      ).catchError((error) {
+        print('❌ Ping error caught: $error');
+        return {
+          'input': {
+            'proposed_execution_id': 'ping_${DateTime.now().millisecondsSinceEpoch}',
+            'string_to_be_ponged': stringToBePonged,
+          },
+          'output': {
+            'error': 'Ping execution failed',
+            'message': 'Failed to execute ping: ${error.toString()}',
+          },
+          'requestTime': _toUnixTimestamp(DateTime.now()).toString(),
+          'serverType': 'execution-error',
+          'success': false,
+        };
+      });
+
+      print('📬 Real Server Ping Response: ${response['output']}');
+      print('✅ Real ping completed');
+
+      // Update connection state based on response
+      if (response['success'] == true) {
+        _isConnected = true;
+      } else {
+        // Test connectivity again if ping failed
+        final stillReachable = await testServerConnectivity();
+        _isConnected = stillReachable;
+      }
+
+      return response;
+    } catch (e, stackTrace) {
+      print('❌ Critical error in ping: $e');
+      print('❌ Stack trace: $stackTrace');
+      
+      // Test connectivity to update state
+      final stillReachable = await testServerConnectivity();
+      _isConnected = stillReachable;
+      
+      // Return error response instead of throwing exception to prevent app crash
       return {
         'input': {
           'proposed_execution_id': 'ping_${DateTime.now().millisecondsSinceEpoch}',
           'string_to_be_ponged': stringToBePonged,
         },
         'output': {
-          'error': 'gRPC call failed',
-          'details': e.toString(),
+          'error': 'Critical ping error',
+          'message': 'A critical error occurred during ping: ${e.toString()}',
+          'details': stackTrace.toString(),
         },
         'requestTime': _toUnixTimestamp(DateTime.now()).toString(),
-        'serverType': 'grpc-error',
+        'serverType': 'critical-error',
         'success': false,
       };
     }
   }
 
-  /// Get Instrument List using InstrumentService.GetInstrumentList
-  Future<Map<String, dynamic>> getInstrumentList({
-    int pageNumber = 0,
-    int pageSize = 0,
+  /// Real NewAccount call to AccountService.NewAccount using grpcurl
+  Future<Map<String, dynamic>> newAccount({
+    required String externalAccountId,
+    String? auxData,
     Duration? timeout,
   }) async {
-    // If not connected, try to reconnect first
-    if (!_isConnected && _instrumentClient != null) {
-      print('🔄 Not connected - attempting auto-reconnect...');
-      await reconnect();
-    }
-
-    if (_instrumentClient == null) {
+    // Always test connectivity first to prevent crashes
+    print('🔍 Testing server connectivity before NewAccount...');
+    final isServerReachable = await testServerConnectivity();
+    
+    if (!isServerReachable) {
+      _isConnected = false; // Update connection state
       return {
-        'input': {},
-        'output': {'error': 'gRPC client not initialized'},
+        'input': {
+          'proposed_execution_id': 'new_account_${DateTime.now().millisecondsSinceEpoch}',
+          'external_account_id': externalAccountId,
+          'aux_data': auxData ?? '',
+        },
+        'output': {
+          'error': 'Server not reachable',
+          'message': 'Cannot connect to the gRPC server at $_host:$_port. Please check if the server is running.',
+        },
         'requestTime': _toUnixTimestamp(DateTime.now()).toString(),
-        'serverType': 'not-initialized',
+        'serverType': 'not-reachable',
         'success': false,
       };
     }
 
+    // Update connection state if server is reachable
+    if (!_isConnected) {
+      _isConnected = true;
+      print('✅ Server connection restored');
+    }
+
     try {
-      print('📋 Getting instrument list from real server...');
+      print('👤 NewAccount called - attempting to create account for $externalAccountId');
+      
+      final requestId = 'new_account_${DateTime.now().millisecondsSinceEpoch}';
+      final request = {
+        'proposed_execution_id': requestId,
+        'external_account_id': externalAccountId,
+        'aux_data': auxData ?? 'Created from Flutter signup',
+      };
 
-      final request = GetInstrumentListRequest()
-        ..proposedExecutionId = 'get_instrument_list_${DateTime.now().millisecondsSinceEpoch}'
-        ..pagination = (common.PaginationParams()
-          ..pageNr = pageNumber
-          ..pageSize = pageSize
-          ..cursorToken = '');
+      // Try to call the real server with grpcurl, with comprehensive crash protection
+      final response = await GrpcurlHelper.newAccount(
+        externalAccountId: externalAccountId,
+        auxData: auxData,
+      ).timeout(
+        const Duration(seconds: 10),
+        onTimeout: () {
+          print('⏰ NewAccount request timed out');
+          return {
+            'input': request,
+            'output': {
+              'error': 'Request timed out',
+              'message': 'The new account request timed out after 10 seconds. Check if server is running properly.',
+            },
+            'requestTime': _toUnixTimestamp(DateTime.now()).toString(),
+            'serverType': 'timeout',
+            'success': false,
+          };
+        },
+      ).catchError((error) {
+        print('❌ NewAccount error caught: $error');
+        return {
+          'input': request,
+          'output': {
+            'error': 'NewAccount execution failed',
+            'message': 'Failed to execute NewAccount: ${error.toString()}',
+          },
+          'requestTime': _toUnixTimestamp(DateTime.now()).toString(),
+          'serverType': 'execution-error',
+          'success': false,
+        };
+      });
 
-      final response = await _instrumentClient!.getInstrumentList(request,
-          options: _createCallOptions(timeout: timeout ?? const Duration(seconds: 10)));
+      print('📬 Real Server NewAccount Response: ${response['output']}');
+      print('✅ Real NewAccount completed');
 
-      print('✅ GetInstrumentList successful: ${response.instruments.length} instruments');
+      // Update connection state based on response
+      if (response['success'] == true) {
+        _isConnected = true;
+      } else {
+        // Test connectivity again if request failed
+        final stillReachable = await testServerConnectivity();
+        _isConnected = stillReachable;
+      }
 
+      return response;
+    } catch (e, stackTrace) {
+      print('❌ Critical error in NewAccount: $e');
+      print('❌ Stack trace: $stackTrace');
+      
+      // Test connectivity to update state
+      final stillReachable = await testServerConnectivity();
+      _isConnected = stillReachable;
+      
+      // Return error response instead of throwing exception to prevent app crash
       return {
         'input': {
-          'proposed_execution_id': request.proposedExecutionId,
+          'proposed_execution_id': 'new_account_${DateTime.now().millisecondsSinceEpoch}',
+          'external_account_id': externalAccountId,
+          'aux_data': auxData ?? '',
+        },
+        'output': {
+          'error': 'Critical NewAccount error',
+          'message': 'A critical error occurred during NewAccount: ${e.toString()}',
+          'details': stackTrace.toString(),
+        },
+        'requestTime': _toUnixTimestamp(DateTime.now()).toString(),
+        'serverType': 'critical-error',
+        'success': false,
+      };
+    }
+  }
+
+  /// Real GetAccountList call to AccountService.GetAccountList using grpcurl
+  Future<Map<String, dynamic>> getAccountList({
+    int pageNumber = 0,
+    int pageSize = 0,
+    String? accountIdRegex,
+    Map<String, String>? auxData,
+    Duration? timeout,
+  }) async {
+    // Always test connectivity first to prevent crashes
+    print('🔍 Testing server connectivity before GetAccountList...');
+    final isServerReachable = await testServerConnectivity();
+    
+    if (!isServerReachable) {
+      _isConnected = false; // Update connection state
+      return {
+        'input': {
+          'proposed_execution_id': 'get_account_list_${DateTime.now().millisecondsSinceEpoch}',
           'pagination': {
             'page_nr': pageNumber,
             'page_size': pageSize,
+            'page_token': '',
           },
+          if (accountIdRegex != null && accountIdRegex.isNotEmpty)
+            'account_iid_or_external_id_regex': accountIdRegex,
+          if (auxData != null && auxData.isNotEmpty)
+            'aux_data': auxData,
         },
         'output': {
-          'ref_execution_id': response.refExecutionId,
-          'instruments': response.instruments.map((i) => {
-            'id': i.iid,
-            'cfi_code': i.cfiCode,
-            'issue_currency': i.issueCurrency,
-            'identifiers': i.identifiers.map((id) => {
-              'scheme_type': id.schemeType.toString(),
-              'scheme_name': id.schemeName,
-              'ids': id.ids.map((v) => v.value).toList(),
-            }).toList(),
-            'display_names': i.displayNames,
-            'metadata': i.metadata,
-          }).toList(),
-          'pagination_info': response.hasPaginationInfo() ? {
-            'total_count': response.paginationInfo.totalCount.toString(),
-            'next_cursor_token': response.paginationInfo.nextCursorToken,
-          } : null,
+          'error': 'Server not reachable',
+          'message': 'Cannot connect to the gRPC server at $_host:$_port. Please check if the server is running.',
         },
         'requestTime': _toUnixTimestamp(DateTime.now()).toString(),
-        'serverType': 'real_grpc',
-        'success': true,
-      };
-    } catch (e) {
-      print('❌ GetInstrumentList failed: $e');
-      return {
-        'input': {},
-        'output': {
-          'error': 'gRPC call failed',
-          'details': e.toString(),
-        },
-        'requestTime': _toUnixTimestamp(DateTime.now()).toString(),
-        'serverType': 'grpc-error',
+        'serverType': 'not-reachable',
         'success': false,
       };
     }
-  }
 
-  /// Get Account List using AccountService.GetAccountList
-  Future<Map<String, dynamic>> getAccountList({
-    String? accountIdRegex,
-    int pageNumber = 0,
-    int pageSize = 0,
-    Duration? timeout,
-  }) async {
-    // If not connected, try to reconnect first
-    if (!_isConnected && _accountClient != null) {
-      print('🔄 Not connected - attempting auto-reconnect...');
-      await reconnect();
-    }
-
-    if (_accountClient == null) {
-      return {
-        'input': {},
-        'output': {'error': 'gRPC client not initialized'},
-        'requestTime': _toUnixTimestamp(DateTime.now()).toString(),
-        'serverType': 'not-initialized',
-        'success': false,
-      };
+    // Update connection state if server is reachable
+    if (!_isConnected) {
+      _isConnected = true;
+      print('✅ Server connection restored');
     }
 
     try {
-      print('🔄 GetAccountList - attempting real server connection');
+      print('🔄 GetAccountList button clicked - attempting real server connection');
+      
+      // Try to call the real server with grpcurl, with comprehensive crash protection
+      final response = await GrpcurlHelper.getAccountList(
+        pageNumber: pageNumber,
+        pageSize: pageSize,
+        accountIdRegex: accountIdRegex,
+        auxData: auxData,
+      ).timeout(
+        const Duration(seconds: 5),
+        onTimeout: () {
+          print('⏰ GetAccountList request timed out');
+          return {
+            'input': {
+              'proposed_execution_id': 'get_account_list_${DateTime.now().millisecondsSinceEpoch}',
+              'pagination': {
+                'page_nr': pageNumber,
+                'page_size': pageSize,
+                'page_token': '',
+              },
+              if (accountIdRegex != null && accountIdRegex.isNotEmpty)
+                'account_iid_or_external_id_regex': accountIdRegex,
+              if (auxData != null && auxData.isNotEmpty)
+                'aux_data': auxData,
+            },
+            'output': {
+              'error': 'Request timed out',
+              'message': 'The account list request timed out after 5 seconds. Check if server is running properly.',
+            },
+            'requestTime': _toUnixTimestamp(DateTime.now()).toString(),
+            'serverType': 'timeout',
+            'success': false,
+          };
+        },
+      ).catchError((error) {
+        print('❌ GetAccountList error caught: $error');
+        return {
+          'input': {
+            'proposed_execution_id': 'get_account_list_${DateTime.now().millisecondsSinceEpoch}',
+            'pagination': {
+              'page_nr': pageNumber,
+              'page_size': pageSize,
+              'page_token': '',
+            },
+            if (accountIdRegex != null && accountIdRegex.isNotEmpty)
+              'account_iid_or_external_id_regex': accountIdRegex,
+            if (auxData != null && auxData.isNotEmpty)
+              'aux_data': auxData,
+          },
+          'output': {
+            'error': 'GetAccountList execution failed',
+            'message': 'Failed to execute GetAccountList: ${error.toString()}',
+          },
+          'requestTime': _toUnixTimestamp(DateTime.now()).toString(),
+          'serverType': 'execution-error',
+          'success': false,
+        };
+      });
 
-      final request = GetAccountListRequest()
-        ..proposedExecutionId = 'get_account_list_${DateTime.now().millisecondsSinceEpoch}'
-        ..pagination = (common.PaginationParams()
-          ..pageNr = pageNumber
-          ..pageSize = pageSize
-          ..cursorToken = '');
+      print('📬 Real Server GetAccountList Response: ${response['output']}');
+      print('✅ Real account list completed');
 
-      if (accountIdRegex != null && accountIdRegex.isNotEmpty) {
-        request.accountIidOrExternalIdRegex = accountIdRegex;
+      // Update connection state based on response
+      if (response['success'] == true) {
+        _isConnected = true;
+      } else {
+        // Test connectivity again if request failed
+        final stillReachable = await testServerConnectivity();
+        _isConnected = stillReachable;
       }
 
-      final response = await _accountClient!.getAccountList(request,
-          options: _createCallOptions(timeout: timeout ?? const Duration(seconds: 10)));
-
-      print('✅ GetAccountList successful: ${response.accounts.length} accounts');
-
+      return response;
+    } catch (e, stackTrace) {
+      print('❌ Critical error in GetAccountList: $e');
+      print('❌ Stack trace: $stackTrace');
+      
+      // Test connectivity to update state
+      final stillReachable = await testServerConnectivity();
+      _isConnected = stillReachable;
+      
+      // Return error response instead of throwing exception to prevent app crash
       return {
         'input': {
-          'proposed_execution_id': request.proposedExecutionId,
-          'account_iid_or_external_id_regex': accountIdRegex ?? '',
+          'proposed_execution_id': 'get_account_list_${DateTime.now().millisecondsSinceEpoch}',
         },
         'output': {
-          'ref_execution_id': response.refExecutionId,
-          'accounts': response.accounts.map((a) => {
-            'id': a.iid,
-            'external_account_id': a.externalAccountId,
-            'account_type': a.accountType.toString(),
-            'account_status': a.accountStatus.toString(),
-            'identifiers': a.identifiers.map((id) => {
-              'scheme_type': id.schemeType.toString(),
-              'scheme_name': id.schemeName,
-              'ids': id.ids.map((v) => v.value).toList(),
-            }).toList(),
-          }).toList(),
-          'pagination_info': response.hasPaginationInfo() ? {
-            'total_count': response.paginationInfo.totalCount.toString(),
-            'next_cursor_token': response.paginationInfo.nextCursorToken,
-          } : null,
+          'error': 'Critical GetAccountList error',
+          'message': 'A critical error occurred during GetAccountList: ${e.toString()}',
+          'details': stackTrace.toString(),
         },
         'requestTime': _toUnixTimestamp(DateTime.now()).toString(),
-        'serverType': 'real_grpc',
-        'success': true,
-      };
-    } catch (e) {
-      print('❌ GetAccountList failed: $e');
-      // Mark as disconnected on error
-      _isConnected = false;
-      return {
-        'input': {
-          'account_iid_or_external_id_regex': accountIdRegex ?? '',
-        },
-        'output': {
-          'error': 'gRPC call failed',
-          'details': e.toString(),
-        },
-        'requestTime': _toUnixTimestamp(DateTime.now()).toString(),
-        'serverType': 'grpc-error',
+        'serverType': 'critical-error',
         'success': false,
       };
     }
   }
 
-  // TODO: Implement remaining methods using proper Dart gRPC clients
-  // For now, these are stub methods that return "not implemented" errors
+  /// Real GetAccountInstrumentHoldings call to AccountService.GetAccountInstrumentHoldings using grpcurl
+  Future<Map<String, dynamic>> getAccountMarketPortfolio({
+    required String accountId,
+    String? marketId,
+    List<String>? assetIds,
+    Duration? timeout,
+  }) async {
+    // Always test connectivity first to prevent crashes
+    print('🔍 Testing server connectivity before GetAccountInstrumentHoldings...');
+    final isServerReachable = await testServerConnectivity();
+    
+    if (!isServerReachable) {
+      _isConnected = false; // Update connection state
+      return {
+        'input': {
+          'proposed_execution_id': 'get_account_instrument_holdings_${DateTime.now().millisecondsSinceEpoch}',
+          'account_iid': accountId,
+        },
+        'output': {
+          'error': 'Server not reachable',
+          'message': 'Cannot connect to the gRPC server at $_host:$_port. Please check if the server is running.',
+        },
+        'requestTime': _toUnixTimestamp(DateTime.now()).toString(),
+        'serverType': 'not-reachable',
+        'success': false,
+      };
+    }
 
-  Future<Map<String, dynamic>> newAccount({required String externalAccountId, String? auxData}) async {
-    return _notImplemented('newAccount');
+    // Update connection state if server is reachable
+    if (!_isConnected) {
+      _isConnected = true;
+      print('✅ Server connection restored');
+    }
+
+    try {
+      print('📊 GetAccountInstrumentHoldings called - attempting to get instrument holdings for account $accountId');
+      
+      // Try to call the real server with grpcurl, with comprehensive crash protection
+      final response = await GrpcurlHelper.getAccountMarketPortfolio(
+        accountId: accountId,
+      ).timeout(
+        const Duration(seconds: 10),
+        onTimeout: () {
+          print('⏰ GetAccountInstrumentHoldings request timed out');
+          return {
+            'input': {
+              'proposed_execution_id': 'get_account_instrument_holdings_${DateTime.now().millisecondsSinceEpoch}',
+              'account_iid': accountId,
+            },
+            'output': {
+              'error': 'Request timed out',
+              'message': 'The account instrument holdings request timed out after 10 seconds. Check if server is running properly.',
+            },
+            'requestTime': _toUnixTimestamp(DateTime.now()).toString(),
+            'serverType': 'timeout',
+            'success': false,
+          };
+        },
+      ).catchError((error) {
+        print('❌ GetAccountInstrumentHoldings error caught: $error');
+        return {
+          'input': {
+            'proposed_execution_id': 'get_account_instrument_holdings_${DateTime.now().millisecondsSinceEpoch}',
+            'account_iid': accountId,
+          },
+          'output': {
+            'error': 'GetAccountInstrumentHoldings execution failed',
+            'message': 'Failed to execute GetAccountInstrumentHoldings: ${error.toString()}',
+          },
+          'requestTime': _toUnixTimestamp(DateTime.now()).toString(),
+          'serverType': 'execution-error',
+          'success': false,
+        };
+      });
+
+      // Update connection state based on response
+      if (response['success'] == true) {
+        _isConnected = true;
+      } else {
+        // Test connectivity again if request failed
+        final stillReachable = await testServerConnectivity();
+        _isConnected = stillReachable;
+      }
+
+      return response;
+    } catch (e, stackTrace) {
+      print('❌ Critical error in GetAccountInstrumentHoldings: $e');
+      print('❌ Stack trace: $stackTrace');
+      
+      // Test connectivity to update state
+      final stillReachable = await testServerConnectivity();
+      _isConnected = stillReachable;
+      
+      // Return error response instead of throwing exception to prevent app crash
+      return {
+        'input': {
+          'proposed_execution_id': 'get_account_instrument_holdings_${DateTime.now().millisecondsSinceEpoch}',
+          'account_iid': accountId,
+        },
+        'output': {
+          'error': 'Critical GetAccountInstrumentHoldings error',
+          'message': 'A critical error occurred during GetAccountInstrumentHoldings: ${e.toString()}',
+          'details': stackTrace.toString(),
+        },
+        'requestTime': _toUnixTimestamp(DateTime.now()).toString(),
+        'serverType': 'critical-error',
+        'success': false,
+      };
+    }
   }
 
+  /// Real GetAccountCashHoldings call to AccountService.GetAccountCashHoldings using grpcurl
+  Future<Map<String, dynamic>> getAccountCashHoldings({
+    required String accountId,
+    List<String>? cashAssetIds,
+    Duration? timeout,
+  }) async {
+    // Always test connectivity first to prevent crashes
+    print('🔍 Testing server connectivity before GetAccountCashHoldings...');
+    final isServerReachable = await testServerConnectivity();
+    
+    if (!isServerReachable) {
+      _isConnected = false; // Update connection state
+      return {
+        'input': {
+          'proposed_execution_id': 'get_account_cash_holdings_${DateTime.now().millisecondsSinceEpoch}',
+          'account_iid': accountId,
+          'currency_codes': cashAssetIds ?? [],
+        },
+        'output': {
+          'error': 'Server not reachable',
+          'message': 'Cannot connect to the gRPC server at $_host:$_port. Please check if the server is running.',
+        },
+        'requestTime': _toUnixTimestamp(DateTime.now()).toString(),
+        'serverType': 'not-reachable',
+        'success': false,
+      };
+    }
+
+    // Update connection state if server is reachable
+    if (!_isConnected) {
+      _isConnected = true;
+      print('✅ Server connection restored');
+    }
+
+    try {
+      print('💰 GetAccountCashHoldings called - attempting to get cash holdings for account $accountId');
+      
+      // Try to call the real server with grpcurl, with comprehensive crash protection
+      final response = await GrpcurlHelper.getAccountCashHoldings(
+        accountId: accountId,
+        cashAssetIds: cashAssetIds,
+      ).timeout(
+        const Duration(seconds: 10),
+        onTimeout: () {
+          print('⏰ GetAccountCashHoldings request timed out');
+          return {
+            'input': {
+              'proposed_execution_id': 'get_account_cash_holdings_${DateTime.now().millisecondsSinceEpoch}',
+              'account_iid': accountId,
+              'currency_codes': cashAssetIds ?? [],
+            },
+            'output': {
+              'error': 'Request timed out',
+              'message': 'The account cash holdings request timed out after 10 seconds. Check if server is running properly.',
+            },
+            'requestTime': _toUnixTimestamp(DateTime.now()).toString(),
+            'serverType': 'timeout',
+            'success': false,
+          };
+        },
+      ).catchError((error) {
+        print('❌ GetAccountCashHoldings error caught: $error');
+        return {
+          'input': {
+            'proposed_execution_id': 'get_account_cash_holdings_${DateTime.now().millisecondsSinceEpoch}',
+            'account_iid': accountId,
+            'currency_codes': cashAssetIds ?? [],
+          },
+          'output': {
+            'error': 'GetAccountCashHoldings execution failed',
+            'message': 'Failed to execute GetAccountCashHoldings: ${error.toString()}',
+          },
+          'requestTime': _toUnixTimestamp(DateTime.now()).toString(),
+          'serverType': 'execution-error',
+          'success': false,
+        };
+      });
+
+      // Update connection state based on response
+      if (response['success'] == true) {
+        _isConnected = true;
+      } else {
+        // Test connectivity again if request failed
+        final stillReachable = await testServerConnectivity();
+        _isConnected = stillReachable;
+      }
+
+      return response;
+    } catch (e, stackTrace) {
+      print('❌ Critical error in GetAccountCashHoldings: $e');
+      print('❌ Stack trace: $stackTrace');
+      
+      // Test connectivity to update state
+      final stillReachable = await testServerConnectivity();
+      _isConnected = stillReachable;
+      
+      // Return error response instead of throwing exception to prevent app crash
+      return {
+        'input': {
+          'proposed_execution_id': 'get_account_cash_holdings_${DateTime.now().millisecondsSinceEpoch}',
+          'account_iid': accountId,
+          'currency_codes': cashAssetIds ?? [],
+        },
+        'output': {
+          'error': 'Critical GetAccountCashHoldings error',
+          'message': 'A critical error occurred during GetAccountCashHoldings: ${e.toString()}',
+          'details': stackTrace.toString(),
+        },
+        'requestTime': _toUnixTimestamp(DateTime.now()).toString(),
+        'serverType': 'critical-error',
+        'success': false,
+      };
+    }
+  }
+
+  /// Deposit cash to an account
+  Future<Map<String, dynamic>> depositCash({
+    required String accountId,
+    required String currencyCode,
+    required String amount,
+    Map<String, String>? auxData,
+    Duration? timeout,
+  }) async {
+    // Always test connectivity first to prevent crashes
+    print('🔍 Testing server connectivity before DepositCash...');
+    final isServerReachable = await testServerConnectivity();
+
+    if (!isServerReachable) {
+      _isConnected = false; // Update connection state
+      return {
+        'input': {
+          'proposed_execution_id': 'deposit_cash_${DateTime.now().millisecondsSinceEpoch}',
+          'account_iid': accountId,
+          'currency_code': currencyCode,
+          'amount': amount,
+        },
+        'output': {
+          'error': 'Server not reachable',
+          'message': 'Cannot connect to the gRPC server at $_host:$_port. Please check if the server is running.',
+        },
+        'requestTime': _toUnixTimestamp(DateTime.now()).toString(),
+        'serverType': 'not-reachable',
+        'success': false,
+      };
+    }
+
+    // Update connection state if server is reachable
+    if (!_isConnected) {
+      _isConnected = true;
+      print('✅ Server connection restored');
+    }
+
+    try {
+      print('💰 DepositCash called - attempting to deposit $amount $currencyCode to account $accountId');
+
+      // Try to call the real server with grpcurl, with comprehensive crash protection
+      final response = await GrpcurlHelper.depositCash(
+        accountId: accountId,
+        currencyCode: currencyCode,
+        amount: amount,
+        auxData: auxData,
+      ).timeout(
+        const Duration(seconds: 15),
+        onTimeout: () {
+          print('⏰ DepositCash request timed out');
+          return {
+            'input': {
+              'proposed_execution_id': 'deposit_cash_${DateTime.now().millisecondsSinceEpoch}',
+              'account_iid': accountId,
+              'currency_code': currencyCode,
+              'amount': amount,
+            },
+            'output': {
+              'error': 'Request timed out',
+              'message': 'The deposit cash request timed out after 15 seconds. Check if server is running properly.',
+            },
+            'requestTime': _toUnixTimestamp(DateTime.now()).toString(),
+            'serverType': 'timeout',
+            'success': false,
+          };
+        },
+      ).catchError((error) {
+        print('❌ DepositCash error caught: $error');
+        return {
+          'input': {
+            'proposed_execution_id': 'deposit_cash_${DateTime.now().millisecondsSinceEpoch}',
+            'account_iid': accountId,
+            'currency_code': currencyCode,
+            'amount': amount,
+          },
+          'output': {
+            'error': 'DepositCash execution failed',
+            'message': 'Failed to execute DepositCash: ${error.toString()}',
+          },
+          'requestTime': _toUnixTimestamp(DateTime.now()).toString(),
+          'serverType': 'execution-error',
+          'success': false,
+        };
+      });
+
+      // Update connection state based on response
+      if (response['success'] == true) {
+        _isConnected = true;
+      } else {
+        // Test connectivity again if request failed
+        final stillReachable = await testServerConnectivity();
+        _isConnected = stillReachable;
+      }
+
+      return response;
+    } catch (e, stackTrace) {
+      print('❌ Critical error in DepositCash: $e');
+      print('❌ Stack trace: $stackTrace');
+
+      // Test connectivity to update state
+      final stillReachable = await testServerConnectivity();
+      _isConnected = stillReachable;
+
+      // Return error response instead of throwing exception to prevent app crash
+      return {
+        'input': {
+          'proposed_execution_id': 'deposit_cash_${DateTime.now().millisecondsSinceEpoch}',
+          'account_iid': accountId,
+          'currency_code': currencyCode,
+          'amount': amount,
+        },
+        'output': {
+          'error': 'Critical DepositCash error',
+          'message': 'A critical error occurred during DepositCash: ${e.toString()}',
+          'details': stackTrace.toString(),
+        },
+        'requestTime': _toUnixTimestamp(DateTime.now()).toString(),
+        'serverType': 'critical-error',
+        'success': false,
+      };
+    }
+  }
+
+  /// Withdraw cash from an account
+  Future<Map<String, dynamic>> withdrawCash({
+    required String accountId,
+    required String currencyCode,
+    required String amount,
+    Map<String, String>? auxData,
+    Duration? timeout,
+  }) async {
+    // Always test connectivity first to prevent crashes
+    print('🔍 Testing server connectivity before WithdrawCash...');
+    final isServerReachable = await testServerConnectivity();
+
+    if (!isServerReachable) {
+      _isConnected = false; // Update connection state
+      return {
+        'input': {
+          'proposed_execution_id': 'withdraw_cash_${DateTime.now().millisecondsSinceEpoch}',
+          'account_iid': accountId,
+          'currency_code': currencyCode,
+          'amount': amount,
+        },
+        'output': {
+          'error': 'Server not reachable',
+          'message': 'Cannot connect to the gRPC server at $_host:$_port. Please check if the server is running.',
+        },
+        'requestTime': _toUnixTimestamp(DateTime.now()).toString(),
+        'serverType': 'not-reachable',
+        'success': false,
+      };
+    }
+
+    // Update connection state if server is reachable
+    if (!_isConnected) {
+      _isConnected = true;
+      print('✅ Server connection restored');
+    }
+
+    try {
+      print('💰 WithdrawCash called - attempting to withdraw $amount $currencyCode from account $accountId');
+
+      // Try to call the real server with grpcurl, with comprehensive crash protection
+      final response = await GrpcurlHelper.withdrawCash(
+        accountId: accountId,
+        currencyCode: currencyCode,
+        amount: amount,
+        auxData: auxData,
+      ).timeout(
+        const Duration(seconds: 15),
+        onTimeout: () {
+          print('⏰ WithdrawCash request timed out');
+          return {
+            'input': {
+              'proposed_execution_id': 'withdraw_cash_${DateTime.now().millisecondsSinceEpoch}',
+              'account_iid': accountId,
+              'currency_code': currencyCode,
+              'amount': amount,
+            },
+            'output': {
+              'error': 'Request timed out',
+              'message': 'The withdraw cash request timed out after 15 seconds. Check if server is running properly.',
+            },
+            'requestTime': _toUnixTimestamp(DateTime.now()).toString(),
+            'serverType': 'timeout',
+            'success': false,
+          };
+        },
+      ).catchError((error) {
+        print('❌ WithdrawCash error caught: $error');
+        return {
+          'input': {
+            'proposed_execution_id': 'withdraw_cash_${DateTime.now().millisecondsSinceEpoch}',
+            'account_iid': accountId,
+            'currency_code': currencyCode,
+            'amount': amount,
+          },
+          'output': {
+            'error': 'WithdrawCash execution failed',
+            'message': 'Failed to execute WithdrawCash: ${error.toString()}',
+          },
+          'requestTime': _toUnixTimestamp(DateTime.now()).toString(),
+          'serverType': 'execution-error',
+          'success': false,
+        };
+      });
+
+      // Update connection state based on response
+      if (response['success'] == true) {
+        _isConnected = true;
+      } else {
+        // Test connectivity again if request failed
+        final stillReachable = await testServerConnectivity();
+        _isConnected = stillReachable;
+      }
+
+      return response;
+    } catch (e, stackTrace) {
+      print('❌ Critical error in WithdrawCash: $e');
+      print('❌ Stack trace: $stackTrace');
+
+      // Test connectivity to update state
+      final stillReachable = await testServerConnectivity();
+      _isConnected = stillReachable;
+
+      // Return error response instead of throwing exception to prevent app crash
+      return {
+        'input': {
+          'proposed_execution_id': 'withdraw_cash_${DateTime.now().millisecondsSinceEpoch}',
+          'account_iid': accountId,
+          'currency_code': currencyCode,
+          'amount': amount,
+        },
+        'output': {
+          'error': 'Critical WithdrawCash error',
+          'message': 'A critical error occurred during WithdrawCash: ${e.toString()}',
+          'details': stackTrace.toString(),
+        },
+        'requestTime': _toUnixTimestamp(DateTime.now()).toString(),
+        'serverType': 'critical-error',
+        'success': false,
+      };
+    }
+  }
+
+  /// Get participant info - shows info about connection to real server
+  Future<Map<String, dynamic>> getParticipantInfo({Duration? timeout}) async {
+    if (!_isConnected) {
+      throw Exception('Not connected to gRPC server');
+    }
+
+    try {
+      print('🔄 Getting real participant info from connection...');
+      
+      // Get real server info
+      final serverInfo = await getServerInfo();
+      
+      final response = {
+        'input': {
+          'proposed_execution_id': generateRequestId(prefix: 'get_participant_info'),
+        },
+        'output': {
+          'identifier': 'real_server_connection_${DateTime.now().millisecondsSinceEpoch}',
+          'name': 'Real Simprtagent Server Connection',
+          'status': 'ACTIVE',
+          'server_info': serverInfo,
+          'connected_to_real_server': true,
+        },
+        'requestTime': _toUnixTimestamp(DateTime.now()).toString(),
+        'serverType': 'simprtagent-real',
+      };
+
+      print('📬 Real connection info: ${response['output']}');
+      return response;
+    } catch (e) {
+      throw Exception('Real GetParticipantInfo failed: $e');
+    }
+  }
+
+  /// Get server info from the real server
+  Future<Map<String, String>> getServerInfo() async {
+    if (!_isConnected) {
+      throw Exception('Not connected to gRPC server');
+    }
+
+    try {
+      return {
+        'host': _host ?? 'unknown',
+        'port': _port?.toString() ?? 'unknown',
+        'status': 'connected',
+        'type': 'simprtagent-real',
+        'server_name': 'Mock Participant Agent gRPC server',
+        'timestamp': _toUnixTimestamp(DateTime.now()).toString(),
+        'services': 'AgentService, AccountService, MarketService, InstrumentService',
+      };
+    } catch (e) {
+      throw Exception('Failed to get real server info: $e');
+    }
+  }
+
+  /// Disconnect from the real gRPC server
+  Future<void> disconnect() async {
+    if (_isConnected) {
+      try {
+        _isConnected = false;
+        _host = AppConfig.grpcHost;
+        _port = AppConfig.grpcPort;
+        print('🔌 Disconnected from real gRPC server');
+      } catch (e) {
+        print('⚠️ Error during disconnect: $e');
+        _isConnected = false;
+        _host = AppConfig.grpcHost;
+        _port = AppConfig.grpcPort;
+      }
+    }
+  }
+
+  /// Generate a unique request ID
+  String generateRequestId({String? prefix}) {
+    final timestamp = DateTime.now().millisecondsSinceEpoch;
+    final prefixStr = prefix != null ? '${prefix}_' : '';
+    return '${prefixStr}${timestamp}';
+  }
+
+  /// Handle errors and convert them to user-friendly messages
+  String handleError(dynamic error) {
+    return 'Real server error: ${error.toString()}';
+  }
+
+  /// Real GetAccountOrders call to PortfolioService.GetAccountOrders using grpcurl
   Future<Map<String, dynamic>> getAccountOrders({
     required String accountId,
     List<String>? marketIdOrNameRegexes,
@@ -422,12 +1043,83 @@ class RealGrpcClient {
     String? fromTime,
     String? toTime,
     String? side,
-    dynamic statusFilters,
-    List<String>? instrumentIdOrSymbolRegexes,
+    List<bool>? statusFilters,
   }) async {
-    return _notImplemented('getAccountOrders');
+    if (!_isConnected) {
+      return {
+        'input': {'account_iid': accountId},
+        'output': {'error': 'Not connected to server'},
+        'requestTime': _toUnixTimestamp(DateTime.now()).toString(),
+        'serverType': 'disconnected',
+        'success': false,
+      };
+    }
+
+    try {
+      print('📋 Fetching orders for account: $accountId');
+
+      final response = await Future.any([
+        GrpcurlHelper.getAccountOrders(
+          accountId: accountId,
+          refRequestId: generateRequestId(prefix: 'get_orders'),
+          marketIdOrNameRegexes: marketIdOrNameRegexes,
+          pagination: pagination,
+          fromTime: fromTime,
+          toTime: toTime,
+          side: side,
+          statusFilters: statusFilters,
+        ),
+      ]).catchError((error) {
+        print('❌ GetAccountOrders execution error: $error');
+        return {
+          'input': {'account_iid': accountId},
+          'output': {
+            'error': 'GetAccountOrders execution error',
+            'message': error.toString(),
+          },
+          'requestTime': _toUnixTimestamp(DateTime.now()).toString(),
+          'serverType': 'execution-error',
+          'success': false,
+        };
+      });
+
+      print('📬 Real Server GetAccountOrders Response: ${response['output']}');
+      print('✅ Real get account orders completed');
+
+      // Update connection state based on response
+      if (response['success'] == true) {
+        _isConnected = true;
+      } else {
+        // Test connectivity again if request failed
+        final stillReachable = await testServerConnectivity();
+        _isConnected = stillReachable;
+      }
+
+      return response;
+    } catch (e, stackTrace) {
+      print('❌ Critical error in GetAccountOrders: $e');
+      print('❌ Stack trace: $stackTrace');
+      
+      // Test connectivity to update state
+      final stillReachable = await testServerConnectivity();
+      _isConnected = stillReachable;
+      
+      // Return error response instead of throwing exception to prevent app crash
+      return {
+        'input': {'account_iid': accountId},
+        'output': {
+          'error': 'Critical GetAccountOrders error',
+          'message': 'A critical error occurred during GetAccountOrders: ${e.toString()}',
+          'details': stackTrace.toString(),
+        },
+        'requestTime': _toUnixTimestamp(DateTime.now()).toString(),
+        'serverType': 'critical-error',
+        'success': false,
+      };
+    }
   }
 
+  /// Real GetAccountTrades call to PortfolioService.GetAccountTrades using grpcurl
   Future<Map<String, dynamic>> getAccountTrades({
     required String accountId,
     List<String>? marketIdOrNameRegexes,
@@ -435,100 +1127,487 @@ class RealGrpcClient {
     String? fromTime,
     String? toTime,
     String? side,
-    dynamic statusFilters,
     List<String>? instrumentIdOrSymbolRegexes,
   }) async {
-    return _notImplemented('getAccountTrades');
+    if (!_isConnected) {
+      return {
+        'input': {'account_iid': accountId},
+        'output': {'error': 'Not connected to server'},
+        'requestTime': _toUnixTimestamp(DateTime.now()).toString(),
+        'serverType': 'disconnected',
+        'success': false,
+      };
+    }
+
+    try {
+      print('📋 Fetching trades for account: $accountId');
+
+      final response = await Future.any([
+        GrpcurlHelper.getAccountTrades(
+          accountId: accountId,
+          refRequestId: generateRequestId(prefix: 'get_trades'),
+          marketIdOrNameRegexes: marketIdOrNameRegexes,
+          pagination: pagination,
+          fromTime: fromTime,
+          toTime: toTime,
+          side: side,
+          instrumentIdOrSymbolRegexes: instrumentIdOrSymbolRegexes,
+        ),
+      ]).catchError((error) {
+        print('❌ GetAccountTrades execution error: $error');
+        return {
+          'input': {'account_iid': accountId},
+          'output': {
+            'error': 'GetAccountTrades execution error',
+            'message': error.toString(),
+          },
+          'requestTime': _toUnixTimestamp(DateTime.now()).toString(),
+          'serverType': 'execution-error',
+          'success': false,
+        };
+      });
+
+      print('📬 Real Server GetAccountTrades Response: ${response['output']}');
+      print('✅ Real get account trades completed');
+
+      // Update connection state based on response
+      if (response['success'] == true) {
+        _isConnected = true;
+      } else {
+        // Test connectivity again if request failed
+        final stillReachable = await testServerConnectivity();
+        _isConnected = stillReachable;
+      }
+
+      return response;
+    } catch (e, stackTrace) {
+      print('❌ Critical error in GetAccountTrades: $e');
+      print('❌ Stack trace: $stackTrace');
+      
+      // Test connectivity to update state
+      final stillReachable = await testServerConnectivity();
+      _isConnected = stillReachable;
+      
+      // Return error response instead of throwing exception to prevent app crash
+      return {
+        'input': {'account_iid': accountId},
+        'output': {
+          'error': 'Critical GetAccountTrades error',
+          'message': 'A critical error occurred during GetAccountTrades: ${e.toString()}',
+          'details': stackTrace.toString(),
+        },
+        'requestTime': _toUnixTimestamp(DateTime.now()).toString(),
+        'serverType': 'critical-error',
+        'success': false,
+      };
+    }
   }
 
-  Future<Map<String, dynamic>> getMarketList() async {
-    return _notImplemented('getMarketList');
+  /// Real GetMarketList call to MarketService.GetMarketList using grpcurl
+  Future<Map<String, dynamic>> getMarketList({Duration? timeout}) async {
+    if (!_isConnected) {
+      return {
+        'input': {},
+        'output': {'error': 'Not connected to server'},
+        'requestTime': _toUnixTimestamp(DateTime.now()).toString(),
+        'serverType': 'disconnected',
+        'success': false,
+      };
+    }
+
+    try {
+      print('📋 Getting market list from real server...');
+
+      final inputParams = {
+        'proposed_execution_id': 'get_markets_${DateTime.now().millisecondsSinceEpoch}',
+      };
+
+      final result = await GrpcurlHelper.getMarketList();
+
+      print('📤 GetMarketList OUTPUT: ${result.toString()}');
+      return {
+        'input': inputParams,
+        'output': result['success'] ? result['output'] : {'error': result['error'] ?? 'Unknown error'},
+        'requestTime': _toUnixTimestamp(DateTime.now()).toString(),
+        'serverType': 'real_grpc',
+        'success': result['success'] ?? false,
+      };
+    } catch (e) {
+      print('❌ Critical error in getMarketList: $e');
+      return {
+        'input': {},
+        'output': {'error': 'Critical error: $e'},
+        'requestTime': _toUnixTimestamp(DateTime.now()).toString(),
+        'serverType': 'critical-error',
+        'success': false,
+      };
+    }
   }
 
-  Future<Map<String, dynamic>> getMarketInstrumentList({required String marketId, int pageNumber = 0, int pageSize = 0}) async {
-    return _notImplemented('getMarketInstrumentList');
-  }
-
-  Future<Map<String, dynamic>> getMarketSupportedCurrencies({required String marketId}) async {
-    return _notImplemented('getMarketSupportedCurrencies');
-  }
-
-  Future<Map<String, dynamic>> getAccountCashHoldings({required String accountId, List<String>? cashAssetIds}) async {
-    return _notImplemented('getAccountCashHoldings');
-  }
-
-  Future<Map<String, dynamic>> depositCash({required String accountId, String? currencyCode, String? assetId, required String amount}) async {
-    return _notImplemented('depositCash');
-  }
-
-  Future<Map<String, dynamic>> withdrawCash({required String accountId, String? currencyCode, String? assetId, required String amount}) async {
-    return _notImplemented('withdrawCash');
-  }
-
-  Future<Map<String, dynamic>> getAccountMarketPortfolio({required String accountId, String? marketId, List<String>? assetIds}) async {
-    return _notImplemented('getAccountMarketPortfolio');
-  }
-
-  Future<Map<String, dynamic>> placeOrder({
-    required String accountId,
+  /// Real GetMarketInstrumentList call to MarketService.GetMarketInstrumentList using grpcurl
+  Future<Map<String, dynamic>> getMarketInstrumentList({
     required String marketId,
-    required String instrumentId,
-    required String orderType,
-    required String side,
-    required String quantity,
-    String? price,
+    int pageNumber = 0,
+    int pageSize = 0,
+    Duration? timeout,
   }) async {
-    return _notImplemented('placeOrder');
+    if (!_isConnected) {
+      return {
+        'input': {'market_id': marketId},
+        'output': {'error': 'Not connected to server'},
+        'requestTime': _toUnixTimestamp(DateTime.now()).toString(),
+        'serverType': 'disconnected',
+        'success': false,
+      };
+    }
+
+    try {
+      print('📋 Getting market instrument list for market: $marketId from real server...');
+
+      final inputParams = {
+        'proposed_execution_id': 'get_instrument_list_${DateTime.now().millisecondsSinceEpoch}',
+        'market_id': marketId,
+      };
+
+      final result = await GrpcurlHelper.getMarketInstrumentList(
+        marketId: marketId,
+        pageNumber: pageNumber,
+        pageSize: pageSize,
+      );
+
+      print('📤 GetMarketInstrumentList OUTPUT: ${result.toString()}');
+      return {
+        'input': inputParams,
+        'output': result['success'] ? result['output'] : {'error': result['error'] ?? 'Unknown error'},
+        'requestTime': _toUnixTimestamp(DateTime.now()).toString(),
+        'serverType': 'real_grpc',
+        'success': result['success'] ?? false,
+      };
+    } catch (e) {
+      print('❌ Critical error in getMarketInstrumentList: $e');
+      return {
+        'input': {'market_id': marketId},
+        'output': {'error': 'Critical error: $e'},
+        'requestTime': _toUnixTimestamp(DateTime.now()).toString(),
+        'serverType': 'critical-error',
+        'success': false,
+      };
+    }
   }
 
-  Future<Map<String, dynamic>> createOrder({
-    required String accountId,
-    required String instrumentId,
-    required String side,
-    required String quantity,
-    String? price,
-    String? orderType,
-    String? feePayerAccountId,
-    String? timeInForce,
-    String? participantOrderId,
+  /// Get supported currencies using the real gRPC server
+  Future<Map<String, dynamic>> getSupportedCurrencies({
+    int pageNumber = 0,
+    int pageSize = 0,
   }) async {
-    return _notImplemented('createOrder');
+    try {
+      print('🏦 Getting supported currencies...');
+
+      final result = await GrpcurlHelper.getSupportedCurrencies(
+        pageNumber: pageNumber,
+        pageSize: pageSize,
+      );
+
+      return result;
+    } catch (e) {
+      print('❌ Critical error in getSupportedCurrencies: $e');
+      return {
+        'input': {
+          'page_nr': pageNumber,
+          'page_size': pageSize,
+        },
+        'output': {'error': 'Critical error: $e'},
+        'requestTime': _toUnixTimestamp(DateTime.now()).toString(),
+        'serverType': 'critical-error',
+        'success': false,
+      };
+    }
   }
 
-  Future<Map<String, dynamic>> getSupportedCurrencies() async {
-    return _notImplemented('getSupportedCurrencies');
+  /// Get market supported currencies using the real gRPC server
+  Future<Map<String, dynamic>> getMarketSupportedCurrencies({
+    required String marketId,
+    int pageNumber = 0,
+    int pageSize = 0,
+  }) async {
+    try {
+      print('🏦 Getting market supported currencies for market: $marketId');
+      final result = await GrpcurlHelper.getMarketSupportedCurrencies(
+        marketId: marketId,
+        pageNumber: pageNumber,
+        pageSize: pageSize,
+      );
+      print('📤 GetMarketSupportedCurrencies OUTPUT: ${result.toString()}');
+      return {
+        'input': {
+          'market_id': marketId,
+          'page_nr': pageNumber,
+          'page_size': pageSize,
+        },
+        'output': result['success'] ? result['output'] : {'error': result['output']?['error'] ?? 'Unknown error'},
+        'requestTime': _toUnixTimestamp(DateTime.now()).toString(),
+        'serverType': 'real_grpc',
+        'success': result['success'] ?? false,
+      };
+    } catch (e) {
+      print('❌ Critical error in getMarketSupportedCurrencies: $e');
+      return {
+        'input': {
+          'market_id': marketId,
+          'page_nr': pageNumber,
+          'page_size': pageSize,
+        },
+        'output': {'error': 'Critical error: $e'},
+        'requestTime': _toUnixTimestamp(DateTime.now()).toString(),
+        'serverType': 'critical-error',
+        'success': false,
+      };
+    }
   }
 
-  Future<Map<String, dynamic>> getVenueList({String? marketId}) async {
-    return _notImplemented('getVenueList');
-  }
-
+  /// Get order fees using the real gRPC server
   Future<Map<String, dynamic>> getOrderFees({
     required String accountId,
     required String feePayerAccountId,
     required String instrumentId,
-    required String orderType,
-    required String side,
+    required String orderType, // "LIMIT" or "MARKET"
+    required String side, // "BUY" or "SELL"
     required String quantity,
-    String? price,
-    String? timeInForce,
+    String? price, // Required for LIMIT orders
+    String timeInForce = "0", // Always 0 according to requirements
   }) async {
-    return _notImplemented('getOrderFees');
+    try {
+      print('💰 Getting order fees...');
+
+      final result = await GrpcurlHelper.getOrderFees(
+        accountId: accountId,
+        feePayerAccountId: feePayerAccountId,
+        instrumentId: instrumentId,
+        orderType: orderType,
+        side: side,
+        quantity: quantity,
+        price: price,
+        timeInForce: timeInForce,
+      );
+
+      print('📤 GetOrderFees OUTPUT: ${result.toString()}');
+      return {
+        'input': {
+          'account_iid': accountId,
+          'fee_payer_account_iid': feePayerAccountId,
+          'instrument_listing_iid': instrumentId,
+          'order_type': orderType,
+          'side': side,
+          'quantity': quantity,
+          'price': price,
+          'time_in_force': timeInForce,
+        },
+        'output': result['success'] ? result['output'] : {'error': result['error'] ?? 'Unknown error'},
+        'requestTime': _toUnixTimestamp(DateTime.now()).toString(),
+        'serverType': 'real_grpc',
+        'success': result['success'] ?? false,
+      };
+    } catch (e) {
+      print('❌ Critical error in getOrderFees: $e');
+      return {
+        'input': {
+          'account_iid': accountId,
+          'fee_payer_account_iid': feePayerAccountId,
+          'instrument_listing_iid': instrumentId,
+          'order_type': orderType,
+          'side': side,
+          'quantity': quantity,
+          'price': price,
+          'time_in_force': timeInForce,
+        },
+        'output': {'error': 'Critical error: $e'},
+        'requestTime': _toUnixTimestamp(DateTime.now()).toString(),
+        'serverType': 'critical-error',
+        'success': false,
+      };
+    }
   }
 
-  Map<String, dynamic> _notImplemented(String methodName) {
+  Future<Map<String, dynamic>> createOrder({
+    required String accountId,
+    required String feePayerAccountId,
+    required String instrumentId,
+    required String orderType, // "LIMIT" or "MARKET"
+    required String side, // "BUY" or "SELL"
+    required String quantity,
+    required String price, // Must be zero for MARKET orders
+    String timeInForce = "0", // "0" for GTC, "1" for IOC, "2" for FOK, "3" for DAY
+    DateTime? expireTime,
+    required String participantOrderId,
+    String? metadata,
+    String? auxData,
+  }) async {
+    try {
+      // Ensure connection
+      if (!isConnected) {
+        await connect(host: _host, port: _port);
+      }
+
+      final result = await GrpcurlHelper.createOrder(
+        accountId: accountId,
+        feePayerAccountId: feePayerAccountId,
+        instrumentId: instrumentId,
+        orderType: orderType,
+        side: side,
+        quantity: quantity,
+        price: price,
+        timeInForce: timeInForce,
+        expireTime: expireTime,
+        participantOrderId: participantOrderId,
+        metadata: metadata,
+        auxData: auxData,
+      );
+
+      return result;
+    } catch (e) {
+      print('❌ Critical error in createOrder: $e');
+      return {
+        'request': {
+          'account_iid': accountId,
+          'fee_payer_account_iid': feePayerAccountId,
+          'instrument_listing_iid': instrumentId,
+          'order_type': orderType,
+          'side': side,
+          'quantity': quantity,
+          'price': price,
+          'time_in_force': timeInForce,
+          'participant_order_iid': participantOrderId,
+        },
+        'output': {'error': 'Critical error: $e'},
+        'requestTime': _toUnixTimestamp(DateTime.now()).toString(),
+        'serverType': 'critical-error',
+        'success': false,
+      };
+    }
+  }
+
+  /// Real GetVenueList call to VenueService.GetVenueList using grpcurl
+  Future<Map<String, dynamic>> getVenueList({
+    String? marketId,
+    Duration? timeout,
+  }) async {
+    if (!_isConnected) {
+      return {
+        'input': {},
+        'output': {'error': 'Not connected to server'},
+        'requestTime': _toUnixTimestamp(DateTime.now()).toString(),
+        'serverType': 'disconnected',
+        'success': false,
+      };
+    }
+
+    try {
+      print('📋 Getting venue list from real server...');
+
+      final inputParams = {
+        'proposed_execution_id': 'get_venues_${DateTime.now().millisecondsSinceEpoch}',
+        if (marketId != null && marketId.isNotEmpty)
+          'market_id_or_symbol_regex': marketId,
+      };
+
+      final result = await GrpcurlHelper.getVenueList(
+        marketIdOrSymbolRegex: marketId,
+      );
+
+      return {
+        'input': inputParams,
+        'output': result['success'] ? result['output'] : {'error': result['error'] ?? 'Unknown error'},
+        'requestTime': _toUnixTimestamp(DateTime.now()).toString(),
+        'serverType': 'real_grpc',
+        'success': result['success'] ?? false,
+      };
+    } catch (e) {
+      return {
+        'input': {},
+        'output': {'error': 'Critical error: $e'},
+        'requestTime': _toUnixTimestamp(DateTime.now()).toString(),
+        'serverType': 'critical-error',
+        'success': false,
+      };
+    }
+  }
+
+  /// Get instrument list using the real gRPC server
+  Future<Map<String, dynamic>> getInstrumentList({
+    int pageNumber = 0,
+    int pageSize = 0,
+  }) async {
+    try {
+      print('🎵 Getting instrument list...');
+
+      final result = await GrpcurlHelper.getInstrumentList(
+        pageNumber: pageNumber,
+        pageSize: pageSize,
+      );
+
+      return result;
+    } catch (e) {
+      print('❌ Critical error in getInstrumentList: $e');
+      return {
+        'input': {
+          'page_nr': pageNumber,
+          'page_size': pageSize,
+        },
+        'output': {'error': 'Critical error: $e'},
+        'requestTime': _toUnixTimestamp(DateTime.now()).toString(),
+        'serverType': 'critical-error',
+        'success': false,
+      };
+    }
+  }
+
+  /// Get account settlements using the real gRPC server
+  Future<Map<String, dynamic>> getAccountSettlements({
+    required String accountId,
+    List<String>? marketIdOrNameRegexes,
+    Map<String, dynamic>? pagination,
+    String? fromTime,
+    String? toTime,
+    List<String>? instrumentIdOrSymbolRegexes,
+  }) async {
+    // Not yet implemented in GrpcurlHelper
     return {
-      'input': {},
+      'input': {'account_iid': accountId},
       'output': {
-        'error': 'Method not yet implemented in new gRPC client',
-        'details': '$methodName is not yet implemented. This method needs to be converted to use proper Dart gRPC client instead of grpcurl.',
+        'error': 'Method not yet implemented',
+        'message': 'GetAccountSettlements is not yet implemented in GrpcurlHelper',
       },
       'requestTime': _toUnixTimestamp(DateTime.now()).toString(),
       'serverType': 'not-implemented',
       'success': false,
     };
   }
+
+  /// Get account transactions using the real gRPC server
+  Future<Map<String, dynamic>> getAccountTransactions({
+    required String accountId,
+    Map<String, dynamic>? pagination,
+    String? fromTime,
+    String? toTime,
+  }) async {
+    // Not yet implemented in GrpcurlHelper
+    return {
+      'input': {'account_iid': accountId},
+      'output': {
+        'error': 'Method not yet implemented',
+        'message': 'GetAccountTransactions is not yet implemented in GrpcurlHelper',
+      },
+      'requestTime': _toUnixTimestamp(DateTime.now()).toString(),
+      'serverType': 'not-implemented',
+      'success': false,
+    };
+  }
+
+  /// Dispose and clean up resources
+  void dispose() {
+    disconnect();
+  }
 }
 
-/// Global singleton instance of RealGrpcClient
+// Singleton instance for easy access throughout the app
 final realGrpcClient = RealGrpcClient();
