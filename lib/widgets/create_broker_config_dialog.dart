@@ -1,7 +1,10 @@
+import 'dart:async';
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
+import 'package:grpc/grpc.dart';
 import '../services/theme_service.dart';
 import '../utils/broker_config_helper.dart';
+import '../generated/prtagent/v1/agent.pbgrpc.dart';
 
 /// Dialog for creating a new broker configuration
 import '../config/ui_constants.dart';
@@ -21,20 +24,20 @@ class CreateBrokerConfigDialog extends StatefulWidget {
 class _CreateBrokerConfigDialogState extends State<CreateBrokerConfigDialog> {
   final _formKey = GlobalKey<FormState>();
   final _brokerNameController = TextEditingController();
-  final _grpcHostController = TextEditingController(text: 'localhost');
-  final _grpcPortController = TextEditingController(text: '50051');
+  final _grpcEndpointController = TextEditingController(text: 'localhost:50051');
   final _apiKeyController = TextEditingController();
   final _participantIdController = TextEditingController();
   final _participantNameController = TextEditingController();
 
   bool _isCreating = false;
+  bool _isTesting = false;
   String? _errorMessage;
+  String? _testMessage;
 
   @override
   void dispose() {
     _brokerNameController.dispose();
-    _grpcHostController.dispose();
-    _grpcPortController.dispose();
+    _grpcEndpointController.dispose();
     _apiKeyController.dispose();
     _participantIdController.dispose();
     _participantNameController.dispose();
@@ -53,8 +56,16 @@ class _CreateBrokerConfigDialogState extends State<CreateBrokerConfigDialog> {
 
     try {
       final brokerName = _brokerNameController.text.trim();
-      final grpcHost = _grpcHostController.text.trim();
-      final grpcPort = int.parse(_grpcPortController.text.trim());
+
+      // Parse endpoint into host and port
+      final endpoint = _grpcEndpointController.text.trim();
+      final parts = endpoint.split(':');
+      if (parts.length != 2) {
+        throw Exception('Invalid endpoint format. Expected host:port');
+      }
+      final grpcHost = parts[0];
+      final grpcPort = int.parse(parts[1]);
+
       final apiKey = _apiKeyController.text.trim();
       final participantId = _participantIdController.text.trim();
       final participantName = _participantNameController.text.trim();
@@ -90,6 +101,88 @@ class _CreateBrokerConfigDialogState extends State<CreateBrokerConfigDialog> {
       if (mounted) {
         setState(() {
           _isCreating = false;
+        });
+      }
+    }
+  }
+
+  Future<void> _testConnection() async {
+    // First validate endpoint field only
+    final endpoint = _grpcEndpointController.text.trim();
+    if (endpoint.isEmpty) {
+      setState(() {
+        _errorMessage = 'Endpoint is required for testing';
+      });
+      return;
+    }
+
+    setState(() {
+      _isTesting = true;
+      _testMessage = null;
+      _errorMessage = null;
+    });
+
+    ClientChannel? channel;
+    StreamController<PingRequest>? requestController;
+
+    try {
+      // Parse endpoint
+      final parts = endpoint.split(':');
+      if (parts.length != 2) {
+        throw Exception('Invalid endpoint format. Expected host:port');
+      }
+      final host = parts[0];
+      final port = int.parse(parts[1]);
+
+      // Create gRPC channel
+      channel = ClientChannel(
+        host,
+        port: port,
+        options: const ChannelOptions(
+          credentials: ChannelCredentials.insecure(),
+        ),
+      );
+
+      // Create client
+      final client = AgentServiceClient(channel);
+
+      // Test bidirectional streaming ping
+      requestController = StreamController<PingRequest>();
+      final responseStream = client.biDirStreamPing(requestController.stream);
+
+      // Send a ping request
+      final testRequest = PingRequest()
+        ..stringToBePonged = 'Connection test from mini-broker';
+      requestController.add(testRequest);
+
+      // Wait for response with timeout
+      final response = await responseStream.first.timeout(
+        const Duration(seconds: 5),
+        onTimeout: () {
+          throw TimeoutException('Connection test timed out after 5 seconds');
+        },
+      );
+
+      // Close the request stream
+      await requestController.close();
+
+      if (mounted) {
+        setState(() {
+          _testMessage = 'Connection successful! Response: ${response.pongString}';
+        });
+      }
+    } catch (e) {
+      if (mounted) {
+        setState(() {
+          _errorMessage = 'Connection failed: ${e.toString()}';
+        });
+      }
+    } finally {
+      await requestController?.close();
+      await channel?.shutdown();
+      if (mounted) {
+        setState(() {
+          _isTesting = false;
         });
       }
     }
@@ -197,9 +290,9 @@ class _CreateBrokerConfigDialogState extends State<CreateBrokerConfigDialog> {
                       ),
                       const SizedBox(height: UIConstants.spacingMd),
 
-                      // gRPC Server Section
+                      // Participant Agent gRPC Endpoint Section
                       Text(
-                        'gRPC Server',
+                        'Participant Agent gRPC Endpoint',
                         style: TextStyle(
                           color: textColor,
                           fontWeight: UIConstants.fontWeightMedium,
@@ -208,76 +301,68 @@ class _CreateBrokerConfigDialogState extends State<CreateBrokerConfigDialog> {
                       ),
                       const SizedBox(height: UIConstants.spacingSm),
 
-                      // gRPC Host
-                      Text(
-                        'Host *',
-                        style: TextStyle(
-                          color: textColor,
-                          fontWeight: UIConstants.fontWeightMedium,
-                          fontSize: UIConstants.textFieldFontSize,
-                        ),
-                      ),
-                      const SizedBox(height: UIConstants.spacingSm),
-                      TextFormField(
-                        controller: _grpcHostController,
-                        style: TextStyle(color: textColor, fontSize: UIConstants.textFieldFontSize),
-                        decoration: InputDecoration(
-                          hintText: 'localhost or IP address',
-                          hintStyle: TextStyle(color: hintColor, fontSize: UIConstants.textFieldFontSize),
-                          filled: true,
-                          fillColor: surfaceColor,
-                          contentPadding: UIConstants.textFieldPadding,
-                          isDense: true,
-                          border: OutlineInputBorder(
-                            borderRadius: BorderRadius.circular(UIConstants.textFieldBorderRadius),
-                            borderSide: BorderSide.none,
+                      // gRPC Endpoint (host:port)
+                      Row(
+                        children: [
+                          Expanded(
+                            child: TextFormField(
+                              controller: _grpcEndpointController,
+                              style: TextStyle(color: textColor, fontSize: UIConstants.textFieldFontSize),
+                              decoration: InputDecoration(
+                                hintText: 'localhost:50051',
+                                hintStyle: TextStyle(color: hintColor, fontSize: UIConstants.textFieldFontSize),
+                                filled: true,
+                                fillColor: surfaceColor,
+                                contentPadding: UIConstants.textFieldPadding,
+                                isDense: true,
+                                border: OutlineInputBorder(
+                                  borderRadius: BorderRadius.circular(UIConstants.textFieldBorderRadius),
+                                  borderSide: BorderSide.none,
+                                ),
+                              ),
+                              validator: (value) {
+                                if (value == null || value.trim().isEmpty) {
+                                  return 'Endpoint is required';
+                                }
+                                final parts = value.trim().split(':');
+                                if (parts.length != 2) {
+                                  return 'Format must be host:port';
+                                }
+                                final port = int.tryParse(parts[1]);
+                                if (port == null || port < 1 || port > 65535) {
+                                  return 'Invalid port number (1-65535)';
+                                }
+                                return null;
+                              },
+                            ),
                           ),
-                        ),
-                        validator: (value) {
-                          if (value == null || value.trim().isEmpty) {
-                            return 'Host is required';
-                          }
-                          return null;
-                        },
-                      ),
-                      const SizedBox(height: UIConstants.spacingMd),
-
-                      // gRPC Port
-                      Text(
-                        'Port *',
-                        style: TextStyle(
-                          color: textColor,
-                          fontWeight: UIConstants.fontWeightMedium,
-                          fontSize: UIConstants.textFieldFontSize,
-                        ),
-                      ),
-                      const SizedBox(height: UIConstants.spacingSm),
-                      TextFormField(
-                        controller: _grpcPortController,
-                        style: TextStyle(color: textColor, fontSize: UIConstants.textFieldFontSize),
-                        keyboardType: TextInputType.number,
-                        decoration: InputDecoration(
-                          hintText: '50051',
-                          hintStyle: TextStyle(color: hintColor, fontSize: UIConstants.textFieldFontSize),
-                          filled: true,
-                          fillColor: surfaceColor,
-                          contentPadding: UIConstants.textFieldPadding,
-                          isDense: true,
-                          border: OutlineInputBorder(
-                            borderRadius: BorderRadius.circular(UIConstants.textFieldBorderRadius),
-                            borderSide: BorderSide.none,
+                          const SizedBox(width: UIConstants.spacingSm),
+                          ElevatedButton.icon(
+                            onPressed: _isTesting ? null : _testConnection,
+                            icon: _isTesting
+                                ? SizedBox(
+                                    width: 16,
+                                    height: 16,
+                                    child: CircularProgressIndicator(
+                                      strokeWidth: 2,
+                                      valueColor: AlwaysStoppedAnimation<Color>(Colors.white),
+                                    ),
+                                  )
+                                : Icon(Icons.network_ping, size: 18),
+                            label: Text('Test'),
+                            style: ElevatedButton.styleFrom(
+                              backgroundColor: primaryColor,
+                              foregroundColor: Colors.white,
+                              padding: const EdgeInsets.symmetric(
+                                horizontal: 16,
+                                vertical: 12,
+                              ),
+                              shape: RoundedRectangleBorder(
+                                borderRadius: BorderRadius.circular(UIConstants.textFieldBorderRadius),
+                              ),
+                            ),
                           ),
-                        ),
-                        validator: (value) {
-                          if (value == null || value.trim().isEmpty) {
-                            return 'Port is required';
-                          }
-                          final port = int.tryParse(value.trim());
-                          if (port == null || port < 1 || port > 65535) {
-                            return 'Invalid port number (1-65535)';
-                          }
-                          return null;
-                        },
+                        ],
                       ),
                       const SizedBox(height: UIConstants.spacingMd),
 
@@ -384,6 +469,31 @@ class _CreateBrokerConfigDialogState extends State<CreateBrokerConfigDialog> {
                   ),
                 ),
               ),
+
+              // Test success message
+              if (_testMessage != null) ...[
+                const SizedBox(height: UIConstants.spacingMd),
+                Container(
+                  padding: UIConstants.paddingStandard,
+                  decoration: BoxDecoration(
+                    color: Colors.green.withOpacity(0.1),
+                    borderRadius: BorderRadius.circular(UIConstants.textFieldBorderRadius),
+                    border: Border.all(color: Colors.green.withOpacity(0.3)),
+                  ),
+                  child: Row(
+                    children: [
+                      Icon(Icons.check_circle_outline, color: Colors.green[400], size: 20),
+                      const SizedBox(width: UIConstants.spacingSm),
+                      Expanded(
+                        child: Text(
+                          _testMessage!,
+                          style: TextStyle(color: Colors.green[400], fontSize: 13),
+                        ),
+                      ),
+                    ],
+                  ),
+                ),
+              ],
 
               // Error message
               if (_errorMessage != null) ...[

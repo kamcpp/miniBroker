@@ -13,6 +13,7 @@ import "prtagent/v1/event.proto";
 
 service AgentService {
   rpc Ping(PingRequest) returns (PingResponse);
+  rpc BiDirStreamPing(stream PingRequest) returns (stream PingResponse);
   rpc GetSupportedCurrencies(GetSupportedCurrenciesRequest)
     returns (GetSupportedCurrenciesResponse);
   rpc GetSupportedCurrenciesAsync(GetSupportedCurrenciesRequest)

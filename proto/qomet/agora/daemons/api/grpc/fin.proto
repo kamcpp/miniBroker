@@ -286,6 +286,57 @@ message ParticipantToAssetRelation {
   map<string, string> metadata = 105;                       // OPTIONAL: Additional metadata
 }
 
+message OneOfIdOrParticipant {
+  oneof participant {
+    string iid = 1;
+    Participant obj = 2;
+  }
+}
+
+enum InvestorTypeEnum {
+  INVESTOR_TYPE_ENUM__UNKNOWN = 0;
+
+  INVESTOR_TYPE_ENUM__RETAIL = 1;
+  INVESTOR_TYPE_ENUM__INSTITUTIONAL = 2;
+  INVESTOR_TYPE_ENUM__ACCREDITED = 3;
+  INVESTOR_TYPE_ENUM__ADVANCED = 4;
+
+  INVESTOR_TYPE_ENUM__OTHER = 0x0fff0000;
+}
+
+enum InvestorStatusEnum {
+  INVESTOR_STATUS_ENUM__UNKNOWN = 0;
+
+  INVESTOR_STATUS_ENUM__ACTIVE = 1;
+  INVESTOR_STATUS_ENUM__INACTIVE = 2;
+  INVESTOR_STATUS_ENUM__SUSPENDED = 3;
+  INVESTOR_STATUS_ENUM__BLOCKED = 4;
+  INVESTOR_STATUS_ENUM__CLOSED = 5;
+  INVESTOR_STATUS_ENUM__PENDING = 6;
+  INVESTOR_STATUS_ENUM__TERMINATED = 7;
+
+  INVESTOR_STATUS_ENUM__OTHER = 0x0fff0000;
+}
+
+message Investor {
+  string iid = 1;                              // REQUIRED: Internal investor identifier
+
+  repeated FinIdentifier identifiers = 2;      // OPTIONAL: List of investor identifiers (BIC, LET, etc)
+  string external_investor_id = 3;             // OPTIONAL: External investor identifier stored by prtagent
+
+  repeated InvestorTypeEnum types = 4;         // AT LEAST ONE IS REQUIRED: List of investor types (can be empty)
+
+  OneOfIdOrParticipant broker_participant = 5; // REQUIRED: Associated broker participant internal IID
+
+  InvestorStatusEnum investor_status = 6;      // REQUIRED: Current investor status
+
+  map<string, string> display_names = 101;     // OPTIONAL: Display names for localization
+  map<string, string> descriptions = 102;      // OPTIONAL: Descriptions for localization
+  map<string, string> labels = 103;            // OPTIONAL: Key-value labels
+  repeated string tags = 104;                  // OPTIONAL: Tags for categorization
+  map<string, string> metadata = 105;          // OPTIONAL: Additional metadata
+}
+
 enum InstrumentClassEnum {
   INSTRUMENT_CLASS_ENUM__UNKNOWN = 0;
 
@@ -316,12 +367,6 @@ message FinInstrumentClass {
   map<string, string> metadata = 105;
 }
 
-message OneOfIdOrParticipant {
-  oneof participant {
-    string iid = 1;
-    Participant obj = 2;
-  }
-}
 
 message Instrument {
   string iid = 1;                               // REQUIRED: Internal instrument identifier

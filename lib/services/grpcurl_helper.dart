@@ -380,22 +380,22 @@ class GrpcurlHelper {
     }
   }
 
-  /// Make a real NewAccount call using grpcurl
+  /// Make a real NewInvestor call using grpcurl
   static Future<Map<String, dynamic>> newAccount({
     required String externalAccountId,
     String? auxData,
   }) async {
-    // Prevent concurrent newAccount calls to avoid crashes
+    // Prevent concurrent newInvestor calls to avoid crashes
     if (_isAccountListInProgress) {
-      print('⚠️ NewAccount blocked - another account operation in progress');
+      print('⚠️ NewInvestor blocked - another investor operation in progress');
       return {
         'input': {
-          'proposed_execution_id': 'new_account_${DateTime.now().millisecondsSinceEpoch}',
-          'external_account_id': externalAccountId,
+          'proposed_execution_id': 'new_investor_${DateTime.now().millisecondsSinceEpoch}',
+          'external_investor_id': externalAccountId,
         },
         'output': {
           'error': 'Operation already in progress',
-          'message': 'Another account operation is already in progress. Please wait for it to complete.',
+          'message': 'Another investor operation is already in progress. Please wait for it to complete.',
         },
         'requestTime': _toUnixTimestamp(DateTime.now()).toString(),
         'serverType': 'concurrent-blocked',
@@ -410,15 +410,15 @@ class GrpcurlHelper {
         auxData: auxData,
       );
     } catch (error, stack) {
-      print('❌ CRITICAL: Unhandled exception in newAccount: $error');
+      print('❌ CRITICAL: Unhandled exception in newInvestor: $error');
       print('❌ CRITICAL: Stack: $stack');
       return {
         'input': {
-          'proposed_execution_id': 'new_account_${DateTime.now().millisecondsSinceEpoch}',
-          'external_account_id': externalAccountId,
+          'proposed_execution_id': 'new_investor_${DateTime.now().millisecondsSinceEpoch}',
+          'external_investor_id': externalAccountId,
         },
         'output': {
-          'error': 'Critical unhandled exception in newAccount',
+          'error': 'Critical unhandled exception in newInvestor',
           'message': 'An unhandled exception occurred: ${error.toString()}',
           'details': stack.toString(),
         },
@@ -431,16 +431,16 @@ class GrpcurlHelper {
     }
   }
 
-  /// Internal newAccount implementation
+  /// Internal newInvestor implementation
   static Future<Map<String, dynamic>> _newAccountInternal({
     required String externalAccountId,
     String? auxData,
   }) async {
-    final requestId = 'new_account_${DateTime.now().millisecondsSinceEpoch}';
+    final requestId = 'new_investor_${DateTime.now().millisecondsSinceEpoch}';
 
     final request = {
       'proposed_execution_id': requestId,
-      'external_account_id': externalAccountId,
+      'external_investor_id': externalAccountId,
       'aux_data': {
         'source': 'flutter_app',
         'created_at': auxData ?? 'Created from Flutter signup',
@@ -449,17 +449,17 @@ class GrpcurlHelper {
 
     try {
       // Find the working grpcurl path with aggressive timeout to prevent hanging
-      print('🔍 Looking for grpcurl executable for NewAccount...');
+      print('🔍 Looking for grpcurl executable for NewInvestor...');
       final grpcurlPath = await _findGrpcurlPath().timeout(
         const Duration(milliseconds: 500),
         onTimeout: () {
-          print('⏰ grpcurl path finder timed out for NewAccount');
+          print('⏰ grpcurl path finder timed out for NewInvestor');
           return null;
         },
       );
-      
+
       if (grpcurlPath == null) {
-        print('❌ No grpcurl path found for NewAccount');
+        print('❌ No grpcurl path found for NewInvestor');
         return {
           'input': request,
           'output': {
@@ -473,7 +473,7 @@ class GrpcurlHelper {
         };
       }
 
-      print('🔄 Making real grpcurl call to AccountService.NewAccount using $grpcurlPath');
+      print('🔄 Making real grpcurl call to InvestorService.NewInvestor using $grpcurlPath');
       print('📨 Request: $request');
 
       ProcessResult? result;
@@ -483,21 +483,21 @@ class GrpcurlHelper {
 
         result = await Process.run(
           grpcurlPath,
-          ['-plaintext', '-d', jsonRequest, '$_host:$_port', 'tech.qomet.agora.api.grpc.prtagent.v1.AccountService.NewAccount'],
+          ['-plaintext', '-d', jsonRequest, '$_host:$_port', 'tech.qomet.agora.api.grpc.prtagent.v1.InvestorService/NewInvestor'],
         ).timeout(
           const Duration(seconds: 10),
           onTimeout: () {
-            print('⏰ grpcurl NewAccount Process.run timed out after 10 seconds');
-            throw TimeoutException('grpcurl newAccount timed out', const Duration(seconds: 10));
+            print('⏰ grpcurl NewInvestor Process.run timed out after 10 seconds');
+            throw TimeoutException('grpcurl newInvestor timed out', const Duration(seconds: 10));
           },
         );
       } on TimeoutException catch (e) {
-        print('⏰ NewAccount timeout: ${e.message}');
+        print('⏰ NewInvestor timeout: ${e.message}');
         return {
           'input': request,
           'output': {
             'error': 'Request timed out',
-            'message': 'The new account request timed out after 10 seconds. Check if server is running on ${AppConfig.grpcServerAddress}.',
+            'message': 'The new investor request timed out after 10 seconds. Check if server is running on ${AppConfig.grpcServerAddress}.',
           },
           'requestTime': _toUnixTimestamp(DateTime.now()).toString(),
           'serverType': 'timeout',

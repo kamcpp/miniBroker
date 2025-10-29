@@ -4,102 +4,102 @@ package tech.qomet.agora.api.grpc.prtagent.v1;
 
 option go_package = "qomet.tech/agora/daemons/gen-pkg/tech/qomet/agora/api/grpc/prtagent/v1;agoraapigrpcprtagentv1";
 option java_package = "tech.qomet.agora.api.grpc.prtagent.v1";
-option java_outer_classname = "Account";
+option java_outer_classname = "Investor";
 option csharp_namespace  = "Tech.Qomet.Agora.Api.Grpc.PrtAgent.V1";
 
 import "common.proto";
 import "fin.proto";
 import "prtagent/v1/query.proto";
 
-service AccountService {
-  rpc GetAccountList(GetAccountListRequest) returns (GetAccountListResponse);
-  rpc GetAccountListAsync(GetAccountListRequest) returns (tech.qomet.agora.api.grpc.common.ExecutionAsyncResponse);
+service InvestorService {
+  rpc GetInvestorList(GetInvestorListRequest) returns (GetInvestorListResponse);
+  rpc GetInvestorListAsync(GetInvestorListRequest) returns (tech.qomet.agora.api.grpc.common.ExecutionAsyncResponse);
 
-  rpc GetAccountInfoBatch(GetAccountInfoBatchRequest) returns (GetAccountInfoBatchResponse);
-  rpc GetAccountInfoBatchAsync(GetAccountInfoBatchRequest) returns (tech.qomet.agora.api.grpc.common.ExecutionAsyncResponse);
+  rpc GetInvestorInfoBatch(GetInvestorInfoBatchRequest) returns (GetInvestorInfoBatchResponse);
+  rpc GetInvestorInfoBatchAsync(GetInvestorInfoBatchRequest) returns (tech.qomet.agora.api.grpc.common.ExecutionAsyncResponse);
 
-  rpc NewAccount(NewAccountRequest) returns (tech.qomet.agora.api.grpc.common.ExecutionAsyncResponse);
-  rpc ActivateVenueForAccount(ActivateVenueForAccountRequest) returns (tech.qomet.agora.api.grpc.common.ExecutionAsyncResponse);
+  rpc NewInvestor(NewInvestorRequest) returns (tech.qomet.agora.api.grpc.common.ExecutionAsyncResponse);
+  rpc ActivateVenueForInvestor(ActivateVenueForInvestorRequest) returns (tech.qomet.agora.api.grpc.common.ExecutionAsyncResponse);
 
   rpc DepositCash(DepositCashRequest) returns (tech.qomet.agora.api.grpc.common.ExecutionAsyncResponse);
   rpc DepositInstrument(DepositInstrumentRequest) returns (tech.qomet.agora.api.grpc.common.ExecutionAsyncResponse);
   rpc WithdrawCash(WithdrawCashRequest) returns (tech.qomet.agora.api.grpc.common.ExecutionAsyncResponse);
   rpc WithdrawInstrument(WithdrawInstrumentRequest) returns (tech.qomet.agora.api.grpc.common.ExecutionAsyncResponse);
 
-  rpc GetAccountInstrumentHoldings(GetAccountInstrumentHoldingsRequest) returns (GetAccountInstrumentHoldingsResponse);
-  rpc GetAccountInstrumentHoldingsAsync(GetAccountInstrumentHoldingsRequest) returns (tech.qomet.agora.api.grpc.common.ExecutionAsyncResponse);
+  rpc GetInvestorInstrumentHoldings(GetInvestorInstrumentHoldingsRequest) returns (GetInvestorInstrumentHoldingsResponse);
+  rpc GetInvestorInstrumentHoldingsAsync(GetInvestorInstrumentHoldingsRequest) returns (tech.qomet.agora.api.grpc.common.ExecutionAsyncResponse);
 
-  rpc GetAccountCashHoldings(GetAccountCashHoldingsRequest) returns (GetAccountCashHoldingsResponse);
-  rpc GetAccountCashHoldingsAsync(GetAccountCashHoldingsRequest) returns (tech.qomet.agora.api.grpc.common.ExecutionAsyncResponse);
+  rpc GetInvestorCashHoldings(GetInvestorCashHoldingsRequest) returns (GetInvestorCashHoldingsResponse);
+  rpc GetInvestorCashHoldingsAsync(GetInvestorCashHoldingsRequest) returns (tech.qomet.agora.api.grpc.common.ExecutionAsyncResponse);
 
-  rpc GetAccountOrders(GetAccountOrdersRequest) returns (GetAccountOrdersResponse);
-  rpc GetAccountOrdersAsync(GetAccountOrdersRequest) returns (tech.qomet.agora.api.grpc.common.ExecutionAsyncResponse);
+  rpc GetInvestorOrders(GetInvestorOrdersRequest) returns (GetInvestorOrdersResponse);
+  rpc GetInvestorOrdersAsync(GetInvestorOrdersRequest) returns (tech.qomet.agora.api.grpc.common.ExecutionAsyncResponse);
 
-  rpc GetAccountTrades(GetAccountTradesRequest) returns (GetAccountTradesResponse);
-  rpc GetAccountTradesAsync(GetAccountTradesRequest) returns (tech.qomet.agora.api.grpc.common.ExecutionAsyncResponse);
+  rpc GetInvestorTrades(GetInvestorTradesRequest) returns (GetInvestorTradesResponse);
+  rpc GetInvestorTradesAsync(GetInvestorTradesRequest) returns (tech.qomet.agora.api.grpc.common.ExecutionAsyncResponse);
 
-  rpc GetAccountSettlements(GetAccountSettlementsRequest) returns (GetAccountSettlementsResponse);
-  rpc GetAccountSettlementsAsync(GetAccountSettlementsRequest) returns (tech.qomet.agora.api.grpc.common.ExecutionAsyncResponse);
+  rpc GetInvestorSettlements(GetInvestorSettlementsRequest) returns (GetInvestorSettlementsResponse);
+  rpc GetInvestorSettlementsAsync(GetInvestorSettlementsRequest) returns (tech.qomet.agora.api.grpc.common.ExecutionAsyncResponse);
 
-  rpc GetAccountTransactions(GetAccountTransactionsRequest) returns (GetAccountTransactionsResponse);
-  rpc GetAccountTransactionsAsync(GetAccountTransactionsRequest) returns (tech.qomet.agora.api.grpc.common.ExecutionAsyncResponse);
+  rpc GetInvestorTransactions(GetInvestorTransactionsRequest) returns (GetInvestorTransactionsResponse);
+  rpc GetInvestorTransactionsAsync(GetInvestorTransactionsRequest) returns (tech.qomet.agora.api.grpc.common.ExecutionAsyncResponse);
 }
 
-message GetAccountListRequest {
+message GetInvestorListRequest {
   string proposed_execution_id = 1;                      // OPTIONAL: Client-proposed execution ID for tracking
   tech.qomet.agora.api.grpc.common.PaginationParams pagination = 2;    // OPTIONAL: Pagination parameters
-  string account_iid_or_external_id_regex = 3;           // OPTIONAL: Filter by account ID regex
+  string investor_iid_or_external_id_regex = 3;           // OPTIONAL: Filter by investor IID regex
 
   map<string, string> aux_data = 105;                    // OPTIONAL: Additional request data
 }
 
-message GetAccountListResponse {
+message GetInvestorListResponse {
   string ref_execution_id = 1;                             // REQUIRED: Reference to the execution ID
   tech.qomet.agora.api.grpc.common.PaginationInfo pagination_info = 2;   // OPTIONAL: Pagination information (required if paginated)
-  repeated tech.qomet.agora.api.grpc.common.Account accounts = 3;        // REQUIRED: List of accounts (can be empty)
+  repeated tech.qomet.agora.api.grpc.common.Investor investors = 3;        // REQUIRED: List of investors (can be empty)
 
   map<string, string> metadata = 105;                      // OPTIONAL: Response metadata
 }
 
-message GetAccountInfoBatchRequest {
+message GetInvestorInfoBatchRequest {
   string proposed_execution_id = 1;               // OPTIONAL: Client-proposed execution ID for tracking
-  repeated string account_iids = 2;               // REQUIRED: List of account IIDs to retrieve
+  repeated string investor_iids = 2;               // REQUIRED: List of investor IIDs to retrieve
 
   map<string, string> aux_data = 105;             // OPTIONAL: Additional request data
 }
 
-message GetAccountInfoBatchResponse {
+message GetInvestorInfoBatchResponse {
   string ref_execution_id = 1;                        // REQUIRED: Reference to the execution ID
-  repeated tech.qomet.agora.api.grpc.common.Account accounts = 2;   // REQUIRED: List of account details (can be empty)
+  repeated tech.qomet.agora.api.grpc.common.Investor investors = 2;   // REQUIRED: List of investor details (can be empty)
 
   map<string, string> metadata = 105;                 // OPTIONAL: Response metadata
 }
 
-message NewAccountRequest {
+message NewInvestorRequest {
   string proposed_execution_id = 1;               // OPTIONAL: Client-proposed execution ID for tracking
-  string external_account_id = 2;                 // REQUIRED: External account identifier
+  string external_investor_id = 2;                 // REQUIRED: External investor identifier
 
   map<string, string> aux_data = 105;             // OPTIONAL: Additional request data
 }
 
-message NewAccountResponse {
+message NewInvestorResponse {
   string ref_execution_id = 1;                      // REQUIRED: Reference to the execution ID
 
-  string agent_account_id = 2;                      // REQUIRED: Created agent account ID
-  tech.qomet.agora.api.grpc.common.DateTime activation_dt = 3;    // REQUIRED: Account activation timestamp
+  string new_investor_iid = 2;                      // REQUIRED: Created investor ID
+  tech.qomet.agora.api.grpc.common.DateTime activation_dt = 3;    // REQUIRED: Investor activation timestamp
 
   map<string, string> metadata = 105;               // OPTIONAL: Response metadata
 }
 
-message ActivateVenueForAccountRequest {
+message ActivateVenueForInvestorRequest {
   string proposed_execution_id = 1;               // OPTIONAL: Client-proposed execution ID for tracking
-  string account_iid = 2;                         // REQUIRED: Account internal ID
+  string investor_iid = 2;                         // REQUIRED: Investor internal ID
   string venue_iid = 3;                           // REQUIRED: Venue internal ID to activate
 
   map<string, string> aux_data = 105;             // OPTIONAL: Additional request data
 }
 
-message ActivateVenueForAccountResponse {
+message ActivateVenueForInvestorResponse {
   string ref_execution_id = 1;                     // REQUIRED: Reference to the execution ID
 
   tech.qomet.agora.api.grpc.common.DateTime activation_dt = 2;   // REQUIRED: Venue activation timestamp
@@ -107,31 +107,31 @@ message ActivateVenueForAccountResponse {
   map<string, string> metadata = 105;              // OPTIONAL: Response metadata
 }
 
-message GetAccountInstrumentHoldingsRequest {
+message GetInvestorInstrumentHoldingsRequest {
   string proposed_execution_id = 1;               // OPTIONAL: Client-proposed execution ID for tracking
-  string account_iid = 2;                         // REQUIRED: Account internal ID
+  string investor_iid = 2;                         // REQUIRED: Investor internal ID
   string venue_iid = 3;                           // OPTIONAL: Venue internal ID (filter by venue)
   repeated string instrument_iids = 4;            // OPTIONAL: Specific instrument IIDs to retrieve
 
   map<string, string> aux_data = 105;             // OPTIONAL: Additional request data
 }
 
-message GetAccountInstrumentHoldingsResponse {
+message GetInvestorInstrumentHoldingsResponse {
   string ref_execution_id = 1;                    // REQUIRED: Reference to the execution ID
   tech.qomet.agora.api.grpc.common.Portfolio portfolio = 2;     // REQUIRED: Portfolio with instrument holdings
 
   map<string, string> metadata = 105;             // OPTIONAL: Response metadata
 }
 
-message GetAccountCashHoldingsRequest {
+message GetInvestorCashHoldingsRequest {
   string proposed_execution_id = 1;               // OPTIONAL: Client-proposed execution ID for tracking
-  string account_iid = 2;                         // REQUIRED: Account internal ID
+  string investor_iid = 2;                         // REQUIRED: Investor internal ID
   repeated string currency_codes = 3;             // OPTIONAL: Specific currency codes to retrieve
 
   map<string, string> aux_data = 105;             // OPTIONAL: Additional request data
 }
 
-message GetAccountCashHoldingsResponse {
+message GetInvestorCashHoldingsResponse {
   string ref_execution_id = 1;                       // REQUIRED: Reference to the execution ID
   tech.qomet.agora.api.grpc.common.Portfolio cash_portfolio = 2;   // REQUIRED: Portfolio with cash holdings
 
@@ -140,7 +140,7 @@ message GetAccountCashHoldingsResponse {
 
 message DepositCashRequest {
   string proposed_execution_id = 1;               // OPTIONAL: Client-proposed execution ID for tracking
-  string account_iid = 2;                         // REQUIRED: Account internal ID
+  string investor_iid = 2;                         // REQUIRED: Investor internal ID
   string currency_code = 3;                       // REQUIRED: Currency code (e.g., "USD", "EUR")
   string amount = 4;                              // REQUIRED: Amount to deposit
 
@@ -155,7 +155,7 @@ message DepositCashResponse {
 
 message DepositInstrumentRequest {
   string proposed_execution_id = 1;               // OPTIONAL: Client-proposed execution ID for tracking
-  string account_iid = 2;                         // REQUIRED: Account internal ID
+  string investor_iid = 2;                         // REQUIRED: Investor internal ID
   string instrument_iid = 3;                      // REQUIRED: Instrument internal ID
   string units = 4;                               // REQUIRED: Number of units to deposit
 
@@ -170,7 +170,7 @@ message DepositInstrumentResponse {
 
 message WithdrawCashRequest {
   string proposed_execution_id = 1;               // OPTIONAL: Client-proposed execution ID for tracking
-  string account_iid = 2;                         // REQUIRED: Account internal ID
+  string investor_iid = 2;                         // REQUIRED: Investor internal ID
   string currency_code = 3;                       // REQUIRED: Currency code (e.g., "USD", "EUR")
   string amount = 4;                              // REQUIRED: Amount to withdraw
 
@@ -185,7 +185,7 @@ message WithdrawCashResponse {
 
 message WithdrawInstrumentRequest {
   string proposed_execution_id = 1;               // OPTIONAL: Client-proposed execution ID for tracking
-  string account_iid = 2;                         // REQUIRED: Account internal ID
+  string investor_iid = 2;                         // REQUIRED: Investor internal ID
   string instrument_iid = 3;                      // REQUIRED: Instrument internal ID
   string units = 4;                               // REQUIRED: Number of units to withdraw
 
@@ -198,9 +198,9 @@ message WithdrawInstrumentResponse {
   map<string, string> metadata = 105;             // OPTIONAL: Response metadata
 }
 
-message GetAccountOrdersRequest {
+message GetInvestorOrdersRequest {
   string proposed_execution_id = 1;                      // OPTIONAL: Client-proposed execution ID for tracking
-  string account_iid = 2;                                // REQUIRED: Account internal ID
+  string investor_iid = 2;                                // REQUIRED: Investor internal ID
   repeated string venue_id_or_symbol_regexes = 3;        // OPTIONAL: Filter by venue ID or symbol regex
   tech.qomet.agora.api.grpc.common.PaginationParams pagination = 4;    // OPTIONAL: Pagination parameters
   OrderQueryFilter order_query_filter = 5;               // OPTIONAL: Additional order filters
@@ -208,7 +208,7 @@ message GetAccountOrdersRequest {
   map<string, string> aux_data = 105;                    // OPTIONAL: Additional request data
 }
 
-message GetAccountOrdersResponse {
+message GetInvestorOrdersResponse {
   string ref_execution_id = 1;                               // REQUIRED: Reference to the execution ID
   tech.qomet.agora.api.grpc.common.PaginationInfo pagination_info = 2;     // OPTIONAL: Pagination information (required if paginated)
   tech.qomet.agora.api.grpc.common.DateTime generated_at_dt = 3;           // REQUIRED: Response generation timestamp
@@ -217,9 +217,9 @@ message GetAccountOrdersResponse {
   map<string, string> metadata = 105;                        // OPTIONAL: Response metadata
 }
 
-message GetAccountTradesRequest {
+message GetInvestorTradesRequest {
   string proposed_execution_id = 1;                      // OPTIONAL: Client-proposed execution ID for tracking
-  string account_iid = 2;                                // REQUIRED: Account internal ID
+  string investor_iid = 2;                                // REQUIRED: Investor internal ID
   repeated string market_id_or_name_regexes = 3;         // OPTIONAL: Filter by market ID or name regex
   tech.qomet.agora.api.grpc.common.PaginationParams pagination = 4;    // OPTIONAL: Pagination parameters
   tech.qomet.agora.api.grpc.common.DateTime from_dt = 5;               // OPTIONAL: Start of time range
@@ -230,7 +230,7 @@ message GetAccountTradesRequest {
   map<string, string> aux_data = 105;                    // OPTIONAL: Additional request data
 }
 
-message GetAccountTradesResponse {
+message GetInvestorTradesResponse {
   string ref_execution_id = 1;                              // REQUIRED: Reference to the execution ID
   tech.qomet.agora.api.grpc.common.PaginationInfo pagination_info = 2;    // OPTIONAL: Pagination information (required if paginated)
   tech.qomet.agora.api.grpc.common.DateTime generated_at_dt = 3;          // REQUIRED: Response generation timestamp
@@ -239,9 +239,9 @@ message GetAccountTradesResponse {
   map<string, string> metadata = 105;                       // OPTIONAL: Response metadata
 }
 
-message GetAccountSettlementsRequest {
+message GetInvestorSettlementsRequest {
   string proposed_execution_id = 1;                        // OPTIONAL: Client-proposed execution ID for tracking
-  string account_iid = 2;                                  // REQUIRED: Account internal ID
+  string investor_iid = 2;                                  // REQUIRED: Investor internal ID
   repeated string market_id_or_name_regexes = 3;           // OPTIONAL: Filter by market ID or name regex
   tech.qomet.agora.api.grpc.common.PaginationParams pagination = 4;      // OPTIONAL: Pagination parameters
   tech.qomet.agora.api.grpc.common.DateTime from_dt = 5;                 // OPTIONAL: Start of time range
@@ -252,7 +252,7 @@ message GetAccountSettlementsRequest {
   map<string, string> aux_data = 105;                      // OPTIONAL: Additional request data
 }
 
-message GetAccountSettlementsResponse {
+message GetInvestorSettlementsResponse {
   string ref_execution_id = 1;                                 // REQUIRED: Reference to the execution ID
   tech.qomet.agora.api.grpc.common.PaginationInfo pagination_info = 2;       // OPTIONAL: Pagination information (required if paginated)
   tech.qomet.agora.api.grpc.common.DateTime generated_at_dt = 3;             // REQUIRED: Response generation timestamp
@@ -261,9 +261,9 @@ message GetAccountSettlementsResponse {
   map<string, string> metadata = 105;                          // OPTIONAL: Response metadata
 }
 
-message GetAccountTransactionsRequest {
+message GetInvestorTransactionsRequest {
   string proposed_execution_id = 1;                                       // OPTIONAL: Client-proposed execution ID for tracking
-  string account_iid = 2;                                                 // REQUIRED: Account internal ID
+  string investor_iid = 2;                                                 // REQUIRED: Investor internal ID
   tech.qomet.agora.api.grpc.common.PaginationParams pagination = 3;                     // OPTIONAL: Pagination parameters
   tech.qomet.agora.api.grpc.common.DateTime from_dt = 4;                                // OPTIONAL: Start of time range
   tech.qomet.agora.api.grpc.common.DateTime to_dt = 5;                                  // OPTIONAL: End of time range
@@ -273,7 +273,7 @@ message GetAccountTransactionsRequest {
   map<string, string> aux_data = 105;                                     // OPTIONAL: Additional request data
 }
 
-message GetAccountTransactionsResponse {
+message GetInvestorTransactionsResponse {
   string ref_execution_id = 1;                                // REQUIRED: Reference to the execution ID
   tech.qomet.agora.api.grpc.common.PaginationInfo pagination_info = 2;      // OPTIONAL: Pagination information (required if paginated)
   tech.qomet.agora.api.grpc.common.DateTime generated_at_dt = 3;            // REQUIRED: Response generation timestamp

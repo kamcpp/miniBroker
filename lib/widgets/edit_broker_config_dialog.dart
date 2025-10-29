@@ -1,11 +1,13 @@
 import 'dart:io';
 import 'dart:convert';
+import 'dart:async';
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 import 'package:path/path.dart' as path;
+import 'package:grpc/grpc.dart';
 import '../services/theme_service.dart';
 import '../config/ui_constants.dart';
-import '../utils/broker_config_helper.dart';
+import '../generated/prtagent/v1/agent.pbgrpc.dart';
 
 /// Dialog for editing an existing broker configuration (except broker name)
 class EditBrokerConfigDialog extends StatefulWidget {
@@ -27,14 +29,15 @@ class EditBrokerConfigDialog extends StatefulWidget {
 class _EditBrokerConfigDialogState extends State<EditBrokerConfigDialog> {
   final _formKey = GlobalKey<FormState>();
   late final TextEditingController _brokerNameController;
-  late final TextEditingController _grpcHostController;
-  late final TextEditingController _grpcPortController;
+  late final TextEditingController _grpcEndpointController;
   late final TextEditingController _apiKeyController;
   late final TextEditingController _participantIdController;
   late final TextEditingController _participantNameController;
 
   bool _isSaving = false;
+  bool _isTesting = false;
   String? _errorMessage;
+  String? _testMessage;
 
   @override
   void initState() {
@@ -48,12 +51,14 @@ class _EditBrokerConfigDialogState extends State<EditBrokerConfigDialog> {
     _brokerNameController = TextEditingController(
       text: broker?['name'] as String? ?? '',
     );
-    _grpcHostController = TextEditingController(
-      text: grpc?['host'] as String? ?? 'localhost',
+
+    // Combine host and port into endpoint
+    final host = grpc?['host'] as String? ?? 'localhost';
+    final port = grpc?['port'] as int? ?? 50051;
+    _grpcEndpointController = TextEditingController(
+      text: '$host:$port',
     );
-    _grpcPortController = TextEditingController(
-      text: (grpc?['port'] as int?)?.toString() ?? '50051',
-    );
+
     _apiKeyController = TextEditingController(
       text: participant?['apiKey'] as String? ?? '',
     );
@@ -68,8 +73,7 @@ class _EditBrokerConfigDialogState extends State<EditBrokerConfigDialog> {
   @override
   void dispose() {
     _brokerNameController.dispose();
-    _grpcHostController.dispose();
-    _grpcPortController.dispose();
+    _grpcEndpointController.dispose();
     _apiKeyController.dispose();
     _participantIdController.dispose();
     _participantNameController.dispose();
@@ -90,11 +94,18 @@ class _EditBrokerConfigDialogState extends State<EditBrokerConfigDialog> {
       // Update the config with new values
       final updatedConfig = Map<String, dynamic>.from(widget.existingConfig);
 
+      // Parse endpoint into host and port
+      final endpoint = _grpcEndpointController.text.trim();
+      final parts = endpoint.split(':');
+      if (parts.length != 2) {
+        throw Exception('Invalid endpoint format. Expected host:port');
+      }
+      final host = parts[0];
+      final port = int.parse(parts[1]);
+
       // Update grpc settings
-      (updatedConfig['grpc'] as Map<String, dynamic>?)?['host'] =
-          _grpcHostController.text.trim();
-      (updatedConfig['grpc'] as Map<String, dynamic>?)?['port'] =
-          int.parse(_grpcPortController.text.trim());
+      (updatedConfig['grpc'] as Map<String, dynamic>?)?['host'] = host;
+      (updatedConfig['grpc'] as Map<String, dynamic>?)?['port'] = port;
 
       // Update participant settings
       (updatedConfig['participant'] as Map<String, dynamic>?)?['apiKey'] =
@@ -121,6 +132,84 @@ class _EditBrokerConfigDialogState extends State<EditBrokerConfigDialog> {
       if (mounted) {
         setState(() {
           _isSaving = false;
+        });
+      }
+    }
+  }
+
+  Future<void> _testConnection() async {
+    if (!_formKey.currentState!.validate()) {
+      return;
+    }
+
+    setState(() {
+      _isTesting = true;
+      _testMessage = null;
+      _errorMessage = null;
+    });
+
+    ClientChannel? channel;
+    StreamController<PingRequest>? requestController;
+
+    try {
+      // Parse endpoint
+      final endpoint = _grpcEndpointController.text.trim();
+      final parts = endpoint.split(':');
+      if (parts.length != 2) {
+        throw Exception('Invalid endpoint format. Expected host:port');
+      }
+      final host = parts[0];
+      final port = int.parse(parts[1]);
+
+      // Create gRPC channel
+      channel = ClientChannel(
+        host,
+        port: port,
+        options: const ChannelOptions(
+          credentials: ChannelCredentials.insecure(),
+        ),
+      );
+
+      // Create client
+      final client = AgentServiceClient(channel);
+
+      // Test bidirectional streaming ping
+      requestController = StreamController<PingRequest>();
+      final responseStream = client.biDirStreamPing(requestController.stream);
+
+      // Send a ping request
+      final testRequest = PingRequest()
+        ..stringToBePonged = 'Connection test from mini-broker';
+      requestController.add(testRequest);
+
+      // Wait for response with timeout
+      final response = await responseStream.first.timeout(
+        const Duration(seconds: 5),
+        onTimeout: () {
+          throw TimeoutException('Connection test timed out after 5 seconds');
+        },
+      );
+
+      // Close the request stream
+      await requestController.close();
+
+      if (mounted) {
+        setState(() {
+          _testMessage = 'Connection successful! Response: ${response.pongString}';
+        });
+      }
+    } catch (e) {
+      if (mounted) {
+        setState(() {
+          _errorMessage = 'Connection failed: ${e.toString()}';
+        });
+      }
+    } finally {
+      await requestController?.close();
+      await channel?.shutdown();
+      if (mounted) {
+        setState(() {
+          _isTesting = false;
         });
       }
     }
@@ -215,9 +304,9 @@ class _EditBrokerConfigDialogState extends State<EditBrokerConfigDialog> {
                       ),
                       const SizedBox(height: UIConstants.spacingMd),
 
-                      // gRPC Server Section
+                      // Participant Agent gRPC Endpoint Section
                       Text(
-                        'gRPC Server',
+                        'Participant Agent gRPC Endpoint',
                         style: TextStyle(
                           color: textColor,
                           fontWeight: UIConstants.fontWeightMedium,
@@ -226,76 +315,68 @@ class _EditBrokerConfigDialogState extends State<EditBrokerConfigDialog> {
                       ),
                       const SizedBox(height: UIConstants.spacingSm),
 
-                      // gRPC Host
-                      Text(
-                        'Host *',
-                        style: TextStyle(
-                          color: textColor,
-                          fontWeight: UIConstants.fontWeightMedium,
-                          fontSize: UIConstants.textFieldFontSize,
-                        ),
-                      ),
-                      const SizedBox(height: UIConstants.spacingSm),
-                      TextFormField(
-                        controller: _grpcHostController,
-                        style: TextStyle(color: textColor, fontSize: UIConstants.textFieldFontSize),
-                        decoration: InputDecoration(
-                          hintText: 'localhost or IP address',
-                          hintStyle: TextStyle(color: hintColor, fontSize: UIConstants.textFieldFontSize),
-                          filled: true,
-                          fillColor: surfaceColor,
-                          contentPadding: UIConstants.textFieldPadding,
-                          isDense: true,
-                          border: OutlineInputBorder(
-                            borderRadius: BorderRadius.circular(UIConstants.textFieldBorderRadius),
-                            borderSide: BorderSide.none,
+                      // gRPC Endpoint (host:port)
+                      Row(
+                        children: [
+                          Expanded(
+                            child: TextFormField(
+                              controller: _grpcEndpointController,
+                              style: TextStyle(color: textColor, fontSize: UIConstants.textFieldFontSize),
+                              decoration: InputDecoration(
+                                hintText: 'localhost:50051',
+                                hintStyle: TextStyle(color: hintColor, fontSize: UIConstants.textFieldFontSize),
+                                filled: true,
+                                fillColor: surfaceColor,
+                                contentPadding: UIConstants.textFieldPadding,
+                                isDense: true,
+                                border: OutlineInputBorder(
+                                  borderRadius: BorderRadius.circular(UIConstants.textFieldBorderRadius),
+                                  borderSide: BorderSide.none,
+                                ),
+                              ),
+                              validator: (value) {
+                                if (value == null || value.trim().isEmpty) {
+                                  return 'Endpoint is required';
+                                }
+                                final parts = value.trim().split(':');
+                                if (parts.length != 2) {
+                                  return 'Format must be host:port';
+                                }
+                                final port = int.tryParse(parts[1]);
+                                if (port == null || port < 1 || port > 65535) {
+                                  return 'Invalid port number (1-65535)';
+                                }
+                                return null;
+                              },
+                            ),
                           ),
-                        ),
-                        validator: (value) {
-                          if (value == null || value.trim().isEmpty) {
-                            return 'Host is required';
-                          }
-                          return null;
-                        },
-                      ),
-                      const SizedBox(height: UIConstants.spacingMd),
-
-                      // gRPC Port
-                      Text(
-                        'Port *',
-                        style: TextStyle(
-                          color: textColor,
-                          fontWeight: UIConstants.fontWeightMedium,
-                          fontSize: UIConstants.textFieldFontSize,
-                        ),
-                      ),
-                      const SizedBox(height: UIConstants.spacingSm),
-                      TextFormField(
-                        controller: _grpcPortController,
-                        style: TextStyle(color: textColor, fontSize: UIConstants.textFieldFontSize),
-                        keyboardType: TextInputType.number,
-                        decoration: InputDecoration(
-                          hintText: '50051',
-                          hintStyle: TextStyle(color: hintColor, fontSize: UIConstants.textFieldFontSize),
-                          filled: true,
-                          fillColor: surfaceColor,
-                          contentPadding: UIConstants.textFieldPadding,
-                          isDense: true,
-                          border: OutlineInputBorder(
-                            borderRadius: BorderRadius.circular(UIConstants.textFieldBorderRadius),
-                            borderSide: BorderSide.none,
+                          const SizedBox(width: UIConstants.spacingSm),
+                          ElevatedButton.icon(
+                            onPressed: _isTesting ? null : _testConnection,
+                            icon: _isTesting
+                                ? SizedBox(
+                                    width: 16,
+                                    height: 16,
+                                    child: CircularProgressIndicator(
+                                      strokeWidth: 2,
+                                      valueColor: AlwaysStoppedAnimation<Color>(Colors.white),
+                                    ),
+                                  )
+                                : Icon(Icons.network_ping, size: 18),
+                            label: Text('Test'),
+                            style: ElevatedButton.styleFrom(
+                              backgroundColor: primaryColor,
+                              foregroundColor: Colors.white,
+                              padding: const EdgeInsets.symmetric(
+                                horizontal: 16,
+                                vertical: 12,
+                              ),
+                              shape: RoundedRectangleBorder(
+                                borderRadius: BorderRadius.circular(UIConstants.textFieldBorderRadius),
+                              ),
+                            ),
                           ),
-                        ),
-                        validator: (value) {
-                          if (value == null || value.trim().isEmpty) {
-                            return 'Port is required';
-                          }
-                          final port = int.tryParse(value.trim());
-                          if (port == null || port < 1 || port > 65535) {
-                            return 'Invalid port number (1-65535)';
-                          }
-                          return null;
-                        },
+                        ],
                       ),
                       const SizedBox(height: UIConstants.spacingMd),
 
@@ -402,6 +483,31 @@ class _EditBrokerConfigDialogState extends State<EditBrokerConfigDialog> {
                   ),
                 ),
               ),
+
+              // Test success message
+              if (_testMessage != null) ...[
+                const SizedBox(height: UIConstants.spacingMd),
+                Container(
+                  padding: UIConstants.paddingStandard,
+                  decoration: BoxDecoration(
+                    color: Colors.green.withOpacity(0.1),
+                    borderRadius: BorderRadius.circular(UIConstants.textFieldBorderRadius),
+                    border: Border.all(color: Colors.green.withOpacity(0.3)),
+                  ),
+                  child: Row(
+                    children: [
+                      Icon(Icons.check_circle_outline, color: Colors.green[400], size: 20),
+                      const SizedBox(width: UIConstants.spacingSm),
+                      Expanded(
+                        child: Text(
+                          _testMessage!,
+                          style: TextStyle(color: Colors.green[400], fontSize: 13),
+                        ),
+                      ),
+                    ],
+                  ),
+                ),
+              ],
 
               // Error message
               if (_errorMessage != null) ...[
