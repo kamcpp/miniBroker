@@ -65,11 +65,8 @@ class _PortfolioPageState extends State<PortfolioPage> {
           _accountListData = accountListResponse;
         });
 
-        if (accountListResponse['success'] == true) {
-          // Auto-sync server accounts with local users
-          final accounts = accountListResponse['output']['accounts'] as List<dynamic>;
-          await _syncServerAccountsWithLocalUsers(accounts);
-        }
+        // Note: We no longer auto-create users from server accounts
+        // Users should only be created via signup (which calls NewAccount)
       }
     } catch (e) {
       print('❌ Error in _fetchAccountList: $e');

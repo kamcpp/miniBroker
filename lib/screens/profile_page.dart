@@ -105,7 +105,7 @@ class _ProfilePageState extends State<ProfilePage> {
                           _usernameController.text = authService.username;
                         },
                         isDarkTheme: isDarkTheme,
-                        canEdit: !_databaseHelper.isAdminUser(authService.username),
+                        canEdit: true,
                       ),
 
                       const SizedBox(height: UIConstants.spacingLg),

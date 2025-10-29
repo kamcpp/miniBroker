@@ -65,8 +65,9 @@ class DatabaseHelper {
 
       final db = await openDatabase(
         dbPath,
-        version: 1,
+        version: 2,
         onCreate: _createDatabase,
+        onUpgrade: _upgradeDatabase,
       );
 
       print('📊 Database opened successfully');
@@ -85,55 +86,18 @@ class DatabaseHelper {
         username TEXT UNIQUE NOT NULL,
         password TEXT NOT NULL,
         created_at TEXT NOT NULL,
-        last_login TEXT
+        last_login TEXT,
+        exists_on_server INTEGER DEFAULT 0
       )
     ''');
-    
-    // Create default admin user
-    await _createDefaultAdminUser(db);
+
   }
 
-  // Create the default admin user that cannot be deleted
-  Future<void> _createDefaultAdminUser(Database db) async {
-    try {
-      final hashedPassword = _hashPassword('111111');
-      
-      await db.insert(
-        'users',
-        {
-          'username': 'admin',
-          'password': hashedPassword,
-          'created_at': _toUnixTimestamp(DateTime.now()),
-        },
-        conflictAlgorithm: ConflictAlgorithm.ignore, // Ignore if admin already exists
-      );
-      
-      print('✅ Default admin user created/verified');
-    } catch (e) {
-      print('Error creating default admin user: $e');
-    }
-  }
-
-  // Ensure admin user exists (call this on app startup)
-  Future<void> ensureAdminUserExists() async {
-    try {
-      print('📊 Ensuring admin user exists...');
-      final db = await database;
-      print('📊 Database instance obtained');
-
-      // Check if admin user exists
-      final adminExists = await isUsernameExists('admin');
-      print('📊 Admin exists check: $adminExists');
-
-      if (!adminExists) {
-        print('📊 Creating default admin user...');
-        await _createDefaultAdminUser(db);
-        print('📊 Default admin user created');
-      }
-    } catch (e, stackTrace) {
-      print('❌ Error ensuring admin user exists: $e');
-      print('❌ Stack trace: $stackTrace');
-      // Don't rethrow - just log the error to prevent app crash
+  Future<void> _upgradeDatabase(Database db, int oldVersion, int newVersion) async {
+    if (oldVersion < 2) {
+      // Add exists_on_server column for version 2
+      await db.execute('ALTER TABLE users ADD COLUMN exists_on_server INTEGER DEFAULT 0');
+      print('📊 Database upgraded to version 2: added exists_on_server column');
     }
   }
 
@@ -243,32 +207,21 @@ class DatabaseHelper {
     }
   }
 
-  // Delete user (prevents deletion of admin user)
+  // Delete user
   Future<bool> deleteUser(String username) async {
-    try {
-      // Prevent deletion of admin user
-      if (username.toLowerCase().trim() == 'admin') {
-        print('❌ Cannot delete admin user - admin user is protected');
-        return false;
-      }
-      
+    try{
       final db = await database;
       final result = await db.delete(
         'users',
         where: 'username = ?',
         whereArgs: [username.toLowerCase().trim()],
       );
-      
+
       return result > 0;
     } catch (e) {
       print('Error deleting user: $e');
       return false;
     }
-  }
-
-  // Check if user is the protected admin user
-  bool isAdminUser(String username) {
-    return username.toLowerCase().trim() == 'admin';
   }
 
   // Update user password
@@ -291,14 +244,9 @@ class DatabaseHelper {
     }
   }
 
-  // Update username (if not admin)
+  // Update username
   Future<bool> updateUsername(String oldUsername, String newUsername) async {
     try {
-      // Prevent updating admin username
-      if (isAdminUser(oldUsername)) {
-        print('❌ Cannot update admin username');
-        return false;
-      }
 
       // Check if new username already exists
       final exists = await isUsernameExists(newUsername);
@@ -326,53 +274,59 @@ class DatabaseHelper {
   Future<void> syncUsersWithServer(List<Map<String, dynamic>> serverAccounts) async {
     try {
       final db = await database;
-      
+
       // Get all local users
       final localUsers = await getAllUsers();
-      
+
       // Create set of server external IDs for quick lookup
+      // Note: Server returns 'externalAccountId' field
       final serverExternalIds = serverAccounts
-          .map((account) => account['externalId'] as String?)
+          .map((account) => account['externalAccountId'] as String?)
           .where((id) => id != null)
           .cast<String>()
           .toSet();
-      
-      print('📊 Sync Status:');
+
+      // Create map of local usernames for quick lookup
+      final localUsernames = localUsers
+          .map((user) => user['username'] as String)
+          .toSet();
+
       print('  - Local users: ${localUsers.length}');
       print('  - Server accounts: ${serverAccounts.length}');
-      print('  - Server external IDs: $serverExternalIds');
-      
-      // Check each local user
+
+      // Detailed comparison
+      print('📊 Detailed Comparison:');
+      for (final localUser in localUsers) {
+        final username = localUser['username'] as String;
+        final existsOnServer = serverExternalIds.contains(username);
+        print('  - User "$username": ${existsOnServer ? "✅ EXISTS on server" : "❌ NOT on server"}');
+      }
+
+      // Update exists_on_server status for all local users
       for (final user in localUsers) {
         final username = user['username'] as String;
-        
-        // Skip admin user - always keep locally
-        if (isAdminUser(username)) {
-          print('  ✅ Keeping admin user: $username (protected)');
-          continue;
-        }
-        
-        // Check if user exists on server
-        if (serverExternalIds.contains(username)) {
-          print('  ✅ Keeping user: $username (exists on server)');
+        final existsOnServer = serverExternalIds.contains(username) ? 1 : 0;
+
+        // Update the exists_on_server field
+        await db.update(
+          'users',
+          {'exists_on_server': existsOnServer},
+          where: 'username = ?',
+          whereArgs: [username],
+        );
+
+        if (existsOnServer == 1) {
+          print('  ✅ User exists on server: $username');
         } else {
-          print('  🗑️  Deleting user: $username (not found on server)');
-          
-          // Delete user from local database
-          final deleted = await deleteUser(username);
-          if (deleted) {
-            print('  ✅ Successfully deleted: $username');
-          } else {
-            print('  ❌ Failed to delete: $username');
-          }
+          print('  ℹ️  User does NOT exist on server: $username (kept in local database)');
         }
       }
-      
+
       // Final count
       final remainingUsers = await getAllUsers();
       print('📊 Sync completed:');
-      print('  - Remaining local users: ${remainingUsers.length}');
-      
+      print('  - Total local users: ${remainingUsers.length}');
+
     } catch (e) {
       print('❌ Error syncing users with server: $e');
       rethrow;

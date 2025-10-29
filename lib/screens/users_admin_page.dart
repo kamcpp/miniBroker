@@ -66,50 +66,17 @@ class _UsersAdminPageState extends State<UsersAdminPage> {
         _isLoading = false;
         _isSyncing = false;
       });
-      
-      print('✅ Synchronized users loaded: ${users.length}');
-      
-      // Show sync result in snackbar
-      if (mounted) {
-        ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(
-            content: Text('✅ Users synchronized with server (${users.length} users)'),
-            backgroundColor: Colors.green,
-            duration: const Duration(seconds: 2),
-          ),
-        );
-      }
+            
     } catch (e) {
       print('Error loading synchronized users: $e');
       setState(() {
         _isLoading = false;
         _isSyncing = false;
       });
-      
-      if (mounted) {
-        ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(
-            content: Text('⚠️ Sync failed, showing local users only'),
-            backgroundColor: Colors.orange,
-            duration: const Duration(seconds: 3),
-          ),
-        );
-      }
     }
   }
 
   Future<void> _deleteUser(String username) async {
-    // Check if trying to delete admin user
-    if (_databaseHelper.isAdminUser(username)) {
-      ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(
-          content: Text('❌ Cannot delete admin user - admin user is protected'),
-          backgroundColor: Colors.red,
-        ),
-      );
-      return;
-    }
-
     final confirmed = await showDialog<bool>(
       context: context,
       builder: (context) => AlertDialog(
@@ -232,34 +199,76 @@ class _UsersAdminPageState extends State<UsersAdminPage> {
                                   ),
                                 ),
                               ),
-                              title: Row(
-                                children: [
-                                  Text(
-                                    user['username'] ?? 'Unknown',
-                                    style: const TextStyle(fontWeight: UIConstants.fontWeightMedium),
-                                  ),
-                                  if (_databaseHelper.isAdminUser(user['username'] ?? '')) ...[
-                                    const SizedBox(width: UIConstants.spacingSm),
-                                    const Icon(
-                                      Icons.admin_panel_settings,
-                                      color: Colors.amber,
-                                      size: 20,
-                                    ),
-                                    const Text(
-                                      ' (Admin)',
-                                      style: TextStyle(
-                                        color: Colors.amber,
-                                        fontWeight: UIConstants.fontWeightNormal,
-                                        fontSize: UIConstants.fontSizeSm,
-                                      ),
-                                    ),
-                                  ],
-                                ],
+                              title: Text(
+                                user['username'] ?? 'Unknown',
+                                style: const TextStyle(fontWeight: UIConstants.fontWeightMedium),
                               ),
                               subtitle: Column(
                                 crossAxisAlignment: CrossAxisAlignment.start,
                                 children: [
                                   Text('ID: ${user['id']}'),
+                                  const SizedBox(height: 4),
+                                  Row(
+                                    children: [
+                                      // Local database status
+                                      Container(
+                                        padding: const EdgeInsets.symmetric(horizontal: 6, vertical: 2),
+                                        decoration: BoxDecoration(
+                                          color: Colors.green.withOpacity(0.2),
+                                          borderRadius: BorderRadius.circular(4),
+                                          border: Border.all(color: Colors.green, width: 1),
+                                        ),
+                                        child: const Row(
+                                          mainAxisSize: MainAxisSize.min,
+                                          children: [
+                                            Icon(Icons.check_circle, color: Colors.green, size: 12),
+                                            SizedBox(width: 4),
+                                            Text(
+                                              'Local DB',
+                                              style: TextStyle(
+                                                color: Colors.green,
+                                                fontSize: 11,
+                                                fontWeight: FontWeight.bold,
+                                              ),
+                                            ),
+                                          ],
+                                        ),
+                                      ),
+                                      const SizedBox(width: 8),
+                                      // Server status
+                                      Container(
+                                        padding: const EdgeInsets.symmetric(horizontal: 6, vertical: 2),
+                                        decoration: BoxDecoration(
+                                          color: (user['exists_on_server'] == 1 ? Colors.blue : Colors.grey).withOpacity(0.2),
+                                          borderRadius: BorderRadius.circular(4),
+                                          border: Border.all(
+                                            color: user['exists_on_server'] == 1 ? Colors.blue : Colors.grey,
+                                            width: 1,
+                                          ),
+                                        ),
+                                        child: Row(
+                                          mainAxisSize: MainAxisSize.min,
+                                          children: [
+                                            Icon(
+                                              user['exists_on_server'] == 1 ? Icons.cloud_done : Icons.cloud_off,
+                                              color: user['exists_on_server'] == 1 ? Colors.blue : Colors.grey,
+                                              size: 12,
+                                            ),
+                                            const SizedBox(width: 4),
+                                            Text(
+                                              user['exists_on_server'] == 1 ? 'On Server' : 'Not on Server',
+                                              style: TextStyle(
+                                                color: user['exists_on_server'] == 1 ? Colors.blue : Colors.grey,
+                                                fontSize: 11,
+                                                fontWeight: FontWeight.bold,
+                                              ),
+                                            ),
+                                          ],
+                                        ),
+                                      ),
+                                    ],
+                                  ),
+                                  const SizedBox(height: 4),
                                   if (createdAt != null)
                                     Text('Created: ${_formatDate(createdAt)}'),
                                   if (lastLogin != null)
@@ -268,18 +277,10 @@ class _UsersAdminPageState extends State<UsersAdminPage> {
                                     const Text('Last Login: Never'),
                                 ],
                               ),
-                              trailing: _databaseHelper.isAdminUser(user['username'] ?? '')
-                                  ? const Tooltip(
-                                      message: 'Admin user cannot be deleted',
-                                      child: Icon(
-                                        Icons.shield,
-                                        color: Colors.amber,
-                                      ),
-                                    )
-                                  : IconButton(
-                                      icon: const Icon(Icons.delete, color: Colors.red),
-                                      onPressed: () => _deleteUser(user['username']),
-                                    ),
+                              trailing: IconButton(
+                                icon: const Icon(Icons.delete, color: Colors.red),
+                                onPressed: () => _deleteUser(user['username']),
+                              ),
                               isThreeLine: true,
                             ),
                           );

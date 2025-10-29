@@ -40,9 +40,6 @@ class AuthService extends ChangeNotifier {
     _isLoggedIn = false;
     _username = '';
 
-    // Ensure admin user exists on app startup
-    await _databaseHelper.ensureAdminUserExists();
-
     notifyListeners();
   }
 
@@ -110,11 +107,6 @@ class AuthService extends ChangeNotifier {
 
       if (password.length < 5) {
         throw 'Password must be at least 5 characters long';
-      }
-      
-      // Prevent creating another admin user
-      if (user.toLowerCase().trim() == 'admin') {
-        throw 'Username "admin" is reserved - please choose a different username';
       }
       
       // Check if username already exists
