@@ -1568,19 +1568,107 @@ class RealGrpcClient {
     Map<String, dynamic>? pagination,
     String? fromTime,
     String? toTime,
-    List<String>? instrumentIdOrSymbolRegexes,
+    String? status,
+    List<String>? assetIdOrNameRegexes,
   }) async {
-    // Not yet implemented in GrpcurlHelper
-    return {
-      'input': {'account_iid': accountId},
-      'output': {
-        'error': 'Method not yet implemented',
-        'message': 'GetAccountSettlements is not yet implemented in GrpcurlHelper',
-      },
-      'requestTime': _toUnixTimestamp(DateTime.now()).toString(),
-      'serverType': 'not-implemented',
-      'success': false,
-    };
+    if (!_isConnected) {
+      return {
+        'input': {'account_iid': accountId},
+        'output': {'error': 'Not connected to server'},
+        'requestTime': _toUnixTimestamp(DateTime.now()).toString(),
+        'serverType': 'disconnected',
+        'success': false,
+      };
+    }
+
+    try {
+      final refRequestId = generateRequestId(prefix: 'get_settlements');
+
+      // Build the request params that will actually be sent
+      final requestParams = <String, dynamic>{
+        'proposed_execution_id': refRequestId,
+        'account_iid': accountId,
+      };
+
+      if (marketIdOrNameRegexes != null && marketIdOrNameRegexes.isNotEmpty) {
+        requestParams['market_id_or_name_regexes'] = marketIdOrNameRegexes;
+      }
+      if (pagination != null) {
+        requestParams['pagination'] = pagination;
+      }
+      if (fromTime != null) {
+        requestParams['from_dt'] = fromTime;
+      }
+      if (toTime != null) {
+        requestParams['to_dt'] = toTime;
+      }
+      if (status != null && status.isNotEmpty) {
+        requestParams['status'] = status;
+      }
+      if (assetIdOrNameRegexes != null && assetIdOrNameRegexes.isNotEmpty) {
+        requestParams['asset_id_or_name_regexes'] = assetIdOrNameRegexes;
+      }
+
+      print('📤 GetAccountSettlements Request: $requestParams');
+
+      final response = await Future.any([
+        GrpcurlHelper.getAccountSettlements(
+          accountId: accountId,
+          refRequestId: refRequestId,
+          marketIdOrNameRegexes: marketIdOrNameRegexes,
+          pagination: pagination,
+          fromTime: fromTime,
+          toTime: toTime,
+          status: status,
+          assetIdOrNameRegexes: assetIdOrNameRegexes,
+        ),
+      ]).catchError((error) {
+        print('❌ GetAccountSettlements execution error: $error');
+        return {
+          'input': {'account_iid': accountId},
+          'output': {
+            'error': 'GetAccountSettlements execution error',
+            'message': error.toString(),
+          },
+          'requestTime': _toUnixTimestamp(DateTime.now()).toString(),
+          'serverType': 'execution-error',
+          'success': false,
+        };
+      });
+
+      print('📬 Real Server GetAccountSettlements Response: ${response['output']}');
+
+      // Update connection state based on response
+      if (response['success'] == true) {
+        _isConnected = true;
+      } else {
+        // Test connectivity again if request failed
+        final stillReachable = await testServerConnectivity();
+        _isConnected = stillReachable;
+      }
+
+      return response;
+    } catch (e, stackTrace) {
+      print('❌ Critical error in GetAccountSettlements: $e');
+      print('❌ Stack trace: $stackTrace');
+
+      // Test connectivity to update state
+      final stillReachable = await testServerConnectivity();
+      _isConnected = stillReachable;
+
+      // Return error response instead of throwing exception to prevent app crash
+      return {
+        'input': {'account_iid': accountId},
+        'output': {
+          'error': 'Critical GetAccountSettlements error',
+          'message': 'A critical error occurred during GetAccountSettlements: ${e.toString()}',
+          'details': stackTrace.toString(),
+        },
+        'requestTime': _toUnixTimestamp(DateTime.now()).toString(),
+        'serverType': 'critical-error',
+        'success': false,
+      };
+    }
   }
 
   /// Get account transactions using the real gRPC server

@@ -1807,6 +1807,144 @@ class GrpcurlHelper {
     }
   }
 
+  /// Get account settlements using GetAccountSettlements gRPC method
+  static Future<Map<String, dynamic>> getAccountSettlements({
+    required String accountId,
+    String refRequestId = 'flutter-get-settlements',
+    List<String>? marketIdOrNameRegexes,
+    Map<String, dynamic>? pagination,
+    String? fromTime,
+    String? toTime,
+    String? status,
+    List<String>? assetIdOrNameRegexes,
+  }) async {
+    try {
+      // Find the working grpcurl path
+      final grpcurlPath = await _findGrpcurlPath();
+      if (grpcurlPath == null) {
+        return {
+          'success': false,
+          'output': {'error': 'grpcurl not available'},
+          'requestTime': _toUnixTimestamp(DateTime.now()).toString(),
+          'serverType': 'grpcurl_unavailable',
+        };
+      }
+
+      // Prepare request payload with all optional parameters
+      final requestPayload = <String, dynamic>{
+        'proposed_execution_id': refRequestId,
+        'account_iid': accountId,
+      };
+
+      // Add optional parameters if provided
+      if (marketIdOrNameRegexes != null && marketIdOrNameRegexes.isNotEmpty) {
+        requestPayload['market_id_or_name_regexes'] = marketIdOrNameRegexes;
+      }
+
+      if (pagination != null) {
+        requestPayload['pagination'] = pagination;
+      }
+
+      if (fromTime != null) {
+        // Parse fromTime as JSON and add directly to request
+        try {
+          final parsedFromTime = jsonDecode(fromTime);
+          if (parsedFromTime is Map<String, dynamic>) {
+            requestPayload['from_dt'] = parsedFromTime;
+          }
+        } catch (e) {
+          // If not valid JSON, skip it
+          print('⚠️ Could not parse fromTime: $fromTime');
+        }
+      }
+
+      if (toTime != null) {
+        // Parse toTime as JSON and add directly to request
+        try {
+          final parsedToTime = jsonDecode(toTime);
+          if (parsedToTime is Map<String, dynamic>) {
+            requestPayload['to_dt'] = parsedToTime;
+          }
+        } catch (e) {
+          // If not valid JSON, skip it
+          print('⚠️ Could not parse toTime: $toTime');
+        }
+      }
+
+      if (status != null) {
+        requestPayload['status'] = status;
+      }
+
+      if (assetIdOrNameRegexes != null && assetIdOrNameRegexes.isNotEmpty) {
+        requestPayload['asset_id_or_name_regexes'] = assetIdOrNameRegexes;
+      }
+
+      final jsonPayload = jsonEncode(requestPayload);
+
+      ProcessResult result;
+      try {
+        result = await Process.run(
+          grpcurlPath,
+          [
+            '-plaintext',
+            '-d', jsonPayload,
+            '$_host:$_port',
+            'tech.qomet.agora.api.grpc.prtagent.v1.AccountService/GetAccountSettlements'
+          ],
+        ).timeout(const Duration(seconds: 10));
+      } catch (e) {
+        print('❌ Process.run failed for GetAccountSettlements: ${e.runtimeType}: ${e.toString()}');
+        return {
+          'success': false,
+          'output': {'error': 'Process execution failed', 'details': e.toString()},
+          'requestTime': _toUnixTimestamp(DateTime.now()).toString(),
+          'serverType': 'process_error',
+        };
+      }
+
+      final responseData = {
+        'input': requestPayload,
+        'output': {},
+        'requestTime': _toUnixTimestamp(DateTime.now()).toString(),
+        'serverType': 'real_grpc',
+        'success': false,
+      };
+
+      if (result.exitCode == 0) {
+        try {
+          final outputData = jsonDecode(result.stdout.toString());
+          responseData['output'] = outputData;
+          responseData['success'] = true;
+        } catch (e) {
+          responseData['output'] = {
+            'error': 'Invalid JSON response',
+            'raw_output': result.stdout.toString(),
+            'details': e.toString(),
+          };
+          print('❌ GetAccountSettlements JSON parse error: $e');
+        }
+      } else {
+        responseData['output'] = {
+          'error': 'gRPC call failed',
+          'stderr': result.stderr.toString(),
+          'stdout': result.stdout.toString(),
+          'exit_code': result.exitCode,
+        };
+        print('❌ GetAccountSettlements failed: ${result.stderr}');
+      }
+
+      return responseData;
+    } catch (e) {
+      print('❌ GetAccountSettlements exception: $e');
+      return {
+        'success': false,
+        'output': {'error': 'Exception occurred', 'details': e.toString()},
+        'requestTime': _toUnixTimestamp(DateTime.now()).toString(),
+        'serverType': 'exception',
+      };
+    }
+  }
+
   /// Get Market List using grpcurl
   static Future<Map<String, dynamic>> getMarketList() async {
     final responseData = <String, dynamic>{

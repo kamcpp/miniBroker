@@ -196,7 +196,7 @@ class _ActivityPageState extends State<ActivityPage> {
 
   /// Format DateTime for display with date and time
   String _formatDateTime(DateTime? dateTime) {
-    if (dateTime == null) return 'Select date & time';
+    if (dateTime == null) return 'Select Date and Time';
     return '${dateTime.year}-${dateTime.month.toString().padLeft(2, '0')}-${dateTime.day.toString().padLeft(2, '0')} '
            '${dateTime.hour.toString().padLeft(2, '0')}:${dateTime.minute.toString().padLeft(2, '0')}';
   }
@@ -634,68 +634,27 @@ class _ActivityPageState extends State<ActivityPage> {
         toTimeFormatted = {"utc_unix_epoch_ts_millis": timestamp};
       }
 
-      final settlementMarketFilters = _selectedSettlementsMarket != null ? [_selectedSettlementsMarket!] : <String>[];
-      final settlementAssetFilters = _selectedSettlementsAsset != null ? [_selectedSettlementsAsset!] : <String>[];
+      // Only include filters if they have values
+      final settlementMarketFilters = _selectedSettlementsMarket != null && _selectedSettlementsMarket!.isNotEmpty
+        ? [_selectedSettlementsMarket!]
+        : null;
+      final settlementAssetFilters = _selectedSettlementsAsset != null && _selectedSettlementsAsset!.isNotEmpty
+        ? [_selectedSettlementsAsset!]
+        : null;
+      final settlementStatusFilter = _selectedSettlementStatus != null && _selectedSettlementStatus!.isNotEmpty
+        ? _selectedSettlementStatus
+        : null;
 
-      final settlementInputParams = {
-        'ref_request_id': 'flutter-get-settlements-${DateTime.now().millisecondsSinceEpoch}',
-        'account_id': accountId,
-        'market_id_or_name_regexes': settlementMarketFilters,
-        'asset_id_or_name_regexes': settlementAssetFilters,
-        'from_time': fromTimeFormatted,
-        'to_time': toTimeFormatted,
-        'status': _selectedSettlementStatus,
-        'pagination': settlementPagination,
-      };
-
-      settlementInputParams.removeWhere((key, value) => value == null);
-
-      // TODO: Replace with real API call when GetAccountSettlements is implemented
-      // final settlementsResponse = await realGrpcClient.getAccountSettlements(
-      //   accountId: accountId,
-      //   marketIdOrNameRegexes: settlementMarketFilters,
-      //   assetIdOrNameRegexes: settlementAssetFilters,
-      //   fromTime: fromTimeFormatted != null ? json.encode(fromTimeFormatted) : null,
-      //   toTime: toTimeFormatted != null ? json.encode(toTimeFormatted) : null,
-      //   status: _selectedSettlementStatus,
-      //   pagination: settlementPagination,
-      // );
-
-      // Mock settlements response for UI demonstration
-      final settlementsResponse = {
-        'success': true,
-        'output': {
-          'settlements': [
-            {
-              'settlement_id': 'SETTLE-001',
-              'confirmation_status': 'CONFIRMATION_STATUS__CONFIRMED',
-              'asset_transferred': 'ETH',
-              'amount_transferred': '1.5',
-              'currency_transferred': 'USD',
-              'currency_amount': '2250.00',
-              'timestamp': DateTime.now().subtract(Duration(hours: 2)).toIso8601String(),
-            },
-            {
-              'settlement_id': 'SETTLE-002',
-              'confirmation_status': 'CONFIRMATION_STATUS__PENDING',
-              'asset_transferred': 'XRP',
-              'amount_transferred': '1000.0',
-              'currency_transferred': 'USD',
-              'currency_amount': '500.00',
-              'timestamp': DateTime.now().subtract(Duration(hours: 5)).toIso8601String(),
-            },
-            {
-              'settlement_id': 'SETTLE-003',
-              'confirmation_status': 'CONFIRMATION_STATUS__DECLINED',
-              'asset_transferred': 'ETH',
-              'amount_transferred': '0.5',
-              'currency_transferred': 'USD',
-              'currency_amount': '750.00',
-              'timestamp': DateTime.now().subtract(Duration(days: 1)).toIso8601String(),
-            },
-          ]
-        }
-      };
+      // Call real API to get settlements
+      final settlementsResponse = await realGrpcClient.getAccountSettlements(
+        accountId: accountId,
+        marketIdOrNameRegexes: settlementMarketFilters,
+        assetIdOrNameRegexes: settlementAssetFilters,
+        fromTime: fromTimeFormatted != null ? json.encode(fromTimeFormatted) : null,
+        toTime: toTimeFormatted != null ? json.encode(toTimeFormatted) : null,
+        status: settlementStatusFilter,
+        pagination: settlementPagination,
+      );
 
       if (mounted) {
         setState(() {
@@ -1251,7 +1210,7 @@ class _ActivityPageState extends State<ActivityPage> {
                             ),
                             const SizedBox(height: 4),
                             Container(
-                              height: 48,
+                              height: 38,
                               padding: const EdgeInsets.symmetric(horizontal: 12),
                               decoration: BoxDecoration(
                                 color: isDarkTheme ? const Color(0xFF3a3a3a) : Colors.white,
@@ -1362,7 +1321,7 @@ class _ActivityPageState extends State<ActivityPage> {
                             ),
                             const SizedBox(height: 4),
                             Container(
-                              height: 48,
+                              height: 38,
                               padding: const EdgeInsets.symmetric(horizontal: 12),
                               decoration: BoxDecoration(
                                 color: isDarkTheme ? const Color(0xFF3a3a3a) : Colors.white,
@@ -1418,7 +1377,7 @@ class _ActivityPageState extends State<ActivityPage> {
                             ),
                             const SizedBox(height: 4),
                             Container(
-                              height: 48,
+                              height: 38,
                               padding: const EdgeInsets.symmetric(horizontal: 12),
                               decoration: BoxDecoration(
                                 color: isDarkTheme ? const Color(0xFF3a3a3a) : Colors.white,
@@ -1465,7 +1424,7 @@ class _ActivityPageState extends State<ActivityPage> {
                             ),
                             const SizedBox(height: 4),
                             Container(
-                              height: 48,
+                              height: 38,
                               padding: const EdgeInsets.symmetric(horizontal: 12),
                               decoration: BoxDecoration(
                                 color: isDarkTheme ? const Color(0xFF3a3a3a) : Colors.white,
@@ -1538,7 +1497,7 @@ class _ActivityPageState extends State<ActivityPage> {
                                 }
                               },
                               child: Container(
-                                height: 48,
+                                height: 38,
                                 padding: const EdgeInsets.symmetric(horizontal: 12),
                                 decoration: BoxDecoration(
                                   color: isDarkTheme ? const Color(0xFF3a3a3a) : Colors.white,
@@ -1601,7 +1560,7 @@ class _ActivityPageState extends State<ActivityPage> {
                                 }
                               },
                               child: Container(
-                                height: 48,
+                                height: 38,
                                 padding: const EdgeInsets.symmetric(horizontal: 12),
                                 decoration: BoxDecoration(
                                   color: isDarkTheme ? const Color(0xFF3a3a3a) : Colors.white,
@@ -1971,7 +1930,7 @@ class _ActivityPageState extends State<ActivityPage> {
                             ),
                             const SizedBox(height: 4),
                             Container(
-                              height: 48,
+                              height: 38,
                               padding: const EdgeInsets.symmetric(horizontal: 12),
                               decoration: BoxDecoration(
                                 color: isDarkTheme ? const Color(0xFF3a3a3a) : Colors.white,
@@ -2082,7 +2041,7 @@ class _ActivityPageState extends State<ActivityPage> {
                             ),
                             const SizedBox(height: 4),
                             Container(
-                              height: 48,
+                              height: 38,
                               padding: const EdgeInsets.symmetric(horizontal: 12),
                               decoration: BoxDecoration(
                                 color: isDarkTheme ? const Color(0xFF3a3a3a) : Colors.white,
@@ -2138,7 +2097,7 @@ class _ActivityPageState extends State<ActivityPage> {
                             ),
                             const SizedBox(height: 4),
                             Container(
-                              height: 48,
+                              height: 38,
                               padding: const EdgeInsets.symmetric(horizontal: 12),
                               decoration: BoxDecoration(
                                 color: isDarkTheme ? const Color(0xFF3a3a3a) : Colors.white,
@@ -2210,7 +2169,7 @@ class _ActivityPageState extends State<ActivityPage> {
                                 }
                               },
                               child: Container(
-                                height: 48,
+                                height: 38,
                                 padding: const EdgeInsets.symmetric(horizontal: 12),
                                 decoration: BoxDecoration(
                                   color: isDarkTheme ? const Color(0xFF3a3a3a) : Colors.white,
@@ -2273,7 +2232,7 @@ class _ActivityPageState extends State<ActivityPage> {
                                 }
                               },
                               child: Container(
-                                height: 48,
+                                height: 38,
                                 padding: const EdgeInsets.symmetric(horizontal: 12),
                                 decoration: BoxDecoration(
                                   color: isDarkTheme ? const Color(0xFF3a3a3a) : Colors.white,
@@ -2701,6 +2660,7 @@ class _ActivityPageState extends State<ActivityPage> {
                             ),
                             const SizedBox(height: 4),
                             Container(
+                              height: 38,
                               padding: const EdgeInsets.symmetric(horizontal: 12),
                               decoration: BoxDecoration(
                                 color: isDarkTheme ? const Color(0xFF3a3a3a) : Colors.white,
@@ -2794,6 +2754,7 @@ class _ActivityPageState extends State<ActivityPage> {
                             ),
                             const SizedBox(height: 4),
                             Container(
+                              height: 38,
                               padding: const EdgeInsets.symmetric(horizontal: 12),
                               decoration: BoxDecoration(
                                 color: isDarkTheme ? const Color(0xFF3a3a3a) : Colors.white,
@@ -2847,6 +2808,7 @@ class _ActivityPageState extends State<ActivityPage> {
                             ),
                             const SizedBox(height: 4),
                             Container(
+                              height: 38,
                               padding: const EdgeInsets.symmetric(horizontal: 12),
                               decoration: BoxDecoration(
                                 color: isDarkTheme ? const Color(0xFF3a3a3a) : Colors.white,
@@ -2871,56 +2833,6 @@ class _ActivityPageState extends State<ActivityPage> {
                                 onChanged: (value) {
                                   setState(() {
                                     _selectedSettlementStatus = value;
-                                  });
-                                },
-                              ),
-                            ),
-                          ],
-                        ),
-                      ),
-                      const SizedBox(width: UIConstants.spacingSm),
-                      // Transaction Type filter
-                      Expanded(
-                        child: Column(
-                          crossAxisAlignment: CrossAxisAlignment.start,
-                          children: [
-                            Text(
-                              'Type',
-                              style: TextStyle(
-                                fontSize: UIConstants.fontSizeSm,
-                                fontWeight: UIConstants.fontWeightNormal,
-                                color: isDarkTheme ? Colors.grey[300] : Colors.grey[700],
-                              ),
-                            ),
-                            const SizedBox(height: 4),
-                            Container(
-                              padding: const EdgeInsets.symmetric(horizontal: 12),
-                              decoration: BoxDecoration(
-                                color: isDarkTheme ? const Color(0xFF3a3a3a) : Colors.white,
-                                borderRadius: BorderRadius.circular(UIConstants.textFieldBorderRadius),
-                                border: Border.all(
-                                  color: isDarkTheme ? Colors.grey[600]! : Colors.grey[300]!,
-                                ),
-                              ),
-                              child: DropdownButton<String>(
-                                value: _selectedSettlementTransactionType,
-                                isExpanded: true,
-                                underline: SizedBox.shrink(),
-                                dropdownColor: isDarkTheme ? const Color(0xFF2a2a2a) : Colors.white,
-                                iconEnabledColor: isDarkTheme ? Colors.grey[300] : Colors.grey[600],
-                                iconDisabledColor: isDarkTheme ? Colors.grey[600] : Colors.grey[400],
-                                items: [
-                                  DropdownMenuItem(value: null, child: Text('All Types', style: TextStyle(color: isDarkTheme ? Colors.white : Colors.black))),
-                                  DropdownMenuItem(value: 'TRANSACTION_TYPE__TRADE_BUY', child: Text('Trade Buy', style: TextStyle(color: isDarkTheme ? Colors.white : Colors.black))),
-                                  DropdownMenuItem(value: 'TRANSACTION_TYPE__TRADE_SELL', child: Text('Trade Sell', style: TextStyle(color: isDarkTheme ? Colors.white : Colors.black))),
-                                  DropdownMenuItem(value: 'TRANSACTION_TYPE__DEPOSIT_CASH', child: Text('Deposit Cash', style: TextStyle(color: isDarkTheme ? Colors.white : Colors.black))),
-                                  DropdownMenuItem(value: 'TRANSACTION_TYPE__SETTLEMENT', child: Text('Settlement', style: TextStyle(color: isDarkTheme ? Colors.white : Colors.black))),
-                                  DropdownMenuItem(value: 'TRANSACTION_TYPE__FEE', child: Text('Fee', style: TextStyle(color: isDarkTheme ? Colors.white : Colors.black))),
-                                  DropdownMenuItem(value: 'TRANSACTION_TYPE__TRANSFER_IN', child: Text('Transfer In', style: TextStyle(color: isDarkTheme ? Colors.white : Colors.black))),
-                                ],
-                                onChanged: (value) {
-                                  setState(() {
-                                    _selectedSettlementTransactionType = value;
                                   });
                                 },
                               ),
@@ -2977,7 +2889,7 @@ class _ActivityPageState extends State<ActivityPage> {
                                     Text(
                                       _settlementFromDate != null ?
                                       '${_settlementFromDate!.day}/${_settlementFromDate!.month}/${_settlementFromDate!.year} ${_settlementFromDate!.hour.toString().padLeft(2, '0')}:${_settlementFromDate!.minute.toString().padLeft(2, '0')}' :
-                                      'Select Date',
+                                      'Select Date and Time',
                                       style: TextStyle(
                                         fontSize: UIConstants.fontSizeSm,
                                         color: isDarkTheme ? Colors.white : Colors.black,
@@ -3034,7 +2946,7 @@ class _ActivityPageState extends State<ActivityPage> {
                                     Text(
                                       _settlementToDate != null ?
                                       '${_settlementToDate!.day}/${_settlementToDate!.month}/${_settlementToDate!.year} ${_settlementToDate!.hour.toString().padLeft(2, '0')}:${_settlementToDate!.minute.toString().padLeft(2, '0')}' :
-                                      'Select Date',
+                                      'Select Date and Time',
                                       style: TextStyle(
                                         fontSize: UIConstants.fontSizeSm,
                                         color: isDarkTheme ? Colors.white : Colors.black,
@@ -3273,6 +3185,33 @@ class _ActivityPageState extends State<ActivityPage> {
                 ],
               ),
             ),
+          // Show More button for settlements
+          if (_settlements.isNotEmpty)
+            Padding(
+              padding: const EdgeInsets.all(16.0),
+              child: Center(
+                child: ElevatedButton.icon(
+                  onPressed: () async {
+                    if (_cachedAccountId != null && _cachedAccountId!.isNotEmpty) {
+                      setState(() {
+                        _settlementPageSize = (_settlementPageSize ?? 15) + 15;
+                      });
+                      await _fetchSettlementsWithAccountId(_cachedAccountId!);
+                    }
+                  },
+                  icon: const Icon(Icons.add),
+                  label: const Text('Show More'),
+                  style: ElevatedButton.styleFrom(
+                    backgroundColor: isDarkTheme
+                        ? const Color(0xFF2d2d2d)
+                        : Colors.grey[100],
+                    foregroundColor: isDarkTheme
+                        ? Colors.white
+                        : Colors.black,
+                  ),
+                ),
+              ),
+            ),
         ],
       ),
     );
@@ -3370,6 +3309,7 @@ class _ActivityPageState extends State<ActivityPage> {
                             ),
                             const SizedBox(height: 4),
                             Container(
+                              height: 38,
                               padding: UIConstants.paddingStandard,
                               decoration: BoxDecoration(
                                 color: isDarkTheme ? const Color(0xFF3a3a3a) : Colors.white,
@@ -3429,6 +3369,7 @@ class _ActivityPageState extends State<ActivityPage> {
                             ),
                             const SizedBox(height: 4),
                             Container(
+                              height: 38,
                               padding: const EdgeInsets.symmetric(horizontal: 12),
                               decoration: BoxDecoration(
                                 color: isDarkTheme ? const Color(0xFF3a3a3a) : Colors.white,
@@ -3510,7 +3451,7 @@ class _ActivityPageState extends State<ActivityPage> {
                                     Text(
                                       _transactionFromDate != null ?
                                       '${_transactionFromDate!.day}/${_transactionFromDate!.month}/${_transactionFromDate!.year} ${_transactionFromDate!.hour.toString().padLeft(2, '0')}:${_transactionFromDate!.minute.toString().padLeft(2, '0')}' :
-                                      'Select Date',
+                                      'Select Date and Time',
                                       style: TextStyle(
                                         fontSize: UIConstants.fontSizeSm,
                                         color: isDarkTheme ? Colors.white : Colors.black,
@@ -3567,7 +3508,7 @@ class _ActivityPageState extends State<ActivityPage> {
                                     Text(
                                       _transactionToDate != null ?
                                       '${_transactionToDate!.day}/${_transactionToDate!.month}/${_transactionToDate!.year} ${_transactionToDate!.hour.toString().padLeft(2, '0')}:${_transactionToDate!.minute.toString().padLeft(2, '0')}' :
-                                      'Select Date',
+                                      'Select Date and Time',
                                       style: TextStyle(
                                         fontSize: UIConstants.fontSizeSm,
                                         color: isDarkTheme ? Colors.white : Colors.black,
