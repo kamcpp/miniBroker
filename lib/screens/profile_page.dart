@@ -105,7 +105,7 @@ class _ProfilePageState extends State<ProfilePage> {
                           _usernameController.text = authService.username;
                         },
                         isDarkTheme: isDarkTheme,
-                        canEdit: true,
+                        canEdit: false,
                       ),
 
                       const SizedBox(height: UIConstants.spacingLg),
@@ -223,11 +223,10 @@ class _ProfilePageState extends State<ProfilePage> {
             ),
           ] else ...[
             Text(
-              canEdit ? value : '$value (Admin - cannot edit)',
+              value,
               style: TextStyle(
                 fontSize: UIConstants.textFieldFontSize,
                 color: isDarkTheme ? Colors.white : Colors.black,
-                fontStyle: canEdit ? FontStyle.normal : FontStyle.italic,
               ),
             ),
           ],
