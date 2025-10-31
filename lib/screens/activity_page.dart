@@ -1,6 +1,7 @@
 import 'dart:async';
 import 'dart:convert';
 import 'package:flutter/material.dart';
+import 'package:flutter/services.dart';
 import 'package:provider/provider.dart';
 import '../services/auth_service.dart';
 import '../config/ui_constants.dart';
@@ -107,6 +108,10 @@ class _ActivityPageState extends State<ActivityPage> {
   late TextEditingController _settlementPageNumberController;
   late TextEditingController _transactionPageNumberController;
 
+  // Scroll controllers for settlements table horizontal scroll
+  final ScrollController _settlementsHeaderScrollController = ScrollController();
+  final ScrollController _settlementsRowsScrollController = ScrollController();
+
   // Tab management
   int _selectedTabIndex = 0;
   final List<String> _tabNames = ['Orders', 'Trades', 'Settlements', 'Transactions'];
@@ -121,7 +126,21 @@ class _ActivityPageState extends State<ActivityPage> {
     _tradePageNumberController = TextEditingController(text: _tradePageNumber.toString());
     _settlementPageNumberController = TextEditingController(text: _settlementPageNumber.toString());
     _transactionPageNumberController = TextEditingController(text: _transactionPageNumber.toString());
-    
+
+    // Sync settlements scroll controllers
+    _settlementsHeaderScrollController.addListener(() {
+      if (_settlementsRowsScrollController.hasClients &&
+          _settlementsRowsScrollController.offset != _settlementsHeaderScrollController.offset) {
+        _settlementsRowsScrollController.jumpTo(_settlementsHeaderScrollController.offset);
+      }
+    });
+    _settlementsRowsScrollController.addListener(() {
+      if (_settlementsHeaderScrollController.hasClients &&
+          _settlementsHeaderScrollController.offset != _settlementsRowsScrollController.offset) {
+        _settlementsHeaderScrollController.jumpTo(_settlementsRowsScrollController.offset);
+      }
+    });
+
     // Check server connectivity when page opens
     WidgetsBinding.instance.addPostFrameCallback((_) {
       ConnectivityChecker.checkAndShowErrorIfNeeded(context, 'Activity');
@@ -141,7 +160,89 @@ class _ActivityPageState extends State<ActivityPage> {
     _tradePageNumberController.dispose();
     _settlementPageNumberController.dispose();
     _transactionPageNumberController.dispose();
+    _settlementsHeaderScrollController.dispose();
+    _settlementsRowsScrollController.dispose();
     super.dispose();
+  }
+
+  /// Format timestamp from milliseconds string to readable date
+  String _formatTimestamp(String? timestamp) {
+    if (timestamp == null || timestamp.isEmpty) {
+      return 'N/A';
+    }
+
+    try {
+      // Try parsing as milliseconds timestamp
+      final millis = int.tryParse(timestamp);
+      if (millis != null) {
+        final dateTime = DateTime.fromMillisecondsSinceEpoch(millis);
+        return '${dateTime.year}-${dateTime.month.toString().padLeft(2, '0')}-${dateTime.day.toString().padLeft(2, '0')} ${dateTime.hour.toString().padLeft(2, '0')}:${dateTime.minute.toString().padLeft(2, '0')}:${dateTime.second.toString().padLeft(2, '0')}';
+      }
+
+      // Try parsing as ISO date string
+      final dateTime = DateTime.tryParse(timestamp);
+      if (dateTime != null) {
+        return '${dateTime.year}-${dateTime.month.toString().padLeft(2, '0')}-${dateTime.day.toString().padLeft(2, '0')} ${dateTime.hour.toString().padLeft(2, '0')}:${dateTime.minute.toString().padLeft(2, '0')}:${dateTime.second.toString().padLeft(2, '0')}';
+      }
+    } catch (e) {
+      return 'N/A';
+    }
+
+    return 'N/A';
+  }
+
+  /// Build abbreviated hash display with copy button
+  Widget _buildHashWidget(String? hash, bool isDarkTheme) {
+    if (hash == null || hash.isEmpty) {
+      return Text(
+        'N/A',
+        style: TextStyle(
+          fontSize: UIConstants.textFieldFontSize,
+          color: isDarkTheme ? Colors.white : Colors.black,
+        ),
+      );
+    }
+
+    // Abbreviate hash: first 4 + ... + last 4
+    String abbreviatedHash;
+    if (hash.length > 8) {
+      abbreviatedHash = '${hash.substring(0, 4)}...${hash.substring(hash.length - 4)}';
+    } else {
+      abbreviatedHash = hash;
+    }
+
+    return Row(
+      mainAxisSize: MainAxisSize.min,
+      children: [
+        Text(
+          abbreviatedHash,
+          style: TextStyle(
+            fontSize: UIConstants.textFieldFontSize,
+            color: isDarkTheme ? Colors.white : Colors.black,
+            fontFamily: 'monospace',
+          ),
+          overflow: TextOverflow.ellipsis,
+        ),
+        const SizedBox(width: 4),
+        InkWell(
+          onTap: () {
+            Clipboard.setData(ClipboardData(text: hash));
+            ScaffoldMessenger.of(context).showSnackBar(
+              SnackBar(
+                content: Text('$hash copied successfully'),
+                duration: const Duration(seconds: 2),
+                backgroundColor: Colors.green,
+              ),
+            );
+          },
+          child: const Icon(
+            Icons.copy,
+            size: 14,
+            color: Colors.blue,
+          ),
+        ),
+      ],
+    );
   }
 
   /// Show date and time picker combined
@@ -2972,7 +3073,7 @@ class _ActivityPageState extends State<ActivityPage> {
                             _selectedSettlementsMarket = _tempSelectedSettlementsMarket;
                             _selectedSettlementsAsset = _tempSelectedSettlementsAsset;
                           });
-                          _fetchActivityData();
+                          _fetchSettlements();
                         },
                         icon: const Icon(Icons.check),
                         label: const Text('Apply Filters'),
@@ -3003,110 +3104,367 @@ class _ActivityPageState extends State<ActivityPage> {
           Expanded(
             child: Column(
               children: [
-                // Table header row - always show
-                Row(
-                  children: [
-                    Expanded(
-                      flex: 3,
-                      child: Padding(
-                        padding: const EdgeInsets.only(left: 16),
-                        child: Text(
-                          'Settlement ID',
-                          style: TextStyle(
-                            fontSize: UIConstants.textFieldFontSize,
-                            color: isDarkTheme ? Colors.grey[400] : Colors.grey[600],
+                // Table header row - horizontally scrollable
+                SingleChildScrollView(
+                  controller: _settlementsHeaderScrollController,
+                  scrollDirection: Axis.horizontal,
+                  child: Row(
+                    children: [
+                      SizedBox(
+                        width: 150,
+                        child: Padding(
+                          padding: const EdgeInsets.only(left: 16),
+                          child: Text(
+                            'Settlement ID',
+                            style: TextStyle(
+                              fontSize: UIConstants.textFieldFontSize,
+                              color: isDarkTheme ? Colors.grey[400] : Colors.grey[600],
+                              fontWeight: FontWeight.bold,
+                            ),
                           ),
                         ),
                       ),
-                    ),
-                    Expanded(
-                      flex: 2,
-                      child: Text(
-                        'Status',
-                        style: TextStyle(
-                          fontSize: UIConstants.textFieldFontSize,
-                          color: isDarkTheme ? Colors.grey[400] : Colors.grey[600],
+                      SizedBox(
+                        width: 150,
+                        child: Text(
+                          'Settlement Hash',
+                          style: TextStyle(
+                            fontSize: UIConstants.textFieldFontSize,
+                            color: isDarkTheme ? Colors.grey[400] : Colors.grey[600],
+                            fontWeight: FontWeight.bold,
+                          ),
                         ),
                       ),
-                    ),
-                    Expanded(
-                      flex: 2,
-                      child: Text(
-                        'Asset',
-                        style: TextStyle(
-                          fontSize: UIConstants.textFieldFontSize,
-                          color: isDarkTheme ? Colors.grey[400] : Colors.grey[600],
-                        ),
-                      ),
-                    ),
-                    Expanded(
-                      flex: 2,
-                      child: Text(
-                        'Amount',
-                        textAlign: TextAlign.center,
-                        style: TextStyle(
-                          fontSize: UIConstants.textFieldFontSize,
-                          color: isDarkTheme ? Colors.grey[400] : Colors.grey[600],
-                        ),
-                      ),
-                    ),
-                    Expanded(
-                      flex: 2,
-                      child: Padding(
-                        padding: const EdgeInsets.only(right: 16),
+                      SizedBox(
+                        width: 180,
                         child: Text(
                           'Timestamp',
-                          textAlign: TextAlign.right,
                           style: TextStyle(
                             fontSize: UIConstants.textFieldFontSize,
                             color: isDarkTheme ? Colors.grey[400] : Colors.grey[600],
+                            fontWeight: FontWeight.bold,
                           ),
                         ),
                       ),
-                    ),
-                  ],
+                      SizedBox(
+                        width: 150,
+                        child: Text(
+                          'Trade ID',
+                          style: TextStyle(
+                            fontSize: UIConstants.textFieldFontSize,
+                            color: isDarkTheme ? Colors.grey[400] : Colors.grey[600],
+                            fontWeight: FontWeight.bold,
+                          ),
+                        ),
+                      ),
+                      SizedBox(
+                        width: 150,
+                        child: Text(
+                          'Trade Hash',
+                          style: TextStyle(
+                            fontSize: UIConstants.textFieldFontSize,
+                            color: isDarkTheme ? Colors.grey[400] : Colors.grey[600],
+                            fontWeight: FontWeight.bold,
+                          ),
+                        ),
+                      ),
+                      SizedBox(
+                        width: 120,
+                        child: Text(
+                          'Status',
+                          style: TextStyle(
+                            fontSize: UIConstants.textFieldFontSize,
+                            color: isDarkTheme ? Colors.grey[400] : Colors.grey[600],
+                            fontWeight: FontWeight.bold,
+                          ),
+                        ),
+                      ),
+                      SizedBox(
+                        width: 120,
+                        child: Text(
+                          'Type',
+                          style: TextStyle(
+                            fontSize: UIConstants.textFieldFontSize,
+                            color: isDarkTheme ? Colors.grey[400] : Colors.grey[600],
+                            fontWeight: FontWeight.bold,
+                          ),
+                        ),
+                      ),
+                      SizedBox(
+                        width: 150,
+                        child: Text(
+                          'Buyer Account',
+                          style: TextStyle(
+                            fontSize: UIConstants.textFieldFontSize,
+                            color: isDarkTheme ? Colors.grey[400] : Colors.grey[600],
+                            fontWeight: FontWeight.bold,
+                          ),
+                        ),
+                      ),
+                      SizedBox(
+                        width: 150,
+                        child: Text(
+                          'Seller Account',
+                          style: TextStyle(
+                            fontSize: UIConstants.textFieldFontSize,
+                            color: isDarkTheme ? Colors.grey[400] : Colors.grey[600],
+                            fontWeight: FontWeight.bold,
+                          ),
+                        ),
+                      ),
+                      SizedBox(
+                        width: 100,
+                        child: Text(
+                          'Asset',
+                          style: TextStyle(
+                            fontSize: UIConstants.textFieldFontSize,
+                            color: isDarkTheme ? Colors.grey[400] : Colors.grey[600],
+                            fontWeight: FontWeight.bold,
+                          ),
+                        ),
+                      ),
+                      SizedBox(
+                        width: 120,
+                        child: Text(
+                          'Amount',
+                          style: TextStyle(
+                            fontSize: UIConstants.textFieldFontSize,
+                            color: isDarkTheme ? Colors.grey[400] : Colors.grey[600],
+                            fontWeight: FontWeight.bold,
+                          ),
+                        ),
+                      ),
+                      SizedBox(
+                        width: 100,
+                        child: Text(
+                          'Currency',
+                          style: TextStyle(
+                            fontSize: UIConstants.textFieldFontSize,
+                            color: isDarkTheme ? Colors.grey[400] : Colors.grey[600],
+                            fontWeight: FontWeight.bold,
+                          ),
+                        ),
+                      ),
+                      SizedBox(
+                        width: 120,
+                        child: Text(
+                          'Currency Amt',
+                          style: TextStyle(
+                            fontSize: UIConstants.textFieldFontSize,
+                            color: isDarkTheme ? Colors.grey[400] : Colors.grey[600],
+                            fontWeight: FontWeight.bold,
+                          ),
+                        ),
+                      ),
+                      SizedBox(
+                        width: 120,
+                        child: Text(
+                          'Ledger ID',
+                          style: TextStyle(
+                            fontSize: UIConstants.textFieldFontSize,
+                            color: isDarkTheme ? Colors.grey[400] : Colors.grey[600],
+                            fontWeight: FontWeight.bold,
+                          ),
+                        ),
+                      ),
+                      SizedBox(
+                        width: 150,
+                        child: Text(
+                          'Vault Address',
+                          style: TextStyle(
+                            fontSize: UIConstants.textFieldFontSize,
+                            color: isDarkTheme ? Colors.grey[400] : Colors.grey[600],
+                            fontWeight: FontWeight.bold,
+                          ),
+                        ),
+                      ),
+                      SizedBox(
+                        width: 120,
+                        child: Padding(
+                          padding: const EdgeInsets.only(right: 16),
+                          child: Text(
+                            'Reserve ID',
+                            style: TextStyle(
+                              fontSize: UIConstants.textFieldFontSize,
+                              color: isDarkTheme ? Colors.grey[400] : Colors.grey[600],
+                              fontWeight: FontWeight.bold,
+                            ),
+                          ),
+                        ),
+                      ),
+                    ],
+                  ),
                 ),
                 const SizedBox(height: UIConstants.spacingSm),
                 Container(
-                  height: 1,
-                  color: isDarkTheme ? Colors.grey[700] : Colors.grey[300],
-                ),
-                const SizedBox(height: UIConstants.spacingSm),
-                // Table rows
-                Flexible(
-                  child: _isLoadingSettlements
-                      ? Center(
-                          child: CircularProgressIndicator(
-                            valueColor: AlwaysStoppedAnimation<Color>(
-                              isDarkTheme ? Colors.white : Colors.black,
-                            ),
-                          ),
-                        )
-                      : _settlements.isEmpty
-                          ? Center(
-                              child: Text(
-                                'No settlements found',
-                                style: TextStyle(
-                                  color: isDarkTheme ? Colors.grey[400] : Colors.grey[600],
-                                  fontSize: UIConstants.textFieldFontSize,
-                                ),
-                              ),
-                            )
-                          : ListView.builder(
-                              itemCount: _settlements.length,
-                              itemBuilder: (context, index) {
-                                final settlement = _settlements[index];
-                                return Padding(
-                                  padding: const EdgeInsets.only(bottom: 8),
-                                  child: Row(
-                                    children: [
-                                      // Settlement ID
-                                      Expanded(
-                                        flex: 3,
-                                        child: Padding(
-                                          padding: const EdgeInsets.only(left: 16),
+                    height: 1,
+                    color: isDarkTheme ? Colors.grey[700] : Colors.grey[300],
+                  ),
+                  const SizedBox(height: UIConstants.spacingSm),
+                  // Table rows with scrollbar at bottom
+                  Flexible(
+                    child: Column(
+                      children: [
+                        Expanded(
+                          child: Scrollbar(
+                            controller: _settlementsRowsScrollController,
+                            thumbVisibility: true,
+                            child: _isLoadingSettlements
+                                ? Center(
+                                    child: CircularProgressIndicator(
+                                      valueColor: AlwaysStoppedAnimation<Color>(
+                                        isDarkTheme ? Colors.white : Colors.black,
+                                      ),
+                                    ),
+                                  )
+                                : _settlements.isEmpty
+                                    ? Center(
+                                        child: Text(
+                                          'No settlements found',
+                                          style: TextStyle(
+                                            color: isDarkTheme ? Colors.grey[400] : Colors.grey[600],
+                                            fontSize: UIConstants.textFieldFontSize,
+                                          ),
+                                        ),
+                                      )
+                                    : SingleChildScrollView(
+                                        controller: _settlementsRowsScrollController,
+                                        scrollDirection: Axis.horizontal,
+                                        child: SizedBox(
+                                          width: 150 + 150 + 180 + 150 + 150 + 120 + 120 + 150 + 150 + 100 + 120 + 100 + 120 + 120 + 150 + 120, // Sum of all column widths
+                                          child: ListView.builder(
+                                itemCount: _settlements.length,
+                                itemBuilder: (context, index) {
+                                  final settlement = _settlements[index];
+                                  return Padding(
+                                    padding: const EdgeInsets.only(bottom: 8),
+                                    child: Row(
+                                      children: [
+                                        // Settlement ID
+                                        SizedBox(
+                                          width: 150,
+                                          child: Padding(
+                                            padding: const EdgeInsets.only(left: 16),
+                                            child: Text(
+                                              settlement['settlementId']?.toString() ?? 'N/A',
+                                              style: TextStyle(
+                                                fontSize: UIConstants.textFieldFontSize,
+                                                color: isDarkTheme ? Colors.white : Colors.black,
+                                                fontWeight: UIConstants.fontWeightNormal,
+                                              ),
+                                              overflow: TextOverflow.ellipsis,
+                                            ),
+                                          ),
+                                        ),
+                                        // Settlement Hash
+                                        SizedBox(
+                                          width: 150,
+                                          child: _buildHashWidget(
+                                            settlement['settlementHash']?.toString(),
+                                            isDarkTheme,
+                                          ),
+                                        ),
+                                        // Timestamp
+                                        SizedBox(
+                                          width: 180,
                                           child: Text(
-                                            settlement['settlement_id']?.toString() ?? 'N/A',
+                                            _formatTimestamp(settlement['timestamp']?.toString()),
+                                            style: TextStyle(
+                                              fontSize: UIConstants.textFieldFontSize,
+                                              color: isDarkTheme ? Colors.grey[400] : Colors.grey[600],
+                                            ),
+                                            overflow: TextOverflow.ellipsis,
+                                          ),
+                                        ),
+                                        // Trade ID
+                                        SizedBox(
+                                          width: 150,
+                                          child: Text(
+                                            settlement['tradeId']?.toString() ?? 'N/A',
+                                            style: TextStyle(
+                                              fontSize: UIConstants.textFieldFontSize,
+                                              color: isDarkTheme ? Colors.white : Colors.black,
+                                            ),
+                                            overflow: TextOverflow.ellipsis,
+                                          ),
+                                        ),
+                                        // Trade Hash
+                                        SizedBox(
+                                          width: 150,
+                                          child: _buildHashWidget(
+                                            settlement['tradeHash']?.toString(),
+                                            isDarkTheme,
+                                          ),
+                                        ),
+                                        // Confirmation Status
+                                        SizedBox(
+                                          width: 120,
+                                          child: Text(
+                                            settlement['confirmationStatus']?.toString().replaceAll('CONFIRMATION_STATUS__', '') ?? 'N/A',
+                                            style: TextStyle(
+                                              fontSize: UIConstants.textFieldFontSize,
+                                              color: settlement['confirmationStatus'] == 'CONFIRMATION_STATUS__CONFIRMED'
+                                                  ? Colors.green[600]
+                                                  : settlement['confirmationStatus'] == 'CONFIRMATION_STATUS__PENDING'
+                                                  ? Colors.orange[600]
+                                                  : Colors.red[600],
+                                            ),
+                                            overflow: TextOverflow.ellipsis,
+                                          ),
+                                        ),
+                                        // Settlement Type
+                                        SizedBox(
+                                          width: 120,
+                                          child: Text(
+                                            settlement['settlementType']?.toString() ?? 'N/A',
+                                            style: TextStyle(
+                                              fontSize: UIConstants.textFieldFontSize,
+                                              color: isDarkTheme ? Colors.white : Colors.black,
+                                            ),
+                                            overflow: TextOverflow.ellipsis,
+                                          ),
+                                        ),
+                                        // Buyer Account
+                                        SizedBox(
+                                          width: 150,
+                                          child: Text(
+                                            settlement['buyerAccount']?.toString() ?? 'N/A',
+                                            style: TextStyle(
+                                              fontSize: UIConstants.textFieldFontSize,
+                                              color: isDarkTheme ? Colors.white : Colors.black,
+                                            ),
+                                            overflow: TextOverflow.ellipsis,
+                                          ),
+                                        ),
+                                        // Seller Account
+                                        SizedBox(
+                                          width: 150,
+                                          child: Text(
+                                            settlement['sellerAccount']?.toString() ?? 'N/A',
+                                            style: TextStyle(
+                                              fontSize: UIConstants.textFieldFontSize,
+                                              color: isDarkTheme ? Colors.white : Colors.black,
+                                            ),
+                                            overflow: TextOverflow.ellipsis,
+                                          ),
+                                        ),
+                                        // Asset Transferred
+                                        SizedBox(
+                                          width: 100,
+                                          child: Text(
+                                            settlement['assetTransferred']?.toString() ?? 'N/A',
+                                            style: TextStyle(
+                                              fontSize: UIConstants.textFieldFontSize,
+                                              color: isDarkTheme ? Colors.white : Colors.black,
+                                            ),
+                                            overflow: TextOverflow.ellipsis,
+                                          ),
+                                        ),
+                                        // Amount Transferred
+                                        SizedBox(
+                                          width: 120,
+                                          child: Text(
+                                            settlement['amountTransferred']?.toString() ?? 'N/A',
                                             style: TextStyle(
                                               fontSize: UIConstants.textFieldFontSize,
                                               color: isDarkTheme ? Colors.white : Colors.black,
@@ -3115,101 +3473,105 @@ class _ActivityPageState extends State<ActivityPage> {
                                             overflow: TextOverflow.ellipsis,
                                           ),
                                         ),
-                                      ),
-                                      // Status
-                                      Expanded(
-                                        flex: 2,
-                                        child: Text(
-                                          settlement['confirmation_status']?.toString().replaceAll('CONFIRMATION_STATUS__', '') ?? 'N/A',
-                                          style: TextStyle(
-                                            fontSize: UIConstants.textFieldFontSize,
-                                            color: settlement['confirmation_status'] == 'CONFIRMATION_STATUS__CONFIRMED'
-                                                ? Colors.green[600]
-                                                : settlement['confirmation_status'] == 'CONFIRMATION_STATUS__PENDING'
-                                                ? Colors.orange[600]
-                                                : Colors.red[600],
-                                          ),
-                                          overflow: TextOverflow.ellipsis,
-                                        ),
-                                      ),
-                                      // Asset
-                                      Expanded(
-                                        flex: 2,
-                                        child: Text(
-                                          settlement['asset_transferred']?.toString() ?? 'N/A',
-                                          style: TextStyle(
-                                            fontSize: UIConstants.textFieldFontSize,
-                                            color: isDarkTheme ? Colors.white : Colors.black,
-                                          ),
-                                          overflow: TextOverflow.ellipsis,
-                                        ),
-                                      ),
-                                      // Amount
-                                      Expanded(
-                                        flex: 2,
-                                        child: Text(
-                                          settlement['amount_transferred']?.toString() ?? 'N/A',
-                                          textAlign: TextAlign.center,
-                                          style: TextStyle(
-                                            fontSize: UIConstants.textFieldFontSize,
-                                            color: isDarkTheme ? Colors.white : Colors.black,
-                                            fontWeight: UIConstants.fontWeightNormal,
-                                          ),
-                                          overflow: TextOverflow.ellipsis,
-                                        ),
-                                      ),
-                                      // Timestamp
-                                      Expanded(
-                                        flex: 2,
-                                        child: Padding(
-                                          padding: const EdgeInsets.only(right: 16),
+                                        // Currency Transferred
+                                        SizedBox(
+                                          width: 100,
                                           child: Text(
-                                            settlement['timestamp'] != null
-                                                ? DateTime.tryParse(settlement['timestamp'])?.toString().split('.')[0] ?? 'N/A'
-                                                : 'N/A',
-                                            textAlign: TextAlign.right,
+                                            settlement['currencyTransferred']?.toString() ?? 'N/A',
                                             style: TextStyle(
                                               fontSize: UIConstants.textFieldFontSize,
-                                              color: isDarkTheme ? Colors.grey[400] : Colors.grey[600],
+                                              color: isDarkTheme ? Colors.white : Colors.black,
                                             ),
                                             overflow: TextOverflow.ellipsis,
                                           ),
                                         ),
-                                      ),
-                                    ],
-                                  ),
-                                );
+                                        // Currency Amount
+                                        SizedBox(
+                                          width: 120,
+                                          child: Text(
+                                            settlement['currencyAmount']?.toString() ?? 'N/A',
+                                            style: TextStyle(
+                                              fontSize: UIConstants.textFieldFontSize,
+                                              color: isDarkTheme ? Colors.white : Colors.black,
+                                            ),
+                                            overflow: TextOverflow.ellipsis,
+                                          ),
+                                        ),
+                                        // Ledger ID
+                                        SizedBox(
+                                          width: 120,
+                                          child: Text(
+                                            settlement['ledgerId']?.toString() ?? 'N/A',
+                                            style: TextStyle(
+                                              fontSize: UIConstants.textFieldFontSize,
+                                              color: isDarkTheme ? Colors.white : Colors.black,
+                                            ),
+                                            overflow: TextOverflow.ellipsis,
+                                          ),
+                                        ),
+                                        // Vault Address
+                                        SizedBox(
+                                          width: 150,
+                                          child: _buildHashWidget(
+                                            settlement['vaultAddress']?.toString(),
+                                            isDarkTheme,
+                                          ),
+                                        ),
+                                        // Reserve ID
+                                        SizedBox(
+                                          width: 120,
+                                          child: Padding(
+                                            padding: const EdgeInsets.only(right: 16),
+                                            child: Text(
+                                              settlement['reserveId']?.toString() ?? 'N/A',
+                                              style: TextStyle(
+                                                fontSize: UIConstants.textFieldFontSize,
+                                                color: isDarkTheme ? Colors.white : Colors.black,
+                                              ),
+                                              overflow: TextOverflow.ellipsis,
+                                            ),
+                                          ),
+                                        ),
+                                      ],
+                                    ),
+                                  );
                                 },
                               ),
+                                ),
+                              ),
+                          ),
+                        ),
+                        // Show More button for settlements
+                        if (_settlements.isNotEmpty)
+                          Padding(
+                            padding: const EdgeInsets.symmetric(vertical: 8.0),
+                            child: Center(
+                              child: ElevatedButton.icon(
+                                onPressed: () async {
+                                  if (_cachedAccountId != null && _cachedAccountId!.isNotEmpty) {
+                                    setState(() {
+                                      _settlementPageSize = (_settlementPageSize ?? 15) + 15;
+                                    });
+                                    await _fetchSettlementsWithAccountId(_cachedAccountId!);
+                                  }
+                                },
+                                icon: const Icon(Icons.add),
+                                label: const Text('Show More'),
+                                style: ElevatedButton.styleFrom(
+                                  backgroundColor: isDarkTheme
+                                      ? const Color(0xFF2d2d2d)
+                                      : Colors.grey[100],
+                                  foregroundColor: isDarkTheme
+                                      ? Colors.white
+                                      : Colors.black,
+                                ),
+                              ),
+                            ),
+                          ),
+                      ],
+                    ),
                   ),
                 ],
-              ),
-            ),
-          // Show More button for settlements
-          if (_settlements.isNotEmpty)
-            Padding(
-              padding: const EdgeInsets.all(16.0),
-              child: Center(
-                child: ElevatedButton.icon(
-                  onPressed: () async {
-                    if (_cachedAccountId != null && _cachedAccountId!.isNotEmpty) {
-                      setState(() {
-                        _settlementPageSize = (_settlementPageSize ?? 15) + 15;
-                      });
-                      await _fetchSettlementsWithAccountId(_cachedAccountId!);
-                    }
-                  },
-                  icon: const Icon(Icons.add),
-                  label: const Text('Show More'),
-                  style: ElevatedButton.styleFrom(
-                    backgroundColor: isDarkTheme
-                        ? const Color(0xFF2d2d2d)
-                        : Colors.grey[100],
-                    foregroundColor: isDarkTheme
-                        ? Colors.white
-                        : Colors.black,
-                  ),
-                ),
               ),
             ),
         ],
