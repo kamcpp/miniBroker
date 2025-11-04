@@ -1672,23 +1672,108 @@ class RealGrpcClient {
   }
 
   /// Get account transactions using the real gRPC server
-  Future<Map<String, dynamic>> getAccountTransactions({
+  Future<Map<String, dynamic>> getInvestorTransactions({
     required String accountId,
     Map<String, dynamic>? pagination,
     String? fromTime,
     String? toTime,
+    List<String>? transactionTypes,
+    List<String>? assetIdOrNameRegexes,
   }) async {
-    // Not yet implemented in GrpcurlHelper
-    return {
-      'input': {'account_iid': accountId},
-      'output': {
-        'error': 'Method not yet implemented',
-        'message': 'GetAccountTransactions is not yet implemented in GrpcurlHelper',
-      },
-      'requestTime': _toUnixTimestamp(DateTime.now()).toString(),
-      'serverType': 'not-implemented',
-      'success': false,
-    };
+    if (!_isConnected) {
+      return {
+        'input': {'account_iid': accountId},
+        'output': {'error': 'Not connected to server'},
+        'requestTime': _toUnixTimestamp(DateTime.now()).toString(),
+        'serverType': 'disconnected',
+        'success': false,
+      };
+    }
+
+    try {
+      final refRequestId = generateRequestId(prefix: 'get_transactions');
+
+      // Build the request params that will actually be sent
+      final requestParams = <String, dynamic>{
+        'proposed_execution_id': refRequestId,
+        'account_iid': accountId,
+      };
+
+      if (pagination != null) {
+        requestParams['pagination'] = pagination;
+      }
+      if (fromTime != null) {
+        requestParams['from_dt'] = fromTime;
+      }
+      if (toTime != null) {
+        requestParams['to_dt'] = toTime;
+      }
+      if (transactionTypes != null && transactionTypes.isNotEmpty) {
+        requestParams['transaction_types'] = transactionTypes;
+      }
+      if (assetIdOrNameRegexes != null && assetIdOrNameRegexes.isNotEmpty) {
+        requestParams['asset_id_or_name_regexes'] = assetIdOrNameRegexes;
+      }
+
+      print('📤 GetAccountTransactions Request: $requestParams');
+
+      final response = await Future.any([
+        GrpcurlHelper.getInvestorTransactions(
+          accountId: accountId,
+          refRequestId: refRequestId,
+          pagination: pagination,
+          fromTime: fromTime,
+          toTime: toTime,
+          transactionTypes: transactionTypes,
+          assetIdOrNameRegexes: assetIdOrNameRegexes,
+        ),
+      ]).catchError((error) {
+        print('❌ GetAccountTransactions execution error: $error');
+        return {
+          'input': {'account_iid': accountId},
+          'output': {
+            'error': 'GetAccountTransactions execution error',
+            'message': error.toString(),
+          },
+          'requestTime': _toUnixTimestamp(DateTime.now()).toString(),
+          'serverType': 'execution-error',
+          'success': false,
+        };
+      });
+
+      print('📬 Real Server GetAccountTransactions Response: ${response['output']}');
+
+      // Update connection state based on response
+      if (response['success'] == true) {
+        _isConnected = true;
+      } else {
+        // Test connectivity again if request failed
+        final stillReachable = await testServerConnectivity();
+        _isConnected = stillReachable;
+      }
+
+      return response;
+    } catch (e, stackTrace) {
+      print('❌ Critical error in GetAccountTransactions: $e');
+      print('❌ Stack trace: $stackTrace');
+
+      // Test connectivity to update state
+      final stillReachable = await testServerConnectivity();
+      _isConnected = stillReachable;
+
+      // Return error response instead of throwing exception to prevent app crash
+      return {
+        'input': {'account_iid': accountId},
+        'output': {
+          'error': 'Critical GetAccountTransactions error',
+          'message': 'A critical error occurred during GetAccountTransactions: ${e.toString()}',
+          'details': stackTrace.toString(),
+        },
+        'requestTime': _toUnixTimestamp(DateTime.now()).toString(),
+        'serverType': 'critical-error',
+        'success': false,
+      };
+    }
   }
 
   /// Dispose and clean up resources

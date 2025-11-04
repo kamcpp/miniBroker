@@ -72,7 +72,7 @@ class _ActivityPageState extends State<ActivityPage> {
   bool _showSettlementFilters = false;
 
   // Filter state for transactions
-  List<String> _selectedTransactionTypes = []; // TRADE_BUY, TRADE_SELL, DEPOSIT_CASH, etc.
+  String? _selectedTransactionType; // Single selection from dropdown
   List<String> _transactionAssetFilters = [];
   DateTime? _transactionFromDate;
   DateTime? _transactionToDate;
@@ -83,6 +83,7 @@ class _ActivityPageState extends State<ActivityPage> {
   // Market and Asset dropdown data
   List<Map<String, dynamic>> _availableMarkets = [];
   List<Map<String, dynamic>> _availableAssets = [];
+  List<Map<String, dynamic>> _allInstruments = []; // All instruments from all markets for transactions
   String? _selectedOrdersMarket;
   String? _selectedOrdersAsset;
   String? _selectedTradesMarket;
@@ -101,6 +102,7 @@ class _ActivityPageState extends State<ActivityPage> {
   String? _tempSelectedSettlementsMarket;
   String? _tempSelectedSettlementsAsset;
   String? _tempSelectedTransactionsAsset;
+  String? _tempSelectedTransactionType;
   
   // Text controllers for page number fields
   late TextEditingController _pageNumberController;
@@ -111,6 +113,10 @@ class _ActivityPageState extends State<ActivityPage> {
   // Scroll controllers for settlements table horizontal scroll
   final ScrollController _settlementsHeaderScrollController = ScrollController();
   final ScrollController _settlementsRowsScrollController = ScrollController();
+
+  // Scroll controllers for transactions table horizontal scroll
+  final ScrollController _transactionsHeaderScrollController = ScrollController();
+  final ScrollController _transactionsRowsScrollController = ScrollController();
 
   // Tab management
   int _selectedTabIndex = 0;
@@ -141,6 +147,20 @@ class _ActivityPageState extends State<ActivityPage> {
       }
     });
 
+    // Sync transactions scroll controllers
+    _transactionsHeaderScrollController.addListener(() {
+      if (_transactionsRowsScrollController.hasClients &&
+          _transactionsRowsScrollController.offset != _transactionsHeaderScrollController.offset) {
+        _transactionsRowsScrollController.jumpTo(_transactionsHeaderScrollController.offset);
+      }
+    });
+    _transactionsRowsScrollController.addListener(() {
+      if (_transactionsHeaderScrollController.hasClients &&
+          _transactionsHeaderScrollController.offset != _transactionsRowsScrollController.offset) {
+        _transactionsHeaderScrollController.jumpTo(_transactionsRowsScrollController.offset);
+      }
+    });
+
     // Check server connectivity when page opens
     WidgetsBinding.instance.addPostFrameCallback((_) {
       ConnectivityChecker.checkAndShowErrorIfNeeded(context, 'Activity');
@@ -152,6 +172,13 @@ class _ActivityPageState extends State<ActivityPage> {
     // Load dropdown data
     _fetchMarketList();
     // Asset list will be fetched when market is selected
+
+    // Fetch all instruments for transactions tab (no market filter) - after frame is built
+    WidgetsBinding.instance.addPostFrameCallback((_) async {
+      // Wait a bit to ensure markets are loaded
+      await Future.delayed(const Duration(milliseconds: 500));
+      _fetchAllInstruments();
+    });
   }
 
   @override
@@ -162,27 +189,61 @@ class _ActivityPageState extends State<ActivityPage> {
     _transactionPageNumberController.dispose();
     _settlementsHeaderScrollController.dispose();
     _settlementsRowsScrollController.dispose();
+    _transactionsHeaderScrollController.dispose();
+    _transactionsRowsScrollController.dispose();
     super.dispose();
   }
 
   /// Format timestamp from milliseconds string to readable date
-  String _formatTimestamp(String? timestamp) {
-    if (timestamp == null || timestamp.isEmpty) {
+  String _formatTimestamp(dynamic timestamp) {
+    if (timestamp == null) {
       return 'N/A';
     }
 
     try {
-      // Try parsing as milliseconds timestamp
-      final millis = int.tryParse(timestamp);
-      if (millis != null) {
-        final dateTime = DateTime.fromMillisecondsSinceEpoch(millis);
-        return '${dateTime.year}-${dateTime.month.toString().padLeft(2, '0')}-${dateTime.day.toString().padLeft(2, '0')} ${dateTime.hour.toString().padLeft(2, '0')}:${dateTime.minute.toString().padLeft(2, '0')}:${dateTime.second.toString().padLeft(2, '0')}';
+      // Handle nested timestamp object like {hmss: {hour: 13, minute: 24, second: 56}}
+      if (timestamp is Map<String, dynamic>) {
+        final hmss = timestamp['hmss'] as Map<String, dynamic>?;
+        if (hmss != null) {
+          final hour = hmss['hour']?.toString().padLeft(2, '0') ?? '00';
+          final minute = hmss['minute']?.toString().padLeft(2, '0') ?? '00';
+          final second = hmss['second']?.toString().padLeft(2, '0') ?? '00';
+          // Return time only since date is not provided in this format
+          return '$hour:$minute:$second';
+        }
+
+        // Handle full timestamp with ymdhmss
+        final ymdhmss = timestamp['ymdhmss'] as Map<String, dynamic>?;
+        if (ymdhmss != null) {
+          final date = ymdhmss['date'] as Map<String, dynamic>?;
+          final time = ymdhmss['time'] as Map<String, dynamic>?;
+
+          if (date != null && time != null) {
+            final year = date['year']?.toString() ?? '0000';
+            final month = date['month']?.toString().padLeft(2, '0') ?? '00';
+            final day = date['day']?.toString().padLeft(2, '0') ?? '00';
+            final hour = time['hour']?.toString().padLeft(2, '0') ?? '00';
+            final minute = time['minute']?.toString().padLeft(2, '0') ?? '00';
+            final second = time['second']?.toString().padLeft(2, '0') ?? '00';
+            return '$year-$month-$day $hour:$minute:$second';
+          }
+        }
       }
 
-      // Try parsing as ISO date string
-      final dateTime = DateTime.tryParse(timestamp);
-      if (dateTime != null) {
-        return '${dateTime.year}-${dateTime.month.toString().padLeft(2, '0')}-${dateTime.day.toString().padLeft(2, '0')} ${dateTime.hour.toString().padLeft(2, '0')}:${dateTime.minute.toString().padLeft(2, '0')}:${dateTime.second.toString().padLeft(2, '0')}';
+      // Handle string timestamp
+      if (timestamp is String && timestamp.isNotEmpty) {
+        // Try parsing as seconds timestamp
+        final seconds = int.tryParse(timestamp);
+        if (seconds != null) {
+          final dateTime = DateTime.fromMillisecondsSinceEpoch(seconds * 1000);
+          return '${dateTime.year}-${dateTime.month.toString().padLeft(2, '0')}-${dateTime.day.toString().padLeft(2, '0')} ${dateTime.hour.toString().padLeft(2, '0')}:${dateTime.minute.toString().padLeft(2, '0')}:${dateTime.second.toString().padLeft(2, '0')}';
+        }
+
+        // Try parsing as ISO date string
+        final dateTime = DateTime.tryParse(timestamp);
+        if (dateTime != null) {
+          return '${dateTime.year}-${dateTime.month.toString().padLeft(2, '0')}-${dateTime.day.toString().padLeft(2, '0')} ${dateTime.hour.toString().padLeft(2, '0')}:${dateTime.minute.toString().padLeft(2, '0')}:${dateTime.second.toString().padLeft(2, '0')}';
+        }
       }
     } catch (e) {
       return 'N/A';
@@ -835,110 +896,21 @@ class _ActivityPageState extends State<ActivityPage> {
         'pagination': transactionPagination,
         'from_time': fromTimeFormatted,
         'to_time': toTimeFormatted,
-        'transaction_types': _selectedTransactionTypes.isNotEmpty ? _selectedTransactionTypes : null,
+        'transaction_types': _selectedTransactionType != null ? [_selectedTransactionType!] : null,
         'asset_id_or_name_regexes': transactionAssetFilters.isNotEmpty ? transactionAssetFilters : null,
       };
 
       transactionInputParams.removeWhere((key, value) => value == null);
 
-      // TODO: Replace with real API call when GetAccountTransactions is implemented
-      // final transactionsResponse = await realGrpcClient.getAccountTransactions(
-      //   accountId: accountId,
-      //   pagination: transactionPagination,
-      //   fromTime: fromTimeFormatted != null ? json.encode(fromTimeFormatted) : null,
-      //   toTime: toTimeFormatted != null ? json.encode(toTimeFormatted) : null,
-      //   transactionTypes: _selectedTransactionTypes.isNotEmpty ? _selectedTransactionTypes : null,
-      //   assetIdOrNameRegexes: transactionAssetFilters.isNotEmpty ? transactionAssetFilters : null,
-      // );
-
-      // Mock transactions response for UI demonstration
-      final transactionsResponse = {
-        'success': true,
-        'output': {
-          'transactions': [
-            {
-              'transaction_id': 'txn_deposit_12345',
-              'transaction_hash': '0xabcdef1234567890abcdef1234567890abcdef12',
-              'timestamp': {'ts': DateTime.now().subtract(Duration(hours: 2)).toIso8601String()},
-              'type': 'TRANSACTION_TYPE__DEPOSIT_CASH',
-              'operation': 'CASH_DEPOSIT',
-              'account_id': accountId,
-              'from_account': 'external_bank_001',
-              'to_account': accountId,
-              'asset_id': 'USDC',
-              'amount': '10000000000',
-              'reference_id': 'bank_transfer_ref_789',
-              'reference_type': 'bank_transfer',
-              'description': 'Cash deposit from external bank account',
-              'metadata': '{"bank_ref": "TXN789456123", "wire_id": "WIRE001"}',
-            },
-            {
-              'transaction_id': 'txn_trade_buy_67890',
-              'transaction_hash': '0x1234567890abcdef1234567890abcdef12345678',
-              'timestamp': {'ts': DateTime.now().subtract(Duration(hours: 4)).toIso8601String()},
-              'type': 'TRANSACTION_TYPE__TRADE_BUY',
-              'operation': 'SPOT_BUY',
-              'account_id': accountId,
-              'from_account': accountId,
-              'to_account': 'acc_marketmaker_001',
-              'asset_id': 'ETH',
-              'amount': '2500000000000000000',
-              'reference_id': 'order_eth_buy_5678',
-              'reference_type': 'order',
-              'description': 'ETH purchase via spot order',
-              'metadata': '{"order_id": "order_eth_buy_5678", "trade_id": "trade_eth_12345", "price": "1700.00"}',
-            },
-            {
-              'transaction_id': 'txn_settlement_11111',
-              'transaction_hash': '0xfedcba0987654321fedcba0987654321fedcba09',
-              'timestamp': {'ts': DateTime.now().subtract(Duration(hours: 6)).toIso8601String()},
-              'type': 'TRANSACTION_TYPE__SETTLEMENT',
-              'operation': 'ASSET_SETTLEMENT',
-              'account_id': accountId,
-              'from_account': 'acc_marketmaker_001',
-              'to_account': accountId,
-              'asset_id': 'ETH',
-              'amount': '2500000000000000000',
-              'reference_id': 'settle_eth_12345',
-              'reference_type': 'settlement',
-              'description': 'ETH settlement for trade execution',
-              'metadata': '{"settlement_id": "settle_eth_12345", "trade_id": "trade_eth_12345"}',
-            },
-            {
-              'transaction_id': 'txn_fee_22222',
-              'transaction_hash': '0x55556666777788889999000011112222333344444',
-              'timestamp': {'ts': DateTime.now().subtract(Duration(hours: 8)).toIso8601String()},
-              'type': 'TRANSACTION_TYPE__FEE',
-              'operation': 'TRADING_FEE',
-              'account_id': accountId,
-              'from_account': accountId,
-              'to_account': 'acc_fee_collection',
-              'asset_id': 'USDC',
-              'amount': '8500000',
-              'reference_id': 'trade_eth_12345',
-              'reference_type': 'trade',
-              'description': 'Trading fee for ETH purchase',
-              'metadata': '{"fee_rate": "0.002", "trade_volume": "4250.00"}',
-            },
-            {
-              'transaction_id': 'txn_trade_sell_33333',
-              'transaction_hash': '0x99998888777766665555444433332222111100000',
-              'timestamp': {'ts': DateTime.now().subtract(Duration(days: 1)).toIso8601String()},
-              'type': 'TRANSACTION_TYPE__TRADE_SELL',
-              'operation': 'SPOT_SELL',
-              'account_id': accountId,
-              'from_account': accountId,
-              'to_account': 'acc_hedge_fund_xyz',
-              'asset_id': 'BTC',
-              'amount': '50000000',
-              'reference_id': 'order_btc_sell_9012',
-              'reference_type': 'order',
-              'description': 'BTC sale via spot order',
-              'metadata': '{"order_id": "order_btc_sell_9012", "trade_id": "trade_btc_67890", "price": "55000.00"}',
-            },
-          ]
-        }
-      };
+      // Call GetInvestorTransactions API
+      final transactionsResponse = await realGrpcClient.getInvestorTransactions(
+        accountId: accountId,
+        pagination: transactionPagination,
+        fromTime: fromTimeFormatted != null ? json.encode(fromTimeFormatted) : null,
+        toTime: toTimeFormatted != null ? json.encode(toTimeFormatted) : null,
+        transactionTypes: _selectedTransactionType != null ? [_selectedTransactionType!] : null,
+        assetIdOrNameRegexes: transactionAssetFilters.isNotEmpty ? transactionAssetFilters : null,
+      );
 
       if (mounted) {
         setState(() {
@@ -1102,7 +1074,8 @@ class _ActivityPageState extends State<ActivityPage> {
   /// Clear all transactions filters
   void _clearTransactionsFilters() {
     setState(() {
-      _selectedTransactionTypes.clear();
+      _selectedTransactionType = null;
+      _tempSelectedTransactionType = null;
       _selectedTransactionsAsset = null;
       _tempSelectedTransactionsAsset = null;
       _transactionFromDate = null;
@@ -1219,6 +1192,127 @@ class _ActivityPageState extends State<ActivityPage> {
         setState(() {
           _isLoadingAssets = false;
           _availableAssets = [];
+        });
+      }
+    }
+  }
+
+  /// Fetch all instruments from all markets for transactions filter
+  Future<void> _fetchAllInstruments() async {
+    if (_isLoadingAssets) return;
+
+    setState(() {
+      _isLoadingAssets = true;
+    });
+
+    try {
+      print('📋 Fetching all instruments from all markets...');
+
+      // Wait for markets to be loaded if not already
+      if (_availableMarkets.isEmpty) {
+        await _fetchMarketList();
+      }
+
+      final allInstrumentsFromMarkets = <Map<String, dynamic>>[];
+
+      // Fetch instruments from each market
+      for (final market in _availableMarkets) {
+        final marketId = market['iid']?.toString();
+        if (marketId != null && marketId.isNotEmpty) {
+          try {
+            print('📋 Fetching instruments for market: $marketId');
+            final result = await realGrpcClient.getMarketInstrumentList(
+              marketId: marketId,
+            );
+
+            print('📋 GetMarketInstrumentList result for $marketId: success=${result['success']}, output type=${result['output'].runtimeType}');
+            if (result['success'] == true) {
+              final output = result['output'];
+              if (output is Map<String, dynamic>) {
+                final instruments = output['instruments'] ?? output['instrumentList'] ?? output['instrument_list'] ?? [];
+                print('📋 Instruments found in $marketId: ${instruments.length}');
+                if (instruments is List && instruments.isNotEmpty) {
+                  for (final instrument in instruments) {
+                    if (instrument is Map<String, dynamic>) {
+                      String assetId = '';
+                      String assetName = '';
+
+                      assetId = instrument['iid']?.toString() ?? '';
+
+                      final identifiers = instrument['identifiers'] as List?;
+                      if (identifiers != null && identifiers.isNotEmpty) {
+                        final firstIdentifier = identifiers.first;
+                        if (firstIdentifier is Map) {
+                          final idsArray = firstIdentifier['ids'] as List?;
+                          if (idsArray != null && idsArray.isNotEmpty) {
+                            final firstId = idsArray.first;
+                            if (firstId is Map && firstId.containsKey('value')) {
+                              final symbolValue = firstId['value'].toString();
+                              if (assetId.isEmpty) {
+                                assetId = symbolValue;
+                              }
+                              assetName = symbolValue;
+                            }
+                          }
+                        }
+                      }
+
+                      final displayNames = instrument['displayNames'] as Map?;
+                      if (displayNames != null && displayNames.isNotEmpty) {
+                        assetName = displayNames['en']?.toString() ??
+                                    displayNames.values.first?.toString() ?? assetName;
+                      }
+
+                      if (assetId.isNotEmpty) {
+                        allInstrumentsFromMarkets.add({
+                          'id': assetId,
+                          'symbol': assetName.isNotEmpty ? assetName : assetId,
+                          'instrument_id': assetId,
+                          'description': assetName.isNotEmpty ? assetName : assetId,
+                        });
+                      }
+                    }
+                  }
+                }
+              } else {
+                print('⚠️ Output is not Map for market $marketId: ${output.runtimeType}');
+              }
+            } else {
+              print('⚠️ GetMarketInstrumentList failed for market $marketId: ${result['output']}');
+            }
+          } catch (e) {
+            print('⚠️ Failed to fetch instruments from market $marketId: $e');
+          }
+        } else {
+          print('⚠️ Invalid market ID: $marketId');
+        }
+      }
+
+      // Remove duplicates based on instrument ID
+      final uniqueInstruments = <String, Map<String, dynamic>>{};
+      for (final instrument in allInstrumentsFromMarkets) {
+        final id = instrument['id']?.toString() ?? '';
+        if (id.isNotEmpty && !uniqueInstruments.containsKey(id)) {
+          uniqueInstruments[id] = instrument;
+        }
+      }
+
+      if (mounted) {
+        setState(() {
+          _allInstruments = uniqueInstruments.values.toList();
+          _isLoadingAssets = false;
+        });
+        print('✅ All instruments loaded: ${_allInstruments.length} unique instruments found (from ${allInstrumentsFromMarkets.length} total)');
+        if (_allInstruments.isNotEmpty) {
+          print('📋 Sample instruments: ${_allInstruments.take(3).map((a) => a['symbol']).toList()}');
+        }
+      }
+    } catch (e) {
+      print('❌ Exception fetching all instruments: $e');
+      if (mounted) {
+        setState(() {
+          _isLoadingAssets = false;
+          _allInstruments = [];
         });
       }
     }
@@ -3655,14 +3749,13 @@ class _ActivityPageState extends State<ActivityPage> {
                   // First row: Transaction Types and Asset
                   Row(
                     children: [
-                      // Transaction Types filter (multiple selection)
+                      // Market filter
                       Expanded(
-                        flex: 2,
                         child: Column(
                           crossAxisAlignment: CrossAxisAlignment.start,
                           children: [
                             Text(
-                              'Transaction Types',
+                              'Market',
                               style: TextStyle(
                                 fontSize: UIConstants.fontSizeSm,
                                 fontWeight: UIConstants.fontWeightNormal,
@@ -3672,7 +3765,7 @@ class _ActivityPageState extends State<ActivityPage> {
                             const SizedBox(height: 4),
                             Container(
                               height: 38,
-                              padding: UIConstants.paddingStandard,
+                              padding: const EdgeInsets.symmetric(horizontal: 12),
                               decoration: BoxDecoration(
                                 color: isDarkTheme ? const Color(0xFF3a3a3a) : Colors.white,
                                 borderRadius: BorderRadius.circular(UIConstants.textFieldBorderRadius),
@@ -3680,36 +3773,70 @@ class _ActivityPageState extends State<ActivityPage> {
                                   color: isDarkTheme ? Colors.grey[600]! : Colors.grey[300]!,
                                 ),
                               ),
-                              child: Wrap(
-                                spacing: 8,
-                                children: [
-                                  'TRADE_BUY',
-                                  'TRADE_SELL',
-                                  'DEPOSIT_CASH',
-                                  'SETTLEMENT',
-                                  'FEE',
-                                  'TRANSFER_IN',
-                                ].map((type) => FilterChip(
-                                  label: Text(
-                                    type.replaceAll('TRANSACTION_TYPE__', '').replaceAll('_', ' '),
-                                    style: TextStyle(
-                                      fontSize: UIConstants.fontSizeXs,
-                                      color: isDarkTheme ? Colors.white : Colors.black,
-                                    ),
-                                  ),
-                                  selected: _selectedTransactionTypes.contains('TRANSACTION_TYPE__$type'),
-                                  onSelected: (selected) {
-                                    setState(() {
-                                      if (selected) {
-                                        _selectedTransactionTypes.add('TRANSACTION_TYPE__$type');
-                                      } else {
-                                        _selectedTransactionTypes.remove('TRANSACTION_TYPE__$type');
+                              child: DropdownButton<String>(
+                                value: _tempSelectedSettlementsMarket ?? _selectedSettlementsMarket,
+                                isExpanded: true,
+                                underline: SizedBox.shrink(),
+                                dropdownColor: isDarkTheme ? const Color(0xFF2a2a2a) : Colors.white,
+                                iconEnabledColor: isDarkTheme ? Colors.grey[300] : Colors.grey[600],
+                                iconDisabledColor: isDarkTheme ? Colors.grey[600] : Colors.grey[400],
+                                items: [
+                                  DropdownMenuItem(value: null, child: Text('All Markets', style: TextStyle(color: isDarkTheme ? Colors.white : Colors.black))),
+                                  ..._availableMarkets.map((market) {
+                                    // Extract identifier - try iid first
+                                    String marketId = market['iid']?.toString() ?? '';
+                                    if (marketId.isEmpty) {
+                                      final identifiers = market['identifiers'] as List?;
+                                      if (identifiers != null && identifiers.isNotEmpty) {
+                                        final firstIdentifier = identifiers.first;
+                                        if (firstIdentifier is Map) {
+                                          final idsArray = firstIdentifier['ids'] as List?;
+                                          if (idsArray != null && idsArray.isNotEmpty) {
+                                            final firstId = idsArray.first;
+                                            if (firstId is Map) {
+                                              marketId = firstId['value']?.toString() ?? '';
+                                            }
+                                          }
+                                        }
                                       }
+                                    }
+                                    if (marketId.isEmpty) {
+                                      marketId = market['id']?.toString() ?? '';
+                                    }
+                                    
+                                    // Extract name from displayNames
+                                    String marketName = 'Unknown';
+                                    final displayNames = market['displayNames'] as Map?;
+                                    if (displayNames != null && displayNames.isNotEmpty) {
+                                      marketName = displayNames['en']?.toString() ?? 
+                                                   displayNames.values.first?.toString() ?? 'Unknown';
+                                    }
+                                    if (marketName == 'Unknown') {
+                                      marketName = market['name']?.toString() ?? 'Unknown Market';
+                                    }
+                                    
+                                    return DropdownMenuItem(
+                                      value: marketId,
+                                      child: Text(
+                                        marketName,
+                                        style: TextStyle(color: isDarkTheme ? Colors.white : Colors.black),
+                                      ),
+                                    );
+                                  }).toList(),
+                                ],
+                                onChanged: (value) {
+                                  setState(() {
+                                    _tempSelectedSettlementsMarket = value;
+                                    _tempSelectedSettlementsAsset = null;
+                                  });
+                                  if (value != null) {
+                                    _fetchAssetList(value);
+                                  } else {
+                                    setState(() {
+                                      _availableAssets = [];
                                     });
-                                  },
-                                  backgroundColor: isDarkTheme ? const Color(0xFF4a4a4a) : Colors.grey[200],
-                                  selectedColor: isDarkTheme ? Colors.blue[700] : Colors.blue[200],
-                                )).toList(),
+                                  }
+                                },
                               ),
                             ),
                           ],
@@ -3740,7 +3867,7 @@ class _ActivityPageState extends State<ActivityPage> {
                                   color: isDarkTheme ? Colors.grey[600]! : Colors.grey[300]!,
                                 ),
                               ),
-                              child: DropdownButton<String>(
+                              child: DropdownButton<String?>(
                                 value: _tempSelectedTransactionsAsset ?? _selectedTransactionsAsset,
                                 isExpanded: true,
                                 underline: SizedBox.shrink(),
@@ -3748,15 +3875,109 @@ class _ActivityPageState extends State<ActivityPage> {
                                 iconEnabledColor: isDarkTheme ? Colors.grey[300] : Colors.grey[600],
                                 iconDisabledColor: isDarkTheme ? Colors.grey[600] : Colors.grey[400],
                                 items: [
-                                  DropdownMenuItem(value: null, child: Text('All Assets', style: TextStyle(color: isDarkTheme ? Colors.white : Colors.black))),
-                                  DropdownMenuItem(value: 'USDC', child: Text('USDC', style: TextStyle(color: isDarkTheme ? Colors.white : Colors.black))),
-                                  DropdownMenuItem(value: 'ETH', child: Text('ETH', style: TextStyle(color: isDarkTheme ? Colors.white : Colors.black))),
-                                  DropdownMenuItem(value: 'BTC', child: Text('BTC', style: TextStyle(color: isDarkTheme ? Colors.white : Colors.black))),
-                                  DropdownMenuItem(value: 'XRP', child: Text('XRP', style: TextStyle(color: isDarkTheme ? Colors.white : Colors.black))),
+                                  DropdownMenuItem<String?>(value: null, child: Text('All Assets', style: TextStyle(color: isDarkTheme ? Colors.white : Colors.black))),
+                                  ..._allInstruments.map<DropdownMenuItem<String?>>((instrument) =>
+                                    DropdownMenuItem<String?>(
+                                      value: instrument['id'] ?? instrument['symbol'] ?? instrument['instrument_id'] ?? '',
+                                      child: Text(
+                                        instrument['symbol'] ?? instrument['id'] ?? instrument['instrument_id'] ?? 'Unknown',
+                                        style: TextStyle(color: isDarkTheme ? Colors.white : Colors.black)
+                                      )
+                                    )
+                                  ).toList(),
                                 ],
                                 onChanged: (value) {
                                   setState(() {
                                     _tempSelectedTransactionsAsset = value;
+                                  });
+                                },
+                              ),
+                            ),
+                          ],
+                        ),
+                      ),
+                      const SizedBox(width: UIConstants.spacingSm),
+                      // Transaction Type filter (dropdown)
+                      Expanded(
+                        flex: 2,
+                        child: Column(
+                          crossAxisAlignment: CrossAxisAlignment.start,
+                          children: [
+                            Text(
+                              'Transaction Type',
+                              style: TextStyle(
+                                fontSize: UIConstants.fontSizeSm,
+                                fontWeight: UIConstants.fontWeightNormal,
+                                color: isDarkTheme ? Colors.grey[300] : Colors.grey[700],
+                              ),
+                            ),
+                            const SizedBox(height: 4),
+                            Container(
+                              height: 38,
+                              padding: const EdgeInsets.symmetric(horizontal: 12),
+                              decoration: BoxDecoration(
+                                color: isDarkTheme ? const Color(0xFF3a3a3a) : Colors.white,
+                                borderRadius: BorderRadius.circular(UIConstants.textFieldBorderRadius),
+                                border: Border.all(
+                                  color: isDarkTheme ? Colors.grey[600]! : Colors.grey[300]!,
+                                ),
+                              ),
+                              child: DropdownButton<String?>(
+                                value: _tempSelectedTransactionType ?? _selectedTransactionType,
+                                isExpanded: true,
+                                underline: SizedBox.shrink(),
+                                dropdownColor: isDarkTheme ? const Color(0xFF2a2a2a) : Colors.white,
+                                iconEnabledColor: isDarkTheme ? Colors.grey[300] : Colors.grey[600],
+                                iconDisabledColor: isDarkTheme ? Colors.grey[600] : Colors.grey[400],
+                                items: [
+                                  DropdownMenuItem<String?>(
+                                    value: null,
+                                    child: Text('All Types', style: TextStyle(color: isDarkTheme ? Colors.white : Colors.black))
+                                  ),
+                                  DropdownMenuItem<String?>(
+                                    value: 'TRANSACTION_TYPE_ENUM__DEPOSIT_CASH',
+                                    child: Text('Deposit Cash', style: TextStyle(color: isDarkTheme ? Colors.white : Colors.black))
+                                  ),
+                                  DropdownMenuItem<String?>(
+                                    value: 'TRANSACTION_TYPE_ENUM__DEPOSIT_ASSET',
+                                    child: Text('Deposit Asset', style: TextStyle(color: isDarkTheme ? Colors.white : Colors.black))
+                                  ),
+                                  DropdownMenuItem<String?>(
+                                    value: 'TRANSACTION_TYPE_ENUM__WITHDRAW_CASH',
+                                    child: Text('Withdraw Cash', style: TextStyle(color: isDarkTheme ? Colors.white : Colors.black))
+                                  ),
+                                  DropdownMenuItem<String?>(
+                                    value: 'TRANSACTION_TYPE_ENUM__WITHDRAW_ASSET',
+                                    child: Text('Withdraw Asset', style: TextStyle(color: isDarkTheme ? Colors.white : Colors.black))
+                                  ),
+                                  DropdownMenuItem<String?>(
+                                    value: 'TRANSACTION_TYPE_ENUM__TRADE_BUY',
+                                    child: Text('Trade Buy', style: TextStyle(color: isDarkTheme ? Colors.white : Colors.black))
+                                  ),
+                                  DropdownMenuItem<String?>(
+                                    value: 'TRANSACTION_TYPE_ENUM__TRADE_SELL',
+                                    child: Text('Trade Sell', style: TextStyle(color: isDarkTheme ? Colors.white : Colors.black))
+                                  ),
+                                  DropdownMenuItem<String?>(
+                                    value: 'TRANSACTION_TYPE_ENUM__FEE',
+                                    child: Text('Fee', style: TextStyle(color: isDarkTheme ? Colors.white : Colors.black))
+                                  ),
+                                  DropdownMenuItem<String?>(
+                                    value: 'TRANSACTION_TYPE_ENUM__SETTLEMENT',
+                                    child: Text('Settlement', style: TextStyle(color: isDarkTheme ? Colors.white : Colors.black))
+                                  ),
+                                  DropdownMenuItem<String?>(
+                                    value: 'TRANSACTION_TYPE_ENUM__TRANSFER_IN',
+                                    child: Text('Transfer In', style: TextStyle(color: isDarkTheme ? Colors.white : Colors.black))
+                                  ),
+                                  DropdownMenuItem<String?>(
+                                    value: 'TRANSACTION_TYPE_ENUM__TRANSFER_OUT',
+                                    child: Text('Transfer Out', style: TextStyle(color: isDarkTheme ? Colors.white : Colors.black))
+                                  ),
+                                ],
+                                onChanged: (value) {
+                                  setState(() {
+                                    _tempSelectedTransactionType = value;
                                   });
                                 },
                               ),
@@ -3894,6 +4115,7 @@ class _ActivityPageState extends State<ActivityPage> {
                         onPressed: () {
                           setState(() {
                             _selectedTransactionsAsset = _tempSelectedTransactionsAsset;
+                            _selectedTransactionType = _tempSelectedTransactionType;
                           });
                           _fetchActivityData();
                         },
@@ -3926,68 +4148,163 @@ class _ActivityPageState extends State<ActivityPage> {
           Expanded(
             child: Column(
               children: [
-                // Table header row - always show
-                Row(
-                  children: [
-                    Expanded(
-                      flex: 3,
-                      child: Padding(
-                        padding: const EdgeInsets.only(left: 16),
-                        child: Text(
-                          'Transaction ID',
-                          style: TextStyle(
-                            fontSize: UIConstants.textFieldFontSize,
-                            color: isDarkTheme ? Colors.grey[400] : Colors.grey[600],
+                // Table header row with horizontal scroll
+                SingleChildScrollView(
+                  controller: _transactionsHeaderScrollController,
+                  scrollDirection: Axis.horizontal,
+                  child: Row(
+                    children: [
+                      SizedBox(
+                        width: 150,
+                        child: Padding(
+                          padding: const EdgeInsets.only(left: 16),
+                          child: Text(
+                            'Transaction ID',
+                            style: TextStyle(
+                              fontSize: UIConstants.textFieldFontSize,
+                              color: isDarkTheme ? Colors.grey[400] : Colors.grey[600],
+                              fontWeight: FontWeight.bold,
+                            ),
                           ),
                         ),
                       ),
-                    ),
-                    Expanded(
-                      flex: 2,
-                      child: Text(
-                        'Type',
-                        style: TextStyle(
-                          fontSize: UIConstants.textFieldFontSize,
-                          color: isDarkTheme ? Colors.grey[400] : Colors.grey[600],
+                      SizedBox(
+                        width: 150,
+                        child: Text(
+                          'Transaction Hash',
+                          style: TextStyle(
+                            fontSize: UIConstants.textFieldFontSize,
+                            color: isDarkTheme ? Colors.grey[400] : Colors.grey[600],
+                            fontWeight: FontWeight.bold,
+                          ),
                         ),
                       ),
-                    ),
-                    Expanded(
-                      flex: 2,
-                      child: Text(
-                        'Asset',
-                        style: TextStyle(
-                          fontSize: UIConstants.textFieldFontSize,
-                          color: isDarkTheme ? Colors.grey[400] : Colors.grey[600],
-                        ),
-                      ),
-                    ),
-                    Expanded(
-                      flex: 2,
-                      child: Text(
-                        'Amount',
-                        textAlign: TextAlign.center,
-                        style: TextStyle(
-                          fontSize: UIConstants.textFieldFontSize,
-                          color: isDarkTheme ? Colors.grey[400] : Colors.grey[600],
-                        ),
-                      ),
-                    ),
-                    Expanded(
-                      flex: 2,
-                      child: Padding(
-                        padding: const EdgeInsets.only(right: 16),
+                      SizedBox(
+                        width: 180,
                         child: Text(
                           'Timestamp',
-                          textAlign: TextAlign.right,
                           style: TextStyle(
                             fontSize: UIConstants.textFieldFontSize,
                             color: isDarkTheme ? Colors.grey[400] : Colors.grey[600],
+                            fontWeight: FontWeight.bold,
                           ),
                         ),
                       ),
-                    ),
-                  ],
+                      SizedBox(
+                        width: 150,
+                        child: Text(
+                          'Type',
+                          style: TextStyle(
+                            fontSize: UIConstants.textFieldFontSize,
+                            color: isDarkTheme ? Colors.grey[400] : Colors.grey[600],
+                            fontWeight: FontWeight.bold,
+                          ),
+                        ),
+                      ),
+                      SizedBox(
+                        width: 120,
+                        child: Text(
+                          'Operation',
+                          style: TextStyle(
+                            fontSize: UIConstants.textFieldFontSize,
+                            color: isDarkTheme ? Colors.grey[400] : Colors.grey[600],
+                            fontWeight: FontWeight.bold,
+                          ),
+                        ),
+                      ),
+                      SizedBox(
+                        width: 150,
+                        child: Text(
+                          'Account IID',
+                          style: TextStyle(
+                            fontSize: UIConstants.textFieldFontSize,
+                            color: isDarkTheme ? Colors.grey[400] : Colors.grey[600],
+                            fontWeight: FontWeight.bold,
+                          ),
+                        ),
+                      ),
+                      SizedBox(
+                        width: 150,
+                        child: Text(
+                          'To Account IID',
+                          style: TextStyle(
+                            fontSize: UIConstants.textFieldFontSize,
+                            color: isDarkTheme ? Colors.grey[400] : Colors.grey[600],
+                            fontWeight: FontWeight.bold,
+                          ),
+                        ),
+                      ),
+                      SizedBox(
+                        width: 120,
+                        child: Text(
+                          'To Reserve ID',
+                          style: TextStyle(
+                            fontSize: UIConstants.textFieldFontSize,
+                            color: isDarkTheme ? Colors.grey[400] : Colors.grey[600],
+                            fontWeight: FontWeight.bold,
+                          ),
+                        ),
+                      ),
+                      SizedBox(
+                        width: 100,
+                        child: Text(
+                          'To Stash',
+                          style: TextStyle(
+                            fontSize: UIConstants.textFieldFontSize,
+                            color: isDarkTheme ? Colors.grey[400] : Colors.grey[600],
+                            fontWeight: FontWeight.bold,
+                          ),
+                        ),
+                      ),
+                      SizedBox(
+                        width: 100,
+                        child: Text(
+                          'Asset IID',
+                          style: TextStyle(
+                            fontSize: UIConstants.textFieldFontSize,
+                            color: isDarkTheme ? Colors.grey[400] : Colors.grey[600],
+                            fontWeight: FontWeight.bold,
+                          ),
+                        ),
+                      ),
+                      SizedBox(
+                        width: 120,
+                        child: Text(
+                          'Amount',
+                          style: TextStyle(
+                            fontSize: UIConstants.textFieldFontSize,
+                            color: isDarkTheme ? Colors.grey[400] : Colors.grey[600],
+                            fontWeight: FontWeight.bold,
+                          ),
+                        ),
+                      ),
+                      SizedBox(
+                        width: 120,
+                        child: Text(
+                          'Reference ID',
+                          style: TextStyle(
+                            fontSize: UIConstants.textFieldFontSize,
+                            color: isDarkTheme ? Colors.grey[400] : Colors.grey[600],
+                            fontWeight: FontWeight.bold,
+                          ),
+                        ),
+                      ),
+                      SizedBox(
+                        width: 120,
+                        child: Padding(
+                          padding: const EdgeInsets.only(right: 16),
+                          child: Text(
+                            'Reference Type',
+                            style: TextStyle(
+                              fontSize: UIConstants.textFieldFontSize,
+                              color: isDarkTheme ? Colors.grey[400] : Colors.grey[600],
+                              fontWeight: FontWeight.bold,
+                            ),
+                          ),
+                        ),
+                      ),
+                    ],
+                  ),
                 ),
                 const SizedBox(height: UIConstants.spacingSm),
                 Container(
@@ -3995,109 +4312,243 @@ class _ActivityPageState extends State<ActivityPage> {
                   color: isDarkTheme ? Colors.grey[700] : Colors.grey[300],
                 ),
                 const SizedBox(height: UIConstants.spacingSm),
-                // Table rows
+                // Table rows with scrollbar at bottom
                 Flexible(
-                  child: _isLoadingTransactions
-                      ? Center(
-                          child: CircularProgressIndicator(
-                            valueColor: AlwaysStoppedAnimation<Color>(
-                              isDarkTheme ? Colors.white : Colors.black,
+                  child: Column(
+                    children: [
+                      Expanded(
+                        child: _isLoadingTransactions
+                            ? Center(
+                                child: CircularProgressIndicator(
+                                  valueColor: AlwaysStoppedAnimation<Color>(
+                                    isDarkTheme ? Colors.white : Colors.black,
+                                  ),
+                                ),
+                              )
+                            : _transactions.isEmpty
+                                ? Center(
+                                    child: Text(
+                                      'No transactions found',
+                                      style: TextStyle(
+                                        color: isDarkTheme ? Colors.grey[400] : Colors.grey[600],
+                                        fontSize: UIConstants.textFieldFontSize,
+                                      ),
+                                    ),
+                                  )
+                                : Scrollbar(
+                                    controller: _transactionsRowsScrollController,
+                                    thumbVisibility: true,
+                                    child: SingleChildScrollView(
+                                      controller: _transactionsRowsScrollController,
+                                      scrollDirection: Axis.horizontal,
+                                      child: SizedBox(
+                                        width: 150 + 150 + 180 + 150 + 120 + 150 + 150 + 120 + 100 + 100 + 120 + 120 + 120, // Sum of all column widths
+                                        child: ListView.builder(
+                                          itemCount: _transactions.length,
+                                          itemBuilder: (context, index) {
+                                            final transaction = _transactions[index];
+                                            return Padding(
+                                              padding: const EdgeInsets.only(bottom: 8),
+                                              child: Row(
+                                                children: [
+                                                  // Transaction ID
+                                                  SizedBox(
+                                                    width: 150,
+                                                    child: Padding(
+                                                      padding: const EdgeInsets.only(left: 16),
+                                                      child: Text(
+                                                        transaction['transactionId']?.toString() ?? 'N/A',
+                                                        style: TextStyle(
+                                                          fontSize: UIConstants.textFieldFontSize,
+                                                          color: isDarkTheme ? Colors.white : Colors.black,
+                                                          fontWeight: UIConstants.fontWeightNormal,
+                                                        ),
+                                                        overflow: TextOverflow.ellipsis,
+                                                      ),
+                                                    ),
+                                                  ),
+                                                  // Transaction Hash
+                                                  SizedBox(
+                                                    width: 150,
+                                                    child: _buildHashWidget(
+                                                      transaction['transactionHash']?.toString(),
+                                                      isDarkTheme,
+                                                    ),
+                                                  ),
+                                                  // Timestamp
+                                                  SizedBox(
+                                                    width: 180,
+                                                    child: Text(
+                                                      _formatTimestamp(transaction['timestamp']),
+                                                      style: TextStyle(
+                                                        fontSize: UIConstants.textFieldFontSize,
+                                                        color: isDarkTheme ? Colors.grey[400] : Colors.grey[600],
+                                                      ),
+                                                      overflow: TextOverflow.ellipsis,
+                                                    ),
+                                                  ),
+                                                  // Type
+                                                  SizedBox(
+                                                    width: 150,
+                                                    child: Text(
+                                                      transaction['type']?.toString() ?? 'N/A',
+                                                      style: TextStyle(
+                                                        fontSize: UIConstants.textFieldFontSize,
+                                                        color: isDarkTheme ? Colors.white : Colors.black,
+                                                      ),
+                                                      overflow: TextOverflow.ellipsis,
+                                                    ),
+                                                  ),
+                                                  // Operation
+                                                  SizedBox(
+                                                    width: 120,
+                                                    child: Text(
+                                                      transaction['operation']?.toString() ?? 'N/A',
+                                                      style: TextStyle(
+                                                        fontSize: UIConstants.textFieldFontSize,
+                                                        color: isDarkTheme ? Colors.white : Colors.black,
+                                                      ),
+                                                      overflow: TextOverflow.ellipsis,
+                                                    ),
+                                                  ),
+                                                  // Account IID
+                                                  SizedBox(
+                                                    width: 150,
+                                                    child: Text(
+                                                      transaction['accountIid']?.toString() ?? 'N/A',
+                                                      style: TextStyle(
+                                                        fontSize: UIConstants.textFieldFontSize,
+                                                        color: isDarkTheme ? Colors.white : Colors.black,
+                                                      ),
+                                                      overflow: TextOverflow.ellipsis,
+                                                    ),
+                                                  ),
+                                                  // To Account IID
+                                                  SizedBox(
+                                                    width: 150,
+                                                    child: Text(
+                                                      transaction['toAccountIid']?.toString() ?? 'N/A',
+                                                      style: TextStyle(
+                                                        fontSize: UIConstants.textFieldFontSize,
+                                                        color: isDarkTheme ? Colors.white : Colors.black,
+                                                      ),
+                                                      overflow: TextOverflow.ellipsis,
+                                                    ),
+                                                  ),
+                                                  // To Reserve ID
+                                                  SizedBox(
+                                                    width: 120,
+                                                    child: Text(
+                                                      transaction['toReserveId']?.toString() ?? 'N/A',
+                                                      style: TextStyle(
+                                                        fontSize: UIConstants.textFieldFontSize,
+                                                        color: isDarkTheme ? Colors.white : Colors.black,
+                                                      ),
+                                                      overflow: TextOverflow.ellipsis,
+                                                    ),
+                                                  ),
+                                                  // To Stash
+                                                  SizedBox(
+                                                    width: 100,
+                                                    child: Text(
+                                                      transaction['toStash']?.toString() ?? 'N/A',
+                                                      style: TextStyle(
+                                                        fontSize: UIConstants.textFieldFontSize,
+                                                        color: isDarkTheme ? Colors.white : Colors.black,
+                                                      ),
+                                                      overflow: TextOverflow.ellipsis,
+                                                    ),
+                                                  ),
+                                                  // Asset IID
+                                                  SizedBox(
+                                                    width: 100,
+                                                    child: Text(
+                                                      transaction['assetIid']?.toString() ?? 'N/A',
+                                                      style: TextStyle(
+                                                        fontSize: UIConstants.textFieldFontSize,
+                                                        color: isDarkTheme ? Colors.white : Colors.black,
+                                                      ),
+                                                      overflow: TextOverflow.ellipsis,
+                                                    ),
+                                                  ),
+                                                  // Amount
+                                                  SizedBox(
+                                                    width: 120,
+                                                    child: Text(
+                                                      transaction['amount']?.toString() ?? 'N/A',
+                                                      style: TextStyle(
+                                                        fontSize: UIConstants.textFieldFontSize,
+                                                        color: isDarkTheme ? Colors.white : Colors.black,
+                                                      ),
+                                                      overflow: TextOverflow.ellipsis,
+                                                    ),
+                                                  ),
+                                                  // Reference ID
+                                                  SizedBox(
+                                                    width: 120,
+                                                    child: Text(
+                                                      transaction['referenceId']?.toString() ?? 'N/A',
+                                                      style: TextStyle(
+                                                        fontSize: UIConstants.textFieldFontSize,
+                                                        color: isDarkTheme ? Colors.white : Colors.black,
+                                                      ),
+                                                      overflow: TextOverflow.ellipsis,
+                                                    ),
+                                                  ),
+                                                  // Reference Type
+                                                  SizedBox(
+                                                    width: 120,
+                                                    child: Padding(
+                                                      padding: const EdgeInsets.only(right: 16),
+                                                      child: Text(
+                                                        transaction['referenceType']?.toString() ?? 'N/A',
+                                                        style: TextStyle(
+                                                          fontSize: UIConstants.textFieldFontSize,
+                                                          color: isDarkTheme ? Colors.white : Colors.black,
+                                                        ),
+                                                        overflow: TextOverflow.ellipsis,
+                                                      ),
+                                                    ),
+                                                  ),
+                                                ],
+                                              ),
+                                            );
+                                          },
+                                        ),
+                                      ),
+                                    ),
+                        ),
+                      ),
+                      // Show More button for transactions
+                      if (_transactions.isNotEmpty)
+                        Padding(
+                          padding: const EdgeInsets.symmetric(vertical: 8.0),
+                          child: Center(
+                            child: ElevatedButton.icon(
+                              onPressed: () async {
+                                if (_cachedAccountId != null && _cachedAccountId!.isNotEmpty) {
+                                  setState(() {
+                                    _transactionPageSize = (_transactionPageSize ?? 15) + 15;
+                                  });
+                                  await _fetchTransactionsWithAccountId(_cachedAccountId!);
+                                }
+                              },
+                              icon: const Icon(Icons.add),
+                              label: const Text('Show More'),
+                              style: ElevatedButton.styleFrom(
+                                backgroundColor: isDarkTheme
+                                    ? const Color(0xFF2d2d2d)
+                                    : Colors.grey[100],
+                                foregroundColor: isDarkTheme
+                                    ? Colors.white
+                                    : Colors.black,
+                              ),
                             ),
                           ),
-                        )
-                      : _transactions.isEmpty
-                          ? Center(
-                              child: Text(
-                                'No transactions found',
-                                style: TextStyle(
-                                  color: isDarkTheme ? Colors.grey[400] : Colors.grey[600],
-                                  fontSize: UIConstants.textFieldFontSize,
-                                ),
-                              ),
-                            )
-                            : ListView.builder(
-                                itemCount: _transactions.length,
-                                itemBuilder: (context, index) {
-                                  final transaction = _transactions[index];
-                                  return Padding(
-                                    padding: const EdgeInsets.only(bottom: 8),
-                                    child: Row(
-                                      children: [
-                                        // Transaction ID
-                                        Expanded(
-                                          flex: 3,
-                                          child: Padding(
-                                            padding: const EdgeInsets.only(left: 16),
-                                            child: Text(
-                                              transaction['transaction_id']?.toString() ?? 'N/A',
-                                              style: TextStyle(
-                                                fontSize: UIConstants.textFieldFontSize,
-                                                color: isDarkTheme ? Colors.white : Colors.black,
-                                              ),
-                                              overflow: TextOverflow.ellipsis,
-                                            ),
-                                          ),
-                                        ),
-                                        // Type
-                                        Expanded(
-                                          flex: 2,
-                                          child: Text(
-                                            transaction['type']?.toString().replaceAll('TRANSACTION_TYPE__', '').replaceAll('_', ' ') ?? 'N/A',
-                                            style: TextStyle(
-                                              fontSize: UIConstants.textFieldFontSize,
-                                              color: _getTransactionTypeColor(transaction['type']?.toString() ?? ''),
-                                            ),
-                                            overflow: TextOverflow.ellipsis,
-                                          ),
-                                        ),
-                                        // Asset
-                                        Expanded(
-                                          flex: 2,
-                                          child: Text(
-                                            transaction['asset_id']?.toString() ?? 'N/A',
-                                            style: TextStyle(
-                                              fontSize: UIConstants.textFieldFontSize,
-                                              color: isDarkTheme ? Colors.white : Colors.black,
-                                            ),
-                                            overflow: TextOverflow.ellipsis,
-                                          ),
-                                        ),
-                                        // Amount
-                                        Expanded(
-                                          flex: 2,
-                                          child: Text(
-                                            _formatTransactionAmount(transaction['amount']?.toString() ?? '0', transaction['asset_id']?.toString() ?? ''),
-                                            textAlign: TextAlign.center,
-                                            style: TextStyle(
-                                              fontSize: UIConstants.textFieldFontSize,
-                                              color: isDarkTheme ? Colors.white : Colors.black,
-                                              fontWeight: UIConstants.fontWeightNormal,
-                                            ),
-                                            overflow: TextOverflow.ellipsis,
-                                          ),
-                                        ),
-                                        // Timestamp
-                                        Expanded(
-                                          flex: 2,
-                                          child: Padding(
-                                            padding: const EdgeInsets.only(right: 16),
-                                            child: Text(
-                                              _formatTransactionTimestamp(transaction['timestamp']),
-                                              textAlign: TextAlign.right,
-                                              style: TextStyle(
-                                                fontSize: UIConstants.textFieldFontSize,
-                                                color: isDarkTheme ? Colors.grey[400] : Colors.grey[600],
-                                              ),
-                                              overflow: TextOverflow.ellipsis,
-                                            ),
-                                          ),
-                                        ),
-                                      ],
-                                    ),
-                                  );
-                                },
-                              ),
-                )
+                        ),
+                    ],
+                  ),
+                ),
                 ],
               ),
             ),
