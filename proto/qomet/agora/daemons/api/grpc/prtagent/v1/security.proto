@@ -1,0 +1,58 @@
+syntax = "proto3";
+
+package tech.qomet.agora.api.grpc.prtagent.v1;
+
+import "common.proto";
+import "fin/security.proto";
+
+option go_package = "qomet.tech/agora/daemons/gen-pkg/tech/qomet/agora/api/grpc/prtagent/v1;agoraapigrpcprtagentv1";
+option java_package = "tech.qomet.agora.api.grpc.prtagent.v1";
+option java_outer_classname = "Security";
+option csharp_namespace  = "Tech.Qomet.Agora.Api.Grpc.PrtAgent.V1";
+
+service SecurityService {
+  // Query operations
+  rpc GetSecurityList(GetSecurityListRequest) returns (GetSecurityListResponse);
+  rpc GetSecurityListAsync(GetSecurityListRequest) returns (tech.qomet.agora.api.grpc.common.ExecutionAsyncResponse);
+
+  rpc GetSecurityInfoBatch(GetSecurityInfoBatchRequest) returns (GetSecurityInfoBatchResponse);
+  rpc GetSecurityInfoBatchAsync(GetSecurityInfoBatchRequest) returns (tech.qomet.agora.api.grpc.common.ExecutionAsyncResponse);
+}
+
+// ============================================================================
+// Query Messages
+// ============================================================================
+
+message GetSecurityListRequest {
+  string proposed_execution_id = 1;                                                        // OPTIONAL: Client-proposed execution ID for tracking
+  tech.qomet.agora.api.grpc.common.PaginationParams pagination = 2;                        // OPTIONAL: Pagination parameters
+  string security_iid_or_identifier_regex = 3;                                             // OPTIONAL: Filter by security IID or identifier regex
+  repeated tech.qomet.agora.api.grpc.fin.SecurityStatusEnum statuses = 4;               // OPTIONAL: Filter by security status
+
+  map<string, string> aux_data = 105;                                                      // OPTIONAL: Additional request data
+}
+
+message GetSecurityListResponse {
+  string ref_execution_id = 1;                                                             // REQUIRED: Reference to the execution ID
+  tech.qomet.agora.api.grpc.common.PaginationInfo pagination_info = 2;                     // OPTIONAL: Pagination information (required if paginated)
+  repeated tech.qomet.agora.api.grpc.fin.Security securities = 3;                       // REQUIRED: List of securities (can be empty)
+
+  map<string, string> metadata = 105;                                                      // OPTIONAL: Response metadata
+}
+
+message GetSecurityInfoBatchRequest {
+  string proposed_execution_id = 1;                                                        // OPTIONAL: Client-proposed execution ID for tracking
+  tech.qomet.agora.api.grpc.common.PaginationParams pagination = 2;                        // OPTIONAL: Pagination parameters
+  repeated string security_iid_and_identifier_regexes = 3;                                 // REQUIRED: Security IID and identifier regexes to retrieve
+  repeated tech.qomet.agora.api.grpc.fin.SecurityStatusEnum statuses = 4;               // OPTIONAL: Filter by security status
+
+  map<string, string> aux_data = 105;                                                      // OPTIONAL: Additional request data
+}
+
+message GetSecurityInfoBatchResponse {
+  string ref_execution_id = 1;                                                             // REQUIRED: Reference to the execution ID
+  tech.qomet.agora.api.grpc.common.PaginationInfo pagination_info = 2;                     // OPTIONAL: Pagination information (required if paginated)
+  repeated tech.qomet.agora.api.grpc.fin.Security securities = 3;                       // REQUIRED: List of security details (can be empty)
+
+  map<string, string> metadata = 105;                                                      // OPTIONAL: Response metadata
+}

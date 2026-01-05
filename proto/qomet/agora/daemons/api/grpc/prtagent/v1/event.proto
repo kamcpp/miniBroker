@@ -2,105 +2,94 @@ syntax = "proto3";
 
 package tech.qomet.agora.api.grpc.prtagent.v1;
 
+import "common.proto";
+import "prtagent/v1/investor.proto";
+import "prtagent/v1/participant_types.proto";
+import "prtagent/v1/trading.proto";
+import "prtagent/v1/venue.proto";
+
 option go_package = "qomet.tech/agora/daemons/gen-pkg/tech/qomet/agora/api/grpc/prtagent/v1;agoraapigrpcprtagentv1";
 option java_package = "tech.qomet.agora.api.grpc.prtagent.v1";
 option java_outer_classname = "EventProto";
 option csharp_namespace  = "Tech.Qomet.Agora.Api.Grpc.PrtAgent.V1";
 
-import "common.proto";
-import "prtagent/v1/investor.proto";
-import "prtagent/v1/instrument.proto";
-import "prtagent/v1/market.proto";
-import "prtagent/v1/participant.proto";
-import "prtagent/v1/trading.proto";
-import "prtagent/v1/venue.proto";
-
 enum EventTypeEnum {
-  EVENT_TYPE_ENUM__UNKNOWN = 0;
+  EVENT_TYPE_ENUM_UNKNOWN = 0;
 
-  EVENT_TYPE_ENUM__NEWS = 1;
-  EVENT_TYPE_ENUM__ANNOUNCEMENT = 2;
+  EVENT_TYPE_ENUM_NEWS = 1;
+  EVENT_TYPE_ENUM_ANNOUNCEMENT = 2;
 
-  EVENT_TYPE_ENUM__MARKET_UPDATE = 3;
+  EVENT_TYPE_ENUM_MARKET_UPDATE = 3;
 
-  EVENT_TYPE_ENUM__TRADE_EXECUTION = 4;
+  EVENT_TYPE_ENUM_TRADE_EXECUTION = 4;
 
-  EVENT_TYPE_ENUM__ORDER_PLACED = 5;
-  EVENT_TYPE_ENUM__ORDER_CANCELLED = 6;
-  EVENT_TYPE_ENUM__ORDER_FILLED = 7;
-  EVENT_TYPE_ENUM__ORDER_EXPIRED = 8;
+  EVENT_TYPE_ENUM_ORDER_PLACED = 5;
+  EVENT_TYPE_ENUM_ORDER_CANCELLED = 6;
+  EVENT_TYPE_ENUM_ORDER_FILLED = 7;
+  EVENT_TYPE_ENUM_ORDER_EXPIRED = 8;
 
-  EVENT_TYPE_ENUM__PRICE_UPDATE = 9;
-  EVENT_TYPE_ENUM__REGULATORY = 10;
-  EVENT_TYPE_ENUM__SYSTEM = 11;
+  EVENT_TYPE_ENUM_PRICE_UPDATE = 9;
+  EVENT_TYPE_ENUM_REGULATORY = 10;
+  EVENT_TYPE_ENUM_SYSTEM = 11;
 
-  EVENT_TYPE_ENUM__EXECUTION_UPDATE = 12;
-  EVENT_TYPE_ENUM__EXECUTION_RESPONSE = 13;
+  EVENT_TYPE_ENUM_EXECUTION_UPDATE = 12;
+  EVENT_TYPE_ENUM_EXECUTION_RESPONSE = 13;
 
-  EVENT_TYPE_ENUM__OTHER = 0x0fff0000;
+  EVENT_TYPE_ENUM_OTHER = 0x0fff0000;
 }
 
 message EventSubscriptionParams {
-  string proposed_subscription_id = 1;        // OPTIONAL: Client-proposed subscription ID
-  repeated string topics = 2;                 // OPTIONAL: Specific topics to subscribe to
-  repeated EventTypeEnum subscribed_event_types = 3; // OPTIONAL: Event types to receive
+  string proposed_subscription_id = 1;                            // OPTIONAL: Client-proposed subscription ID
+  repeated string topics = 2;                                     // OPTIONAL: Specific topics to subscribe to
+  repeated EventTypeEnum subscribed_event_types = 3;              // OPTIONAL: Event types to receive
 
-  map<string, string> aux_data = 105;         // OPTIONAL: Additional subscription data
+  map<string, string> aux_data = 105;                             // OPTIONAL: Additional subscription data
 }
 
 message BlobEvent {
-  tech.qomet.agora.api.grpc.common.Blob data = 1;                              // REQUIRED: The blob data payload
+  tech.qomet.agora.api.grpc.common.Blob data = 1;                 // REQUIRED: The blob data payload
 }
 
 enum ExecutionUpdateEventTypeEnum {
-  EXECUTION_UPDATE_EVENT_TYPE_ENUM__UNKNOWN = 0;
+  EXECUTION_UPDATE_EVENT_TYPE_ENUM_UNKNOWN = 0;
 
-  EXECUTION_UPDATE_EVENT_TYPE_ENUM__NEW_EXECUTION_FLOW = 1;
-  EXECUTION_UPDATE_EVENT_TYPE_ENUM__FLOW_PROGRESS_REPORT = 2;
-  EXECUTION_UPDATE_EVENT_TYPE_ENUM__EXECUTION_COMPLETED = 3;
+  EXECUTION_UPDATE_EVENT_TYPE_ENUM_NEW_EXECUTION_FLOW = 1;
+  EXECUTION_UPDATE_EVENT_TYPE_ENUM_FLOW_PROGRESS_REPORT = 2;
+  EXECUTION_UPDATE_EVENT_TYPE_ENUM_EXECUTION_COMPLETED = 3;
 
-  EXECUTION_UPDATE_EVENT_TYPE_ENUM__OTHER = 0x0fff0000;
+  EXECUTION_UPDATE_EVENT_TYPE_ENUM_OTHER = 0x0fff0000;
 }
 
 message ExecutionUpdateEvent {
-  string ref_execution_id = 1;               // REQUIRED: Reference to the execution ID
-  ExecutionUpdateEventTypeEnum event_type = 2; // REQUIRED: Type of execution update
+  string ref_execution_id = 1;                                    // REQUIRED: Reference to the execution ID
+  ExecutionUpdateEventTypeEnum event_type = 2;                    // REQUIRED: Type of execution update
 
-  string flow_instance_id = 3;               // OPTIONAL: Flow instance identifier
-  string flow_execution_id = 4;              // OPTIONAL: Flow execution identifier
-  string total_nr_of_steps = 5;              // OPTIONAL: Total number of steps
-  string current_step_nr = 6;                // OPTIONAL: Current step number
-  string step_description = 7;               // OPTIONAL: Description of current step
-  string progress_percentage = 8;            // OPTIONAL: Progress percentage (0 to 100)
-  string msg = 9;                            // OPTIONAL: Status message
+  string flow_instance_id = 3;                                    // OPTIONAL: Flow instance identifier
+  string flow_execution_id = 4;                                   // OPTIONAL: Flow execution identifier
+  string total_nr_of_steps = 5;                                   // OPTIONAL: Total number of steps
+  string current_step_nr = 6;                                     // OPTIONAL: Current step number
+  string step_description = 7;                                    // OPTIONAL: Description of current step
+  string progress_percentage = 8;                                 // OPTIONAL: Progress percentage (0 to 100)
+  string msg = 9;                                                 // OPTIONAL: Status message
 
-  map<string, string> labels = 103;          // OPTIONAL: Key-value labels
-  repeated string tags = 104;                // OPTIONAL: Tags for categorization
-  map<string, string> metadata = 105;        // OPTIONAL: Additional metadata
+  map<string, string> labels = 103;                               // OPTIONAL: Key-value labels
+  repeated string tags = 104;                                     // OPTIONAL: Tags for categorization
+  map<string, string> metadata = 105;                             // OPTIONAL: Additional metadata
 }
 
 message ExecutionResponseEvent {
-  string ref_execution_id = 1;               // REQUIRED: Reference to the execution ID
+  string ref_execution_id = 1;                                    // REQUIRED: Reference to the execution ID
 
-  oneof response {                           // REQUIRED: Must contain one response type
+  oneof response {                                                // REQUIRED: Must contain one response type
     // investor responses
     GetInvestorListResponse get_investor_list = 201;
     GetInvestorInfoBatchResponse get_investor_info_batch = 202;
-    GetInvestorInstrumentHoldingsResponse get_investor_instrument_holdings = 203;
+    GetInvestorSecurityHoldingsResponse get_investor_security_holdings = 203;
     GetInvestorCashHoldingsResponse get_investor_cash_holdings = 204;
     GetInvestorOrdersResponse get_investor_orders = 205;
     GetInvestorTradesResponse get_investor_trades = 206;
     GetInvestorSettlementsResponse get_investor_settlements = 207;
     GetInvestorTransactionsResponse get_investor_transactions = 208;
-    // instrument responses
-    GetInstrumentListResponse get_instrument_list = 301;
-    GetInstrumentInfoBatchResponse get_instrument_info_batch = 302;
-    GetInstrumentOrdersResponse get_instrument_orders = 303;
-    GetInstrumentTradesResponse get_instrument_trades = 304;
-    GetInstrumentSettlementsResponse get_instrument_settlements = 305;
-    // market responses
-    GetMarketListResponse get_market_list = 401;
-    GetMarketCalendarResponse get_market_calendar = 402;
     // venue responses
     GetVenueListResponse get_venue_list = 501;
     GetVenueCalendarResponse get_venue_calendar = 503;
@@ -118,28 +107,28 @@ message ExecutionResponseEvent {
     // GetSupportedCurrenciesResponse get_supported_currencies = 801;
   }
 
-  map<string, string> labels = 103;          // OPTIONAL: Key-value labels
-  repeated string tags = 104;                // OPTIONAL: Tags for categorization
-  map<string, string> metadata = 105;        // OPTIONAL: Additional metadata
+  map<string, string> labels = 103;                               // OPTIONAL: Key-value labels
+  repeated string tags = 104;                                     // OPTIONAL: Tags for categorization
+  map<string, string> metadata = 105;                             // OPTIONAL: Additional metadata
 }
 
 message Event {
-  string id = 1;                             // REQUIRED: Unique event identifier
-  string hash = 2;                           // OPTIONAL: Event content hash
-  string ref_subscription_id = 3;            // REQUIRED: Reference to subscription ID
-  string topic = 4;                          // REQUIRED: Event topic
-  tech.qomet.agora.api.grpc.common.DateTime generated_at_dt = 5;              // REQUIRED: Event generation timestamp
+  string id = 1;                                                  // REQUIRED: Unique event identifier
+  string hash = 2;                                                // OPTIONAL: Event content hash
+  string ref_subscription_id = 3;                                 // REQUIRED: Reference to subscription ID
+  string topic = 4;                                               // REQUIRED: Event topic
+  tech.qomet.agora.api.grpc.common.DateTime generated_at_dt = 5;  // REQUIRED: Event generation timestamp
 
-  EventTypeEnum type = 6;                    // REQUIRED: Event type
-  oneof carrying_object {                    // REQUIRED: Must contain one event payload
+  EventTypeEnum type = 6;                                         // REQUIRED: Event type
+  oneof carrying_object {                                         // REQUIRED: Must contain one event payload
     BlobEvent blob = 7;
     ExecutionUpdateEvent execution_update = 8;
     ExecutionResponseEvent execution_response = 9;
   }
 
-  map<string, string> display_names = 101;   // OPTIONAL: Display names for localization
-  map<string, string> descriptions = 102;    // OPTIONAL: Descriptions for localization
-  map<string, string> labels = 103;          // OPTIONAL: Key-value labels
-  repeated string tags = 104;                // OPTIONAL: Tags for categorization
-  map<string, string> metadata = 105;        // OPTIONAL: Additional metadata
+  map<string, string> display_names = 101;                        // OPTIONAL: Display names for localization
+  map<string, string> descriptions = 102;                         // OPTIONAL: Descriptions for localization
+  map<string, string> labels = 103;                               // OPTIONAL: Key-value labels
+  repeated string tags = 104;                                     // OPTIONAL: Tags for categorization
+  map<string, string> metadata = 105;                             // OPTIONAL: Additional metadata
 }

@@ -8,141 +8,141 @@ option java_outer_classname = "Common";
 option csharp_namespace  = "Tech.Qomet.Agora.Api.Grpc.Common";
 
 message Blob {
-  string encoding = 1;      // REQUIRED: Encoding type (e.g., "base64", "hex")
-  string struct_type = 2;   // OPTIONAL: Type of structure encoded
-  string data = 3;          // REQUIRED: The encoded data
+  string encoding = 1;                            // REQUIRED: Encoding type (e.g., "base64", "hex")
+  string struct_type = 2;                         // OPTIONAL: Type of structure encoded
+  string data = 3;                                // REQUIRED: The encoded data
 }
 
 message DateYMD {
-  int32 year = 1;   // REQUIRED: Year (e.g., 2024)
-  int32 month = 2;  // REQUIRED: Month (1-12)
-  int32 day = 3;    // REQUIRED: Day of month (1-31)
+  int32 year = 1;                                 // REQUIRED: Year (e.g., 2024)
+  int32 month = 2;                                // REQUIRED: Month (1-12)
+  int32 day = 3;                                  // REQUIRED: Day of month (1-31)
 }
 
 message TimeHMSS {
-  int32 hour = 1;       // REQUIRED: Hour (0 to 23)
-  int32 minute = 2;     // REQUIRED: Minute (0 to 59)
-  int32 second = 3;     // REQUIRED: Second (0 to 60, allowing for leap second)
-  int32 sub_second = 4; // OPTIONAL: Sub-second precision (0 to 999,999,999)
+  int32 hour = 1;                                 // REQUIRED: Hour (0 to 23)
+  int32 minute = 2;                               // REQUIRED: Minute (0 to 59)
+  int32 second = 3;                               // REQUIRED: Second (0 to 60, allowing for leap second)
+  int32 sub_second = 4;                           // OPTIONAL: Sub-second precision (0 to 999,999,999)
 }
 
 message Time {
-    TimeHMSS hmss = 1;    // REQUIRED: HMS representation
+  TimeHMSS hmss = 1;                              // REQUIRED: HMS representation
 }
 
 message DateTimeYMDHMSS {
-  DateYMD date = 1;   // REQUIRED: Date component
-  TimeHMSS time = 2;  // REQUIRED: Time component
+  DateYMD date = 1;                               // REQUIRED: Date component
+  TimeHMSS time = 2;                              // REQUIRED: Time component
 }
 
 message Date {
-    DateYMD ymd = 1;   // REQUIRED: YMD representation
+  DateYMD ymd = 1;                                // REQUIRED: YMD representation
 }
 
 message DateTime {
-  oneof value {                            // REQUIRED: Must provide one of the following
-    DateTimeYMDHMSS ymdhmss = 1;           // YMD-HMSS representation
-    string utc_unix_epoch_ts_millis = 2;   // UTC Unix Epoch Timestamp string representation
+  oneof value {                                   // REQUIRED: Must provide one of the following
+    DateTimeYMDHMSS ymdhmss = 1;                  // YMD-HMSS representation
+    string utc_unix_epoch_ts_millis = 2;          // UTC Unix Epoch Timestamp string representation
   }
 }
 
 message Duration {
-  repeated string identifiers = 1;     // OPTIONAL: Duration identifiers
-  repeated string names = 2;           // OPTIONAL: Duration names
+  repeated string identifiers = 1;                // OPTIONAL: Duration identifiers
+  repeated string names = 2;                      // OPTIONAL: Duration names
 
-  oneof start {                        // REQUIRED: Must provide one start value
+  oneof start {                                   // REQUIRED: Must provide one start value
     Time start_time = 5;
     Date start_date = 6;
     DateTime start_dt = 7;
   }
-  oneof end {                          // REQUIRED: Must provide one end value
+  oneof end {                                     // REQUIRED: Must provide one end value
     Time end_time = 8;
     Date end_date = 9;
     DateTime end_dt = 10;
   }
 
-  string display_name = 101;           // OPTIONAL: Human-readable name
-  string description = 102;            // OPTIONAL: Detailed description
-  map<string, string> labels = 103;    // OPTIONAL: Key-value labels
-  repeated string tags = 104;          // OPTIONAL: Tags for categorization
-  map<string, string> metadata = 105;  // OPTIONAL: Additional metadata
+  string display_name = 101;                      // OPTIONAL: Human-readable name
+  string description = 102;                       // OPTIONAL: Detailed description
+  map<string, string> labels = 103;               // OPTIONAL: Key-value labels
+  repeated string tags = 104;                     // OPTIONAL: Tags for categorization
+  map<string, string> metadata = 105;             // OPTIONAL: Additional metadata
 }
 
 message PaginationParams {
-  string pagination_id = 1;     // OPTIONAL: Unique ID for pagination session (for stateful pagination)
-  int32 page_nr = 2;            // OPTIONAL: Page number (default: 1)
-  int32 page_size = 3;          // OPTIONAL: Number of items per page (default: 50)
-  string cursor_token = 4;      // OPTIONAL: Cursor token when using cursor-based pagination (overrides page_nr and page_size)
+  string pagination_id = 1;                       // OPTIONAL: Unique ID for pagination session (for stateful pagination)
+  int32 page_nr = 2;                              // OPTIONAL: Page number (default: 1)
+  int32 page_size = 3;                            // OPTIONAL: Number of items per page (default: 50)
+  string cursor_token = 4;                        // OPTIONAL: Cursor token when using cursor-based pagination (overrides page_nr and page_size)
 }
 
 message PaginationInfo {
-  int64 total_count = 1;          // OPTIONAL: Total count (-1 means unavailable)
-  string next_cursor_token = 2;   // OPTIONAL: Token for next page (empty means no more pages)
+  int64 total_count = 1;                          // OPTIONAL: Total count (-1 means unavailable)
+  string next_cursor_token = 2;                   // OPTIONAL: Token for next page (empty means no more pages)
 }
 
 message StringValue {
-  string value = 1;             // REQUIRED: The string value
-  bool case_insensitive = 2;    // OPTIONAL: Whether to ignore case (default: false)
-  string encoding = 3;          // OPTIONAL: String encoding (default: UTF-8)
+  string value = 1;                               // REQUIRED: The string value
+  bool case_insensitive = 2;                      // OPTIONAL: Whether to ignore case (default: false)
+  string encoding = 3;                            // OPTIONAL: String encoding (default: UTF-8)
 }
 
 enum AsyncResponseStatusEnum {
-  ASYNC_RESPONSE_STATUS__UNKNOWN = 0;
+  ASYNC_RESPONSE_STATUS_ENUM_UNKNOWN = 0;
 
-  ASYNC_RESPONSE_STATUS__ACCEPTED = 1;
-  ASYNC_RESPONSE_STATUS__COMPLETED = 2;
-  ASYNC_RESPONSE_STATUS__REJECTED = 3;
-  ASYNC_RESPONSE_STATUS__FAILED = 4;
-  ASYNC_RESPONSE_STATUS__EXPIRED = 5;
-  ASYNC_RESPONSE_STATUS__IN_PROGRESS = 6;
-  ASYNC_RESPONSE_STATUS__PENDING = 7;
-  ASYNC_RESPONSE_STATUS__UNAUTHORIZED = 8;
-  ASYNC_RESPONSE_STATUS__CONFLICT = 9;
-  ASYNC_RESPONSE_STATUS__SERVICE_UNAVAILABLE = 10;
-  ASYNC_RESPONSE_STATUS__GATEWAY_TIMEOUT = 11;
-  ASYNC_RESPONSE_STATUS__NOT_IMPLEMENTED = 12;
-  ASYNC_RESPONSE_STATUS__BAD_REQUEST = 13;
-  ASYNC_RESPONSE_STATUS__TOO_MANY_REQUESTS = 14;
-  ASYNC_RESPONSE_STATUS__INTERNAL_SERVER_ERROR = 15;
+  ASYNC_RESPONSE_STATUS_ENUM_ACCEPTED = 1;
+  ASYNC_RESPONSE_STATUS_ENUM_COMPLETED = 2;
+  ASYNC_RESPONSE_STATUS_ENUM_REJECTED = 3;
+  ASYNC_RESPONSE_STATUS_ENUM_FAILED = 4;
+  ASYNC_RESPONSE_STATUS_ENUM_EXPIRED = 5;
+  ASYNC_RESPONSE_STATUS_ENUM_IN_PROGRESS = 6;
+  ASYNC_RESPONSE_STATUS_ENUM_PENDING = 7;
+  ASYNC_RESPONSE_STATUS_ENUM_UNAUTHORIZED = 8;
+  ASYNC_RESPONSE_STATUS_ENUM_CONFLICT = 9;
+  ASYNC_RESPONSE_STATUS_ENUM_SERVICE_UNAVAILABLE = 10;
+  ASYNC_RESPONSE_STATUS_ENUM_GATEWAY_TIMEOUT = 11;
+  ASYNC_RESPONSE_STATUS_ENUM_NOT_IMPLEMENTED = 12;
+  ASYNC_RESPONSE_STATUS_ENUM_BAD_REQUEST = 13;
+  ASYNC_RESPONSE_STATUS_ENUM_TOO_MANY_REQUESTS = 14;
+  ASYNC_RESPONSE_STATUS_ENUM_INTERNAL_SERVER_ERROR = 15;
 
-  ASYNC_RESPONSE_STATUS__OTHER = 0x0fff0000;
+  ASYNC_RESPONSE_STATUS_ENUM_OTHER = 0x0fff0000;
 }
 
 message ExecutionAsyncResponse {
-  string id = 1;                                     // REQUIRED: Unique response ID
+  string id = 1;                                  // REQUIRED: Unique response ID
 
-  string ref_execution_id = 2;                       // REQUIRED: Reference to original execution ID
+  string ref_execution_id = 2;                    // REQUIRED: Reference to original execution ID
 
-  DateTime generated_at_dt = 3;                      // REQUIRED: When response was generated
-  AsyncResponseStatusEnum async_status = 4;          // REQUIRED: Current status
-  string msg = 5;                                    // OPTIONAL: Status message or error details
+  DateTime generated_at_dt = 3;                   // REQUIRED: When response was generated
+  AsyncResponseStatusEnum async_status = 4;       // REQUIRED: Current status
+  string msg = 5;                                 // OPTIONAL: Status message or error details
 
-  map<string, string> async_response_data = 100;     // OPTIONAL: Response-specific data
+  map<string, string> async_response_data = 100;  // OPTIONAL: Response-specific data
 
-  map<string, string> metadata = 1001;               // OPTIONAL: Additional metadata
+  map<string, string> metadata = 1001;            // OPTIONAL: Additional metadata
 }
 
 // Error severity enum (ISO 20022 compatible)
 enum ErrorSeverityEnum {
-  ERROR_SEVERITY_ENUM__UNKNOWN = 0;
-  ERROR_SEVERITY_ENUM__INFO = 1;       // Informational message
-  ERROR_SEVERITY_ENUM__WARNING = 2;    // Warning (non-fatal)
-  ERROR_SEVERITY_ENUM__ERROR = 3;      // Error (may be recoverable)
-  ERROR_SEVERITY_ENUM__FATAL = 4;      // Fatal error (operation failed)
+  ERROR_SEVERITY_ENUM_UNKNOWN = 0;
+  ERROR_SEVERITY_ENUM_INFO = 1;                  // Informational message
+  ERROR_SEVERITY_ENUM_WARNING = 2;               // Warning (non-fatal)
+  ERROR_SEVERITY_ENUM_ERROR = 3;                 // Error (may be recoverable)
+  ERROR_SEVERITY_ENUM_FATAL = 4;                 // Fatal error (operation failed)
 }
 
 // Error detail message (ISO 20022 compatible - maps to BusinessError4 and ErrorHandling5)
 message ErrorDetail {
-  string error_code = 1;           // REQUIRED: Error code (e.g., ISO 20022 "AC01", "NARR", "SYS001")
-  string error_message = 2;        // REQUIRED: Human-readable error description
-  string affected_field = 3;       // OPTIONAL: Which field/element caused the error (e.g., "securities[0].identifiers[1]")
-  ErrorSeverityEnum severity = 4;  // REQUIRED: Error severity level
-  string additional_info = 5;      // OPTIONAL: Additional error context or details
+  string error_code = 1;                          // REQUIRED: Error code (e.g., ISO 20022 "AC01", "NARR", "SYS001")
+  string error_message = 2;                       // REQUIRED: Human-readable error description
+  string affected_field = 3;                      // OPTIONAL: Which field/element caused the error (e.g., "securities[0].identifiers[1]")
+  ErrorSeverityEnum severity = 4;                 // REQUIRED: Error severity level
+  string additional_info = 5;                     // OPTIONAL: Additional error context or details
 }
 
 // Warning message (ISO 20022 compatible)
 message WarningDetail {
-  string warning_code = 1;         // OPTIONAL: Warning code
-  string warning_message = 2;      // REQUIRED: Human-readable warning message
-  string affected_field = 3;       // OPTIONAL: Which field triggered the warning
+  string warning_code = 1;                        // OPTIONAL: Warning code
+  string warning_message = 2;                     // REQUIRED: Human-readable warning message
+  string affected_field = 3;                      // OPTIONAL: Which field triggered the warning
 }

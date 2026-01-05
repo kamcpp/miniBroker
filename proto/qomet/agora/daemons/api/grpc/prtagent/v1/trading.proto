@@ -2,18 +2,19 @@ syntax = "proto3";
 
 package tech.qomet.agora.api.grpc.prtagent.v1;
 
+import "common.proto";
+import "fin/security.proto";
+import "fin/trading.proto";
+import "prtagent/v1/query.proto";
+
 option go_package = "qomet.tech/agora/daemons/gen-pkg/tech/qomet/agora/api/grpc/prtagent/v1;agoraapigrpcprtagentv1";
 option java_package = "tech.qomet.agora.api.grpc.prtagent.v1";
 option java_outer_classname = "Trading";
 option csharp_namespace  = "Tech.Qomet.Agora.Api.Grpc.PrtAgent.V1";
 
-import "common.proto";
-import "fin.proto";
-import "prtagent/v1/query.proto";
-
 service TradingService {
-  rpc GetLatestQuote(GetLatestQuoteRequest) returns (InstrumentQuoteResponse);
-  rpc FetchLiveQuote(FetchLiveQuoteRequest) returns (stream InstrumentQuoteResponse);
+  rpc GetLatestQuote(GetLatestQuoteRequest) returns (SecurityQuoteResponse);
+  rpc FetchLiveQuote(FetchLiveQuoteRequest) returns (stream SecurityQuoteResponse);
   rpc GetHistoricalQuote(GetHistoricalQuoteRequest) returns (GetHistoricalQuoteResponse);
   rpc FetchLiveOhlcData(FetchLiveOhlcDataRequest) returns (stream OhlcDataResponse);
   rpc GetHistoricalOhlcData(GetHistoricalOhlcDataRequest) returns (GetHistoricalOhlcDataResponse);
@@ -29,226 +30,226 @@ service TradingService {
   rpc GetOrderbookAsync(GetOrderbookRequest) returns (tech.qomet.agora.api.grpc.common.ExecutionAsyncResponse);
 }
 
-message InstrumentQuote {
-  tech.qomet.agora.api.grpc.common.Instrument instrument = 1;                  // REQUIRED: Instrument information
-  string amount = 2;                          // REQUIRED: Quote amount
+message SecurityQuote {
+  tech.qomet.agora.api.grpc.fin.Security security = 1;                  // REQUIRED: Security information
+  string amount = 2;                                                    // REQUIRED: Quote amount
 }
 
-message InstrumentQuoteResponse {
-  string ref_execution_id = 1;                // REQUIRED: Reference to the execution ID
-  InstrumentQuote quote = 3;                  // REQUIRED: Instrument quote data
+message SecurityQuoteResponse {
+  string ref_execution_id = 1;                                          // REQUIRED: Reference to the execution ID
+  SecurityQuote quote = 3;                                              // REQUIRED: Security quote data
 
-  map<string, string> metadata = 105;         // OPTIONAL: Response metadata
+  map<string, string> metadata = 105;                                   // OPTIONAL: Response metadata
 }
 
 message OhlcData {
-  tech.qomet.agora.api.grpc.common.Instrument instrument = 3;                  // REQUIRED: Instrument information
-  tech.qomet.agora.api.grpc.common.Duration duration = 4;                      // REQUIRED: Time period duration
-  string open = 5;                            // REQUIRED: Opening price
-  string high = 6;                            // REQUIRED: Highest price
-  string low = 7;                             // REQUIRED: Lowest price
-  string close = 8;                           // REQUIRED: Closing price
-  string volume = 9;                          // OPTIONAL: Trading volume
+  tech.qomet.agora.api.grpc.fin.Security security = 3;                  // REQUIRED: Security information
+  tech.qomet.agora.api.grpc.common.Duration duration = 4;               // REQUIRED: Time period duration
+  string open = 5;                                                      // REQUIRED: Opening price
+  string high = 6;                                                      // REQUIRED: Highest price
+  string low = 7;                                                       // REQUIRED: Lowest price
+  string close = 8;                                                     // REQUIRED: Closing price
+  string volume = 9;                                                    // OPTIONAL: Trading volume
 }
 
 message OhlcDataResponse {
-  string ref_execution_id = 1;                // REQUIRED: Reference to the execution ID
-  OhlcData ohlc_data = 3;                     // REQUIRED: OHLC data
+  string ref_execution_id = 1;                                          // REQUIRED: Reference to the execution ID
+  OhlcData ohlc_data = 3;                                               // REQUIRED: OHLC data
 
-  map<string, string> metadata = 105;         // OPTIONAL: Response metadata
+  map<string, string> metadata = 105;                                   // OPTIONAL: Response metadata
 }
 
 message GetLatestQuoteRequest {
-  string proposed_execution_id = 1;           // OPTIONAL: Client-proposed execution ID for tracking
-  repeated string instrument_id_and_symbol_regexes = 2; // REQUIRED: Instrument ID and symbol regexes
+  string proposed_execution_id = 1;                                     // OPTIONAL: Client-proposed execution ID for tracking
+  repeated string security_iid_or_symbol_regexes = 2;                   // REQUIRED: Security IID or symbol regexes
 
-  map<string, string> aux_data = 105;         // OPTIONAL: Additional request data
+  map<string, string> aux_data = 105;                                   // OPTIONAL: Additional request data
 }
 
 message LiveQuoteFetchParams {
-  uint32 update_interval_ms = 1;              // OPTIONAL: Minimum interval between updates (ms)
-  uint32 max_duration_ms = 2;                 // OPTIONAL: Maximum stream duration (ms)
-  bool include_depth = 3;                     // OPTIONAL: Include orderbook depth (default: false)
-  uint32 depth_levels = 4;                    // OPTIONAL: Number of depth levels (if include_depth)
-  bool include_trades = 5;                    // OPTIONAL: Include recent trades (default: false)
+  uint32 update_interval_ms = 1;                                        // OPTIONAL: Minimum interval between updates (ms)
+  uint32 max_duration_ms = 2;                                           // OPTIONAL: Maximum stream duration (ms)
+  bool include_depth = 3;                                               // OPTIONAL: Include orderbook depth (default: false)
+  uint32 depth_levels = 4;                                              // OPTIONAL: Number of depth levels (if include_depth)
+  bool include_trades = 5;                                              // OPTIONAL: Include recent trades (default: false)
 }
 
 message FetchLiveQuoteRequest {
-  string proposed_execution_id = 1;           // OPTIONAL: Client-proposed execution ID for tracking
-  repeated string instrument_id_and_symbol_regexes = 2; // REQUIRED: Instrument ID and symbol regexes
-  LiveQuoteFetchParams fetch_params = 3;      // OPTIONAL: Live quote fetch parameters
+  string proposed_execution_id = 1;                                     // OPTIONAL: Client-proposed execution ID for tracking
+  repeated string security_iid_or_symbol_regexes = 2;                   // REQUIRED: Security IID or symbol regexes
+  LiveQuoteFetchParams fetch_params = 3;                                // OPTIONAL: Live quote fetch parameters
 
-  map<string, string> aux_data = 105;         // OPTIONAL: Additional request data
+  map<string, string> aux_data = 105;                                   // OPTIONAL: Additional request data
 }
 
 message GetHistoricalQuoteRequest {
-  string proposed_execution_id = 1;           // OPTIONAL: Client-proposed execution ID for tracking
-  tech.qomet.agora.api.grpc.common.PaginationParams pagination = 2;            // OPTIONAL: Pagination parameters
-  repeated string instrument_id_and_symbol_regexes = 3; // REQUIRED: Instrument ID and symbol regexes
-  optional tech.qomet.agora.api.grpc.common.Duration duration = 4;             // OPTIONAL: Time range duration
+  string proposed_execution_id = 1;                                     // OPTIONAL: Client-proposed execution ID for tracking
+  tech.qomet.agora.api.grpc.common.PaginationParams pagination = 2;     // OPTIONAL: Pagination parameters
+  repeated string security_iid_or_symbol_regexes = 3;                   // REQUIRED: Security IID or symbol regexes
+  optional tech.qomet.agora.api.grpc.common.Duration duration = 4;      // OPTIONAL: Time range duration
 
-  map<string, string> aux_data = 105;         // OPTIONAL: Additional request data
+  map<string, string> aux_data = 105;                                   // OPTIONAL: Additional request data
 }
 
 message GetHistoricalQuoteResponse {
-  string ref_execution_id = 1;                // REQUIRED: Reference to the execution ID
-  tech.qomet.agora.api.grpc.common.PaginationInfo pagination_info = 2;         // OPTIONAL: Pagination information (required if paginated)
-  repeated InstrumentQuote quotes = 3;         // REQUIRED: List of historical quotes (can be empty)
+  string ref_execution_id = 1;                                          // REQUIRED: Reference to the execution ID
+  tech.qomet.agora.api.grpc.common.PaginationInfo pagination_info = 2;  // OPTIONAL: Pagination information (required if paginated)
+  repeated SecurityQuote quotes = 3;                                    // REQUIRED: List of historical quotes (can be empty)
 
-  map<string, string> metadata = 105;         // OPTIONAL: Response metadata
+  map<string, string> metadata = 105;                                   // OPTIONAL: Response metadata
 }
 
 message LiveOhlcDataFetchParams {
-  uint32 update_interval_ms = 1;              // OPTIONAL: Update interval in milliseconds
-  uint32 max_duration_ms = 2;                 // OPTIONAL: Maximum stream duration in milliseconds
-  string period = 3;                          // REQUIRED: Time period ("1m", "5m", "15m", "1h", "1d")
-  bool include_volume = 4;                    // OPTIONAL: Include volume data (default: false)
-  bool include_indicators = 5;                // OPTIONAL: Include indicators like RSI, MA (default: false)
+  uint32 update_interval_ms = 1;                                        // OPTIONAL: Update interval in milliseconds
+  uint32 max_duration_ms = 2;                                           // OPTIONAL: Maximum stream duration in milliseconds
+  string period = 3;                                                    // REQUIRED: Time period ("1m", "5m", "15m", "1h", "1d")
+  bool include_volume = 4;                                              // OPTIONAL: Include volume data (default: false)
+  bool include_indicators = 5;                                          // OPTIONAL: Include indicators like RSI, MA (default: false)
 }
 
 message FetchLiveOhlcDataRequest {
-  string proposed_execution_id = 1;           // OPTIONAL: Client-proposed execution ID for tracking
-  repeated string instrument_id_and_symbol_regexes = 2; // REQUIRED: Instrument ID and symbol regexes
-  LiveOhlcDataFetchParams fetch_params = 3;   // OPTIONAL: Live OHLC fetch parameters
+  string proposed_execution_id = 1;                                     // OPTIONAL: Client-proposed execution ID for tracking
+  repeated string security_iid_or_symbol_regexes = 2;                   // REQUIRED: Security IID or symbol regexes
+  LiveOhlcDataFetchParams fetch_params = 3;                             // OPTIONAL: Live OHLC fetch parameters
 
-  map<string, string> aux_data = 105;         // OPTIONAL: Additional request data
+  map<string, string> aux_data = 105;                                   // OPTIONAL: Additional request data
 }
 
 message GetHistoricalOhlcDataRequest {
-  string proposed_execution_id = 1;           // OPTIONAL: Client-proposed execution ID for tracking
-  tech.qomet.agora.api.grpc.common.PaginationParams pagination = 2;            // OPTIONAL: Pagination parameters
-  repeated string instrument_id_and_symbol_regexes = 3; // REQUIRED: Instrument ID and symbol regexes
-  optional tech.qomet.agora.api.grpc.common.Duration duration = 4;             // OPTIONAL: Time range duration
-  string period = 5;                          // REQUIRED: Time period ("1m", "5m", "15m", "1h", "1d")
-  bool include_volume = 6;                    // OPTIONAL: Include volume data (default: false)
+  string proposed_execution_id = 1;                                     // OPTIONAL: Client-proposed execution ID for tracking
+  tech.qomet.agora.api.grpc.common.PaginationParams pagination = 2;     // OPTIONAL: Pagination parameters
+  repeated string security_iid_or_symbol_regexes = 3;                   // REQUIRED: Security IID or symbol regexes
+  optional tech.qomet.agora.api.grpc.common.Duration duration = 4;      // OPTIONAL: Time range duration
+  string period = 5;                                                    // REQUIRED: Time period ("1m", "5m", "15m", "1h", "1d")
+  bool include_volume = 6;                                              // OPTIONAL: Include volume data (default: false)
 
-  map<string, string> aux_data = 105;         // OPTIONAL: Additional request data
+  map<string, string> aux_data = 105;                                   // OPTIONAL: Additional request data
 }
 
 message GetHistoricalOhlcDataResponse {
-  string ref_execution_id = 1;                // REQUIRED: Reference to the execution ID
-  tech.qomet.agora.api.grpc.common.PaginationInfo pagination_info = 2;         // OPTIONAL: Pagination information (required if paginated)
-  repeated OhlcData ohlc_datas = 3;            // REQUIRED: List of historical OHLC data (can be empty)
+  string ref_execution_id = 1;                                          // REQUIRED: Reference to the execution ID
+  tech.qomet.agora.api.grpc.common.PaginationInfo pagination_info = 2;  // OPTIONAL: Pagination information (required if paginated)
+  repeated OhlcData ohlc_data = 3;                                      // REQUIRED: List of historical OHLC data (can be empty)
 
-  map<string, string> metadata = 105;         // OPTIONAL: Response metadata
+  map<string, string> metadata = 105;                                   // OPTIONAL: Response metadata
 }
 
 message FeeStructure {
-  string base_fee = 1;                        // OPTIONAL: Base transaction fee
-  string percentage_fee = 2;                  // OPTIONAL: Percentage of order value
-  string minimum_fee = 3;                     // OPTIONAL: Minimum fee amount
-  string maximum_fee = 4;                     // OPTIONAL: Maximum fee amount
-  string maker_fee = 6;                       // OPTIONAL: Fee for maker orders (adds liquidity)
-  string taker_fee = 7;                       // OPTIONAL: Fee for taker orders (removes liquidity)
-  string currency = 8;                        // REQUIRED: ISO 4217 currency code for fees
-  string fee_tier = 9;                        // OPTIONAL: User's fee tier/level
-  string discount_rate = 10;                  // OPTIONAL: Applicable discount percentage
-  string total_estimated_fee = 11;            // OPTIONAL: Total estimated fee for the order
+  string base_fee = 1;                                                  // OPTIONAL: Base transaction fee
+  string percentage_fee = 2;                                            // OPTIONAL: Percentage of order value
+  string minimum_fee = 3;                                               // OPTIONAL: Minimum fee amount
+  string maximum_fee = 4;                                               // OPTIONAL: Maximum fee amount
+  string maker_fee = 6;                                                 // OPTIONAL: Fee for maker orders (adds liquidity)
+  string taker_fee = 7;                                                 // OPTIONAL: Fee for taker orders (removes liquidity)
+  string currency = 8;                                                  // REQUIRED: ISO 4217 currency code for fees
+  string fee_tier = 9;                                                  // OPTIONAL: User's fee tier/level
+  string discount_rate = 10;                                            // OPTIONAL: Applicable discount percentage
+  string total_estimated_fee = 11;                                      // OPTIONAL: Total estimated fee for the order
 }
 
 message GetOrderFeesRequest {
-  string proposed_execution_id = 1;           // OPTIONAL: Client-proposed execution ID for tracking
+  string proposed_execution_id = 1;                                     // OPTIONAL: Client-proposed execution ID for tracking
 
-  string account_iid = 2;                     // REQUIRED: Account ID to determine fee tier
-  string fee_payer_account_iid = 3;           // OPTIONAL: Fee payer account ID (if different from account_id)
-  string instrument_listing_iid = 4;          // REQUIRED: Instrument listing for the order
+  string account_iid = 2;                                               // REQUIRED: Account ID to determine fee tier
+  string fee_payer_account_iid = 3;                                     // OPTIONAL: Fee payer account ID (if different from account_id)
+  string security_listing_iid = 4;                                      // REQUIRED: Security listing for the order
 
   // Order details for fee calculation
-  string order_type = 5;                      // REQUIRED: Order type ("LIMIT", "MARKET")
-  tech.qomet.agora.api.grpc.common.OrderSide side = 6;                         // REQUIRED: Order side ("BUY", "SELL")
-  string quantity = 7;                        // REQUIRED: Order quantity
-  string price = 8;                           // OPTIONAL: Order price (required for LIMIT orders)
+  string order_type = 5;                                                // REQUIRED: Order type ("LIMIT", "MARKET")
+  tech.qomet.agora.api.grpc.fin.OrderSideEnum side = 6;              // REQUIRED: Order side ("BUY", "SELL")
+  string quantity = 7;                                                  // REQUIRED: Order quantity
+  string price = 8;                                                     // OPTIONAL: Order price (required for LIMIT orders)
 
   // Optional parameters that might affect fees
-  string time_in_force = 9;                   // OPTIONAL: Time in force ("GTC", "IOC", "FOK", "DAY")
+  string time_in_force = 9;                                             // OPTIONAL: Time in force ("GTC", "IOC", "FOK", "DAY")
 
-  bool is_post_only = 10;                     // OPTIONAL: If true, order will only be maker (default: false)
-  bool is_reduce_only = 11;                   // OPTIONAL: If true, order can only reduce position (default: false)
+  bool is_post_only = 10;                                               // OPTIONAL: If true, order will only be maker (default: false)
+  bool is_reduce_only = 11;                                             // OPTIONAL: If true, order can only reduce position (default: false)
 
-  map<string, string> aux_data = 105;         // OPTIONAL: Additional request data
+  map<string, string> aux_data = 105;                                   // OPTIONAL: Additional request data
 }
 
 message GetOrderFeesResponse {
-  string ref_execution_id = 1;                // REQUIRED: Reference to the execution ID
+  string ref_execution_id = 1;                                          // REQUIRED: Reference to the execution ID
 
-  FeeStructure fee_structure = 2;             // REQUIRED: Primary fee structure
+  FeeStructure fee_structure = 2;                                       // REQUIRED: Primary fee structure
 
-  repeated string fee_notes = 3;              // OPTIONAL: Additional fee notes or warnings
-  tech.qomet.agora.api.grpc.common.DateTime fee_valid_until_dt = 4;            // OPTIONAL: Fee validity expiration
-  string msg = 5;                             // OPTIONAL: Additional message or status
+  repeated string fee_notes = 3;                                        // OPTIONAL: Additional fee notes or warnings
+  tech.qomet.agora.api.grpc.common.DateTime fee_valid_until_dt = 4;     // OPTIONAL: Fee validity expiration
+  string msg = 5;                                                       // OPTIONAL: Additional message or status
 
-  map<string, string> fee_breakdown = 6;      // OPTIONAL: Detailed breakdown of fee components
+  map<string, string> fee_breakdown = 6;                                // OPTIONAL: Detailed breakdown of fee components
 
-  repeated FeeStructure alternative_fee_options = 7; // OPTIONAL: Alternative fee options (different currencies)
+  repeated FeeStructure alternative_fee_options = 7;                    // OPTIONAL: Alternative fee options (different currencies)
 
-  map<string, string> metadata = 8;           // OPTIONAL: Additional metadata
+  map<string, string> metadata = 8;                                     // OPTIONAL: Additional metadata
 }
 
 message CreateOrderAsyncRequest {
-  string proposed_execution_id = 1;           // OPTIONAL: Client-proposed execution ID for tracking
+  string proposed_execution_id = 1;                                     // OPTIONAL: Client-proposed execution ID for tracking
 
-  string account_iid = 2;                     // REQUIRED: Account ID (won't be changed)
-  string fee_payer_account_iid = 3;           // OPTIONAL: Fee payer account ID (can be different)
-  string instrument_listing_iid = 4;          // REQUIRED: Instrument listing ID
+  string account_iid = 2;                                               // REQUIRED: Account ID (won't be changed)
+  string fee_payer_account_iid = 3;                                     // OPTIONAL: Fee payer account ID (can be different)
+  string security_listing_iid = 4;                                      // REQUIRED: Security listing ID
 
   // Order details
-  string order_type = 5;                      // REQUIRED: Order type ("LIMIT", "MARKET", STOP not supported)
-  tech.qomet.agora.api.grpc.common.OrderSide side = 6;                         // REQUIRED: Order side ("BUY", "SELL")
-  string quantity = 7;                        // REQUIRED: Order quantity (for both LIMIT and MARKET)
-  string price = 8;                           // REQUIRED for LIMIT orders, must be zero for MARKET
+  string order_type = 5;                                                // REQUIRED: Order type ("LIMIT", "MARKET", STOP not supported)
+  tech.qomet.agora.api.grpc.fin.OrderSideEnum side = 6;              // REQUIRED: Order side ("BUY", "SELL")
+  string quantity = 7;                                                  // REQUIRED: Order quantity (for both LIMIT and MARKET)
+  string price = 8;                                                     // REQUIRED for LIMIT orders, must be zero for MARKET
 
   // Time constraints
-  string time_in_force = 9;                   // OPTIONAL: Time in force ("GTC", "IOC", "FOK", "DAY")
-  tech.qomet.agora.api.grpc.common.DateTime expire_dt = 10;                    // OPTIONAL: Expiration date for GTT orders
+  string time_in_force = 9;                                             // OPTIONAL: Time in force ("GTC", "IOC", "FOK", "DAY")
+  tech.qomet.agora.api.grpc.common.DateTime expire_dt = 10;             // OPTIONAL: Expiration date for GTT orders
 
   // Additional parameters
-  string participant_order_iid = 11;          // REQUIRED: Client's order ID (mandatory in FIX)
+  string participant_order_iid = 11;                                    // REQUIRED: Client's order ID (mandatory in FIX)
 
-  map<string, string> aux_data = 105;         // OPTIONAL: Additional request data
+  map<string, string> aux_data = 105;                                   // OPTIONAL: Additional request data
 }
 
 message ReplaceOrderAsyncRequest {
-  string proposed_execution_id = 1;           // OPTIONAL: Client-proposed execution ID for tracking
+  string proposed_execution_id = 1;                                     // OPTIONAL: Client-proposed execution ID for tracking
 
-  string old_participant_order_id = 2;        // REQUIRED: Old participant order ID to replace
-  string new_participant_order_id = 3;        // REQUIRED: New proposed order ID for replacement
+  string old_participant_order_id = 2;                                  // REQUIRED: Old participant order ID to replace
+  string new_participant_order_id = 3;                                  // REQUIRED: New proposed order ID for replacement
 
   // Fields that can be modified
-  string new_quantity = 4;                    // OPTIONAL: New order quantity
-  string new_price = 5;                       // OPTIONAL: New order price
-  tech.qomet.agora.api.grpc.common.Time new_expire_time = 6;                   // OPTIONAL: New expiration time
+  string new_quantity = 4;                                              // OPTIONAL: New order quantity
+  string new_price = 5;                                                 // OPTIONAL: New order price
+  tech.qomet.agora.api.grpc.common.Time new_expire_time = 6;            // OPTIONAL: New expiration time
 
-  string reason = 7;                          // OPTIONAL: Reason for modification
+  string reason = 7;                                                    // OPTIONAL: Reason for modification
 
-  map<string, string> aux_data = 105;         // OPTIONAL: Additional request data
+  map<string, string> aux_data = 105;                                   // OPTIONAL: Additional request data
 }
 
 message CancelOrderAsyncRequest {
-  string proposed_execution_id = 1;           // OPTIONAL: Client-proposed execution ID for tracking
+  string proposed_execution_id = 1;                                     // OPTIONAL: Client-proposed execution ID for tracking
 
-  string participant_order_id = 2;            // REQUIRED: Participant order ID to cancel
-  string reason = 3;                          // OPTIONAL: Reason for cancellation
+  string participant_order_id = 2;                                      // REQUIRED: Participant order ID to cancel
+  string reason = 3;                                                    // OPTIONAL: Reason for cancellation
 
-  map<string, string> aux_data = 105;         // OPTIONAL: Additional request data
+  map<string, string> aux_data = 105;                                   // OPTIONAL: Additional request data
 }
 
 message GetOrderbookRequest {
-  string proposed_execution_id = 1;           // OPTIONAL: Client-proposed execution ID for tracking
+  string proposed_execution_id = 1;                                     // OPTIONAL: Client-proposed execution ID for tracking
 
-  tech.qomet.agora.api.grpc.common.PaginationParams pagination = 2;            // OPTIONAL: Pagination parameters
-  string instrument_iid = 3;                  // REQUIRED: Instrument internal ID
-  OrderbookQueryFilter orderbook_query_filter = 4; // OPTIONAL: Orderbook query filters
+  tech.qomet.agora.api.grpc.common.PaginationParams pagination = 2;     // OPTIONAL: Pagination parameters
+  string security_iid = 3;                                              // REQUIRED: Security internal ID
+  OrderbookQueryFilter orderbook_query_filter = 4;                      // OPTIONAL: Orderbook query filters
 
-  map<string, string> aux_data = 105;         // OPTIONAL: Additional request data
+  map<string, string> aux_data = 105;                                   // OPTIONAL: Additional request data
 }
 
 message GetOrderbookResponse {
-  string ref_execution_id = 1;                // REQUIRED: Reference to the execution ID
+  string ref_execution_id = 1;                                          // REQUIRED: Reference to the execution ID
 
-  tech.qomet.agora.api.grpc.common.DateTime generated_at_dt = 2;               // REQUIRED: Response generation timestamp
-  tech.qomet.agora.api.grpc.common.Instrument instrument = 3;                  // REQUIRED: Instrument information
-  OrderList buy_list = 4;                     // REQUIRED: Buy side orders (can be empty)
-  OrderList sell_list = 5;                    // REQUIRED: Sell side orders (can be empty)
+  tech.qomet.agora.api.grpc.common.DateTime generated_at_dt = 2;        // REQUIRED: Response generation timestamp
+  tech.qomet.agora.api.grpc.fin.Security security = 3;                  // REQUIRED: Security information
+  OrderList buy_list = 4;                                               // REQUIRED: Buy side orders (can be empty)
+  OrderList sell_list = 5;                                              // REQUIRED: Sell side orders (can be empty)
 
-  map<string, string> metadata = 105;         // OPTIONAL: Response metadata
+  map<string, string> metadata = 105;                                   // OPTIONAL: Response metadata
 }

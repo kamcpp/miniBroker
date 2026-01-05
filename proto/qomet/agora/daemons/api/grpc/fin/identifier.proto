@@ -1,0 +1,64 @@
+syntax = "proto3";
+
+package tech.qomet.agora.api.grpc.fin;
+
+import "common.proto";
+
+option go_package = "qomet.tech/agora/daemons/gen-pkg/tech/qomet/agora/api/grpc/fin;agoraapigrpcfin";
+option java_package = "tech.qomet.agora.api.grpc.fin";
+option java_outer_classname = "IdentifierProto";
+option csharp_namespace  = "Tech.Qomet.Agora.Api.Grpc.Fin";
+
+enum EntityTypeEnum {
+  ENTITY_TYPE_ENUM_UNKNOWN = 0;
+
+  ENTITY_TYPE_ENUM_PARTICIPANT = 1;
+  ENTITY_TYPE_ENUM_INSTRUMENT = 2;
+  ENTITY_TYPE_ENUM_MARKET = 3;
+  ENTITY_TYPE_ENUM_VENUE = 4;
+
+  ENTITY_TYPE_ENUM_OTHER = 0x0fff0000;
+}
+
+enum FinIdentifierSchemeTypeEnum {
+  FIN_IDENTIFIER_SCHEME_TYPE_ENUM_UNKNOWN = 0;
+
+  FIN_IDENTIFIER_SCHEME_TYPE_ENUM_TEXT = 1;               // Free text scheme name
+  FIN_IDENTIFIER_SCHEME_TYPE_ENUM_BIC = 2;                // Business Identifier Code
+  FIN_IDENTIFIER_SCHEME_TYPE_ENUM_ISIN = 3;               // International Securities Identification Number
+  FIN_IDENTIFIER_SCHEME_TYPE_ENUM_LEI = 4;                // Legal Entity Identifier
+  FIN_IDENTIFIER_SCHEME_TYPE_ENUM_TICKER = 5;             // Ticker Symbol
+  FIN_IDENTIFIER_SCHEME_TYPE_ENUM_SEDOL = 7;              // Stock Exchange Daily Official List
+  FIN_IDENTIFIER_SCHEME_TYPE_ENUM_CUSIP = 6;              // Committee on Uniform Securities Identification Procedures
+  FIN_IDENTIFIER_SCHEME_TYPE_ENUM_RIC = 8;                // Reuters Instrument Code
+  FIN_IDENTIFIER_SCHEME_TYPE_ENUM_FIGI = 9;               // Financial Instrument Global Identifier
+  FIN_IDENTIFIER_SCHEME_TYPE_ENUM_WKN = 10;               // Wertpapierkennnummer (German securities identification code)
+  FIN_IDENTIFIER_SCHEME_TYPE_ENUM_VALOREN = 11;           // Swiss securities identification code
+  FIN_IDENTIFIER_SCHEME_TYPE_ENUM_LEI_PLUS = 12;          // Extended Legal Entity Identifier
+  FIN_IDENTIFIER_SCHEME_TYPE_ENUM_DUNS = 13;              // Data Universal Numbering System
+  FIN_IDENTIFIER_SCHEME_TYPE_ENUM_MIC = 14;               // Market Identifier Code
+  FIN_IDENTIFIER_SCHEME_TYPE_ENUM_ISIN_PLUS = 15;         // Extended International Securities Identification Number
+  FIN_IDENTIFIER_SCHEME_TYPE_ENUM_TICKER_PLUS = 16;       // Extended Ticker Symbol
+  FIN_IDENTIFIER_SCHEME_TYPE_ENUM_ORGANIZATION_ID = 17;   // Organization Identifier
+  FIN_IDENTIFIER_SCHEME_TYPE_ENUM_UN_LOCODE = 18;         // UN/LOCODE (location code)
+  FIN_IDENTIFIER_SCHEME_TYPE_ENUM_ISO_COUNTRY_CODE = 19;  // ISO 3166-1 alpha-2 country code
+
+  FIN_IDENTIFIER_SCHEME_TYPE_ENUM_OTHER = 0x0fff0000;       // Other scheme types
+}
+
+message FinIdentifier {
+  EntityTypeEnum fin_entity_type = 1;                                                   // REQUIRED: Type of financial entity
+  FinIdentifierSchemeTypeEnum scheme_type = 2;                                             // REQUIRED: Scheme type (e.g., BIC, ISIN, LEI, etc)
+  string scheme_name = 3;                                                                  // OPTIONAL: Identification scheme name if TEXT or OTHERS
+  //           is selected for schema_type
+  string standard_or_format = 4;                                                           // OPTIONAL: Standard or format used
+  repeated tech.qomet.agora.api.grpc.common.StringValue ids = 5;                            // REQUIRED: List of identifiers
+
+  bool is_primary = 6;                                                                     // OPTIONAL: Whether this is primary identifier (default: false)
+
+  map<string, string> display_names = 101;                                                 // OPTIONAL: Display names for localization
+  map<string, string> descriptions = 102;                                                  // OPTIONAL: Descriptions for localization
+  map<string, string> labels = 103;                                                        // OPTIONAL: Key-value labels
+  repeated string tags = 104;                                                              // OPTIONAL: Tags for categorization
+  map<string, string> metadata = 105;                                                      // OPTIONAL: Additional metadata
+}

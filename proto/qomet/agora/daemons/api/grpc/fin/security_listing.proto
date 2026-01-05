@@ -1,0 +1,77 @@
+syntax = "proto3";
+
+package tech.qomet.agora.api.grpc.fin;
+
+import "common.proto";
+import "fin/cash_token.proto";
+import "fin/identifier.proto";
+import "fin/security.proto";
+import "fin/venue.proto";
+
+option go_package = "qomet.tech/agora/daemons/gen-pkg/tech/qomet/agora/api/grpc/fin;agoraapigrpcfin";
+option java_package = "tech.qomet.agora.api.grpc.fin";
+option java_outer_classname = "SecurityListingProto";
+option csharp_namespace  = "Tech.Qomet.Agora.Api.Grpc.Fin";
+
+// SecurityListing represents a tradable security listing with two legs:
+// - Security leg: the security being traded
+// - CashToken leg: the cash token used for settlement (e.g., USD token)
+message SecurityListing {
+  string iid = 1;                                                                          // REQUIRED: Internal listing identifier
+
+  repeated FinIdentifier identifiers = 2;                                                  // OPTIONAL: List of listing identifiers
+  repeated FinIdentifier local_identifiers = 3;                                            // OPTIONAL: Venue-local identifiers
+
+  // Security leg (required)
+  oneof security_ref {
+    string security_iid = 4;                                                               // REQUIRED: Security internal identifier
+    Security security = 5;                                                                 // REQUIRED: Embedded security object
+  }
+
+  // Cash token leg (required for settlement)
+  oneof cash_token_ref {
+    string cash_token_iid = 6;                                                             // REQUIRED: Cash token internal identifier
+    CashToken cash_token = 7;                                                              // REQUIRED: Embedded cash token object
+  }
+  string cash_token_iso4217_code = 8;                                                      // REQUIRED: ISO 4217 currency code for cash token
+
+  // Venue where listing is traded (required)
+  oneof venue_ref {
+    string venue_iid = 9;                                                                  // REQUIRED: Venue internal identifier
+    Venue venue = 10;                                                                      // REQUIRED: Embedded venue object
+  }
+
+  // Listing details
+  tech.qomet.agora.api.grpc.common.DateTime listing_dt = 11;                               // OPTIONAL: Listing date
+  tech.qomet.agora.api.grpc.common.DateTime effective_from_dt = 12;                        // OPTIONAL: Effective from date
+  tech.qomet.agora.api.grpc.common.DateTime effective_to_dt = 13;                          // OPTIONAL: Effective to date
+
+  SecurityListingStatusEnum status = 14;                                                   // REQUIRED: Current listing status
+
+  // Trading parameters
+  string lot_size = 15;                                                                    // OPTIONAL: Minimum trading lot size
+  string tick_size = 16;                                                                   // OPTIONAL: Minimum price increment
+
+  map<string, string> display_names = 101;                                                 // OPTIONAL: Display names for localization
+  map<string, string> descriptions = 102;                                                  // OPTIONAL: Descriptions for localization
+  map<string, string> labels = 103;                                                        // OPTIONAL: Key-value labels
+  repeated string tags = 104;                                                              // OPTIONAL: Tags for categorization
+  map<string, string> metadata = 105;                                                      // OPTIONAL: Additional metadata
+}
+
+enum SecurityListingStatusEnum {
+  SECURITY_LISTING_STATUS_ENUM_UNKNOWN = 0;
+
+  SECURITY_LISTING_STATUS_ENUM_WHEN_ISSUED = 1;
+  SECURITY_LISTING_STATUS_ENUM_PRE_LISTING = 2;
+  SECURITY_LISTING_STATUS_ENUM_LISTED = 3;                                                 // Active and tradable
+  SECURITY_LISTING_STATUS_ENUM_SUSPENDED = 4;                                              // Temporarily not tradable
+  SECURITY_LISTING_STATUS_ENUM_HALTED = 5;                                                 // Temporarily not tradable
+  SECURITY_LISTING_STATUS_ENUM_MATURED = 6;
+  SECURITY_LISTING_STATUS_ENUM_EXPIRED = 7;
+  SECURITY_LISTING_STATUS_ENUM_MERGED = 8;
+  SECURITY_LISTING_STATUS_ENUM_DELISTED = 9;                                               // Permanently not tradable
+  SECURITY_LISTING_STATUS_ENUM_LIQUIDATED = 10;                                            // Permanently not tradable
+
+  SECURITY_LISTING_STATUS_ENUM_OTHER = 0x0fff0000;
+}

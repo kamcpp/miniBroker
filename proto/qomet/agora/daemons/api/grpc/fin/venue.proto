@@ -1,0 +1,88 @@
+syntax = "proto3";
+
+package tech.qomet.agora.api.grpc.fin;
+
+import "common.proto";
+import "fin/identifier.proto";
+import "fin/market.proto";
+import "fin/participant.proto";
+
+option go_package = "qomet.tech/agora/daemons/gen-pkg/tech/qomet/agora/api/grpc/fin;agoraapigrpcfin";
+option java_package = "tech.qomet.agora.api.grpc.fin";
+option java_outer_classname = "VenueProto";
+option csharp_namespace  = "Tech.Qomet.Agora.Api.Grpc.Fin";
+
+enum VenueTypeEnum {
+  VENUE_TYPE_ENUM_UNKNOWN = 0;
+
+  VENUE_TYPE_ENUM_EXCHANGE = 1;
+
+  VENUE_TYPE_ENUM_OTHER = 0x0fff0000;
+}
+
+enum VenueStatusEnum {
+  VENUE_STATUS_ENUM_UNKNOWN = 0;
+
+  VENUE_STATUS_ENUM_OPENING_AUCTION = 1;
+  VENUE_STATUS_ENUM_PRE_OPEN = 2;
+  VENUE_STATUS_ENUM_OPEN = 3;
+  VENUE_STATUS_ENUM_PARTIALLY_OPEN = 4;
+  VENUE_STATUS_ENUM_REPORTING = 5;
+  VENUE_STATUS_ENUM_CLOSING_AUCTION = 6;
+  VENUE_STATUS_ENUM_CLOSED = 7;
+  VENUE_STATUS_ENUM_CLOSED_ON_PUBLIC_HOLIDAY = 8;
+  VENUE_STATUS_ENUM_SUSPENDED = 9;
+  VENUE_STATUS_ENUM_MAINTENANCE = 10;
+
+  VENUE_STATUS_ENUM_UNAVAILABLE = 100;
+
+  VENUE_STATUS_ENUM_OTHER = 0x0fff0000;
+}
+
+message Venue {
+  string iid = 1;                                                                          // REQUIRED: Internal venue identifier
+
+  repeated FinIdentifier identifiers = 2;                                                  // OPTIONAL: List of venue identifiers
+
+  oneof market {                                                                           // OPTIONAL: Associated market
+    string market_iid = 3;                                                                 // Market internal identifier
+    Market market_obj = 4;                                                                 // Market object
+  }
+
+  string dominant_currency = 5;                                                            // OPTIONAL: ISO 4217 currency code
+
+  VenueTypeEnum venue_type = 6;                                                            // REQUIRED: Type of venue
+
+  tech.qomet.agora.api.grpc.common.DateTime established_dt = 7;                            // OPTIONAL: Venue establishment date
+  string country_code = 8;                                                                 // OPTIONAL: ISO 3166-1 alpha-2
+  string city_code = 9;                                                                    // OPTIONAL: UN/LOCODE
+  string website_url = 10;                                                                 // OPTIONAL: Venue website URL
+  string timezone = 11;                                                                    // OPTIONAL: ISO 8601 time zone
+  tech.qomet.agora.api.grpc.common.Duration trading_hours = 12;                            // OPTIONAL: Daily trading hours
+  repeated string trading_days = 13;                                                       // OPTIONAL: Trading days (1=Monday, 2=Tuesday, ..., 7=Sunday)
+  VenueStatusEnum status = 14;                                                             // REQUIRED: Current venue status
+
+  repeated OneOfIdOrParticipant settlement_depositories = 15;                              // OPTIONAL: CSDs
+  repeated OneOfIdOrParticipant clearing_houses = 16;                                      // OPTIONAL: Clearing houses
+  repeated OneOfIdOrParticipant regulators = 17;                                           // OPTIONAL: Regulators
+
+  map<string, string> display_names = 101;                                                 // OPTIONAL: Display names for localization
+  map<string, string> descriptions = 102;                                                  // OPTIONAL: Descriptions for localization
+  map<string, string> labels = 103;                                                        // OPTIONAL: Key-value labels
+  repeated string tags = 104;                                                              // OPTIONAL: Tags for categorization
+  map<string, string> metadata = 105;                                                      // OPTIONAL: Additional metadata
+}
+
+message VenueDuration {
+  tech.qomet.agora.api.grpc.common.Duration duration = 1;                                  // REQUIRED: Time duration period
+  VenueStatusEnum status = 2;                                                              // REQUIRED: Venue status during this period
+  string metadata = 3;                                                                     // OPTIONAL: Additional metadata
+  repeated string comments = 4;                                                            // OPTIONAL: Additional comments
+}
+
+message VenueCalendar {
+  string venue_iid = 1;                                                                    // REQUIRED: Venue internal identifier
+  tech.qomet.agora.api.grpc.common.Time daily_open = 2;                                    // OPTIONAL: Default daily opening time
+  tech.qomet.agora.api.grpc.common.Time daily_close = 3;                                   // OPTIONAL: Default daily closing time
+  repeated VenueDuration calendars = 4;                                                    // OPTIONAL: Calendar schedule entries
+}

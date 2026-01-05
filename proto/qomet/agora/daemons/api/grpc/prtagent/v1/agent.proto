@@ -7,41 +7,17 @@ option java_package = "tech.qomet.agora.api.grpc.prtagent.v1";
 option java_outer_classname = "Agent";
 option csharp_namespace  = "Tech.Qomet.Agora.Api.Grpc.PrtAgent.V1";
 
-import "common.proto";
-import "fin.proto";
-import "prtagent/v1/event.proto";
-
 service AgentService {
   rpc Ping(PingRequest) returns (PingResponse);
   rpc BiDirStreamPing(stream PingRequest) returns (stream PingResponse);
-  rpc GetSupportedCurrencies(GetSupportedCurrenciesRequest)
-    returns (GetSupportedCurrenciesResponse);
-  rpc GetSupportedCurrenciesAsync(GetSupportedCurrenciesRequest)
-    returns (tech.qomet.agora.api.grpc.common.ExecutionAsyncResponse);
-  rpc SubscribeToEvents(EventSubscriptionParams) returns (stream Event);
 }
 
 message PingRequest {
-  string proposed_execution_id = 1;  // OPTIONAL: Client-proposed execution ID for tracking
-  string string_to_be_ponged = 2;    // REQUIRED: Test string to be echoed back
+  string proposed_execution_id = 1;                                     // OPTIONAL: Client-proposed execution ID for tracking
+  string string_to_be_ponged = 2;                                       // REQUIRED: Test string to be echoed back
 }
 
 message PingResponse {
-  string ref_execution_id = 1;       // REQUIRED: Reference to the execution ID
-  string pong_string = 2;             // REQUIRED: Echoed string from request
-}
-
-message GetSupportedCurrenciesRequest {
-  string proposed_execution_id = 1;  // OPTIONAL: Client-proposed execution ID for tracking
-  tech.qomet.agora.api.grpc.common.PaginationParams pagination = 2;   // OPTIONAL: Pagination parameters
-
-  map<string, string> aux_data = 105; // OPTIONAL: Additional request data
-}
-
-message GetSupportedCurrenciesResponse {
-  string ref_execution_id = 1;       // REQUIRED: Reference to the execution ID
-  tech.qomet.agora.api.grpc.common.PaginationInfo pagination_info = 2; // OPTIONAL: Pagination information (required if paginated)
-  repeated tech.qomet.agora.api.grpc.common.Asset currencies = 3;      // REQUIRED: List of supported currencies (can be empty)
-
-  map<string, string> metadata = 105; // OPTIONAL: Response metadata
+  string ref_execution_id = 1;                                          // REQUIRED: Reference to the execution ID
+  string pong_string = 2;                                               // REQUIRED: Echoed string from request
 }
