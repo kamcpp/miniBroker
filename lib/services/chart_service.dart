@@ -53,7 +53,7 @@ class ChartService {
       print('📊 Fetching historical OHLC data for $symbol, period: $period');
 
       final request = trading_pb.GetHistoricalOhlcDataRequest()
-        ..instrumentIdAndSymbolRegexes.add(symbol)
+        ..securityIidOrSymbolRegexes.add(symbol)
         ..period = period
         ..includeVolume = true;
 
@@ -91,10 +91,10 @@ class ChartService {
 
       final response = await _tradingClient.getHistoricalOhlcData(request);
 
-      print('✅ Received ${response.ohlcDatas.length} OHLC data points');
+      print('✅ Received ${response.ohlcData.length} OHLC data points');
 
       // Convert to CandleData objects
-      final candles = response.ohlcDatas
+      final candles = response.ohlcData
           .map((ohlcData) => _convertToCandle(ohlcData))
           .toList();
 
@@ -119,7 +119,7 @@ class ChartService {
       print('📡 Starting live OHLC stream for $symbol, period: $period');
 
       final request = trading_pb.FetchLiveOhlcDataRequest()
-        ..instrumentIdAndSymbolRegexes.add(symbol);
+        ..securityIidOrSymbolRegexes.add(symbol);
 
       // Set fetch parameters
       final fetchParams = trading_pb.LiveOhlcDataFetchParams()
@@ -154,7 +154,7 @@ class ChartService {
   Future<double?> getLatestQuote(String symbol) async {
     try {
       final request = trading_pb.GetLatestQuoteRequest()
-        ..instrumentIdAndSymbolRegexes.add(symbol);
+        ..securityIidOrSymbolRegexes.add(symbol);
 
       final response = await _tradingClient.getLatestQuote(request);
 
@@ -175,7 +175,7 @@ class ChartService {
   }) async* {
     try {
       final request = trading_pb.FetchLiveQuoteRequest()
-        ..instrumentIdAndSymbolRegexes.add(symbol);
+        ..securityIidOrSymbolRegexes.add(symbol);
 
       if (updateIntervalMs != null) {
         final fetchParams = trading_pb.LiveQuoteFetchParams()

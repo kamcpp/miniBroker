@@ -381,8 +381,8 @@ class GrpcurlHelper {
   }
 
   /// Make a real NewInvestor call using grpcurl
-  static Future<Map<String, dynamic>> newAccount({
-    required String externalAccountId,
+  static Future<Map<String, dynamic>> newInvestor({
+    required String externalInvestorId,
     String? auxData,
   }) async {
     // Prevent concurrent newInvestor calls to avoid crashes
@@ -391,7 +391,7 @@ class GrpcurlHelper {
       return {
         'input': {
           'proposed_execution_id': 'new_investor_${DateTime.now().millisecondsSinceEpoch}',
-          'external_investor_id': externalAccountId,
+          'external_investor_id': externalInvestorId,
         },
         'output': {
           'error': 'Operation already in progress',
@@ -405,8 +405,8 @@ class GrpcurlHelper {
 
     _isAccountListInProgress = true;
     try {
-      return await _newAccountInternal(
-        externalAccountId: externalAccountId,
+      return await _newInvestorInternal(
+        externalInvestorId: externalInvestorId,
         auxData: auxData,
       );
     } catch (error, stack) {
@@ -415,7 +415,7 @@ class GrpcurlHelper {
       return {
         'input': {
           'proposed_execution_id': 'new_investor_${DateTime.now().millisecondsSinceEpoch}',
-          'external_investor_id': externalAccountId,
+          'external_investor_id': externalInvestorId,
         },
         'output': {
           'error': 'Critical unhandled exception in newInvestor',
@@ -431,16 +431,25 @@ class GrpcurlHelper {
     }
   }
 
-  /// Internal newInvestor implementation
-  static Future<Map<String, dynamic>> _newAccountInternal({
+  /// Legacy alias for newInvestor (backwards compatibility)
+  static Future<Map<String, dynamic>> newAccount({
     required String externalAccountId,
+    String? auxData,
+  }) => newInvestor(
+    externalInvestorId: externalAccountId,
+    auxData: auxData,
+  );
+
+  /// Internal newInvestor implementation
+  static Future<Map<String, dynamic>> _newInvestorInternal({
+    required String externalInvestorId,
     String? auxData,
   }) async {
     final requestId = 'new_investor_${DateTime.now().millisecondsSinceEpoch}';
 
     final request = {
       'proposed_execution_id': requestId,
-      'external_investor_id': externalAccountId,
+      'external_investor_id': externalInvestorId,
       'aux_data': {
         'source': 'flutter_app',
         'created_at': auxData ?? 'Created from Flutter signup',
@@ -481,9 +490,20 @@ class GrpcurlHelper {
         final jsonRequest = jsonEncode(request);
         print('📤 JSON payload: $jsonRequest');
 
+        // Build grpcurl arguments with API key header if available
+        final args = <String>['-plaintext'];
+        final apiKey = AppConfig.grpcApiKey;
+        if (apiKey != null && apiKey.isNotEmpty) {
+          args.addAll(['-H', 'x-agora-participant-api-key: $apiKey']);
+          print('🔑 Using API key for authentication');
+        } else {
+          print('⚠️ No API key configured - request may fail authentication');
+        }
+        args.addAll(['-d', jsonRequest, '$_host:$_port', 'tech.qomet.agora.api.grpc.prtagent.v1.InvestorService/NewInvestor']);
+
         result = await Process.run(
           grpcurlPath,
-          ['-plaintext', '-d', jsonRequest, '$_host:$_port', 'tech.qomet.agora.api.grpc.prtagent.v1.InvestorService/NewInvestor'],
+          args,
         ).timeout(
           const Duration(seconds: 10),
           onTimeout: () {
@@ -793,13 +813,13 @@ class GrpcurlHelper {
     }
   }
 
-  /// Make a real GetAccountInstrumentHoldings call using grpcurl
+  /// Make a real GetAccountSecurityHoldings call using grpcurl
   static Future<Map<String, dynamic>> getAccountMarketPortfolio({
     required String accountId,
     String? marketId,
     List<String>? assetIds,
   }) async {
-    final requestId = 'get_account_instrument_holdings_${DateTime.now().millisecondsSinceEpoch}';
+    final requestId = 'get_account_security_holdings_${DateTime.now().millisecondsSinceEpoch}';
 
     final request = {
       'proposed_execution_id': requestId,
@@ -809,17 +829,17 @@ class GrpcurlHelper {
 
     try {
       // Find the working grpcurl path with aggressive timeout to prevent hanging
-      print('🔍 Looking for grpcurl executable for GetAccountInstrumentHoldings...');
+      print('🔍 Looking for grpcurl executable for GetAccountSecurityHoldings...');
       final grpcurlPath = await _findGrpcurlPath().timeout(
         const Duration(milliseconds: 500),
         onTimeout: () {
-          print('⏰ grpcurl path finder timed out for GetAccountInstrumentHoldings');
+          print('⏰ grpcurl path finder timed out for GetAccountSecurityHoldings');
           return null;
         },
       );
 
       if (grpcurlPath == null) {
-        print('❌ No grpcurl path found for GetAccountInstrumentHoldings');
+        print('❌ No grpcurl path found for GetAccountSecurityHoldings');
         return {
           'input': request,
           'output': {
@@ -835,8 +855,8 @@ class GrpcurlHelper {
 
       // Log the full request
       print('━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━');
-      print('📤 GetAccountInstrumentHoldings REQUEST:');
-      print('Service: tech.qomet.agora.api.grpc.prtagent.v1.AccountService.GetAccountInstrumentHoldings');
+      print('📤 GetAccountSecurityHoldings REQUEST:');
+      print('Service: tech.qomet.agora.api.grpc.prtagent.v1.AccountService.GetAccountSecurityHoldings');
       print('Host: $_host:$_port');
       print('Request Body:');
       print(const JsonEncoder.withIndent('  ').convert(request));
@@ -846,21 +866,21 @@ class GrpcurlHelper {
       try {
         result = await Process.run(
           grpcurlPath,
-          ['-plaintext', '-d', jsonEncode(request), '$_host:$_port', 'tech.qomet.agora.api.grpc.prtagent.v1.AccountService.GetAccountInstrumentHoldings'],
+          ['-plaintext', '-d', jsonEncode(request), '$_host:$_port', 'tech.qomet.agora.api.grpc.prtagent.v1.AccountService.GetAccountSecurityHoldings'],
         ).timeout(
           const Duration(seconds: 5),
           onTimeout: () {
-            print('⏰ grpcurl GetAccountInstrumentHoldings Process.run timed out after 5 seconds');
-            throw TimeoutException('grpcurl getAccountInstrumentHoldings timed out', const Duration(seconds: 5));
+            print('⏰ grpcurl GetAccountSecurityHoldings Process.run timed out after 5 seconds');
+            throw TimeoutException('grpcurl getAccountSecurityHoldings timed out', const Duration(seconds: 5));
           },
         );
       } on TimeoutException catch (e) {
-        print('⏰ GetAccountInstrumentHoldings timeout: ${e.message}');
+        print('⏰ GetAccountSecurityHoldings timeout: ${e.message}');
         return {
           'input': request,
           'output': {
             'error': 'Request timed out',
-            'message': 'The account instrument holdings request timed out after 5 seconds. Check if server is running on ${AppConfig.grpcServerAddress}.',
+            'message': 'The account security holdings request timed out after 5 seconds. Check if server is running on ${AppConfig.grpcServerAddress}.',
           },
           'requestTime': _toUnixTimestamp(DateTime.now()).toString(),
           'serverType': 'timeout',
@@ -868,7 +888,7 @@ class GrpcurlHelper {
         };
       } catch (e) {
         // Catch ANY other exception that might occur in sandboxed environment
-        print('❌ Process.run failed for getAccountInstrumentHoldings in sandboxed app: ${e.runtimeType}: ${e.toString()}');
+        print('❌ Process.run failed for getAccountSecurityHoldings in sandboxed app: ${e.runtimeType}: ${e.toString()}');
         return {
           'input': request,
           'output': {
@@ -890,7 +910,7 @@ class GrpcurlHelper {
 
           // Log the full response
           print('━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━');
-          print('📥 GetAccountInstrumentHoldings RESPONSE:');
+          print('📥 GetAccountSecurityHoldings RESPONSE:');
           print('Status: SUCCESS');
           print('Response Body:');
           print(const JsonEncoder.withIndent('  ').convert(parsedResponse));
@@ -905,7 +925,7 @@ class GrpcurlHelper {
           };
         } catch (e) {
           print('━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━');
-          print('📥 GetAccountInstrumentHoldings RESPONSE:');
+          print('📥 GetAccountSecurityHoldings RESPONSE:');
           print('Status: JSON PARSE ERROR');
           print('Raw Response: $responseJson');
           print('Error: $e');
@@ -926,7 +946,7 @@ class GrpcurlHelper {
         final error = result.stderr.toString();
 
         print('━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━');
-        print('📥 GetAccountInstrumentHoldings RESPONSE:');
+        print('📥 GetAccountSecurityHoldings RESPONSE:');
         print('Status: FAILED');
         print('Exit Code: ${result.exitCode}');
         print('STDERR: $error');
@@ -1675,7 +1695,7 @@ class GrpcurlHelper {
     String? fromTime,
     String? toTime,
     String? side,
-    List<String>? instrumentIdOrSymbolRegexes,
+    List<String>? securityIdOrSymbolRegexes,
   }) async {
     try {
       print('📋 Getting trades for account: $accountId');
@@ -1736,8 +1756,8 @@ class GrpcurlHelper {
         requestPayload['side'] = side;
       }
 
-      if (instrumentIdOrSymbolRegexes != null && instrumentIdOrSymbolRegexes.isNotEmpty) {
-        requestPayload['instrument_id_or_symbol_regexes'] = instrumentIdOrSymbolRegexes;
+      if (securityIdOrSymbolRegexes != null && securityIdOrSymbolRegexes.isNotEmpty) {
+        requestPayload['security_id_or_symbol_regexes'] = securityIdOrSymbolRegexes;
       }
 
       final jsonPayload = jsonEncode(requestPayload);
@@ -2148,8 +2168,8 @@ class GrpcurlHelper {
     }
   }
 
-  /// Get Instrument List using grpcurl (without market filter)
-  static Future<Map<String, dynamic>> getInstrumentList({
+  /// Get Security List using grpcurl (without market filter)
+  static Future<Map<String, dynamic>> getSecurityList({
     int pageNumber = 0,
     int pageSize = 0,
   }) async {
@@ -2161,7 +2181,7 @@ class GrpcurlHelper {
     };
 
     try {
-      print('📋 Getting instrument list from real server...');
+      print('📋 Getting security list from real server...');
 
       // Check server reachability first
       if (!await _isServerReachable()) {
@@ -2181,21 +2201,19 @@ class GrpcurlHelper {
         return responseData;
       }
 
-      // TODO: Remove market_id_or_symbol_regex once we confirm the API works without it
-      // For now, passing empty string to test that GetInstrumentList works
       final inputParams = {
-        'proposed_execution_id': 'get_instrument_list_${DateTime.now().millisecondsSinceEpoch}',
+        'proposed_execution_id': 'get_security_list_${DateTime.now().millisecondsSinceEpoch}',
         'pagination': {
           'page_nr': pageNumber,
           'page_size': pageSize,
         },
-        'market_id_or_symbol_regex': '', // Empty market filter - returns all instruments
+        'security_iid_or_identifier_regex': '', // Empty filter - returns all securities
       };
 
       // Log the full request
       print('━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━');
-      print('📤 GetInstrumentList REQUEST:');
-      print('Service: tech.qomet.agora.api.grpc.prtagent.v1.InstrumentService/GetInstrumentList');
+      print('📤 GetSecurityList REQUEST:');
+      print('Service: tech.qomet.agora.api.grpc.prtagent.v1.SecurityService/GetSecurityList');
       print('Host: $_host:$_port');
       print('Request Body:');
       print(const JsonEncoder.withIndent('  ').convert(inputParams));
@@ -2207,7 +2225,7 @@ class GrpcurlHelper {
           '-plaintext',
           '-d', jsonEncode(inputParams),
           '$_host:$_port',
-          'tech.qomet.agora.api.grpc.prtagent.v1.InstrumentService/GetInstrumentList'
+          'tech.qomet.agora.api.grpc.prtagent.v1.SecurityService/GetSecurityList'
         ],
         environment: {'PATH': '/usr/local/bin:/opt/homebrew/bin:${Platform.environment['PATH']}'},
       ).timeout(const Duration(seconds: 10));
@@ -2219,12 +2237,12 @@ class GrpcurlHelper {
 
         // Log the full response
         print('━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━');
-        print('📥 GetInstrumentList RESPONSE:');
+        print('📥 GetSecurityList RESPONSE:');
         print('Status: SUCCESS');
         print('Response Body:');
         print(const JsonEncoder.withIndent('  ').convert(responseJson));
         print('━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━');
-        print('✅ GetInstrumentList successful');
+        print('✅ GetSecurityList successful');
       } else {
         responseData['output'] = {
           'error': 'gRPC call failed',
@@ -2235,18 +2253,18 @@ class GrpcurlHelper {
 
         // Log the error response
         print('━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━');
-        print('📥 GetInstrumentList RESPONSE:');
+        print('📥 GetSecurityList RESPONSE:');
         print('Status: FAILED');
         print('Exit Code: ${result.exitCode}');
         print('STDERR: ${result.stderr}');
         print('STDOUT: ${result.stdout}');
         print('━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━');
-        print('❌ GetInstrumentList failed: ${result.stderr}');
+        print('❌ GetSecurityList failed: ${result.stderr}');
       }
 
       return responseData;
     } catch (e) {
-      print('❌ GetInstrumentList exception: $e');
+      print('❌ GetSecurityList exception: $e');
       return {
         'success': false,
         'output': {'error': 'Exception occurred', 'details': e.toString()},
@@ -2256,8 +2274,8 @@ class GrpcurlHelper {
     }
   }
 
-  /// Get Market Instrument List using grpcurl
-  static Future<Map<String, dynamic>> getMarketInstrumentList({
+  /// Get Market Security List using grpcurl
+  static Future<Map<String, dynamic>> getMarketSecurityList({
     required String marketId,
     int pageNumber = 0,
     int pageSize = 0,
@@ -2270,7 +2288,7 @@ class GrpcurlHelper {
     };
 
     try {
-      print('📋 Getting market instrument list for market: $marketId from real server...');
+      print('📋 Getting market security list for market: $marketId from real server...');
 
       // Check server reachability first
       if (!await _isServerReachable()) {
@@ -2291,18 +2309,18 @@ class GrpcurlHelper {
       }
 
       final inputParams = {
-        'proposed_execution_id': 'get_instrument_list_${DateTime.now().millisecondsSinceEpoch}',
+        'proposed_execution_id': 'get_security_list_${DateTime.now().millisecondsSinceEpoch}',
         'pagination': {
           'page_nr': pageNumber,
           'page_size': pageSize,
         },
-        'market_id_or_symbol_regex': marketId,
+        'security_iid_or_identifier_regex': marketId,
       };
 
       // Log the full request
       print('━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━');
-      print('📤 GetInstrumentList REQUEST:');
-      print('Service: tech.qomet.agora.api.grpc.prtagent.v1.InstrumentService/GetInstrumentList');
+      print('📤 GetMarketSecurityList REQUEST:');
+      print('Service: tech.qomet.agora.api.grpc.prtagent.v1.SecurityService/GetSecurityList');
       print('Host: $_host:$_port');
       print('Request Body:');
       print(const JsonEncoder.withIndent('  ').convert(inputParams));
@@ -2314,7 +2332,7 @@ class GrpcurlHelper {
           '-plaintext',
           '-d', jsonEncode(inputParams),
           '$_host:$_port',
-          'tech.qomet.agora.api.grpc.prtagent.v1.InstrumentService/GetInstrumentList'
+          'tech.qomet.agora.api.grpc.prtagent.v1.SecurityService/GetSecurityList'
         ],
         environment: {'PATH': '/usr/local/bin:/opt/homebrew/bin:${Platform.environment['PATH']}'},
       ).timeout(const Duration(seconds: 10));
@@ -2326,12 +2344,12 @@ class GrpcurlHelper {
 
         // Log the full response
         print('━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━');
-        print('📥 GetInstrumentList RESPONSE:');
+        print('📥 GetSecurityList RESPONSE:');
         print('Status: SUCCESS');
         print('Response Body:');
         print(const JsonEncoder.withIndent('  ').convert(responseJson));
         print('━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━');
-        print('✅ GetMarketInstrumentList successful');
+        print('✅ GetMarketSecurityList successful');
       } else {
         responseData['output'] = {
           'error': 'gRPC call failed',
@@ -2342,18 +2360,18 @@ class GrpcurlHelper {
 
         // Log the error response
         print('━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━');
-        print('📥 GetInstrumentList RESPONSE:');
+        print('📥 GetSecurityList RESPONSE:');
         print('Status: FAILED');
         print('Exit Code: ${result.exitCode}');
         print('STDERR: ${result.stderr}');
         print('STDOUT: ${result.stdout}');
         print('━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━');
-        print('❌ GetMarketInstrumentList failed: ${result.stderr}');
+        print('❌ GetMarketSecurityList failed: ${result.stderr}');
       }
 
       return responseData;
     } catch (e) {
-      print('❌ GetMarketInstrumentList exception: $e');
+      print('❌ GetMarketSecurityList exception: $e');
       return {
         'success': false,
         'output': {'error': 'Exception occurred', 'details': e.toString()},
@@ -2525,7 +2543,7 @@ class GrpcurlHelper {
   static Future<Map<String, dynamic>> getOrderFees({
     required String accountId,
     required String feePayerAccountId,
-    required String instrumentId,
+    required String securityId,
     required String orderType, // "LIMIT" or "MARKET"
     required String side, // "BUY" or "SELL"
     required String quantity,
@@ -2551,7 +2569,7 @@ class GrpcurlHelper {
         'proposed_execution_id': 'get_order_fees_${DateTime.now().millisecondsSinceEpoch}',
         'account_iid': accountId,
         'fee_payer_account_iid': feePayerAccountId,
-        'instrument_listing_iid': instrumentId,
+        'security_listing_iid': securityId,
         'order_type': orderType,
         'side': side == "BUY" ? "ORDER_SIDE__BUY" : "ORDER_SIDE__SELL",
         'quantity': quantity,
@@ -2607,7 +2625,7 @@ class GrpcurlHelper {
   static Future<Map<String, dynamic>> createOrder({
     required String accountId,
     required String feePayerAccountId,
-    required String instrumentId,
+    required String securityId,
     required String orderType, // "LIMIT" or "MARKET"
     required String side, // "BUY" or "SELL"
     required String quantity,
@@ -2663,7 +2681,7 @@ class GrpcurlHelper {
         'proposed_execution_id': 'create_order_${DateTime.now().millisecondsSinceEpoch}',
         'account_iid': accountId,
         'fee_payer_account_iid': feePayerAccountId,
-        'instrument_listing_iid': instrumentId,
+        'security_listing_iid': securityId,
         'order_type': orderType,
         'side': orderSideValue,
         'quantity': quantity,
@@ -2984,7 +3002,7 @@ class GrpcurlHelper {
 
   /// Get Orderbook using grpcurl
   static Future<Map<String, dynamic>> getOrderbook({
-    required String instrumentIid,
+    required String securityIid,
     required String side, // "ORDER_SIDE__BUY" or "ORDER_SIDE__SELL"
     int pageNumber = 1,
     int pageSize = 5,
@@ -2997,7 +3015,7 @@ class GrpcurlHelper {
     };
 
     try {
-      print('📊 Getting orderbook for instrument: $instrumentIid, side: $side from real server...');
+      print('📊 Getting orderbook for security: $securityIid, side: $side from real server...');
 
       // Check server reachability first
       if (!await _isServerReachable()) {
@@ -3019,7 +3037,7 @@ class GrpcurlHelper {
           'page_nr': pageNumber,
           'page_size': pageSize,
         },
-        'instrument_iid': instrumentIid,
+        'security_iid': securityIid,
         'orderbook_query_filter': {
           'aggregated': false,
           'side': side,
@@ -3071,9 +3089,9 @@ class GrpcurlHelper {
     }
   }
 
-  /// Get Instrument Trades using grpcurl
-  static Future<Map<String, dynamic>> getInstrumentTrades({
-    required String instrumentId,
+  /// Get Security Trades using grpcurl
+  static Future<Map<String, dynamic>> getSecurityTrades({
+    required String securityId,
     int pageNumber = 1,
     int pageSize = 15,
     DateTime? fromDate,
@@ -3087,7 +3105,7 @@ class GrpcurlHelper {
     };
 
     try {
-      print('📊 Getting instrument trades for: $instrumentId from real server...');
+      print('📊 Getting security trades for: $securityId from real server...');
 
       // Check server reachability first
       if (!await _isServerReachable()) {
@@ -3109,7 +3127,7 @@ class GrpcurlHelper {
           'page_nr': pageNumber,
           'page_size': pageSize,
         },
-        'instrument_id_and_symbol_regexes': [instrumentId],
+        'security_id_and_symbol_regexes': [securityId],
         'trade_query_filter': {
           'side': 'ORDER_SIDE__BOTH',
         },
@@ -3120,7 +3138,7 @@ class GrpcurlHelper {
         },
       };
 
-      print('📨 GetInstrumentTrades request: ${jsonEncode(inputParams)}');
+      print('📨 GetSecurityTrades request: ${jsonEncode(inputParams)}');
 
       final result = await Process.run(
         grpcurlPath,
@@ -3128,7 +3146,7 @@ class GrpcurlHelper {
           '-plaintext',
           '-d', jsonEncode(inputParams),
           '$_host:$_port',
-          'tech.qomet.agora.api.grpc.prtagent.v1.InstrumentService/GetInstrumentTrades'
+          'tech.qomet.agora.api.grpc.prtagent.v1.SecurityService/GetSecurityTrades'
         ],
         environment: {'PATH': '/usr/local/bin:/opt/homebrew/bin:${Platform.environment['PATH']}'},
       ).timeout(const Duration(seconds: 10));
@@ -3137,7 +3155,7 @@ class GrpcurlHelper {
         final responseJson = jsonDecode(result.stdout);
         responseData['success'] = true;
         responseData['output'] = responseJson;
-        print('✅ GetInstrumentTrades successful');
+        print('✅ GetSecurityTrades successful');
       } else {
         responseData['output'] = {
           'error': 'gRPC call failed',
@@ -3145,12 +3163,12 @@ class GrpcurlHelper {
           'stdout': result.stdout.toString(),
           'exit_code': result.exitCode,
         };
-        print('❌ GetInstrumentTrades failed: ${result.stderr}');
+        print('❌ GetSecurityTrades failed: ${result.stderr}');
       }
 
       return responseData;
     } catch (e) {
-      print('❌ GetInstrumentTrades exception: $e');
+      print('❌ GetSecurityTrades exception: $e');
       return {
         'success': false,
         'output': {'error': 'Exception occurred', 'details': e.toString()},
@@ -3286,7 +3304,7 @@ class GrpcurlHelper {
 
       // Build request
       final requestData = {
-        'instrumentIdAndSymbolRegexes': [symbol],
+        'securityIdAndSymbolRegexes': [symbol],
         'period': period,
         'includeVolume': true,
       };

@@ -8,7 +8,7 @@ This project includes generated Dart gRPC client code from the trading daemon pr
 
 - **Account Service**: Account management, deposits, withdrawals, portfolio tracking
 - **Market Service**: Market data, order creation, order management
-- **Instrument Service**: Real-time quotes, OHLC data, orderbook, trade history
+- **Security Service**: Real-time quotes, OHLC data, orderbook, trade history
 - **Agent Service**: Server connectivity, participant info, event streaming
 
 ## Generated Files
@@ -21,8 +21,8 @@ lib/generated/qomet/agora/daemons/prtagent/v1/
 ├── agent.pb.dart           # Agent message types  
 ├── agent.pbgrpc.dart       # Agent service client
 ├── common.pb.dart          # Common message types
-├── instrument.pb.dart      # Instrument message types
-├── instrument.pbgrpc.dart  # Instrument service client
+├── security.pb.dart      # Security message types
+├── security.pbgrpc.dart  # Security service client
 ├── market.pb.dart          # Market message types
 └── market.pbgrpc.dart      # Market service client
 ```
@@ -34,7 +34,7 @@ High-level service classes are provided for easier usage:
 - `lib/services/grpc_client.dart` - Main gRPC client and connection manager
 - `lib/services/account_service.dart` - Account operations
 - `lib/services/market_service.dart` - Market and order operations
-- `lib/services/instrument_service.dart` - Market data and quotes
+- `lib/services/security_service.dart` - Market data and quotes
 - `lib/services/agent_service.dart` - Server communication and events
 
 ## Quick Start
@@ -89,16 +89,16 @@ await AccountService.depositCash(
 ### 4. Market Data
 
 ```dart
-import 'package:mini_broker/services/instrument_service.dart';
+import 'package:mini_broker/services/security_service.dart';
 
 // Get latest quote
-final quote = await InstrumentService.getLatestQuote(
-  instrumentRegexes: ['AAPL'],
+final quote = await SecurityService.getLatestQuote(
+  securityRegexes: ['AAPL'],
 );
 
 // Stream live quotes
-final quoteStream = InstrumentService.fetchLiveQuotes(
-  instrumentRegexes: ['AAPL', 'GOOGL'],
+final quoteStream = SecurityService.fetchLiveQuotes(
+  securityRegexes: ['AAPL', 'GOOGL'],
   updateIntervalMs: 1000,
 );
 
@@ -116,7 +116,7 @@ import 'package:mini_broker/generated/qomet/agora/daemons/prtagent/v1/common.pb.
 // Create limit order
 final orderResponse = await MarketService.createOrder(
   accountId: 'your_account_id',
-  instrumentId: 'AAPL',
+  securityId: 'AAPL',
   orderType: 'LIMIT',
   side: OrderSide.ORDER_SIDE__BUY,
   quantity: '100',

@@ -3,8 +3,8 @@ syntax = "proto3";
 package tech.qomet.agora.api.grpc.fin;
 
 import "common.proto";
+import "fin/asset.proto";
 import "fin/identifier.proto";
-import "fin/instrument.proto";
 import "fin/participant.proto";
 
 option go_package = "qomet.tech/agora/daemons/gen-pkg/tech/qomet/agora/api/grpc/fin;agoraapigrpcfin";
@@ -12,45 +12,38 @@ option java_package = "tech.qomet.agora.api.grpc.fin";
 option java_outer_classname = "SecurityProto";
 option csharp_namespace  = "Tech.Qomet.Agora.Api.Grpc.Fin";
 
-// Security represents a security (issued instrument with CFI code != MMCXXX)
-// Combines IssuedInstrument fields with the underlying Instrument
-message Security {
-  string iid = 1;                                                                          // REQUIRED: Internal security identifier (same as issued_instrument iid)
+enum SecurityClassEnum {
+  SECURITY_CLASS_ENUM_UNKNOWN = 0;
 
-  repeated FinIdentifier identifiers = 2;                                                  // REQUIRED: List of security identifiers (ISIN, CUSIP, etc.)
+  SECURITY_CLASS_ENUM_EQUITY_SHARE = 1;
+  SECURITY_CLASS_ENUM_TOKENIZED_SECURITY = 2;
+  SECURITY_CLASS_ENUM_FUND_UNIT = 3;
+  SECURITY_CLASS_ENUM_ETF_SHARE = 4;
+  SECURITY_CLASS_ENUM_ETF = 5;
+  SECURITY_CLASS_ENUM_BOND = 6;
+  SECURITY_CLASS_ENUM_EQUITY_DERIVATIVE = 7;
+  SECURITY_CLASS_ENUM_INDEX_DERIVATIVE = 8;
+  SECURITY_CLASS_ENUM_FX = 9;
+  SECURITY_CLASS_ENUM_WARRANT = 10;
+  SECURITY_CLASS_ENUM_CFD = 11;
+  SECURITY_CLASS_ENUM_OPTION = 12;
+  SECURITY_CLASS_ENUM_FUTURE = 13;
+  SECURITY_CLASS_ENUM_SMART_CONTRACT = 14;
+  SECURITY_CLASS_ENUM_COMMODITY = 15;
+  SECURITY_CLASS_ENUM_DIGITAL_TOKEN = 16;
 
-  // Base instrument reference (one of these is required)
-  oneof instrument_ref {
-    string instrument_iid = 3;                                                             // Reference to local instrument definition
-    Instrument instrument = 4;                                                             // Embedded instrument definition
-  }
+  SECURITY_CLASS_ENUM_OTHER = 0x0fff0000;
+}
 
-  // External source fields (for imported securities)
-  string external_source_security_depository_iid = 5;                                      // OPTIONAL: Reference to external security depository (for imported securities)
-  string external_source_issued_instrument_id = 6;                                         // OPTIONAL: External issued-instrument identifier in source depository
+message FinSecurityClass {
+  string schema = 1;
+  repeated SecurityClassEnum classes = 2;
 
-  // Issuance details
-  tech.qomet.agora.api.grpc.common.DateTime maturity_dt = 10;                              // OPTIONAL: Security maturity date
-  tech.qomet.agora.api.grpc.common.DateTime issue_dt = 11;                                 // REQUIRED: Issue date
-  repeated OneOfIdOrParticipant issuers = 12;                                              // OPTIONAL: List of issuers
-  string issue_country_code = 13;                                                          // REQUIRED: ISO 3166-1 alpha-2 country code
-  string issue_currency = 14;                                                              // REQUIRED: ISO 4217 currency code
-  string issue_initial_units = 15;                                                         // REQUIRED: Number of units issued
-  string issue_divisibility = 16;                                                          // REQUIRED: Unit divisibility (decimal places)
-  string issue_initial_authorized_units = 17;                                              // OPTIONAL: Number of units authorized
-  string issued_units_receiver_account_iid = 18;                                           // OPTIONAL: Account receiving issued units
-
-  // CFI code from underlying instrument (for validation)
-  string cfi_code = 20;                                                                    // REQUIRED: CFI 6 letters code (must NOT be MMCXXX)
-
-  // Classification from underlying instrument
-  repeated FinInstrumentClass classes = 21;                                                // OPTIONAL: List of instrument classifications
-
-  map<string, string> display_names = 101;                                                 // OPTIONAL: Display names for localization
-  map<string, string> descriptions = 102;                                                  // OPTIONAL: Descriptions for localization
-  map<string, string> labels = 103;                                                        // OPTIONAL: Key-value labels
-  repeated string tags = 104;                                                              // OPTIONAL: Tags for categorization
-  map<string, string> metadata = 105;                                                      // OPTIONAL: Additional metadata
+  map<string, string> display_names = 101;
+  map<string, string> descriptions = 102;
+  map<string, string> labels = 103;
+  repeated string tags = 104;
+  map<string, string> metadata = 105;
 }
 
 enum SecurityStatusEnum {
@@ -65,3 +58,33 @@ enum SecurityStatusEnum {
 
   SECURITY_STATUS_ENUM_OTHER = 0x0fff0000;
 }
+
+message Security {
+  string iid = 1;                                                                          // REQUIRED: Internal security identifier
+
+  repeated FinIdentifier identifiers = 2;                                                  // REQUIRED: List of security identifiers
+  string cfi_code = 3;                                                                     // REQUIRED: CFI 6 letters code
+  repeated FinSecurityClass classes = 4;                                                   // REQUIRED: List of security classifications
+
+  tech.qomet.agora.api.grpc.common.DateTime maturity_dt = 5;                               // OPTIONAL: Security maturity date
+
+  oneof asset {                                                                            // REQUIRED: Underlying asset
+    string asset_iid = 6;                                                                  // Asset internal identifier
+    Asset asset_obj = 7;                                                                   // Asset object
+  }
+
+  tech.qomet.agora.api.grpc.common.DateTime issue_dt = 8;                                  // REQUIRED: Issue date
+  repeated OneOfIdOrParticipant issuers = 9;                                               // OPTIONAL: List of issuers
+  string issue_country_code = 10;                                                          // REQUIRED: ISO 3166-1 alpha-2
+  string issue_currency = 11;                                                              // REQUIRED: ISO 4217 currency code
+  string issue_initial_units = 12;                                                         // REQUIRED: Number of shares issued
+  string issue_divisibility = 13;                                                          // REQUIRED: Unit divisibility
+  string issue_initial_authorized_units = 14;                                              // OPTIONAL: Number of shares authorized
+
+  map<string, string> display_names = 101;                                                 // OPTIONAL: Display names for localization
+  map<string, string> descriptions = 102;                                                  // OPTIONAL: Descriptions for localization
+  map<string, string> labels = 103;                                                        // OPTIONAL: Key-value labels
+  repeated string tags = 104;                                                              // OPTIONAL: Tags for categorization
+  map<string, string> metadata = 105;                                                      // OPTIONAL: Additional metadata
+}
+

@@ -46,31 +46,40 @@ class _SignupPageState extends State<SignupPage> {
 
     try {
       final authService = Provider.of<AuthService>(context, listen: false);
-      final success = await authService.signup(
+      final result = await authService.signup(
         _userController.text.trim(),
         _passwordController.text,
         _confirmPasswordController.text,
       );
 
-      if (success) {
-        if (mounted) {
-          // Show success message
+      if (mounted) {
+        if (result.isFullySuccessful) {
+          // Both local and server succeeded - show green success
           ScaffoldMessenger.of(context).showSnackBar(
-            const SnackBar(
-              content: Text('Account created successfully!'),
+            SnackBar(
+              content: Text(result.message),
               backgroundColor: Colors.green,
-              duration: Duration(seconds: 4),
+              duration: const Duration(seconds: 4),
             ),
           );
-          
-          // Clear the form fields
-          _userController.clear();
-          _passwordController.clear();
-          _confirmPasswordController.clear();
-          
-          // Navigate back to login page
-          Navigator.of(context).pop();
+        } else if (result.localSuccess) {
+          // Local succeeded but server failed - show orange warning
+          ScaffoldMessenger.of(context).showSnackBar(
+            SnackBar(
+              content: Text(result.message),
+              backgroundColor: Colors.orange,
+              duration: const Duration(seconds: 5),
+            ),
+          );
         }
+
+        // Clear the form fields
+        _userController.clear();
+        _passwordController.clear();
+        _confirmPasswordController.clear();
+
+        // Navigate back to login page
+        Navigator.of(context).pop();
       }
     } catch (e) {
       if (mounted) {

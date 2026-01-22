@@ -45,6 +45,7 @@ protoc \
     --proto_path="$PROTO_DIR/qomet/agora/daemons/api/grpc" \
     --dart_out=grpc:"$OUTPUT_DIR" \
     "$PROTO_DIR/qomet/agora/daemons/api/grpc/"*.proto \
+    "$PROTO_DIR/qomet/agora/daemons/api/grpc/fin/"*.proto \
     "$PROTO_DIR/qomet/agora/daemons/api/grpc/prtagent/v1/"*.proto
 
 echo -e "${GREEN}✅ Proto compilation completed!${NC}"

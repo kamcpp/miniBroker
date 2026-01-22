@@ -98,28 +98,38 @@ class _LoginPageState extends State<LoginPage> with TickerProviderStateMixin {
 
     try {
       final authService = Provider.of<AuthService>(context, listen: false);
-      final success = await authService.signup(
+      final result = await authService.signup(
         _signupUserController.text.trim(),
         _signupPasswordController.text,
         _confirmPasswordController.text,
       );
 
-      if (success) {
-        if (mounted) {
+      if (mounted) {
+        if (result.isFullySuccessful) {
+          // Both local and server succeeded - show green success
           ScaffoldMessenger.of(context).showSnackBar(
-            const SnackBar(
-              content: Text('Account created successfully!'),
+            SnackBar(
+              content: Text(result.message),
               backgroundColor: Colors.green,
-              duration: Duration(seconds: 4),
+              duration: const Duration(seconds: 4),
             ),
           );
-          
-          _signupUserController.clear();
-          _signupPasswordController.clear();
-          _confirmPasswordController.clear();
-          
-          _flipToLogin();
+        } else if (result.localSuccess) {
+          // Local succeeded but server failed - show orange warning
+          ScaffoldMessenger.of(context).showSnackBar(
+            SnackBar(
+              content: Text(result.message),
+              backgroundColor: Colors.orange,
+              duration: const Duration(seconds: 5),
+            ),
+          );
         }
+
+        _signupUserController.clear();
+        _signupPasswordController.clear();
+        _confirmPasswordController.clear();
+
+        _flipToLogin();
       }
     } catch (e) {
       if (mounted) {

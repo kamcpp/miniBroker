@@ -4,6 +4,35 @@ import 'database_helper.dart';
 import 'real_grpc_client.dart';
 import '../config/app_config.dart';
 
+/// Result of a signup operation containing both local and server status
+class SignupResult {
+  final bool localSuccess;
+  final bool serverSuccess;
+  final String? serverInvestorId;
+  final String? serverError;
+
+  SignupResult({
+    required this.localSuccess,
+    required this.serverSuccess,
+    this.serverInvestorId,
+    this.serverError,
+  });
+
+  /// Returns true if both local and server signup succeeded
+  bool get isFullySuccessful => localSuccess && serverSuccess;
+
+  /// Returns a user-friendly message describing the result
+  String get message {
+    if (isFullySuccessful) {
+      return 'Account created successfully on server!';
+    } else if (localSuccess && !serverSuccess) {
+      return 'Local account created. Server: ${serverError ?? "unavailable"}';
+    } else {
+      return 'Failed to create account';
+    }
+  }
+}
+
 class AuthService extends ChangeNotifier {
   
   /// Convert DateTime to Unix timestamp (seconds since epoch)
@@ -94,13 +123,14 @@ class AuthService extends ChangeNotifier {
     print('✅ Auto-connect disabled - FIX functionality removed');
   }
 
-  Future<bool> signup(String user, String password, String confirmPassword) async {
+  /// Result class for signup operation
+  Future<SignupResult> signup(String user, String password, String confirmPassword) async {
     try {
       // Validate input
       if (user.trim().isEmpty || password.isEmpty || confirmPassword.isEmpty) {
         throw 'Please fill in all fields';
       }
-      
+
       if (password != confirmPassword) {
         throw 'Passwords do not match';
       }
@@ -108,58 +138,63 @@ class AuthService extends ChangeNotifier {
       if (password.length < 5) {
         throw 'Password must be at least 5 characters long';
       }
-      
+
       // Check if username already exists
       final usernameExists = await _databaseHelper.isUsernameExists(user);
       if (usernameExists) {
         throw 'Username already exists';
       }
-      
+
       // Create new user in local database first
-      final success = await _databaseHelper.createUser(user, password);
+      final localSuccess = await _databaseHelper.createUser(user, password);
 
-      if (success) {
-        // Try to create account on server as well (but don't fail signup if this fails)
-        try {
-          print('🌐 Creating server account for user: $user');
-          final serverResponse = await realGrpcClient.newAccount(
-            externalAccountId: user.toLowerCase().trim(),
-            auxData: 'Created from Flutter app signup - ${_toUnixTimestamp(DateTime.now()).toString()}',
-          );
-
-          if (serverResponse['success'] == true) {
-            final newAccountId = serverResponse['output']['newAccountId'] ??
-                                serverResponse['output']['new_account_id'];
-            print('✅ Server account created successfully: $newAccountId');
-
-            // TODO: Store the server account ID in local database if needed
-            // This could be used to link local user with server account
-          } else {
-            // Server account creation failed - extract error message
-            final errorOutput = serverResponse['output'];
-            String errorMessage = 'Server account creation failed';
-
-            if (errorOutput != null) {
-              if (errorOutput['error'] != null) {
-                errorMessage = errorOutput['error'].toString();
-              } else if (errorOutput['message'] != null) {
-                errorMessage = errorOutput['message'].toString();
-              }
-            }
-
-            print('⚠️  Server account creation failed: $errorMessage');
-            print('ℹ️  Local account created successfully. Server account can be created later.');
-          }
-        } catch (e) {
-          print('⚠️  Server account creation failed with exception: $e');
-          print('ℹ️  Local account created successfully. Server account can be created later.');
-        }
-
-        // Don't auto-login - user should login manually
-        return true;
+      if (!localSuccess) {
+        throw 'Failed to create local account';
       }
-      
-      throw 'Failed to create account';
+
+      // Try to create investor on server via NewInvestor gRPC call
+      bool serverSuccess = false;
+      String? serverInvestorId;
+      String? serverError;
+
+      try {
+        print('🌐 Creating investor on server for user: $user');
+        final serverResponse = await realGrpcClient.newInvestor(
+          externalInvestorId: user.toLowerCase().trim(),
+          auxData: 'Created from Flutter app signup - ${_toUnixTimestamp(DateTime.now()).toString()}',
+        );
+
+        if (serverResponse['success'] == true) {
+          serverSuccess = true;
+          serverInvestorId = serverResponse['output']['newInvestorIid'] ??
+                            serverResponse['output']['new_investor_iid'] ??
+                            serverResponse['output']['refExecutionId'] ??
+                            serverResponse['output']['ref_execution_id'];
+          print('✅ Server investor created successfully: $serverInvestorId');
+        } else {
+          // Server investor creation failed - extract error message
+          final errorOutput = serverResponse['output'];
+          if (errorOutput != null) {
+            if (errorOutput['error'] != null) {
+              serverError = errorOutput['error'].toString();
+            } else if (errorOutput['message'] != null) {
+              serverError = errorOutput['message'].toString();
+            }
+          }
+          serverError ??= 'Server investor creation failed';
+          print('⚠️ Server investor creation failed: $serverError');
+        }
+      } catch (e) {
+        serverError = e.toString();
+        print('⚠️ Server investor creation failed with exception: $e');
+      }
+
+      return SignupResult(
+        localSuccess: true,
+        serverSuccess: serverSuccess,
+        serverInvestorId: serverInvestorId,
+        serverError: serverError,
+      );
     } catch (e) {
       print('Signup error: $e');
       rethrow; // Re-throw to show specific error messages to user

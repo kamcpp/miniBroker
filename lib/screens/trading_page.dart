@@ -51,10 +51,10 @@ class _TradingPageState extends State<TradingPage> {
       return;
     }
 
-    final instrumentIid = asset['iid']?.toString() ?? '';
-    print('[TradeHistory] instrumentIid: $instrumentIid');
+    final securityIid = asset['iid']?.toString() ?? '';
+    print('[TradeHistory] securityIid: $securityIid');
 
-    if (instrumentIid.isEmpty) {
+    if (securityIid.isEmpty) {
       setState(() {
         _tradeHistory = [];
         _isLoadingTradeHistory = false;
@@ -64,9 +64,9 @@ class _TradingPageState extends State<TradingPage> {
     }
 
     try {
-      // Call GetInstrumentTrades gRPC function
-      final result = await GrpcurlHelper.getInstrumentTrades(
-        instrumentId: instrumentIid,
+      // Call GetSecurityTrades gRPC function
+      final result = await GrpcurlHelper.getSecurityTrades(
+        securityId: securityIid,
         pageNumber: 1, // Always page 1
         pageSize: pageSize,
       );
@@ -370,10 +370,10 @@ class _TradingPageState extends State<TradingPage> {
         
         print('✅ Loaded ${_markets.length} markets');
 
-        // Load venues and instruments for the first market if available
+        // Load venues and securitys for the first market if available
         if (_selectedMarket.isNotEmpty && _selectedMarket['id']!.isNotEmpty) {
           await _fetchVenues(_selectedMarket['id']!);
-          _fetchMarketInstruments(_selectedMarket['id']!);
+          _fetchMarketSecurities(_selectedMarket['id']!);
         }
       } else {
         print('❌ Failed to fetch markets: ${result['output']}');
@@ -482,25 +482,25 @@ class _TradingPageState extends State<TradingPage> {
     }
   }
 
-  /// Fetch instruments for a specific market
-  Future<void> _fetchMarketInstruments(String marketId) async {
+  /// Fetch securitys for a specific market
+  Future<void> _fetchMarketSecurities(String marketId) async {
     try {
-      print('🏪 Fetching instruments for market: $marketId');
+      print('🏪 Fetching securities for market: $marketId');
       
       setState(() {
-        _isLoadingMarketInstruments = true;
+        _isLoadingMarketSecurities = true;
         _assets.clear(); // Clear existing assets
         _selectedSymbol = ''; // Reset selected symbol
       });
       
-      final result = await realGrpcClient.getMarketInstrumentList(
+      final result = await realGrpcClient.getMarketSecurityList(
         marketId: marketId,
         pageNumber: 0,
         pageSize: 0,
       ).timeout(
         const Duration(seconds: 10),
         onTimeout: () {
-          print('⏰ GetMarketInstrumentList timed out after 10 seconds');
+          print('⏰ GetMarketSecurityList timed out after 10 seconds');
           return {
             'success': false,
             'output': {'error': 'Request timed out after 10 seconds'},
@@ -510,18 +510,18 @@ class _TradingPageState extends State<TradingPage> {
       
       if (result['success'] == true && result['output'] != null) {
         final output = result['output'] as Map<String, dynamic>;
-        final instruments = output['instruments'] as List<dynamic>? ?? [];
+        final securitys = output['securities'] as List<dynamic>? ?? [];
         
         final List<Map<String, dynamic>> processedAssets = [];
         
-        for (final instrument in instruments) {
-          if (instrument is Map<String, dynamic>) {
+        for (final security in securitys) {
+          if (security is Map<String, dynamic>) {
             // Extract symbol from identifiers structure
             String symbol = '';
             String description = '';
 
-            final identifiers = instrument['identifiers'] as List<dynamic>? ?? [];
-            final displayNames = instrument['displayNames'] as Map<String, dynamic>? ?? {};
+            final identifiers = security['identifiers'] as List<dynamic>? ?? [];
+            final displayNames = security['displayNames'] as Map<String, dynamic>? ?? {};
 
             // Extract symbol from the complex identifier structure
             if (identifiers.isNotEmpty) {
@@ -536,8 +536,8 @@ class _TradingPageState extends State<TradingPage> {
             // Use display name in English, or fall back to symbol
             description = displayNames['en'] as String? ?? symbol;
 
-            final iid = instrument['iid']?.toString() ?? '';
-            final issueCurrency = instrument['issueCurrency']?.toString() ?? '';
+            final iid = security['iid']?.toString() ?? '';
+            final issueCurrency = security['issueCurrency']?.toString() ?? '';
 
             if (symbol.isNotEmpty) {
               final assetMap = {
@@ -569,14 +569,14 @@ class _TradingPageState extends State<TradingPage> {
               _loadChartData(_selectedSymbol);
             });
           }
-          _isLoadingMarketInstruments = false;
+          _isLoadingMarketSecurities = false;
         });
         
-        print('✅ Loaded ${_assets.length} instruments for market $marketId');
+        print('✅ Loaded ${_assets.length} securitys for market $marketId');
         if (_assets.isNotEmpty) {
-          print('📋 Sample instruments: ${_assets.take(3).map((a) => a['symbol']).toList()}');
+          print('📋 Sample securitys: ${_assets.take(3).map((a) => a['symbol']).toList()}');
           
-          // Fetch last prices for the loaded instruments
+          // Fetch last prices for the loaded securitys
           for (final asset in _assets) {
             _fetchLastPriceForAsset(asset);
           }
@@ -588,17 +588,17 @@ class _TradingPageState extends State<TradingPage> {
           }
         }
       } else {
-        print('❌ Failed to fetch instruments for market $marketId: ${result['output']}');
+        print('❌ Failed to fetch securities for market $marketId: ${result['output']}');
         setState(() {
           _assets.clear();
-          _isLoadingMarketInstruments = false;
+          _isLoadingMarketSecurities = false;
         });
       }
     } catch (e) {
-      print('❌ Error fetching instruments for market $marketId: $e');
+      print('❌ Error fetching securitys for market $marketId: $e');
       setState(() {
         _assets.clear();
-        _isLoadingMarketInstruments = false;
+        _isLoadingMarketSecurities = false;
       });
     }
   }
@@ -723,7 +723,7 @@ class _TradingPageState extends State<TradingPage> {
   List<Map<String, String>> _markets = [];
   Map<String, String> _selectedMarket = {};
   bool _isLoadingMarkets = false;
-  bool _isLoadingMarketInstruments = false;
+  bool _isLoadingMarketSecurities = false;
 
   // Venue data
   List<Map<String, String>> _venues = [];
@@ -866,7 +866,7 @@ class _TradingPageState extends State<TradingPage> {
     });
     
     // Fetch pairs from API immediately when page opens, independent of FIX connection
-    // _fetchPairsFromAPI(); // Disabled - now using GetMarketInstrumentList based on selected market
+    // _fetchPairsFromAPI(); // Disabled - now using GetMarketSecurityList based on selected market
     
     // Fetch cash holdings for buying power
     _fetchCashHoldings();
@@ -1148,7 +1148,7 @@ class _TradingPageState extends State<TradingPage> {
               'order_id': order['orderIid'] ?? order['order_id'] ?? 'N/A',
               'participantOrderId': order['participantOrderId'] ?? order['participant_order_id'] ?? order['orderIid'] ?? order['order_id'] ?? 'N/A',
               'side': order['side'] ?? 'N/A',
-              'symbol': order['instrumentIid'] ?? order['symbol'] ?? 'N/A',
+              'symbol': order['securityIid'] ?? order['symbol'] ?? 'N/A',
               'quantity': order['quantity'] ?? '0',
               'price': order['price'] ?? '0',
               'create_timestamp': order['createTimestamp'] ?? order['createdAtDt']?['ts'] ?? order['create_timestamp'],
@@ -1624,7 +1624,7 @@ class _TradingPageState extends State<TradingPage> {
     try {
       print('💰 Calculating order fees...');
 
-      final instrumentId = _selectedSymbol.split('/').first; // Extract asset part from symbol
+      final securityId = _selectedSymbol.split('/').first; // Extract asset part from symbol
       final orderTypeApi = _orderType == 'Limit' ? 'LIMIT' : 'MARKET';
       final sideApi = _isBuySelected ? 'BUY' : 'SELL';
       final quantity = _quantityController.text.trim();
@@ -1633,7 +1633,7 @@ class _TradingPageState extends State<TradingPage> {
       final result = await realGrpcClient.getOrderFees(
         accountId: _cachedAccountId!,
         feePayerAccountId: _cachedAccountId!,
-        instrumentId: instrumentId,
+        securityId: securityId,
         orderType: orderTypeApi,
         side: sideApi,
         quantity: quantity,
@@ -2123,12 +2123,12 @@ class _TradingPageState extends State<TradingPage> {
       return;
     }
 
-    final instrumentIid = asset['iid']?.toString() ?? '';
+    final securityIid = asset['iid']?.toString() ?? '';
 
-    print('[Orderbook-Sell] $symbol: instrumentIid="$instrumentIid"');
+    print('[Orderbook-Sell] $symbol: securityIid="$securityIid"');
 
-    if (instrumentIid.isEmpty) {
-      print('❌ Missing instrument IID for sell orders $symbol - no orderbook data available');
+    if (securityIid.isEmpty) {
+      print('❌ Missing security IID for sell orders $symbol - no orderbook data available');
       setState(() {
         if (!append) _sellOrders = [];
         _hasMoreSellOrders = false;
@@ -2150,7 +2150,7 @@ class _TradingPageState extends State<TradingPage> {
     try {
       // Call GetOrderbook gRPC function
       final result = await GrpcurlHelper.getOrderbook(
-        instrumentIid: instrumentIid,
+        securityIid: securityIid,
         side: 'ORDER_SIDE__SELL',
         pageNumber: 1,  // Always page 1
         pageSize: pageSize,  // Increase page size instead
@@ -2248,12 +2248,12 @@ class _TradingPageState extends State<TradingPage> {
       return;
     }
 
-    final instrumentIid = asset['iid']?.toString() ?? '';
+    final securityIid = asset['iid']?.toString() ?? '';
 
-    print('[Orderbook-Buy] $symbol: instrumentIid="$instrumentIid"');
+    print('[Orderbook-Buy] $symbol: securityIid="$securityIid"');
 
-    if (instrumentIid.isEmpty) {
-      print('❌ Missing instrument IID for buy orders $symbol - no orderbook data available');
+    if (securityIid.isEmpty) {
+      print('❌ Missing security IID for buy orders $symbol - no orderbook data available');
       setState(() {
         if (!append) _buyOrders = [];
         _hasMoreBuyOrders = false;
@@ -2275,7 +2275,7 @@ class _TradingPageState extends State<TradingPage> {
     try {
       // Call GetOrderbook gRPC function
       final result = await GrpcurlHelper.getOrderbook(
-        instrumentIid: instrumentIid,
+        securityIid: securityIid,
         side: 'ORDER_SIDE__BUY',
         pageNumber: 1,  // Always page 1
         pageSize: pageSize,  // Increase page size instead
@@ -2969,8 +2969,8 @@ class _TradingPageState extends State<TradingPage> {
                           });
                           // Load venues for the selected market
                           await _fetchVenues(newValue['id']!);
-                          // Load instruments for the selected market
-                          await _fetchMarketInstruments(newValue['id']!);
+                          // Load securitys for the selected market
+                          await _fetchMarketSecurities(newValue['id']!);
                           // Update portfolio for sell orders if currently in sell mode
                           // Use the newValue market ID to ensure we're using the correct market
                           if (!_isBuySelected) {
@@ -3033,7 +3033,7 @@ class _TradingPageState extends State<TradingPage> {
                           setState(() {
                             _selectedVenue = newValue;
                           });
-                          // TODO: Filter instruments by venue if needed
+                          // TODO: Filter securitys by venue if needed
                           print('📍 Selected venue: ${newValue['display']} (${newValue['id']})');
                         }
                       },
@@ -3062,7 +3062,7 @@ class _TradingPageState extends State<TradingPage> {
 
           const SizedBox(height: 10), // Space between dropdown and asset boxes
           Expanded(
-            child: _isLoadingMarketInstruments 
+            child: _isLoadingMarketSecurities 
                 ? Center(
                     child: Column(
                       mainAxisAlignment: MainAxisAlignment.center,
@@ -5074,16 +5074,16 @@ class _TradingPageState extends State<TradingPage> {
       if (_selectedSymbol.isEmpty) {
         ScaffoldMessenger.of(context).showSnackBar(
           const SnackBar(
-            content: Text('No instrument selected'),
+            content: Text('No security selected'),
             backgroundColor: Colors.red,
           ),
         );
         return;
       }
 
-      // Use the full symbol as instrument listing ID (e.g., "ETH/USD")
-      final instrumentId = _selectedSymbol;
-      print('🏷️ Using instrumentId: $instrumentId');
+      // Use the full symbol as security listing ID (e.g., "ETH/USD")
+      final securityId = _selectedSymbol;
+      print('🏷️ Using securityId: $securityId');
 
       // Generate unique participant order ID
       final participantOrderId = 'order_${DateTime.now().millisecondsSinceEpoch}';
@@ -5122,7 +5122,7 @@ class _TradingPageState extends State<TradingPage> {
       final result = await realGrpcClient.createOrder(
         accountId: _cachedAccountId!,
         feePayerAccountId: _cachedAccountId!,
-        instrumentId: instrumentId,
+        securityId: securityId,
         orderType: _orderType.toUpperCase(),
         side: side,
         quantity: _quantityController.text.trim(),

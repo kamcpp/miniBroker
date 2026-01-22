@@ -4,7 +4,7 @@ package tech.qomet.agora.api.grpc.fin;
 
 import "common.proto";
 import "fin/identifier.proto";
-import "fin/instrument.proto";
+import "fin/security.proto";
 import "fin/participant.proto";
 
 option go_package = "qomet.tech/agora/daemons/gen-pkg/tech/qomet/agora/api/grpc/fin;agoraapigrpcfin";
@@ -12,22 +12,22 @@ option java_package = "tech.qomet.agora.api.grpc.fin";
 option java_outer_classname = "CashTokenProto";
 option csharp_namespace  = "Tech.Qomet.Agora.Api.Grpc.Fin";
 
-// CashToken represents a cash token (issued instrument with CFI code == MMCXXX)
-// Combines IssuedInstrument fields with the underlying Instrument
+// CashToken represents a cash token (issued security with CFI code == MMCXXX)
+// Combines IssuedSecurity fields with the underlying Security
 message CashToken {
-  string iid = 1;                                                                          // REQUIRED: Internal cash token identifier (same as issued_instrument iid)
+  string iid = 1;                                                                          // REQUIRED: Internal cash token identifier (same as issued_security iid)
 
   repeated FinIdentifier identifiers = 2;                                                  // REQUIRED: List of cash token identifiers
 
-  // Base instrument reference (one of these is required)
-  oneof instrument_ref {
-    string instrument_iid = 3;                                                             // Reference to local instrument definition
-    Instrument instrument = 4;                                                             // Embedded instrument definition
+  // Base security reference (one of these is required)
+  oneof security_ref {
+    string security_iid = 3;                                                               // Reference to local security definition
+    Security security = 4;                                                                 // Embedded security definition
   }
 
   // External source fields (for imported cash tokens)
   string external_source_security_depository_iid = 5;                                      // OPTIONAL: Reference to external security depository (for imported cash tokens)
-  string external_source_issued_instrument_id = 6;                                         // OPTIONAL: External issued-instrument identifier in source depository
+  string external_source_issued_security_id = 6;                                           // OPTIONAL: External issued-security identifier in source depository
 
   // Issuance details
   tech.qomet.agora.api.grpc.common.DateTime issue_dt = 11;                                 // REQUIRED: Issue date
@@ -39,11 +39,11 @@ message CashToken {
   string issue_initial_authorized_units = 17;                                              // OPTIONAL: Number of units authorized
   string issued_units_receiver_account_iid = 18;                                           // OPTIONAL: Account receiving issued units
 
-  // CFI code from underlying instrument (for validation)
+  // CFI code from underlying security (for validation)
   string cfi_code = 20;                                                                    // REQUIRED: CFI 6 letters code (must be MMCXXX for cash tokens)
 
-  // Classification from underlying instrument
-  repeated FinInstrumentClass classes = 21;                                                // OPTIONAL: List of instrument classifications
+  // Classification from underlying security
+  repeated FinSecurityClass classes = 21;                                                  // OPTIONAL: List of security classifications
 
   map<string, string> display_names = 101;                                                 // OPTIONAL: Display names for localization
   map<string, string> descriptions = 102;                                                  // OPTIONAL: Descriptions for localization

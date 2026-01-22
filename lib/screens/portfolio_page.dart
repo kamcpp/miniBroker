@@ -272,7 +272,7 @@ class _PortfolioPageState extends State<PortfolioPage> {
                       child: Row(
                         children: [
                           Text(
-                            'Instruments Holdings',
+                            'Securitys Holdings',
                             style: TextStyle(
                               fontSize: UIConstants.fontSizeMd,
                               fontWeight: UIConstants.fontWeightMedium,

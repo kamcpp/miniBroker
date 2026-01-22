@@ -26,7 +26,7 @@ enum ParticipantTypeEnum {
   PARTICIPANT_TYPE_ENUM_EXTERNAL_PRINCIPAL = 12;                                          // Wallet, Personal Eth. Account (Private Key), etc.
   PARTICIPANT_TYPE_ENUM_INTERNAL_PRINCIPAL = 13;                                          // Managed Eth. Account (Managed Private Key), etc.
   PARTICIPANT_TYPE_ENUM_SERVICE_PROVIDER = 14;
-  PARTICIPANT_TYPE_ENUM_ISSUER = 15;                                                      // Instrument Issuer, etc.
+  PARTICIPANT_TYPE_ENUM_ISSUER = 15;                                                      // Security Issuer, etc.
   PARTICIPANT_TYPE_ENUM_INVESTOR = 16;                                                    // Asset Investor, etc.
   PARTICIPANT_TYPE_ENUM_TRADER = 17;                                                      // Asset Trader, etc.
   PARTICIPANT_TYPE_ENUM_MINER_VALIDATOR = 18;                                             // Blockchain Miner, Validator, etc.

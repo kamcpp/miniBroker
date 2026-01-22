@@ -44,7 +44,7 @@ class _ActivityPageState extends State<ActivityPage> {
   // Filter state for orders
   String? _selectedSide; // BUY, SELL, or null for all
   List<String> _marketFilters = [];
-  List<String> _instrumentFilters = [];
+  List<String> _securityFilters = [];
   DateTime? _fromDate;
   DateTime? _toDate;
   String _selectedOrderStatus = 'All';
@@ -55,7 +55,7 @@ class _ActivityPageState extends State<ActivityPage> {
   // Filter state for trades (similar to orders but without status filters)
   String? _selectedTradeSide;
   List<String> _tradeMarketFilters = [];
-  List<String> _tradeInstrumentFilters = [];
+  List<String> _tradeSecurityFilters = [];
   DateTime? _tradeFromDate;
   DateTime? _tradeToDate;
   int? _tradePageSize = 15;
@@ -83,7 +83,7 @@ class _ActivityPageState extends State<ActivityPage> {
   // Market and Asset dropdown data
   List<Map<String, dynamic>> _availableMarkets = [];
   List<Map<String, dynamic>> _availableAssets = [];
-  List<Map<String, dynamic>> _allInstruments = []; // All instruments from all markets for transactions
+  List<Map<String, dynamic>> _allSecurities = []; // All securitys from all markets for transactions
   String? _selectedOrdersMarket;
   String? _selectedOrdersAsset;
   String? _selectedTradesMarket;
@@ -173,11 +173,11 @@ class _ActivityPageState extends State<ActivityPage> {
     _fetchMarketList();
     // Asset list will be fetched when market is selected
 
-    // Fetch all instruments for transactions tab (no market filter) - after frame is built
+    // Fetch all securitys for transactions tab (no market filter) - after frame is built
     WidgetsBinding.instance.addPostFrameCallback((_) async {
       // Wait a bit to ensure markets are loaded
       await Future.delayed(const Duration(milliseconds: 500));
-      _fetchAllInstruments();
+      _fetchAllSecuritys();
     });
   }
 
@@ -546,14 +546,14 @@ class _ActivityPageState extends State<ActivityPage> {
       // Build market filters array from selected dropdown value
       final marketFilters = _selectedOrdersMarket != null ? [_selectedOrdersMarket!] : <String>[];
       
-      // Build instrument filters array from selected dropdown value  
-      final instrumentFilters = _selectedOrdersAsset != null ? [_selectedOrdersAsset!] : <String>[];
+      // Build security filters array from selected dropdown value  
+      final securityFilters = _selectedOrdersAsset != null ? [_selectedOrdersAsset!] : <String>[];
 
       final inputParams = {
         'ref_request_id': 'flutter-get-orders-${DateTime.now().millisecondsSinceEpoch}',
         'account_id': accountId,
         'market_id_or_name_regexes': marketFilters,
-        'instrument_id_or_symbol_regexes': instrumentFilters,
+        'security_id_or_symbol_regexes': securityFilters,
         'from_time': fromTimeFormatted,
         'to_time': toTimeFormatted,
         'side': _selectedSide,
@@ -663,14 +663,14 @@ class _ActivityPageState extends State<ActivityPage> {
       // Build market filters array from selected dropdown value
       final tradeMarketFilters = _selectedTradesMarket != null ? [_selectedTradesMarket!] : <String>[];
       
-      // Build instrument filters array from selected dropdown value
-      final tradeInstrumentFilters = _selectedTradesAsset != null ? [_selectedTradesAsset!] : <String>[];
+      // Build security filters array from selected dropdown value
+      final tradeSecurityFilters = _selectedTradesAsset != null ? [_selectedTradesAsset!] : <String>[];
       
       final tradeInputParams = {
         'ref_request_id': 'flutter-get-trades-${DateTime.now().millisecondsSinceEpoch}',
         'account_id': accountId,
         'market_id_or_name_regexes': tradeMarketFilters,
-        'instrument_id_or_symbol_regexes': tradeInstrumentFilters,
+        'security_id_or_symbol_regexes': tradeSecurityFilters,
         'from_time': fromTimeFormatted,
         'to_time': toTimeFormatted,
         'side': _selectedTradeSide,
@@ -680,7 +680,7 @@ class _ActivityPageState extends State<ActivityPage> {
       print('🔍 GetAccountTrades REQUEST PARAMETERS:');
       print('   Account ID: $accountId');
       print('   Market Filters: $tradeMarketFilters');
-      print('   Instrument Filters: $tradeInstrumentFilters');
+      print('   Security Filters: $tradeSecurityFilters');
       print('   From Date: $fromTimeFormatted');
       print('   To Date: $toTimeFormatted');
       print('   Side: $_selectedTradeSide');
@@ -697,7 +697,7 @@ class _ActivityPageState extends State<ActivityPage> {
         fromTime: fromTimeFormatted != null ? jsonEncode(fromTimeFormatted) : null,
         toTime: toTimeFormatted != null ? jsonEncode(toTimeFormatted) : null,
         side: _selectedTradeSide,
-        instrumentIdOrSymbolRegexes: _tradeInstrumentFilters.isNotEmpty ? _tradeInstrumentFilters : null,
+        securityIdOrSymbolRegexes: _tradeSecurityFilters.isNotEmpty ? _tradeSecurityFilters : null,
       );
 
       print('📤 GetAccountTrades API RESPONSE:');
@@ -1022,7 +1022,7 @@ class _ActivityPageState extends State<ActivityPage> {
     setState(() {
       _selectedSide = null;
       _marketFilters = [];
-      _instrumentFilters = [];
+      _securityFilters = [];
       _fromDate = null;
       _toDate = null;
       _selectedOrderStatus = 'All';
@@ -1041,7 +1041,7 @@ class _ActivityPageState extends State<ActivityPage> {
     setState(() {
       _selectedTradeSide = null;
       _tradeMarketFilters = [];
-      _tradeInstrumentFilters = [];
+      _tradeSecurityFilters = [];
       _tradeFromDate = null;
       _tradeToDate = null;
       _tradePageSize = 15;
@@ -1104,7 +1104,7 @@ class _ActivityPageState extends State<ActivityPage> {
     try {
       print('📋 Fetching assets for market: $marketId...');
       
-      final result = await realGrpcClient.getMarketInstrumentList(
+      final result = await realGrpcClient.getMarketSecurityList(
         marketId: marketId,
       );
       
@@ -1113,25 +1113,25 @@ class _ActivityPageState extends State<ActivityPage> {
           _isLoadingAssets = false;
           if (result['success'] == true) {
             final output = result['output'];
-            print('✅ GetMarketInstrumentList response for market $marketId: $output');
+            print('✅ GetMarketSecurityList response for market $marketId: $output');
             
             if (output is Map<String, dynamic>) {
-              // Extract instruments from the response based on actual server structure
-              final instruments = output['instruments'] ?? output['instrumentList'] ?? output['instrument_list'] ?? [];
-              if (instruments is List && instruments.isNotEmpty) {
-                // Process instruments to extract the symbol values from nested structure
+              // Extract securitys from the response based on actual server structure
+              final securitys = output['securities'] ?? output['securityList'] ?? output['security_list'] ?? [];
+              if (securitys is List && securitys.isNotEmpty) {
+                // Process securitys to extract the symbol values from nested structure
                 final processedAssets = <Map<String, dynamic>>[];
-                for (final instrument in instruments) {
-                  if (instrument is Map<String, dynamic>) {
+                for (final security in securitys) {
+                  if (security is Map<String, dynamic>) {
                     // Extract from identifiers structure: identifiers -> ids -> value
                     String assetId = '';
                     String assetName = '';
                     
                     // Get the iid as asset ID
-                    assetId = instrument['iid']?.toString() ?? '';
+                    assetId = security['iid']?.toString() ?? '';
                     
                     // Extract from identifiers -> ids -> value
-                    final identifiers = instrument['identifiers'] as List?;
+                    final identifiers = security['identifiers'] as List?;
                     if (identifiers != null && identifiers.isNotEmpty) {
                       final firstIdentifier = identifiers.first;
                       if (firstIdentifier is Map) {
@@ -1150,7 +1150,7 @@ class _ActivityPageState extends State<ActivityPage> {
                     }
                     
                     // Extract display name
-                    final displayNames = instrument['displayNames'] as Map?;
+                    final displayNames = security['displayNames'] as Map?;
                     if (displayNames != null && displayNames.isNotEmpty) {
                       assetName = displayNames['en']?.toString() ?? 
                                   displayNames.values.first?.toString() ?? assetName;
@@ -1160,7 +1160,7 @@ class _ActivityPageState extends State<ActivityPage> {
                       processedAssets.add({
                         'id': assetId,
                         'symbol': assetName.isNotEmpty ? assetName : assetId,
-                        'instrument_id': assetId,
+                        'security_id': assetId,
                         'description': assetName.isNotEmpty ? assetName : assetId,
                       });
                     }
@@ -1174,14 +1174,14 @@ class _ActivityPageState extends State<ActivityPage> {
                 }
               } else {
                 _availableAssets = [];
-                print('⚠️ No instruments found in market $marketId response');
+                print('⚠️ No securities found in market $marketId response');
               }
             } else {
               _availableAssets = [];
               print('⚠️ Unexpected response format for market $marketId');
             }
           } else {
-            print('❌ GetMarketInstrumentList failed for market $marketId: ${result['output']}');
+            print('❌ GetMarketSecurityList failed for market $marketId: ${result['output']}');
             _availableAssets = [];
           }
         });
@@ -1197,8 +1197,8 @@ class _ActivityPageState extends State<ActivityPage> {
     }
   }
 
-  /// Fetch all instruments from all markets for transactions filter
-  Future<void> _fetchAllInstruments() async {
+  /// Fetch all securitys from all markets for transactions filter
+  Future<void> _fetchAllSecuritys() async {
     if (_isLoadingAssets) return;
 
     setState(() {
@@ -1206,40 +1206,40 @@ class _ActivityPageState extends State<ActivityPage> {
     });
 
     try {
-      print('📋 Fetching all instruments from all markets...');
+      print('📋 Fetching all securitys from all markets...');
 
       // Wait for markets to be loaded if not already
       if (_availableMarkets.isEmpty) {
         await _fetchMarketList();
       }
 
-      final allInstrumentsFromMarkets = <Map<String, dynamic>>[];
+      final allSecuritiesFromMarkets = <Map<String, dynamic>>[];
 
-      // Fetch instruments from each market
+      // Fetch securitys from each market
       for (final market in _availableMarkets) {
         final marketId = market['iid']?.toString();
         if (marketId != null && marketId.isNotEmpty) {
           try {
-            print('📋 Fetching instruments for market: $marketId');
-            final result = await realGrpcClient.getMarketInstrumentList(
+            print('📋 Fetching securities for market: $marketId');
+            final result = await realGrpcClient.getMarketSecurityList(
               marketId: marketId,
             );
 
-            print('📋 GetMarketInstrumentList result for $marketId: success=${result['success']}, output type=${result['output'].runtimeType}');
+            print('📋 GetMarketSecurityList result for $marketId: success=${result['success']}, output type=${result['output'].runtimeType}');
             if (result['success'] == true) {
               final output = result['output'];
               if (output is Map<String, dynamic>) {
-                final instruments = output['instruments'] ?? output['instrumentList'] ?? output['instrument_list'] ?? [];
-                print('📋 Instruments found in $marketId: ${instruments.length}');
-                if (instruments is List && instruments.isNotEmpty) {
-                  for (final instrument in instruments) {
-                    if (instrument is Map<String, dynamic>) {
+                final securitys = output['securities'] ?? output['securityList'] ?? output['security_list'] ?? [];
+                print('📋 Securitys found in $marketId: ${securitys.length}');
+                if (securitys is List && securitys.isNotEmpty) {
+                  for (final security in securitys) {
+                    if (security is Map<String, dynamic>) {
                       String assetId = '';
                       String assetName = '';
 
-                      assetId = instrument['iid']?.toString() ?? '';
+                      assetId = security['iid']?.toString() ?? '';
 
-                      final identifiers = instrument['identifiers'] as List?;
+                      final identifiers = security['identifiers'] as List?;
                       if (identifiers != null && identifiers.isNotEmpty) {
                         final firstIdentifier = identifiers.first;
                         if (firstIdentifier is Map) {
@@ -1257,17 +1257,17 @@ class _ActivityPageState extends State<ActivityPage> {
                         }
                       }
 
-                      final displayNames = instrument['displayNames'] as Map?;
+                      final displayNames = security['displayNames'] as Map?;
                       if (displayNames != null && displayNames.isNotEmpty) {
                         assetName = displayNames['en']?.toString() ??
                                     displayNames.values.first?.toString() ?? assetName;
                       }
 
                       if (assetId.isNotEmpty) {
-                        allInstrumentsFromMarkets.add({
+                        allSecuritiesFromMarkets.add({
                           'id': assetId,
                           'symbol': assetName.isNotEmpty ? assetName : assetId,
-                          'instrument_id': assetId,
+                          'security_id': assetId,
                           'description': assetName.isNotEmpty ? assetName : assetId,
                         });
                       }
@@ -1278,41 +1278,41 @@ class _ActivityPageState extends State<ActivityPage> {
                 print('⚠️ Output is not Map for market $marketId: ${output.runtimeType}');
               }
             } else {
-              print('⚠️ GetMarketInstrumentList failed for market $marketId: ${result['output']}');
+              print('⚠️ GetMarketSecurityList failed for market $marketId: ${result['output']}');
             }
           } catch (e) {
-            print('⚠️ Failed to fetch instruments from market $marketId: $e');
+            print('⚠️ Failed to fetch securities from market $marketId: $e');
           }
         } else {
           print('⚠️ Invalid market ID: $marketId');
         }
       }
 
-      // Remove duplicates based on instrument ID
-      final uniqueInstruments = <String, Map<String, dynamic>>{};
-      for (final instrument in allInstrumentsFromMarkets) {
-        final id = instrument['id']?.toString() ?? '';
-        if (id.isNotEmpty && !uniqueInstruments.containsKey(id)) {
-          uniqueInstruments[id] = instrument;
+      // Remove duplicates based on security ID
+      final uniqueSecurities = <String, Map<String, dynamic>>{};
+      for (final security in allSecuritiesFromMarkets) {
+        final id = security['id']?.toString() ?? '';
+        if (id.isNotEmpty && !uniqueSecurities.containsKey(id)) {
+          uniqueSecurities[id] = security;
         }
       }
 
       if (mounted) {
         setState(() {
-          _allInstruments = uniqueInstruments.values.toList();
+          _allSecurities = uniqueSecurities.values.toList();
           _isLoadingAssets = false;
         });
-        print('✅ All instruments loaded: ${_allInstruments.length} unique instruments found (from ${allInstrumentsFromMarkets.length} total)');
-        if (_allInstruments.isNotEmpty) {
-          print('📋 Sample instruments: ${_allInstruments.take(3).map((a) => a['symbol']).toList()}');
+        print('✅ All securitys loaded: ${_allSecurities.length} unique securitys found (from ${allSecuritiesFromMarkets.length} total)');
+        if (_allSecurities.isNotEmpty) {
+          print('📋 Sample securitys: ${_allSecurities.take(3).map((a) => a['symbol']).toList()}');
         }
       }
     } catch (e) {
-      print('❌ Exception fetching all instruments: $e');
+      print('❌ Exception fetching all securitys: $e');
       if (mounted) {
         setState(() {
           _isLoadingAssets = false;
-          _allInstruments = [];
+          _allSecurities = [];
         });
       }
     }
@@ -1538,9 +1538,9 @@ class _ActivityPageState extends State<ActivityPage> {
                                   DropdownMenuItem(value: null, child: Text('All Assets', style: TextStyle(color: isDarkTheme ? Colors.white : Colors.black))),
                                   ..._availableAssets.map<DropdownMenuItem<String?>>((asset) => 
                                     DropdownMenuItem<String?>(
-                                      value: asset['id'] ?? asset['symbol'] ?? asset['instrument_id'] ?? '',
+                                      value: asset['id'] ?? asset['symbol'] ?? asset['security_id'] ?? '',
                                       child: Text(
-                                        asset['symbol'] ?? asset['id'] ?? asset['instrument_id'] ?? 'Unknown',
+                                        asset['symbol'] ?? asset['id'] ?? asset['security_id'] ?? 'Unknown',
                                         style: TextStyle(color: isDarkTheme ? Colors.white : Colors.black)
                                       )
                                     )
@@ -2258,9 +2258,9 @@ class _ActivityPageState extends State<ActivityPage> {
                                   DropdownMenuItem(value: null, child: Text('All Assets', style: TextStyle(color: isDarkTheme ? Colors.white : Colors.black))),
                                   ..._availableAssets.map<DropdownMenuItem<String?>>((asset) => 
                                     DropdownMenuItem<String?>(
-                                      value: asset['id'] ?? asset['symbol'] ?? asset['instrument_id'] ?? '',
+                                      value: asset['id'] ?? asset['symbol'] ?? asset['security_id'] ?? '',
                                       child: Text(
-                                        asset['symbol'] ?? asset['id'] ?? asset['instrument_id'] ?? 'Unknown',
+                                        asset['symbol'] ?? asset['id'] ?? asset['security_id'] ?? 'Unknown',
                                         style: TextStyle(color: isDarkTheme ? Colors.white : Colors.black)
                                       )
                                     )
@@ -3876,11 +3876,11 @@ class _ActivityPageState extends State<ActivityPage> {
                                 iconDisabledColor: isDarkTheme ? Colors.grey[600] : Colors.grey[400],
                                 items: [
                                   DropdownMenuItem<String?>(value: null, child: Text('All Assets', style: TextStyle(color: isDarkTheme ? Colors.white : Colors.black))),
-                                  ..._allInstruments.map<DropdownMenuItem<String?>>((instrument) =>
+                                  ..._allSecurities.map<DropdownMenuItem<String?>>((security) =>
                                     DropdownMenuItem<String?>(
-                                      value: instrument['id'] ?? instrument['symbol'] ?? instrument['instrument_id'] ?? '',
+                                      value: security['id'] ?? security['symbol'] ?? security['security_id'] ?? '',
                                       child: Text(
-                                        instrument['symbol'] ?? instrument['id'] ?? instrument['instrument_id'] ?? 'Unknown',
+                                        security['symbol'] ?? security['id'] ?? security['security_id'] ?? 'Unknown',
                                         style: TextStyle(color: isDarkTheme ? Colors.white : Colors.black)
                                       )
                                     )

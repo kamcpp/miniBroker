@@ -7,16 +7,16 @@ import '../utils/connectivity_checker.dart';
 import '../utils/menu_items_helper.dart';
 import '../widgets/base_page.dart';
 
-class InstrumentsPage extends StatefulWidget {
-  const InstrumentsPage({super.key});
+class SecuritiesPage extends StatefulWidget {
+  const SecuritiesPage({super.key});
 
   @override
-  State<InstrumentsPage> createState() => _InstrumentsPageState();
+  State<SecuritiesPage> createState() => _SecuritiesPageState();
 }
 
-class _InstrumentsPageState extends State<InstrumentsPage> {
-  Map<String, dynamic>? _instrumentsData;
-  bool _isLoadingInstruments = false;
+class _SecuritiesPageState extends State<SecuritiesPage> {
+  Map<String, dynamic>? _securitiesData;
+  bool _isLoadingSecurities = false;
 
   // Pagination
   int _currentPage = 0;
@@ -51,8 +51,8 @@ class _InstrumentsPageState extends State<InstrumentsPage> {
         return;
       }
 
-      // Server is reachable, load instruments directly
-      await _fetchInstruments();
+      // Server is reachable, load securitys directly
+      await _fetchSecurities();
     } catch (e) {
       print('❌ Error checking connectivity: $e');
       setState(() {
@@ -62,25 +62,25 @@ class _InstrumentsPageState extends State<InstrumentsPage> {
     }
   }
 
-  Future<void> _fetchInstruments({int? page}) async {
+  Future<void> _fetchSecurities({int? page}) async {
     try {
       setState(() {
-        _isLoadingInstruments = true;
+        _isLoadingSecurities = true;
         _showNetworkError = false;
       });
 
       final pageToFetch = page ?? _currentPage;
 
-      print('📋 Fetching instruments, page: $pageToFetch');
+      print('📋 Fetching securities, page: $pageToFetch');
 
-      final instrumentsResponse = await realGrpcClient.getInstrumentList(
+      final securitysResponse = await realGrpcClient.getSecurityList(
         pageNumber: pageToFetch,
         pageSize: _pageSize,
       ).timeout(
         const Duration(seconds: 15),
         onTimeout: () => {
           'input': {},
-          'output': {'error': 'Request timed out', 'message': 'Instruments request timed out after 15 seconds'},
+          'output': {'error': 'Request timed out', 'message': 'Securities request timed out after 15 seconds'},
           'requestTime': (DateTime.now().millisecondsSinceEpoch ~/ 1000).toString(),
           'serverType': 'timeout',
           'success': false,
@@ -89,22 +89,22 @@ class _InstrumentsPageState extends State<InstrumentsPage> {
 
       if (mounted) {
         setState(() {
-          _instrumentsData = instrumentsResponse;
-          _isLoadingInstruments = false;
+          _securitiesData = securitysResponse;
+          _isLoadingSecurities = false;
 
           if (page != null) {
             _currentPage = page;
           }
         });
 
-        if (instrumentsResponse['success'] != true) {
+        if (securitysResponse['success'] != true) {
           // Network error occurred
-          final error = instrumentsResponse['output']['error'] ?? 'Unknown error';
+          final error = securitysResponse['output']['error'] ?? 'Unknown error';
           setState(() {
             _showNetworkError = true;
             _networkErrorMessage = error;
           });
-          _showErrorSnackBar('Failed to load instruments: $error');
+          _showErrorSnackBar('Failed to load securities: $error');
         } else {
           setState(() {
             _showNetworkError = false;
@@ -112,14 +112,14 @@ class _InstrumentsPageState extends State<InstrumentsPage> {
         }
       }
     } catch (e) {
-      print('❌ Error in _fetchInstruments: $e');
+      print('❌ Error in _fetchSecurities: $e');
       if (mounted) {
         setState(() {
-          _isLoadingInstruments = false;
+          _isLoadingSecurities = false;
           _showNetworkError = true;
-          _networkErrorMessage = 'Failed to fetch instruments: $e';
+          _networkErrorMessage = 'Failed to fetch securities: $e';
         });
-        _showErrorSnackBar('Network error: Failed to fetch instruments');
+        _showErrorSnackBar('Network error: Failed to fetch securities');
       }
     }
   }
@@ -150,7 +150,7 @@ class _InstrumentsPageState extends State<InstrumentsPage> {
     final isDarkTheme = themeService.isDarkTheme;
 
     return BasePage(
-      menuItems: MenuItemsHelper.buildMenuItems(context, 'instruments'),
+      menuItems: MenuItemsHelper.buildMenuItems(context, 'securities'),
       content: Column(
         children: [
           // Network Error Bar (if error exists)
@@ -196,7 +196,7 @@ class _InstrumentsPageState extends State<InstrumentsPage> {
               child: Column(
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
-                  // Instruments List
+                  // Securities List
                   Expanded(
                     child: Container(
                       decoration: BoxDecoration(
@@ -219,7 +219,7 @@ class _InstrumentsPageState extends State<InstrumentsPage> {
                             child: Row(
                               children: [
                                 Text(
-                                  'Instruments List',
+                                  'Securities List',
                                   style: TextStyle(
                                     fontSize: UIConstants.fontSizeMd,
                                     fontWeight: UIConstants.fontWeightMedium,
@@ -232,7 +232,7 @@ class _InstrumentsPageState extends State<InstrumentsPage> {
                           Expanded(
                             child: Padding(
                               padding: UIConstants.paddingComfortable,
-                              child: _buildInstrumentsContent(themeService, isDarkTheme),
+                              child: _buildSecuritiesContent(themeService, isDarkTheme),
                             ),
                           ),
                         ],
@@ -248,8 +248,8 @@ class _InstrumentsPageState extends State<InstrumentsPage> {
     );
   }
 
-  Widget _buildInstrumentsContent(ThemeService themeService, bool isDarkTheme) {
-    if (_isLoadingInstruments) {
+  Widget _buildSecuritiesContent(ThemeService themeService, bool isDarkTheme) {
+    if (_isLoadingSecurities) {
       return Center(
         child: Column(
           mainAxisAlignment: MainAxisAlignment.center,
@@ -257,7 +257,7 @@ class _InstrumentsPageState extends State<InstrumentsPage> {
             const CircularProgressIndicator(),
             const SizedBox(height: UIConstants.spacingMd),
             Text(
-              'Loading instruments...',
+              'Loading securities...',
               style: TextStyle(
                 fontSize: UIConstants.fontSizeBody,
                 color: isDarkTheme ? Colors.grey[400] : Colors.grey[600],
@@ -268,7 +268,7 @@ class _InstrumentsPageState extends State<InstrumentsPage> {
       );
     }
 
-    if (_instrumentsData == null) {
+    if (_securitiesData == null) {
       return Center(
         child: Column(
           mainAxisAlignment: MainAxisAlignment.center,
@@ -280,7 +280,7 @@ class _InstrumentsPageState extends State<InstrumentsPage> {
             ),
             const SizedBox(height: UIConstants.spacingMd),
             Text(
-              'No instruments data available',
+              'No securities data available',
               style: TextStyle(
                 fontSize: UIConstants.fontSizeMd,
                 fontWeight: UIConstants.fontWeightMedium,
@@ -289,7 +289,7 @@ class _InstrumentsPageState extends State<InstrumentsPage> {
             ),
             const SizedBox(height: UIConstants.spacingSm),
             Text(
-              'Select a market to view instruments',
+              'Select a market to view securities',
               style: TextStyle(
                 fontSize: UIConstants.fontSizeBody,
                 color: isDarkTheme ? Colors.grey[400] : Colors.grey[600],
@@ -300,8 +300,8 @@ class _InstrumentsPageState extends State<InstrumentsPage> {
       );
     }
 
-    if (_instrumentsData!['success'] != true) {
-      final output = _instrumentsData!['output'] as Map<String, dynamic>?;
+    if (_securitiesData!['success'] != true) {
+      final output = _securitiesData!['output'] as Map<String, dynamic>?;
       final error = output?['error'] ?? 'Unknown error';
       final details = output?['details'] ?? '';
       final suggestion = output?['suggestion'] ?? '';
@@ -366,7 +366,7 @@ class _InstrumentsPageState extends State<InstrumentsPage> {
               ],
               const SizedBox(height: 24),
               ElevatedButton.icon(
-                onPressed: () => _fetchInstruments(),
+                onPressed: () => _fetchSecurities(),
                 icon: const Icon(Icons.refresh),
                 label: const Text('Retry'),
               ),
@@ -376,11 +376,11 @@ class _InstrumentsPageState extends State<InstrumentsPage> {
       );
     }
 
-    // Display instruments list
-    final instrumentsOutput = _instrumentsData!['output'] as Map<String, dynamic>;
-    final instruments = instrumentsOutput['instruments'] as List<dynamic>? ?? [];
+    // Display securitys list
+    final securitysOutput = _securitiesData!['output'] as Map<String, dynamic>;
+    final securitys = securitysOutput['securities'] as List<dynamic>? ?? [];
 
-    if (instruments.isEmpty) {
+    if (securitys.isEmpty) {
       return Center(
         child: Column(
           mainAxisAlignment: MainAxisAlignment.center,
@@ -392,7 +392,7 @@ class _InstrumentsPageState extends State<InstrumentsPage> {
             ),
             const SizedBox(height: UIConstants.spacingMd),
             Text(
-              'No instruments found',
+              'No securities found',
               style: TextStyle(
                 fontSize: UIConstants.fontSizeMd,
                 fontWeight: UIConstants.fontWeightMedium,
@@ -401,7 +401,7 @@ class _InstrumentsPageState extends State<InstrumentsPage> {
             ),
             const SizedBox(height: UIConstants.spacingSm),
             Text(
-              'This market has no instruments',
+              'This market has no securities',
               style: TextStyle(
                 fontSize: UIConstants.fontSizeBody,
                 color: isDarkTheme ? Colors.grey[400] : Colors.grey[600],
@@ -413,25 +413,25 @@ class _InstrumentsPageState extends State<InstrumentsPage> {
     }
 
     return ListView.builder(
-      itemCount: instruments.length,
+      itemCount: securitys.length,
       itemBuilder: (context, index) {
-        final instrument = instruments[index] as Map<String, dynamic>;
+        final security = securitys[index] as Map<String, dynamic>;
         return Padding(
-          padding: EdgeInsets.only(bottom: index < instruments.length - 1 ? 12 : 0),
-          child: _buildInstrumentItem(instrument, isDarkTheme),
+          padding: EdgeInsets.only(bottom: index < securitys.length - 1 ? 12 : 0),
+          child: _buildSecurityItem(security, isDarkTheme),
         );
       },
     );
   }
 
-  Widget _buildInstrumentItem(Map<String, dynamic> instrument, bool isDarkTheme) {
-    final instrumentId = instrument['id'] ?? instrument['iid'] ?? 'Unknown';
-    final cfiCode = instrument['cfi_code'] ?? instrument['cfiCode'] ?? '';
-    final issueCurrency = instrument['issue_currency'] ?? instrument['issueCurrency'] ?? '';
+  Widget _buildSecurityItem(Map<String, dynamic> security, bool isDarkTheme) {
+    final securityId = security['id'] ?? security['iid'] ?? 'Unknown';
+    final cfiCode = security['cfi_code'] ?? security['cfiCode'] ?? '';
+    final issueCurrency = security['issue_currency'] ?? security['issueCurrency'] ?? '';
 
     // Extract symbol from identifiers if available
-    String symbol = instrumentId;
-    final identifiers = instrument['identifiers'] as List<dynamic>?;
+    String symbol = securityId;
+    final identifiers = security['identifiers'] as List<dynamic>?;
     if (identifiers != null && identifiers.isNotEmpty) {
       for (var id in identifiers) {
         final ids = id['ids'] as List<dynamic>?;
@@ -458,12 +458,12 @@ class _InstrumentsPageState extends State<InstrumentsPage> {
       ),
       child: Row(
         children: [
-          // Instrument Icon
+          // Security Icon
           Container(
             width: 48,
             height: 48,
             decoration: BoxDecoration(
-              color: _getColorForInstrument(symbol),
+              color: _getColorForSecurity(symbol),
               borderRadius: BorderRadius.circular(8),
             ),
             child: Center(
@@ -480,7 +480,7 @@ class _InstrumentsPageState extends State<InstrumentsPage> {
 
           const SizedBox(width: 16),
 
-          // Instrument Details
+          // Security Details
           Expanded(
             child: Column(
               crossAxisAlignment: CrossAxisAlignment.start,
@@ -515,7 +515,7 @@ class _InstrumentsPageState extends State<InstrumentsPage> {
                 ),
                 const SizedBox(height: UIConstants.spacingSm),
                 Text(
-                  'ID: $instrumentId',
+                  'ID: $securityId',
                   style: TextStyle(
                     fontSize: UIConstants.fontSizeSm,
                     color: isDarkTheme ? Colors.grey[400] : Colors.grey[600],
@@ -525,7 +525,7 @@ class _InstrumentsPageState extends State<InstrumentsPage> {
             ),
           ),
 
-          // Instrument Info
+          // Security Info
           Column(
             crossAxisAlignment: CrossAxisAlignment.end,
             children: [
@@ -551,7 +551,7 @@ class _InstrumentsPageState extends State<InstrumentsPage> {
     );
   }
 
-  Color _getColorForInstrument(String baseCurrency) {
+  Color _getColorForSecurity(String baseCurrency) {
     switch (baseCurrency.toUpperCase()) {
       case 'BTC':
         return const Color(0xFFF7931A);

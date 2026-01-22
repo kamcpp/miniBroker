@@ -1,6 +1,6 @@
 import 'package:flutter/material.dart';
 import '../widgets/left_menu.dart';
-import '../screens/instruments_page.dart';
+import '../screens/securities_page.dart';
 import '../screens/portfolio_page.dart';
 import '../screens/trading_page.dart';
 import '../screens/activity_page.dart';
@@ -16,14 +16,14 @@ class MenuItemsHelper {
   ) {
     return [
       MenuItem(
-        label: 'Instruments',
+        label: 'Securities',
         icon: Icons.list_alt,
-        isSelected: currentPage == 'instruments',
+        isSelected: currentPage == 'securities',
         onTap: () {
-          if (currentPage != 'instruments') {
+          if (currentPage != 'securities') {
             Navigator.of(context).pushReplacement(
               PageRouteBuilder(
-                pageBuilder: (context, animation, secondaryAnimation) => const InstrumentsPage(),
+                pageBuilder: (context, animation, secondaryAnimation) => const SecuritiesPage(),
                 transitionDuration: Duration.zero,
                 reverseTransitionDuration: Duration.zero,
               ),
