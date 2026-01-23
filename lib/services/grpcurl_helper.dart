@@ -19,6 +19,109 @@ class GrpcurlHelper {
   static bool _isAccountListInProgress = false;
   static bool _isFindingGrpcurlPath = false;
 
+  // ============================================================================
+  // Detailed Logging Helpers
+  // ============================================================================
+
+  /// Log a grpcurl request with headers and body
+  static void _logRequest({
+    required String method,
+    required String endpoint,
+    required List<String> args,
+    required String body,
+    Map<String, String>? headers,
+  }) {
+    final buffer = StringBuffer();
+    buffer.writeln('');
+    buffer.writeln('╔══════════════════════════════════════════════════════════════');
+    buffer.writeln('║ 📤 GRPCURL REQUEST');
+    buffer.writeln('╠══════════════════════════════════════════════════════════════');
+    buffer.writeln('║ Method:   $method');
+    buffer.writeln('║ Endpoint: $endpoint');
+    buffer.writeln('║ Target:   $_host:$_port');
+    buffer.writeln('╠──────────────────────────────────────────────────────────────');
+    buffer.writeln('║ Headers:');
+    if (headers != null && headers.isNotEmpty) {
+      for (final entry in headers.entries) {
+        // Mask API key value for security
+        final value = entry.key.toLowerCase().contains('api-key')
+            ? '${entry.value.substring(0, 4)}...${entry.value.substring(entry.value.length - 4)}'
+            : entry.value;
+        buffer.writeln('║   ${entry.key}: $value');
+      }
+    } else {
+      buffer.writeln('║   (none)');
+    }
+    buffer.writeln('╠──────────────────────────────────────────────────────────────');
+    buffer.writeln('║ Body (JSON):');
+    try {
+      // Pretty print JSON body
+      final decoded = jsonDecode(body);
+      final prettyJson = const JsonEncoder.withIndent('  ').convert(decoded);
+      for (final line in prettyJson.split('\n')) {
+        buffer.writeln('║   $line');
+      }
+    } catch (_) {
+      buffer.writeln('║   $body');
+    }
+    buffer.writeln('╠──────────────────────────────────────────────────────────────');
+    buffer.writeln('║ Full command:');
+    buffer.writeln('║   grpcurl ${args.map((a) => a.contains(' ') ? '"$a"' : a).join(' ')}');
+    buffer.writeln('╚══════════════════════════════════════════════════════════════');
+    print(buffer.toString());
+  }
+
+  /// Log a grpcurl response with status and body
+  static void _logResponse({
+    required String method,
+    required int exitCode,
+    required String stdout,
+    required String stderr,
+    required Duration duration,
+  }) {
+    final buffer = StringBuffer();
+    final isSuccess = exitCode == 0;
+    final statusIcon = isSuccess ? '✅' : '❌';
+    final statusText = isSuccess ? 'SUCCESS' : 'ERROR';
+
+    buffer.writeln('');
+    buffer.writeln('╔══════════════════════════════════════════════════════════════');
+    buffer.writeln('║ 📥 GRPCURL RESPONSE - $statusIcon $statusText');
+    buffer.writeln('╠══════════════════════════════════════════════════════════════');
+    buffer.writeln('║ Method:    $method');
+    buffer.writeln('║ Exit Code: $exitCode');
+    buffer.writeln('║ Duration:  ${duration.inMilliseconds}ms');
+    buffer.writeln('╠──────────────────────────────────────────────────────────────');
+
+    if (isSuccess && stdout.isNotEmpty) {
+      buffer.writeln('║ Response Body:');
+      try {
+        // Pretty print JSON response
+        final decoded = jsonDecode(stdout.trim());
+        final prettyJson = const JsonEncoder.withIndent('  ').convert(decoded);
+        for (final line in prettyJson.split('\n')) {
+          buffer.writeln('║   $line');
+        }
+      } catch (_) {
+        // Not JSON, print as-is
+        for (final line in stdout.trim().split('\n')) {
+          buffer.writeln('║   $line');
+        }
+      }
+    } else if (!isSuccess && stderr.isNotEmpty) {
+      buffer.writeln('║ Error Output:');
+      for (final line in stderr.trim().split('\n')) {
+        buffer.writeln('║   $line');
+      }
+    } else {
+      buffer.writeln('║ (empty response)');
+    }
+
+    buffer.writeln('╚══════════════════════════════════════════════════════════════');
+    print(buffer.toString());
+  }
+
+
   // Try common grpcurl installation paths - absolute paths first for sandbox compatibility
   static const List<String> _grpcurlPaths = [
     '/usr/local/bin/grpcurl', // Most common location - try first
@@ -280,20 +383,43 @@ class GrpcurlHelper {
         };
       }
 
-      print('🔄 Making real grpcurl call to AgentService.Ping using $grpcurlPath');
-      print('📨 Request: $request');
+      const methodName = 'AgentService.Ping';
+      const endpoint = 'tech.qomet.agora.api.grpc.prtagent.v1.AgentService.Ping';
 
       ProcessResult? result;
       try {
+        final jsonRequest = jsonEncode(request);
+        final args = ['-plaintext', '-d', jsonRequest, '$_host:$_port', endpoint];
+
+        // Log the request with detailed formatting
+        _logRequest(
+          method: methodName,
+          endpoint: endpoint,
+          args: args,
+          body: jsonRequest,
+        );
+
+        final stopwatch = Stopwatch()..start();
         result = await Process.run(
-          grpcurlPath, 
-          ['-plaintext', '-d', jsonEncode(request), '$_host:$_port', 'tech.qomet.agora.api.grpc.prtagent.v1.AgentService.Ping'],
+          grpcurlPath,
+          args,
         ).timeout(
           const Duration(seconds: 3),
           onTimeout: () {
+            stopwatch.stop();
             print('⏰ grpcurl Process.run timed out after 3 seconds');
             throw TimeoutException('grpcurl ping timed out', const Duration(seconds: 3));
           },
+        );
+        stopwatch.stop();
+
+        // Log the response with detailed formatting
+        _logResponse(
+          method: methodName,
+          exitCode: result.exitCode,
+          stdout: result.stdout.toString(),
+          stderr: result.stderr.toString(),
+          duration: stopwatch.elapsed,
         );
       } on TimeoutException catch (e) {
         print('⏰ Ping timeout: ${e.message}');
@@ -325,8 +451,7 @@ class GrpcurlHelper {
 
       if (result.exitCode == 0) {
         final responseJson = result.stdout.toString().trim();
-        print('📬 Raw server response: $responseJson');
-        
+
         try {
           final parsedResponse = jsonDecode(responseJson) as Map<String, dynamic>;
           return {
@@ -350,7 +475,6 @@ class GrpcurlHelper {
         }
       } else {
         final error = result.stderr.toString();
-        print('❌ grpcurl error: $error');
         
         return {
           'input': request,
@@ -482,34 +606,53 @@ class GrpcurlHelper {
         };
       }
 
-      print('🔄 Making real grpcurl call to InvestorService.NewInvestor using $grpcurlPath');
-      print('📨 Request: $request');
+      const methodName = 'InvestorService.NewInvestor';
+      const endpoint = 'tech.qomet.agora.api.grpc.prtagent.v1.InvestorService/NewInvestor';
 
       ProcessResult? result;
       try {
         final jsonRequest = jsonEncode(request);
-        print('📤 JSON payload: $jsonRequest');
 
         // Build grpcurl arguments with API key header if available
         final args = <String>['-plaintext'];
+        final headers = <String, String>{};
         final apiKey = AppConfig.grpcApiKey;
         if (apiKey != null && apiKey.isNotEmpty) {
           args.addAll(['-H', 'x-agora-participant-api-key: $apiKey']);
-          print('🔑 Using API key for authentication');
-        } else {
-          print('⚠️ No API key configured - request may fail authentication');
+          headers['x-agora-participant-api-key'] = apiKey;
         }
-        args.addAll(['-d', jsonRequest, '$_host:$_port', 'tech.qomet.agora.api.grpc.prtagent.v1.InvestorService/NewInvestor']);
+        args.addAll(['-d', jsonRequest, '$_host:$_port', endpoint]);
 
+        // Log the request with detailed formatting
+        _logRequest(
+          method: methodName,
+          endpoint: endpoint,
+          args: args,
+          body: jsonRequest,
+          headers: headers,
+        );
+
+        final stopwatch = Stopwatch()..start();
         result = await Process.run(
           grpcurlPath,
           args,
         ).timeout(
           const Duration(seconds: 10),
           onTimeout: () {
+            stopwatch.stop();
             print('⏰ grpcurl NewInvestor Process.run timed out after 10 seconds');
             throw TimeoutException('grpcurl newInvestor timed out', const Duration(seconds: 10));
           },
+        );
+        stopwatch.stop();
+
+        // Log the response with detailed formatting
+        _logResponse(
+          method: methodName,
+          exitCode: result.exitCode,
+          stdout: result.stdout.toString(),
+          stderr: result.stderr.toString(),
+          duration: stopwatch.elapsed,
         );
       } on TimeoutException catch (e) {
         print('⏰ NewInvestor timeout: ${e.message}');
@@ -525,7 +668,7 @@ class GrpcurlHelper {
         };
       } catch (e) {
         // Catch ANY other exception that might occur in sandboxed environment
-        print('❌ Process.run failed for newAccount in sandboxed app: ${e.runtimeType}: ${e.toString()}');
+        print('❌ Process.run failed for newInvestor in sandboxed app: ${e.runtimeType}: ${e.toString()}');
         return {
           'input': request,
           'output': {
@@ -541,8 +684,7 @@ class GrpcurlHelper {
 
       if (result.exitCode == 0) {
         final responseJson = result.stdout.toString().trim();
-        print('📬 Raw server response: $responseJson');
-        
+
         try {
           final parsedResponse = jsonDecode(responseJson) as Map<String, dynamic>;
           return {
@@ -566,8 +708,7 @@ class GrpcurlHelper {
         }
       } else {
         final error = result.stderr.toString();
-        print('❌ grpcurl error: $error');
-        
+
         return {
           'input': request,
           'output': {

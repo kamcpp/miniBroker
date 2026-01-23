@@ -4,6 +4,7 @@ import 'dart:ui';
 import '../services/auth_service.dart';
 import '../utils/connectivity_checker.dart';
 import '../main.dart';
+import '../config/app_config.dart';
 import '../config/ui_constants.dart';
 import '../widgets/copyright_bar.dart';
 
@@ -224,18 +225,57 @@ class _LoginPageState extends State<LoginPage> with TickerProviderStateMixin {
           Container(
             color: const Color(0xFF1a1754).withOpacity(0.9), // 90% fade with dark blue
           ),
-          // Back to Config button in top-right corner
+          // Selected broker name and settings button in top-right corner
           Positioned(
             top: 20,
             right: 20,
-            child: IconButton(
-              onPressed: _goBackToConfigSelection,
-              icon: const Icon(Icons.settings, color: Colors.white, size: 28),
-              tooltip: 'Change Configuration',
-              style: IconButton.styleFrom(
-                backgroundColor: Colors.white.withOpacity(0.1),
-                padding: const EdgeInsets.all(12),
-              ),
+            child: Row(
+              mainAxisSize: MainAxisSize.min,
+              children: [
+                // Broker name chip
+                if (AppConfig.selectedBrokerName != null)
+                  Container(
+                    padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
+                    decoration: BoxDecoration(
+                      color: Colors.white.withOpacity(0.15),
+                      borderRadius: BorderRadius.circular(20),
+                      border: Border.all(
+                        color: Colors.white.withOpacity(0.3),
+                        width: 1,
+                      ),
+                    ),
+                    child: Row(
+                      mainAxisSize: MainAxisSize.min,
+                      children: [
+                        const Icon(
+                          Icons.business,
+                          color: Colors.white70,
+                          size: 16,
+                        ),
+                        const SizedBox(width: 6),
+                        Text(
+                          AppConfig.selectedBrokerName!,
+                          style: const TextStyle(
+                            color: Colors.white,
+                            fontSize: 13,
+                            fontWeight: FontWeight.w500,
+                          ),
+                        ),
+                      ],
+                    ),
+                  ),
+                const SizedBox(width: 8),
+                // Settings button
+                IconButton(
+                  onPressed: _goBackToConfigSelection,
+                  icon: const Icon(Icons.settings, color: Colors.white, size: 28),
+                  tooltip: 'Change Configuration',
+                  style: IconButton.styleFrom(
+                    backgroundColor: Colors.white.withOpacity(0.1),
+                    padding: const EdgeInsets.all(12),
+                  ),
+                ),
+              ],
             ),
           ),
           // Main content

@@ -139,61 +139,59 @@ class AuthService extends ChangeNotifier {
         throw 'Password must be at least 5 characters long';
       }
 
-      // Check if username already exists
+      // Check if username already exists locally
       final usernameExists = await _databaseHelper.isUsernameExists(user);
       if (usernameExists) {
         throw 'Username already exists';
       }
 
-      // Create new user in local database first
-      final localSuccess = await _databaseHelper.createUser(user, password);
-
-      if (!localSuccess) {
-        throw 'Failed to create local account';
-      }
-
-      // Try to create investor on server via NewInvestor gRPC call
-      bool serverSuccess = false;
+      // First, try to create investor on server via NewInvestor gRPC call
+      // Only create local account if server succeeds
       String? serverInvestorId;
       String? serverError;
 
-      try {
-        print('🌐 Creating investor on server for user: $user');
-        final serverResponse = await realGrpcClient.newInvestor(
-          externalInvestorId: user.toLowerCase().trim(),
-          auxData: 'Created from Flutter app signup - ${_toUnixTimestamp(DateTime.now()).toString()}',
-        );
+      print('🌐 Creating investor on server for user: $user');
+      final serverResponse = await realGrpcClient.newInvestor(
+        externalInvestorId: user.toLowerCase().trim(),
+        auxData: 'Created from Flutter app signup - ${_toUnixTimestamp(DateTime.now()).toString()}',
+      );
 
-        if (serverResponse['success'] == true) {
-          serverSuccess = true;
-          serverInvestorId = serverResponse['output']['newInvestorIid'] ??
-                            serverResponse['output']['new_investor_iid'] ??
-                            serverResponse['output']['refExecutionId'] ??
-                            serverResponse['output']['ref_execution_id'];
-          print('✅ Server investor created successfully: $serverInvestorId');
-        } else {
-          // Server investor creation failed - extract error message
-          final errorOutput = serverResponse['output'];
-          if (errorOutput != null) {
-            if (errorOutput['error'] != null) {
-              serverError = errorOutput['error'].toString();
-            } else if (errorOutput['message'] != null) {
-              serverError = errorOutput['message'].toString();
-            }
+      if (serverResponse['success'] != true) {
+        // Server investor creation failed - extract error message and throw
+        final errorOutput = serverResponse['output'];
+        if (errorOutput != null) {
+          if (errorOutput['error'] != null) {
+            serverError = errorOutput['error'].toString();
+          } else if (errorOutput['message'] != null) {
+            serverError = errorOutput['message'].toString();
           }
-          serverError ??= 'Server investor creation failed';
-          print('⚠️ Server investor creation failed: $serverError');
         }
-      } catch (e) {
-        serverError = e.toString();
-        print('⚠️ Server investor creation failed with exception: $e');
+        serverError ??= 'Server investor creation failed';
+        print('❌ Server investor creation failed: $serverError');
+        throw 'Failed to create investor on server: $serverError';
+      }
+
+      // Server succeeded - extract investor ID
+      serverInvestorId = serverResponse['output']['newInvestorIid'] ??
+                        serverResponse['output']['new_investor_iid'] ??
+                        serverResponse['output']['refExecutionId'] ??
+                        serverResponse['output']['ref_execution_id'];
+      print('✅ Server investor created successfully: $serverInvestorId');
+
+      // Now create local account since server succeeded
+      final localSuccess = await _databaseHelper.createUser(user, password);
+
+      if (!localSuccess) {
+        // This is an edge case - server succeeded but local failed
+        // Log this but still return success since server has the investor
+        print('⚠️ Server investor created but local account creation failed');
       }
 
       return SignupResult(
-        localSuccess: true,
-        serverSuccess: serverSuccess,
+        localSuccess: localSuccess,
+        serverSuccess: true,
         serverInvestorId: serverInvestorId,
-        serverError: serverError,
+        serverError: null,
       );
     } catch (e) {
       print('Signup error: $e');
