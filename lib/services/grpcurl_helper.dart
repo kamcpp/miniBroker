@@ -358,10 +358,10 @@ class GrpcurlHelper {
     };
 
     try {
-      // Find the working grpcurl path with aggressive timeout to prevent hanging
+      // Find the working grpcurl path with timeout that accounts for socket check (2s) plus path testing
       print('🔍 Looking for grpcurl executable...');
       final grpcurlPath = await _findGrpcurlPath().timeout(
-        const Duration(milliseconds: 500),
+        const Duration(seconds: 20),
         onTimeout: () {
           print('⏰ grpcurl path finder timed out');
           return null;
@@ -529,10 +529,65 @@ class GrpcurlHelper {
 
     _isAccountListInProgress = true;
     try {
-      return await _newInvestorInternal(
-        externalInvestorId: externalInvestorId,
-        auxData: auxData,
-      );
+      // Retry logic with exponential backoff for connection refused errors
+      const maxRetries = 3;
+      const retryDelays = [Duration(seconds: 2), Duration(seconds: 4), Duration(seconds: 8)];
+
+      for (var attempt = 0; attempt <= maxRetries; attempt++) {
+        final result = await _newInvestorInternal(
+          externalInvestorId: externalInvestorId,
+          auxData: auxData,
+        );
+
+        // Check if this is a connection refused error that should trigger retry
+        if (result['success'] != true && attempt < maxRetries) {
+          final errorOutput = result['output'];
+          final errorStr = errorOutput?.toString().toLowerCase() ?? '';
+
+          // Check for connection refused or similar connection errors
+          if (errorStr.contains('connection refused') ||
+              errorStr.contains('connection error') ||
+              errorStr.contains('failed to dial') ||
+              errorStr.contains('transport: error while dialing')) {
+            print('🔄 Connection refused on attempt ${attempt + 1}/${maxRetries + 1}, waiting before retry...');
+
+            // Clear the cached grpcurl path to force re-discovery on next attempt
+            _cachedGrpcurlPath = null;
+
+            // Wait before retrying with exponential backoff
+            await Future.delayed(retryDelays[attempt]);
+
+            // Check if server is reachable before retry
+            print('🔌 Checking if server is reachable before retry...');
+            final serverReachable = await _isServerReachable();
+            if (!serverReachable) {
+              print('⚠️ Server still not reachable, will retry anyway...');
+            } else {
+              print('✅ Server is now reachable, retrying...');
+            }
+
+            continue; // Retry
+          }
+        }
+
+        // Either success or non-retryable error
+        return result;
+      }
+
+      // Should not reach here, but return last error
+      return {
+        'input': {
+          'proposed_execution_id': 'new_investor_${DateTime.now().millisecondsSinceEpoch}',
+          'external_investor_id': externalInvestorId,
+        },
+        'output': {
+          'error': 'Max retries exceeded',
+          'message': 'Failed to connect to server after ${maxRetries + 1} attempts. Please check if the server is running.',
+        },
+        'requestTime': _toUnixTimestamp(DateTime.now()).toString(),
+        'serverType': 'retry-exhausted',
+        'success': false,
+      };
     } catch (error, stack) {
       print('❌ CRITICAL: Unhandled exception in newInvestor: $error');
       print('❌ CRITICAL: Stack: $stack');
@@ -581,10 +636,10 @@ class GrpcurlHelper {
     };
 
     try {
-      // Find the working grpcurl path with aggressive timeout to prevent hanging
+      // Find the working grpcurl path with timeout that accounts for socket check plus path testing
       print('🔍 Looking for grpcurl executable for NewInvestor...');
       final grpcurlPath = await _findGrpcurlPath().timeout(
-        const Duration(milliseconds: 500),
+        const Duration(seconds: 20),
         onTimeout: () {
           print('⏰ grpcurl path finder timed out for NewInvestor');
           return null;
@@ -829,10 +884,10 @@ class GrpcurlHelper {
     };
 
     try {
-      // Find the working grpcurl path with aggressive timeout to prevent hanging
+      // Find the working grpcurl path with timeout that accounts for socket check plus path testing
       print('🔍 Looking for grpcurl executable for GetAccountList...');
       final grpcurlPath = await _findGrpcurlPath().timeout(
-        const Duration(milliseconds: 500),
+        const Duration(seconds: 20),
         onTimeout: () {
           print('⏰ grpcurl path finder timed out for GetAccountList');
           return null;
@@ -969,10 +1024,10 @@ class GrpcurlHelper {
     };
 
     try {
-      // Find the working grpcurl path with aggressive timeout to prevent hanging
+      // Find the working grpcurl path with timeout that accounts for socket check plus path testing
       print('🔍 Looking for grpcurl executable for GetAccountSecurityHoldings...');
       final grpcurlPath = await _findGrpcurlPath().timeout(
-        const Duration(milliseconds: 500),
+        const Duration(seconds: 20),
         onTimeout: () {
           print('⏰ grpcurl path finder timed out for GetAccountSecurityHoldings');
           return null;
@@ -1136,10 +1191,10 @@ class GrpcurlHelper {
     };
 
     try {
-      // Find the working grpcurl path with aggressive timeout to prevent hanging
+      // Find the working grpcurl path with timeout that accounts for socket check plus path testing
       print('🔍 Looking for grpcurl executable for GetAccountCashHoldings...');
       final grpcurlPath = await _findGrpcurlPath().timeout(
-        const Duration(milliseconds: 500),
+        const Duration(seconds: 20),
         onTimeout: () {
           print('⏰ grpcurl path finder timed out for GetAccountCashHoldings');
           return null;
@@ -1310,10 +1365,10 @@ class GrpcurlHelper {
     };
 
     try {
-      // Find the working grpcurl path with aggressive timeout to prevent hanging
+      // Find the working grpcurl path with timeout that accounts for socket check plus path testing
       print('🔍 Looking for grpcurl executable for DepositCash...');
       final grpcurlPath = await _findGrpcurlPath().timeout(
-        const Duration(milliseconds: 500),
+        const Duration(seconds: 20),
         onTimeout: () {
           print('⏰ grpcurl path finder timed out for DepositCash');
           return null;
@@ -1483,10 +1538,10 @@ class GrpcurlHelper {
     };
 
     try {
-      // Find the working grpcurl path with aggressive timeout to prevent hanging
+      // Find the working grpcurl path with timeout that accounts for socket check plus path testing
       print('🔍 Looking for grpcurl executable for WithdrawCash...');
       final grpcurlPath = await _findGrpcurlPath().timeout(
-        const Duration(milliseconds: 500),
+        const Duration(seconds: 20),
         onTimeout: () {
           print('⏰ grpcurl path finder timed out for WithdrawCash');
           return null;
@@ -2778,10 +2833,10 @@ class GrpcurlHelper {
     String? auxData,
   }) async {
     try {
-      // Find the working grpcurl path
+      // Find the working grpcurl path with timeout that accounts for socket check plus path testing
       print('🔍 Looking for grpcurl executable for CreateOrderAsync...');
       final grpcurlPath = await _findGrpcurlPath().timeout(
-        const Duration(milliseconds: 500),
+        const Duration(seconds: 20),
         onTimeout: () {
           print('⏰ grpcurl path finder timed out for CreateOrderAsync');
           return null;
