@@ -2,8 +2,8 @@
 # Auto-sync daemon for Config.json - Production-ready automatic sync
 # This runs in background and automatically syncs Config.json changes INSTANTLY
 
-EXTERNAL_CONFIG="/Users/arezoughanekanafi/000/mini-broker/build/macos/Build/Products/Debug/Config.json"
-ASSETS_CONFIG="/Users/arezoughanekanafi/000/mini-broker/assets/Config.json"
+EXTERNAL_CONFIG="/Users/arezoughanekanafi/000/miniBroker/build/macos/Build/Products/Debug/Config.json"
+ASSETS_CONFIG="/Users/arezoughanekanafi/000/miniBroker/assets/Config.json"
 
 echo "🚀 Starting AUTOMATIC Config.json sync daemon..."
 echo "📂 Watching: $EXTERNAL_CONFIG"

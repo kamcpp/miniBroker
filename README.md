@@ -25,7 +25,7 @@ A Flutter-based FIX protocol client application for macOS and Windows, designed 
 1. **Clone the repository**:
    ```bash
    git clone <your-gitlab-repo-url>
-   cd mini-broker
+   cd miniBroker
    ```
 
 2. **Install Flutter dependencies**:

@@ -82,7 +82,7 @@ class AppHeader extends StatelessWidget {
         ),
         const SizedBox(width: UIConstants.spacingSm),
         Text(
-          'mini Broker',
+          'miniBroker',
           style: TextStyle(
             fontSize: UIConstants.fontSizeLg,
             fontWeight: UIConstants.fontWeightMedium,

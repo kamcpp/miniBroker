@@ -1,11 +1,11 @@
 #!/bin/bash
 
-# Script to convert the Mini Broker logo to macOS app icon sizes
+# Script to convert the miniBroker logo to macOS app icon sizes
 # Usage: Place your logo as 'logo.png' in the same directory as this script, then run it
 
 # Check if logo.png exists
 if [ ! -f "logo.png" ]; then
-    echo "Error: logo.png not found. Please place your Mini Broker logo as 'logo.png' in this directory."
+    echo "Error: logo.png not found. Please place your miniBroker logo as 'logo.png' in this directory."
     exit 1
 fi
 

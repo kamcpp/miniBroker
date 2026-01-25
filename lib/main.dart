@@ -41,7 +41,7 @@ class MyApp extends StatelessWidget {
         ChangeNotifierProvider(create: (_) => ThemeService()),
       ],
       child: MaterialApp(
-        title: 'mini-broker-v1.0.0',
+        title: 'miniBroker-v1.0.0',
         debugShowCheckedModeBanner: false,
         theme: ThemeData(
           colorScheme: ColorScheme.fromSeed(seedColor: const Color(0xFF1a1754)),

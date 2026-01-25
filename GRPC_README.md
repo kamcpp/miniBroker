@@ -1,6 +1,6 @@
-# Mini Broker gRPC Integration
+# miniBroker gRPC Integration
 
-This document explains how to use the generated gRPC client code for the Mini Broker Flutter application.
+This document explains how to use the generated gRPC client code for the miniBroker Flutter application.
 
 ## Overview
 

@@ -152,7 +152,7 @@ class _CreateBrokerConfigDialogState extends State<CreateBrokerConfigDialog> {
 
       // Send a ping request
       final testRequest = PingRequest()
-        ..stringToBePonged = 'Connection test from mini-broker';
+        ..stringToBePonged = 'Connection test from miniBroker';
       requestController.add(testRequest);
 
       // Wait for response with timeout

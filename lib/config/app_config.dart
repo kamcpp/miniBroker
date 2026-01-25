@@ -1,6 +1,6 @@
 /// Application-wide configuration
 ///
-/// This file contains all configuration settings for the mini-broker app.
+/// This file contains all configuration settings for the miniBroker app.
 /// To change server settings, update the values in this file only.
 class AppConfig {
   // Private constructor to prevent instantiation
@@ -30,7 +30,7 @@ class AppConfig {
   // ============================================================================
 
   /// Application name
-  static const String appName = 'mini-broker';
+  static const String appName = 'miniBroker';
 
   /// Application version
   static const String appVersion = '1.0.0';

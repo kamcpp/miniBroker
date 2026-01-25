@@ -2,8 +2,8 @@
 # Auto-sync script for Config.json during development
 # This script watches your external Config.json and automatically copies it to Resources
 
-EXTERNAL_CONFIG="/Users/arezoughanekanafi/000/mini-broker/build/macos/Build/Products/Debug/Config.json"
-RESOURCES_CONFIG="/Users/arezoughanekanafi/000/mini-broker/build/macos/Build/Products/Debug/Mini Broker.app/Contents/Resources/Config.json"
+EXTERNAL_CONFIG="/Users/arezoughanekanafi/000/miniBroker/build/macos/Build/Products/Debug/Config.json"
+RESOURCES_CONFIG="/Users/arezoughanekanafi/000/miniBroker/build/macos/Build/Products/Debug/miniBroker.app/Contents/Resources/Config.json"
 
 echo "🔄 Starting Config.json auto-sync..."
 echo "📂 Watching: $EXTERNAL_CONFIG"

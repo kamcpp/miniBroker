@@ -169,7 +169,7 @@ class BrokerConfigHelper {
           'name': participantName ?? brokerName,
         },
         'app': {
-          'name': 'mini-broker',
+          'name': 'miniBroker',
           'version': '1.0.0',
           'environment': 'development',
         },

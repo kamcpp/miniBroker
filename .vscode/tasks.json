@@ -2,7 +2,7 @@
 	"version": "2.0.0",
 	"tasks": [
 		{
-			"label": "Run Mini Broker App",
+			"label": "Run miniBroker App",
 			"type": "shell",
 			"command": "flutter",
 			"args": [
