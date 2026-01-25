@@ -2,10 +2,10 @@ import 'package:flutter/material.dart';
 import '../widgets/left_menu.dart';
 import '../screens/securities_page.dart';
 import '../screens/portfolio_page.dart';
-import '../screens/trading_page.dart';
-import '../screens/activity_page.dart';
+// import '../screens/trading_page.dart';  // Disabled
+// import '../screens/activity_page.dart';  // Disabled
 import '../screens/cash_management_page.dart';
-import '../screens/users_admin_page.dart';
+// import '../screens/users_admin_page.dart';  // Disabled
 
 /// Helper class to build consistent menu items across all pages
 class MenuItemsHelper {
@@ -47,38 +47,40 @@ class MenuItemsHelper {
           }
         },
       ),
-      MenuItem(
-        label: 'Trading',
-        icon: Icons.candlestick_chart,
-        isSelected: currentPage == 'trading',
-        onTap: () {
-          if (currentPage != 'trading') {
-            Navigator.of(context).pushReplacement(
-              PageRouteBuilder(
-                pageBuilder: (context, animation, secondaryAnimation) => const TradingPage(),
-                transitionDuration: Duration.zero,
-                reverseTransitionDuration: Duration.zero,
-              ),
-            );
-          }
-        },
-      ),
-      MenuItem(
-        label: 'Activity',
-        icon: Icons.history,
-        isSelected: currentPage == 'activity',
-        onTap: () {
-          if (currentPage != 'activity') {
-            Navigator.of(context).pushReplacement(
-              PageRouteBuilder(
-                pageBuilder: (context, animation, secondaryAnimation) => const ActivityPage(),
-                transitionDuration: Duration.zero,
-                reverseTransitionDuration: Duration.zero,
-              ),
-            );
-          }
-        },
-      ),
+      // Trading - Disabled
+      // MenuItem(
+      //   label: 'Trading',
+      //   icon: Icons.candlestick_chart,
+      //   isSelected: currentPage == 'trading',
+      //   onTap: () {
+      //     if (currentPage != 'trading') {
+      //       Navigator.of(context).pushReplacement(
+      //         PageRouteBuilder(
+      //           pageBuilder: (context, animation, secondaryAnimation) => const TradingPage(),
+      //           transitionDuration: Duration.zero,
+      //           reverseTransitionDuration: Duration.zero,
+      //         ),
+      //       );
+      //     }
+      //   },
+      // ),
+      // Activity - Disabled
+      // MenuItem(
+      //   label: 'Activity',
+      //   icon: Icons.history,
+      //   isSelected: currentPage == 'activity',
+      //   onTap: () {
+      //     if (currentPage != 'activity') {
+      //       Navigator.of(context).pushReplacement(
+      //         PageRouteBuilder(
+      //           pageBuilder: (context, animation, secondaryAnimation) => const ActivityPage(),
+      //           transitionDuration: Duration.zero,
+      //           reverseTransitionDuration: Duration.zero,
+      //         ),
+      //       );
+      //     }
+      //   },
+      // ),
       MenuItem(
         label: 'Cash Management',
         icon: Icons.payments,
@@ -95,20 +97,21 @@ class MenuItemsHelper {
           }
         },
       ),
-      MenuItem(
-        label: 'Users Admin',
-        icon: Icons.admin_panel_settings,
-        isSelected: currentPage == 'users',
-        onTap: () {
-          Navigator.of(context).push(
-            PageRouteBuilder(
-              pageBuilder: (context, animation, secondaryAnimation) => const UsersAdminPage(),
-              transitionDuration: Duration.zero,
-              reverseTransitionDuration: Duration.zero,
-            ),
-          );
-        },
-      ),
+      // Users Admin - Disabled
+      // MenuItem(
+      //   label: 'Users Admin',
+      //   icon: Icons.admin_panel_settings,
+      //   isSelected: currentPage == 'users',
+      //   onTap: () {
+      //     Navigator.of(context).push(
+      //       PageRouteBuilder(
+      //         pageBuilder: (context, animation, secondaryAnimation) => const UsersAdminPage(),
+      //         transitionDuration: Duration.zero,
+      //         reverseTransitionDuration: Duration.zero,
+      //       ),
+      //     );
+      //   },
+      // ),
     ];
   }
 }

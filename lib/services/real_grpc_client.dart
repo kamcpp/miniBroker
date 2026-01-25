@@ -758,7 +758,7 @@ class RealGrpcClient {
 
       // Try to call the real server with grpcurl, with comprehensive crash protection
       final response = await GrpcurlHelper.depositCash(
-        accountId: accountId,
+        investorId: accountId,
         currencyCode: currencyCode,
         amount: amount,
         auxData: auxData,
@@ -881,7 +881,7 @@ class RealGrpcClient {
 
       // Try to call the real server with grpcurl, with comprehensive crash protection
       final response = await GrpcurlHelper.withdrawCash(
-        accountId: accountId,
+        investorId: accountId,
         currencyCode: currencyCode,
         amount: amount,
         auxData: auxData,
@@ -1226,33 +1226,14 @@ class RealGrpcClient {
       };
     }
 
-    try {
-      print('📋 Getting market list from real server...');
-
-      final inputParams = {
-        'proposed_execution_id': 'get_markets_${DateTime.now().millisecondsSinceEpoch}',
-      };
-
-      final result = await GrpcurlHelper.getMarketList();
-
-      print('📤 GetMarketList OUTPUT: ${result.toString()}');
-      return {
-        'input': inputParams,
-        'output': result['success'] ? result['output'] : {'error': result['error'] ?? 'Unknown error'},
-        'requestTime': _toUnixTimestamp(DateTime.now()).toString(),
-        'serverType': 'real_grpc',
-        'success': result['success'] ?? false,
-      };
-    } catch (e) {
-      print('❌ Critical error in getMarketList: $e');
-      return {
-        'input': {},
-        'output': {'error': 'Critical error: $e'},
-        'requestTime': _toUnixTimestamp(DateTime.now()).toString(),
-        'serverType': 'critical-error',
-        'success': false,
-      };
-    }
+    // MarketService not available - returns empty list
+    return {
+      'input': {},
+      'output': {'markets': []},
+      'requestTime': _toUnixTimestamp(DateTime.now()).toString(),
+      'serverType': 'stub',
+      'success': true,
+    };
   }
 
   /// Real GetMarketSecurityList call to MarketService.GetMarketSecurityList using grpcurl
@@ -1311,28 +1292,12 @@ class RealGrpcClient {
     int pageNumber = 0,
     int pageSize = 0,
   }) async {
-    try {
-      print('🏦 Getting supported currencies...');
-
-      final result = await GrpcurlHelper.getSupportedCurrencies(
-        pageNumber: pageNumber,
-        pageSize: pageSize,
-      );
-
-      return result;
-    } catch (e) {
-      print('❌ Critical error in getSupportedCurrencies: $e');
-      return {
-        'input': {
-          'page_nr': pageNumber,
-          'page_size': pageSize,
-        },
-        'output': {'error': 'Critical error: $e'},
-        'requestTime': _toUnixTimestamp(DateTime.now()).toString(),
-        'serverType': 'critical-error',
-        'success': false,
-      };
-    }
+    // AgentService only supports Ping - getSupportedCurrencies not available
+    print('⚠️ getSupportedCurrencies not available - using CashTokenService instead');
+    return GrpcurlHelper.getCashTokenList(
+      pageNumber: pageNumber,
+      pageSize: pageSize,
+    );
   }
 
   /// Get market supported currencies using the real gRPC server
@@ -1341,206 +1306,94 @@ class RealGrpcClient {
     int pageNumber = 0,
     int pageSize = 0,
   }) async {
-    try {
-      print('🏦 Getting market supported currencies for market: $marketId');
-      final result = await GrpcurlHelper.getMarketSupportedCurrencies(
-        marketId: marketId,
-        pageNumber: pageNumber,
-        pageSize: pageSize,
-      );
-      print('📤 GetMarketSupportedCurrencies OUTPUT: ${result.toString()}');
-      return {
-        'input': {
-          'market_id': marketId,
-          'page_nr': pageNumber,
-          'page_size': pageSize,
-        },
-        'output': result['success'] ? result['output'] : {'error': result['output']?['error'] ?? 'Unknown error'},
-        'requestTime': _toUnixTimestamp(DateTime.now()).toString(),
-        'serverType': 'real_grpc',
-        'success': result['success'] ?? false,
-      };
-    } catch (e) {
-      print('❌ Critical error in getMarketSupportedCurrencies: $e');
-      return {
-        'input': {
-          'market_id': marketId,
-          'page_nr': pageNumber,
-          'page_size': pageSize,
-        },
-        'output': {'error': 'Critical error: $e'},
-        'requestTime': _toUnixTimestamp(DateTime.now()).toString(),
-        'serverType': 'critical-error',
-        'success': false,
-      };
-    }
+    // AgentService only supports Ping - getMarketSupportedCurrencies not available
+    // Using CashTokenService.GetCashTokenList as fallback
+    print('⚠️ getMarketSupportedCurrencies not available - using CashTokenService instead');
+    return GrpcurlHelper.getCashTokenList(
+      pageNumber: pageNumber,
+      pageSize: pageSize,
+    );
   }
 
   /// Get order fees using the real gRPC server
+  /// NOTE: TradingService not available on current server
   Future<Map<String, dynamic>> getOrderFees({
     required String accountId,
     required String feePayerAccountId,
     required String securityId,
-    required String orderType, // "LIMIT" or "MARKET"
-    required String side, // "BUY" or "SELL"
+    required String orderType,
+    required String side,
     required String quantity,
-    String? price, // Required for LIMIT orders
-    String timeInForce = "0", // Always 0 according to requirements
+    String? price,
+    String timeInForce = "0",
   }) async {
-    try {
-      print('💰 Getting order fees...');
-
-      final result = await GrpcurlHelper.getOrderFees(
-        accountId: accountId,
-        feePayerAccountId: feePayerAccountId,
-        securityId: securityId,
-        orderType: orderType,
-        side: side,
-        quantity: quantity,
-        price: price,
-        timeInForce: timeInForce,
-      );
-
-      print('📤 GetOrderFees OUTPUT: ${result.toString()}');
-      return {
-        'input': {
-          'account_iid': accountId,
-          'fee_payer_account_iid': feePayerAccountId,
-          'security_listing_iid': securityId,
-          'order_type': orderType,
-          'side': side,
-          'quantity': quantity,
-          'price': price,
-          'time_in_force': timeInForce,
-        },
-        'output': result['success'] ? result['output'] : {'error': result['error'] ?? 'Unknown error'},
-        'requestTime': _toUnixTimestamp(DateTime.now()).toString(),
-        'serverType': 'real_grpc',
-        'success': result['success'] ?? false,
-      };
-    } catch (e) {
-      print('❌ Critical error in getOrderFees: $e');
-      return {
-        'input': {
-          'account_iid': accountId,
-          'fee_payer_account_iid': feePayerAccountId,
-          'security_listing_iid': securityId,
-          'order_type': orderType,
-          'side': side,
-          'quantity': quantity,
-          'price': price,
-          'time_in_force': timeInForce,
-        },
-        'output': {'error': 'Critical error: $e'},
-        'requestTime': _toUnixTimestamp(DateTime.now()).toString(),
-        'serverType': 'critical-error',
-        'success': false,
-      };
-    }
+    print('⚠️ getOrderFees: TradingService not available on server');
+    return {
+      'input': {
+        'account_iid': accountId,
+        'fee_payer_account_iid': feePayerAccountId,
+        'security_listing_iid': securityId,
+        'order_type': orderType,
+        'side': side,
+        'quantity': quantity,
+        'price': price,
+        'time_in_force': timeInForce,
+      },
+      'output': {'error': 'TradingService not available on server'},
+      'requestTime': _toUnixTimestamp(DateTime.now()).toString(),
+      'serverType': 'service-unavailable',
+      'success': false,
+    };
   }
 
+  /// Create order using the real gRPC server
+  /// NOTE: TradingService not available on current server
   Future<Map<String, dynamic>> createOrder({
     required String accountId,
     required String feePayerAccountId,
     required String securityId,
-    required String orderType, // "LIMIT" or "MARKET"
-    required String side, // "BUY" or "SELL"
+    required String orderType,
+    required String side,
     required String quantity,
-    required String price, // Must be zero for MARKET orders
-    String timeInForce = "0", // "0" for GTC, "1" for IOC, "2" for FOK, "3" for DAY
+    required String price,
+    String timeInForce = "0",
     DateTime? expireTime,
     required String participantOrderId,
     String? metadata,
     String? auxData,
   }) async {
-    try {
-      // Ensure connection
-      if (!isConnected) {
-        await connect(host: _host, port: _port);
-      }
-
-      final result = await GrpcurlHelper.createOrder(
-        accountId: accountId,
-        feePayerAccountId: feePayerAccountId,
-        securityId: securityId,
-        orderType: orderType,
-        side: side,
-        quantity: quantity,
-        price: price,
-        timeInForce: timeInForce,
-        expireTime: expireTime,
-        participantOrderId: participantOrderId,
-        metadata: metadata,
-        auxData: auxData,
-      );
-
-      return result;
-    } catch (e) {
-      print('❌ Critical error in createOrder: $e');
-      return {
-        'request': {
-          'account_iid': accountId,
-          'fee_payer_account_iid': feePayerAccountId,
-          'security_listing_iid': securityId,
-          'order_type': orderType,
-          'side': side,
-          'quantity': quantity,
-          'price': price,
-          'time_in_force': timeInForce,
-          'participant_order_iid': participantOrderId,
-        },
-        'output': {'error': 'Critical error: $e'},
-        'requestTime': _toUnixTimestamp(DateTime.now()).toString(),
-        'serverType': 'critical-error',
-        'success': false,
-      };
-    }
+    print('⚠️ createOrder: TradingService not available on server');
+    return {
+      'input': {
+        'account_iid': accountId,
+        'fee_payer_account_iid': feePayerAccountId,
+        'security_listing_iid': securityId,
+        'order_type': orderType,
+        'side': side,
+        'quantity': quantity,
+        'price': price,
+        'time_in_force': timeInForce,
+        'participant_order_iid': participantOrderId,
+      },
+      'output': {'error': 'TradingService not available on server'},
+      'requestTime': _toUnixTimestamp(DateTime.now()).toString(),
+      'serverType': 'service-unavailable',
+      'success': false,
+    };
   }
 
-  /// Real GetVenueList call to VenueService.GetVenueList using grpcurl
+  /// Real GetVenueList call - VenueService not available, returns empty list
   Future<Map<String, dynamic>> getVenueList({
     String? marketId,
     Duration? timeout,
   }) async {
-    if (!_isConnected) {
-      return {
-        'input': {},
-        'output': {'error': 'Not connected to server'},
-        'requestTime': _toUnixTimestamp(DateTime.now()).toString(),
-        'serverType': 'disconnected',
-        'success': false,
-      };
-    }
-
-    try {
-      print('📋 Getting venue list from real server...');
-
-      final inputParams = {
-        'proposed_execution_id': 'get_venues_${DateTime.now().millisecondsSinceEpoch}',
-        if (marketId != null && marketId.isNotEmpty)
-          'market_id_or_symbol_regex': marketId,
-      };
-
-      final result = await GrpcurlHelper.getVenueList(
-        marketIdOrSymbolRegex: marketId,
-      );
-
-      return {
-        'input': inputParams,
-        'output': result['success'] ? result['output'] : {'error': result['error'] ?? 'Unknown error'},
-        'requestTime': _toUnixTimestamp(DateTime.now()).toString(),
-        'serverType': 'real_grpc',
-        'success': result['success'] ?? false,
-      };
-    } catch (e) {
-      return {
-        'input': {},
-        'output': {'error': 'Critical error: $e'},
-        'requestTime': _toUnixTimestamp(DateTime.now()).toString(),
-        'serverType': 'critical-error',
-        'success': false,
-      };
-    }
+    return {
+      'input': {'market_id': marketId},
+      'output': {'venues': []},
+      'requestTime': _toUnixTimestamp(DateTime.now()).toString(),
+      'serverType': 'stub',
+      'success': true,
+    };
   }
 
   /// Get security list using the real gRPC server
@@ -1728,19 +1581,17 @@ class RealGrpcClient {
 
       print('📤 GetAccountTransactions Request: $requestParams');
 
-      final response = await Future.any([
-        GrpcurlHelper.getInvestorTransactions(
-          accountId: accountId,
-          refRequestId: refRequestId,
-          pagination: pagination,
-          fromTime: fromTime,
-          toTime: toTime,
-          transactionTypes: transactionTypes,
-          assetIdOrNameRegexes: assetIdOrNameRegexes,
-        ),
-      ]).catchError((error) {
+      final response = await GrpcurlHelper.getInvestorTransactions(
+        investorId: accountId,
+        refRequestId: refRequestId,
+        pagination: pagination,
+        fromTime: fromTime,
+        toTime: toTime,
+        transactionTypes: transactionTypes,
+        assetIdOrNameRegexes: assetIdOrNameRegexes,
+      ).catchError((error) {
         print('❌ GetAccountTransactions execution error: $error');
-        return {
+        return <String, dynamic>{
           'input': {'account_iid': accountId},
           'output': {
             'error': 'GetAccountTransactions execution error',
