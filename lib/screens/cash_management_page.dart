@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:flutter/services.dart';
 import 'package:provider/provider.dart';
 import '../services/auth_service.dart';
 import '../services/theme_service.dart';
@@ -44,11 +45,11 @@ class _CashManagementPageState extends State<CashManagementPage> {
     }
   }
 
-  // Fetch market supported currencies using GetMarketSupportedCurrencies
+  // Fetch supported currencies using CashTokenService.GetCashTokenList
   Future<void> _fetchSupportedCurrencies() async {
     try {
       if (!realGrpcClient.isConnected) {
-        print('❌ Not connected to real gRPC server for market supported currencies');
+        print('❌ Not connected to real gRPC server for cash tokens');
         return;
       }
 
@@ -56,38 +57,80 @@ class _CashManagementPageState extends State<CashManagementPage> {
         _isLoadingSupportedCurrencies = true;
       });
 
-      // Use default market_id - this should ideally come from configuration or user selection
-      final result = await realGrpcClient.getMarketSupportedCurrencies(
-        marketId: '', // Empty string for default/all markets
-      );
+      // Use CashTokenService.GetCashTokenList to get supported cash tokens
+      final result = await realGrpcClient.getSupportedCurrencies();
 
       if (result['success'] == true) {
         final output = result['output'] as Map<String, dynamic>;
-        final currencies = output['currencies'] as List<dynamic>? ?? [];
+        // Response format: { cash_tokens: [...], pagination_info: {...} }
+        final cashTokens = output['cashTokens'] as List<dynamic>? ??
+                          output['cash_tokens'] as List<dynamic>? ?? [];
 
-        final currencyData = currencies.map((currency) {
-          final currencyMap = currency as Map<String, dynamic>;
+        final currencyData = cashTokens.map((token) {
+          final tokenMap = token as Map<String, dynamic>;
 
-          // Extract currency value from currencies > identifiers > ids[0] > value
-          String currencyValue = '';
-          final identifiers = currencyMap['identifiers'] as List<dynamic>? ?? [];
-          if (identifiers.isNotEmpty) {
+          // Get the cash token iid
+          final iid = tokenMap['iid']?.toString() ?? '';
+
+          // Get display name - try displayNames map first
+          String displayName = '';
+          final displayNames = tokenMap['displayNames'] as Map<String, dynamic>? ??
+                               tokenMap['display_names'] as Map<String, dynamic>? ?? {};
+          if (displayNames.isNotEmpty) {
+            // Try 'en' first, then any available language
+            displayName = displayNames['en']?.toString() ??
+                         displayNames.values.first?.toString() ?? '';
+          }
+
+          // Extract TICKER identifier from identifiers if available
+          String ticker = '';
+          final identifiers = tokenMap['identifiers'] as List<dynamic>? ?? [];
+          for (var identifier in identifiers) {
+            final identifierMap = identifier as Map<String, dynamic>? ?? {};
+            final idType = identifierMap['id_type']?.toString() ??
+                          identifierMap['idType']?.toString() ?? '';
+            if (idType == 'TICKER' || idType == 'ticker') {
+              final ids = identifierMap['ids'] as List<dynamic>? ?? [];
+              if (ids.isNotEmpty) {
+                final firstId = ids.first as Map<String, dynamic>? ?? {};
+                ticker = firstId['value']?.toString() ?? '';
+                break;
+              }
+            }
+          }
+          // Fallback: if no TICKER found, try first identifier
+          if (ticker.isEmpty && identifiers.isNotEmpty) {
             final firstIdentifier = identifiers.first as Map<String, dynamic>? ?? {};
             final ids = firstIdentifier['ids'] as List<dynamic>? ?? [];
             if (ids.isNotEmpty) {
               final firstId = ids.first as Map<String, dynamic>? ?? {};
-              currencyValue = firstId['value']?.toString() ?? '';
+              ticker = firstId['value']?.toString() ?? '';
             }
           }
 
-          // Use currency value as both asset_id and symbol for now
+          // Use issue_currency if available
+          final issueCurrency = tokenMap['issueCurrency']?.toString() ??
+                                tokenMap['issue_currency']?.toString() ?? '';
+
+          // Determine the code to use (prefer issue_currency, then ticker, then iid)
+          final code = issueCurrency.isNotEmpty ? issueCurrency :
+                      (ticker.isNotEmpty ? ticker : iid);
+
+          // Display format: "issueCurrency (ticker)" e.g., "EUR (EUR_THIRD_BROKER)"
+          // If no ticker, use displayName, otherwise iid
+          final tickerDisplay = ticker.isNotEmpty ? ticker :
+                               (displayName.isNotEmpty ? displayName : iid);
+          final display = issueCurrency.isNotEmpty
+              ? '$issueCurrency ($tickerDisplay)'
+              : tickerDisplay;
+
           return {
-            'asset_id': currencyValue, // Using currency value as asset_id
-            'code': currencyValue,
-            'symbol': currencyValue,
-            'display': currencyValue, // Show currencies > identifiers > ids[0] > value
+            'asset_id': iid, // Use iid as asset_id for API calls
+            'code': code,
+            'symbol': issueCurrency.isNotEmpty ? issueCurrency : code,
+            'display': display,
           };
-        }).where((currency) => currency['code']!.isNotEmpty).toList();
+        }).where((currency) => currency['asset_id']!.isNotEmpty).toList();
 
         setState(() {
           _supportedCurrencies = currencyData;
@@ -101,15 +144,15 @@ class _CashManagementPageState extends State<CashManagementPage> {
           _isLoadingSupportedCurrencies = false;
         });
 
-        print('✅ Loaded ${_supportedCurrencies.length} market supported currencies');
+        print('✅ Loaded ${_supportedCurrencies.length} cash tokens from CashTokenService');
       } else {
-        print('❌ Failed to fetch market supported currencies: ${result['output']}');
+        print('❌ Failed to fetch cash tokens: ${result['output']}');
         setState(() {
           _isLoadingSupportedCurrencies = false;
         });
       }
     } catch (e) {
-      print('❌ Error fetching market supported currencies: $e');
+      print('❌ Error fetching cash tokens: $e');
       setState(() {
         _isLoadingSupportedCurrencies = false;
       });
@@ -429,9 +472,28 @@ class _CashManagementPageState extends State<CashManagementPage> {
                         ],
                       ),
                     ),
-                    Padding(
-                      padding: UIConstants.paddingStandard,
-                      child: _buildBalanceContent(themeService, isDarkTheme),
+                    Expanded(
+                      child: Padding(
+                        padding: UIConstants.paddingStandard,
+                        child: _isLoadingSupportedCurrencies
+                            ? Center(
+                                child: Column(
+                                  mainAxisAlignment: MainAxisAlignment.center,
+                                  children: [
+                                    const CircularProgressIndicator(),
+                                    const SizedBox(height: UIConstants.spacingMd),
+                                    Text(
+                                      'Loading cash tokens...',
+                                      style: TextStyle(
+                                        fontSize: UIConstants.fontSizeBody,
+                                        color: isDarkTheme ? Colors.grey[400] : Colors.grey[600],
+                                      ),
+                                    ),
+                                  ],
+                                ),
+                              )
+                            : _buildBalanceContent(themeService, isDarkTheme),
+                      ),
                     ),
                   ],
                 ),
@@ -471,11 +533,11 @@ class _CashManagementPageState extends State<CashManagementPage> {
             const SizedBox(width: 10),
             Container(
               padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
-              width: 180,
+              width: 280,
               height: 40,
               decoration: BoxDecoration(
                 color: isDarkTheme ? const Color(0xFF505050) : Colors.white, // Enhanced background color
-                borderRadius: BorderRadius.circular(8),
+                borderRadius: BorderRadius.circular(UIConstants.textFieldBorderRadius),
                 border: Border.all(
                   color: isDarkTheme ? Colors.grey[700]! : Colors.grey[200]!,
                   width: 1,
@@ -500,7 +562,7 @@ class _CashManagementPageState extends State<CashManagementPage> {
                   dropdownColor: isDarkTheme ? const Color(0xFF1e1e1e) : Colors.white,
                   style: TextStyle(
                     color: isDarkTheme ? Colors.white : Colors.black,
-                    fontSize: UIConstants.fontSizeSm, // Smaller font for more compact appearance
+                    fontSize: UIConstants.fontSizeMd,
                   ),
                   items: _supportedCurrencies.isEmpty
                       ? [DropdownMenuItem<Map<String, String>>(
@@ -574,10 +636,10 @@ class _CashManagementPageState extends State<CashManagementPage> {
                   style: TextStyle(color: Colors.white, fontWeight: UIConstants.fontWeightMedium),
                 ),
                 style: ElevatedButton.styleFrom(
-                  backgroundColor: const Color(0xFF4CAF50),
+                  backgroundColor: UIConstants.colorSuccess,
                   padding: const EdgeInsets.symmetric(vertical: 12),
                   shape: RoundedRectangleBorder(
-                    borderRadius: BorderRadius.circular(8),
+                    borderRadius: BorderRadius.circular(UIConstants.textFieldBorderRadius),
                   ),
                 ),
               ),
@@ -595,10 +657,10 @@ class _CashManagementPageState extends State<CashManagementPage> {
                   style: TextStyle(color: Colors.white, fontWeight: UIConstants.fontWeightMedium),
                 ),
                 style: ElevatedButton.styleFrom(
-                  backgroundColor: const Color(0xFFFF4081),
+                  backgroundColor: UIConstants.colorDanger,
                   padding: const EdgeInsets.symmetric(vertical: 12),
                   shape: RoundedRectangleBorder(
-                    borderRadius: BorderRadius.circular(8),
+                    borderRadius: BorderRadius.circular(UIConstants.textFieldBorderRadius),
                   ),
                 ),
               ),
@@ -620,6 +682,9 @@ class _CashManagementPageState extends State<CashManagementPage> {
       builder: (BuildContext context) {
         return AlertDialog(
           backgroundColor: isDarkTheme ? const Color(0xFF2A2A2A) : Colors.white,
+          shape: RoundedRectangleBorder(
+            borderRadius: BorderRadius.circular(UIConstants.borderRadiusLg),
+          ),
           title: Text(
             'Add Cash',
             style: TextStyle(
@@ -640,15 +705,24 @@ class _CashManagementPageState extends State<CashManagementPage> {
               const SizedBox(height: 10),
               TextField(
                 controller: amountController,
-                keyboardType: TextInputType.number,
+                keyboardType: const TextInputType.numberWithOptions(decimal: true),
+                inputFormatters: [
+                  FilteringTextInputFormatter.allow(RegExp(r'^\d*\.?\d*')),
+                ],
                 decoration: InputDecoration(
                   hintText: '0.00',
+                  hintStyle: TextStyle(
+                    color: isDarkTheme ? Colors.grey[500] : Colors.grey[400],
+                  ),
                   suffixText: _selectedCurrency['symbol'] ?? '',
+                  suffixStyle: TextStyle(
+                    color: isDarkTheme ? Colors.white : Colors.black,
+                  ),
                   border: OutlineInputBorder(
-                    borderRadius: BorderRadius.circular(8),
+                    borderRadius: BorderRadius.circular(UIConstants.textFieldBorderRadius),
                   ),
                   filled: true,
-                  fillColor: isDarkTheme ? Colors.grey[400] : Colors.grey[200],
+                  fillColor: isDarkTheme ? const Color(0xFF505050) : Colors.grey[200],
                 ),
                 style: TextStyle(
                   color: isDarkTheme ? Colors.white : Colors.black,
@@ -775,7 +849,10 @@ class _CashManagementPageState extends State<CashManagementPage> {
                 }
               },
               style: ElevatedButton.styleFrom(
-                backgroundColor: const Color(0xFF4CAF50),
+                backgroundColor: UIConstants.colorSuccess,
+                shape: RoundedRectangleBorder(
+                  borderRadius: BorderRadius.circular(UIConstants.textFieldBorderRadius),
+                ),
               ),
               child: const Text(
                 'Add',
@@ -798,6 +875,9 @@ class _CashManagementPageState extends State<CashManagementPage> {
       builder: (BuildContext context) {
         return AlertDialog(
           backgroundColor: isDarkTheme ? const Color(0xFF2A2A2A) : Colors.white,
+          shape: RoundedRectangleBorder(
+            borderRadius: BorderRadius.circular(UIConstants.borderRadiusLg),
+          ),
           title: Text(
             'Withdraw Cash',
             style: TextStyle(
@@ -818,15 +898,24 @@ class _CashManagementPageState extends State<CashManagementPage> {
               const SizedBox(height: 10),
               TextField(
                 controller: amountController,
-                keyboardType: TextInputType.number,
+                keyboardType: const TextInputType.numberWithOptions(decimal: true),
+                inputFormatters: [
+                  FilteringTextInputFormatter.allow(RegExp(r'^\d*\.?\d*')),
+                ],
                 decoration: InputDecoration(
                   hintText: '0.00',
+                  hintStyle: TextStyle(
+                    color: isDarkTheme ? Colors.grey[500] : Colors.grey[400],
+                  ),
                   suffixText: _selectedCurrency['symbol'] ?? '',
+                  suffixStyle: TextStyle(
+                    color: isDarkTheme ? Colors.white : Colors.black,
+                  ),
                   border: OutlineInputBorder(
-                    borderRadius: BorderRadius.circular(8),
+                    borderRadius: BorderRadius.circular(UIConstants.textFieldBorderRadius),
                   ),
                   filled: true,
-                  fillColor: isDarkTheme ? Colors.grey[400] : Colors.grey[200],
+                  fillColor: isDarkTheme ? const Color(0xFF505050) : Colors.grey[200],
                 ),
                 style: TextStyle(
                   color: isDarkTheme ? Colors.white : Colors.black,
@@ -975,7 +1064,10 @@ class _CashManagementPageState extends State<CashManagementPage> {
                 }
               },
               style: ElevatedButton.styleFrom(
-                backgroundColor: Colors.red,
+                backgroundColor: UIConstants.colorDanger,
+                shape: RoundedRectangleBorder(
+                  borderRadius: BorderRadius.circular(UIConstants.textFieldBorderRadius),
+                ),
               ),
               child: const Text(
                 'Withdraw',

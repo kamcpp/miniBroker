@@ -170,6 +170,22 @@ class UIConstants {
   static const double iconSizeLg = 20.0;
 
   // ============================================================================
+  // COLORS - Standard colors for consistency across the app
+  // ============================================================================
+
+  /// Standard green for success, buy, positive actions
+  static const Color colorSuccess = Color(0xFF00C853);
+
+  /// Standard red for error, sell, negative actions
+  static const Color colorDanger = Color(0xFFFF1744);
+
+  /// Standard blue for info, primary actions
+  static const Color colorPrimary = Color(0xFF2196F3);
+
+  /// Standard orange for warning
+  static const Color colorWarning = Color(0xFFFF9800);
+
+  // ============================================================================
   // BORDER RADIUS - Minimal rounding for sharp, professional look
   // ============================================================================
 

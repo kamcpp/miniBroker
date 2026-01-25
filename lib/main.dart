@@ -7,6 +7,7 @@ import 'services/auth_service.dart';
 import 'services/theme_service.dart';
 import 'services/real_grpc_client.dart';
 import 'config/app_config.dart';
+import 'config/ui_constants.dart';
 import 'utils/broker_config_helper.dart';
 import 'utils/config_rc_manager.dart';
 import 'widgets/config_finder_dialog.dart';
@@ -51,6 +52,17 @@ class MyApp extends StatelessWidget {
             trackBorderColor: WidgetStateProperty.all(Colors.grey[300]),
             thickness: WidgetStateProperty.all(8.0),
             radius: const Radius.circular(4.0),
+          ),
+          snackBarTheme: SnackBarThemeData(
+            shape: RoundedRectangleBorder(
+              borderRadius: BorderRadius.circular(UIConstants.borderRadiusLg),
+            ),
+            behavior: SnackBarBehavior.floating,
+          ),
+          dialogTheme: DialogThemeData(
+            shape: RoundedRectangleBorder(
+              borderRadius: BorderRadius.circular(UIConstants.borderRadiusLg),
+            ),
           ),
         ),
         home: const AppInitializer(),
