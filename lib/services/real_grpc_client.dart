@@ -526,7 +526,7 @@ class RealGrpcClient {
 
     try {
       print('📊 GetAccountSecurityHoldings called - attempting to get security holdings for account $accountId');
-      
+
       // Try to call the real server with grpcurl, with comprehensive crash protection
       final response = await GrpcurlHelper.getAccountMarketPortfolio(
         accountId: accountId,
@@ -578,11 +578,11 @@ class RealGrpcClient {
     } catch (e, stackTrace) {
       print('❌ Critical error in GetAccountSecurityHoldings: $e');
       print('❌ Stack trace: $stackTrace');
-      
+
       // Test connectivity to update state
       final stillReachable = await testServerConnectivity();
       _isConnected = stillReachable;
-      
+
       // Return error response instead of throwing exception to prevent app crash
       return {
         'input': {
@@ -601,23 +601,23 @@ class RealGrpcClient {
     }
   }
 
-  /// Real GetAccountCashHoldings call to AccountService.GetAccountCashHoldings using grpcurl
-  Future<Map<String, dynamic>> getAccountCashHoldings({
-    required String accountId,
-    List<String>? cashAssetIds,
+  /// Real GetInvestorCashHoldings call to InvestorService.GetInvestorCashHoldings using grpcurl
+  Future<Map<String, dynamic>> getInvestorCashHoldings({
+    required String investorId,
+    List<String>? currencyCodes,
     Duration? timeout,
   }) async {
     // Always test connectivity first to prevent crashes
-    print('🔍 Testing server connectivity before GetAccountCashHoldings...');
+    print('🔍 Testing server connectivity before GetInvestorCashHoldings...');
     final isServerReachable = await testServerConnectivity();
-    
+
     if (!isServerReachable) {
       _isConnected = false; // Update connection state
       return {
         'input': {
-          'proposed_execution_id': 'get_account_cash_holdings_${DateTime.now().millisecondsSinceEpoch}',
-          'account_iid': accountId,
-          'currency_codes': cashAssetIds ?? [],
+          'proposed_execution_id': 'get_investor_cash_holdings_${DateTime.now().millisecondsSinceEpoch}',
+          'investor_iid': investorId,
+          'currency_codes': currencyCodes ?? [],
         },
         'output': {
           'error': 'Server not reachable',
@@ -636,25 +636,25 @@ class RealGrpcClient {
     }
 
     try {
-      print('💰 GetAccountCashHoldings called - attempting to get cash holdings for account $accountId');
-      
+      print('💰 GetInvestorCashHoldings called - attempting to get cash holdings for investor $investorId');
+
       // Try to call the real server with grpcurl, with comprehensive crash protection
-      final response = await GrpcurlHelper.getAccountCashHoldings(
-        accountId: accountId,
-        cashAssetIds: cashAssetIds,
+      final response = await GrpcurlHelper.getInvestorCashHoldings(
+        investorId: investorId,
+        currencyCodes: currencyCodes,
       ).timeout(
         const Duration(seconds: 10),
         onTimeout: () {
-          print('⏰ GetAccountCashHoldings request timed out');
+          print('⏰ GetInvestorCashHoldings request timed out');
           return {
             'input': {
-              'proposed_execution_id': 'get_account_cash_holdings_${DateTime.now().millisecondsSinceEpoch}',
-              'account_iid': accountId,
-              'currency_codes': cashAssetIds ?? [],
+              'proposed_execution_id': 'get_investor_cash_holdings_${DateTime.now().millisecondsSinceEpoch}',
+              'investor_iid': investorId,
+              'currency_codes': currencyCodes ?? [],
             },
             'output': {
               'error': 'Request timed out',
-              'message': 'The account cash holdings request timed out after 10 seconds. Check if server is running properly.',
+              'message': 'The investor cash holdings request timed out after 10 seconds. Check if server is running properly.',
             },
             'requestTime': _toUnixTimestamp(DateTime.now()).toString(),
             'serverType': 'timeout',
@@ -662,16 +662,16 @@ class RealGrpcClient {
           };
         },
       ).catchError((error) {
-        print('❌ GetAccountCashHoldings error caught: $error');
+        print('❌ GetInvestorCashHoldings error caught: $error');
         return {
           'input': {
-            'proposed_execution_id': 'get_account_cash_holdings_${DateTime.now().millisecondsSinceEpoch}',
-            'account_iid': accountId,
-            'currency_codes': cashAssetIds ?? [],
+            'proposed_execution_id': 'get_investor_cash_holdings_${DateTime.now().millisecondsSinceEpoch}',
+            'investor_iid': investorId,
+            'currency_codes': currencyCodes ?? [],
           },
           'output': {
-            'error': 'GetAccountCashHoldings execution failed',
-            'message': 'Failed to execute GetAccountCashHoldings: ${error.toString()}',
+            'error': 'GetInvestorCashHoldings execution failed',
+            'message': 'Failed to execute GetInvestorCashHoldings: ${error.toString()}',
           },
           'requestTime': _toUnixTimestamp(DateTime.now()).toString(),
           'serverType': 'execution-error',
@@ -690,23 +690,23 @@ class RealGrpcClient {
 
       return response;
     } catch (e, stackTrace) {
-      print('❌ Critical error in GetAccountCashHoldings: $e');
+      print('❌ Critical error in GetInvestorCashHoldings: $e');
       print('❌ Stack trace: $stackTrace');
-      
+
       // Test connectivity to update state
       final stillReachable = await testServerConnectivity();
       _isConnected = stillReachable;
-      
+
       // Return error response instead of throwing exception to prevent app crash
       return {
         'input': {
-          'proposed_execution_id': 'get_account_cash_holdings_${DateTime.now().millisecondsSinceEpoch}',
-          'account_iid': accountId,
-          'currency_codes': cashAssetIds ?? [],
+          'proposed_execution_id': 'get_investor_cash_holdings_${DateTime.now().millisecondsSinceEpoch}',
+          'investor_iid': investorId,
+          'currency_codes': currencyCodes ?? [],
         },
         'output': {
-          'error': 'Critical GetAccountCashHoldings error',
-          'message': 'A critical error occurred during GetAccountCashHoldings: ${e.toString()}',
+          'error': 'Critical GetInvestorCashHoldings error',
+          'message': 'A critical error occurred during GetInvestorCashHoldings: ${e.toString()}',
           'details': stackTrace.toString(),
         },
         'requestTime': _toUnixTimestamp(DateTime.now()).toString(),
@@ -716,9 +716,9 @@ class RealGrpcClient {
     }
   }
 
-  /// Deposit cash to an account
+  /// Deposit cash to an investor
   Future<Map<String, dynamic>> depositCash({
-    required String accountId,
+    required String investorId,
     required String currencyCode,
     required String amount,
     Map<String, String>? auxData,
@@ -733,7 +733,7 @@ class RealGrpcClient {
       return {
         'input': {
           'proposed_execution_id': 'deposit_cash_${DateTime.now().millisecondsSinceEpoch}',
-          'account_iid': accountId,
+          'investor_iid': investorId,
           'currency_code': currencyCode,
           'amount': amount,
         },
@@ -754,11 +754,11 @@ class RealGrpcClient {
     }
 
     try {
-      print('💰 DepositCash called - attempting to deposit $amount $currencyCode to account $accountId');
+      print('💰 DepositCash called - attempting to deposit $amount $currencyCode to investor $investorId');
 
       // Try to call the real server with grpcurl, with comprehensive crash protection
       final response = await GrpcurlHelper.depositCash(
-        investorId: accountId,
+        investorId: investorId,
         currencyCode: currencyCode,
         amount: amount,
         auxData: auxData,
@@ -769,7 +769,7 @@ class RealGrpcClient {
           return {
             'input': {
               'proposed_execution_id': 'deposit_cash_${DateTime.now().millisecondsSinceEpoch}',
-              'account_iid': accountId,
+              'investor_iid': investorId,
               'currency_code': currencyCode,
               'amount': amount,
             },
@@ -787,7 +787,7 @@ class RealGrpcClient {
         return {
           'input': {
             'proposed_execution_id': 'deposit_cash_${DateTime.now().millisecondsSinceEpoch}',
-            'account_iid': accountId,
+            'investor_iid': investorId,
             'currency_code': currencyCode,
             'amount': amount,
           },
@@ -823,7 +823,7 @@ class RealGrpcClient {
       return {
         'input': {
           'proposed_execution_id': 'deposit_cash_${DateTime.now().millisecondsSinceEpoch}',
-          'account_iid': accountId,
+          'investor_iid': investorId,
           'currency_code': currencyCode,
           'amount': amount,
         },
@@ -839,9 +839,9 @@ class RealGrpcClient {
     }
   }
 
-  /// Withdraw cash from an account
+  /// Withdraw cash from an investor
   Future<Map<String, dynamic>> withdrawCash({
-    required String accountId,
+    required String investorId,
     required String currencyCode,
     required String amount,
     Map<String, String>? auxData,
@@ -856,7 +856,7 @@ class RealGrpcClient {
       return {
         'input': {
           'proposed_execution_id': 'withdraw_cash_${DateTime.now().millisecondsSinceEpoch}',
-          'account_iid': accountId,
+          'investor_iid': investorId,
           'currency_code': currencyCode,
           'amount': amount,
         },
@@ -877,11 +877,11 @@ class RealGrpcClient {
     }
 
     try {
-      print('💰 WithdrawCash called - attempting to withdraw $amount $currencyCode from account $accountId');
+      print('💰 WithdrawCash called - attempting to withdraw $amount $currencyCode from investor $investorId');
 
       // Try to call the real server with grpcurl, with comprehensive crash protection
       final response = await GrpcurlHelper.withdrawCash(
-        investorId: accountId,
+        investorId: investorId,
         currencyCode: currencyCode,
         amount: amount,
         auxData: auxData,
@@ -892,7 +892,7 @@ class RealGrpcClient {
           return {
             'input': {
               'proposed_execution_id': 'withdraw_cash_${DateTime.now().millisecondsSinceEpoch}',
-              'account_iid': accountId,
+              'investor_iid': investorId,
               'currency_code': currencyCode,
               'amount': amount,
             },
@@ -910,7 +910,7 @@ class RealGrpcClient {
         return {
           'input': {
             'proposed_execution_id': 'withdraw_cash_${DateTime.now().millisecondsSinceEpoch}',
-            'account_iid': accountId,
+            'investor_iid': investorId,
             'currency_code': currencyCode,
             'amount': amount,
           },
@@ -946,7 +946,7 @@ class RealGrpcClient {
       return {
         'input': {
           'proposed_execution_id': 'withdraw_cash_${DateTime.now().millisecondsSinceEpoch}',
-          'account_iid': accountId,
+          'investor_iid': investorId,
           'currency_code': currencyCode,
           'amount': amount,
         },

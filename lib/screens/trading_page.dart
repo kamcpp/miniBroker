@@ -966,7 +966,7 @@ class _TradingPageState extends State<TradingPage> {
           _cachedAccountId!.isNotEmpty &&
           !_isLoadingCashHoldings) {
         print('✅ Using cached account ID for fresh cash holdings: $_cachedAccountId');
-        await _fetchCashHoldingsForAccount(_cachedAccountId!);
+        await _fetchCashHoldingsForInvestor(_cachedAccountId!);
         return;
       }
 
@@ -1015,7 +1015,7 @@ class _TradingPageState extends State<TradingPage> {
       // Fetch real orders now that we have the account ID
       _fetchRealOrders();
 
-      await _fetchCashHoldingsForAccount(accountId);
+      await _fetchCashHoldingsForInvestor(accountId);
     } catch (e) {
       // Ultimate crash protection
       try {
@@ -1035,10 +1035,10 @@ class _TradingPageState extends State<TradingPage> {
     }
   }
 
-  /// Fetch cash holdings for a specific account ID
-  Future<void> _fetchCashHoldingsForAccount(String accountId) async {
+  /// Fetch cash holdings for a specific investor ID
+  Future<void> _fetchCashHoldingsForInvestor(String investorId) async {
     try {
-      // Get the selected currency code to pass to GetAccountCashHoldings
+      // Get the selected currency code to pass to GetInvestorCashHoldings
       final selectedCurrencyCode = _selectedCurrency.isNotEmpty ? _selectedCurrency['code'] : 'USD';
       final currencyCodes = selectedCurrencyCode != null && selectedCurrencyCode.isNotEmpty
           ? [selectedCurrencyCode]
@@ -1047,9 +1047,9 @@ class _TradingPageState extends State<TradingPage> {
       print('📋 Fetching cash holdings for currency: $selectedCurrencyCode');
 
       // Fetch cash holdings with comprehensive crash protection
-      final cashHoldingsResponse = await realGrpcClient.getAccountCashHoldings(
-        accountId: accountId,
-        cashAssetIds: currencyCodes,
+      final cashHoldingsResponse = await realGrpcClient.getInvestorCashHoldings(
+        investorId: investorId,
+        currencyCodes: currencyCodes,
       ).timeout(
         const Duration(seconds: 15),
         onTimeout: () => {
@@ -5250,7 +5250,7 @@ class _TradingPageState extends State<TradingPage> {
                           });
                           // Fetch fresh cash holdings for the new currency
                           if (_cachedAccountId != null && _cachedAccountId!.isNotEmpty) {
-                            await _fetchCashHoldingsForAccount(_cachedAccountId!);
+                            await _fetchCashHoldingsForInvestor(_cachedAccountId!);
                           }
                         }
                       },

@@ -2,7 +2,7 @@ import 'package:flutter/material.dart';
 import '../widgets/left_menu.dart';
 import '../screens/securities_page.dart';
 import '../screens/portfolio_page.dart';
-// import '../screens/trading_page.dart';  // Disabled
+import '../screens/trading_page.dart';
 // import '../screens/activity_page.dart';  // Disabled
 import '../screens/cash_management_page.dart';
 // import '../screens/users_admin_page.dart';  // Disabled
@@ -32,6 +32,22 @@ class MenuItemsHelper {
         },
       ),
       MenuItem(
+        label: 'Cash Management',
+        icon: Icons.payments,
+        isSelected: currentPage == 'cash',
+        onTap: () {
+          if (currentPage != 'cash') {
+            Navigator.of(context).pushReplacement(
+              PageRouteBuilder(
+                pageBuilder: (context, animation, secondaryAnimation) => const CashManagementPage(),
+                transitionDuration: Duration.zero,
+                reverseTransitionDuration: Duration.zero,
+              ),
+            );
+          }
+        },
+      ),
+      MenuItem(
         label: 'Portfolio',
         icon: Icons.account_balance_wallet,
         isSelected: currentPage == 'portfolio',
@@ -47,23 +63,22 @@ class MenuItemsHelper {
           }
         },
       ),
-      // Trading - Disabled
-      // MenuItem(
-      //   label: 'Trading',
-      //   icon: Icons.candlestick_chart,
-      //   isSelected: currentPage == 'trading',
-      //   onTap: () {
-      //     if (currentPage != 'trading') {
-      //       Navigator.of(context).pushReplacement(
-      //         PageRouteBuilder(
-      //           pageBuilder: (context, animation, secondaryAnimation) => const TradingPage(),
-      //           transitionDuration: Duration.zero,
-      //           reverseTransitionDuration: Duration.zero,
-      //         ),
-      //       );
-      //     }
-      //   },
-      // ),
+      MenuItem(
+        label: 'Trading',
+        icon: Icons.candlestick_chart,
+        isSelected: currentPage == 'trading',
+        onTap: () {
+          if (currentPage != 'trading') {
+            Navigator.of(context).pushReplacement(
+              PageRouteBuilder(
+                pageBuilder: (context, animation, secondaryAnimation) => const TradingPage(),
+                transitionDuration: Duration.zero,
+                reverseTransitionDuration: Duration.zero,
+              ),
+            );
+          }
+        },
+      ),
       // Activity - Disabled
       // MenuItem(
       //   label: 'Activity',
@@ -81,22 +96,6 @@ class MenuItemsHelper {
       //     }
       //   },
       // ),
-      MenuItem(
-        label: 'Cash Management',
-        icon: Icons.payments,
-        isSelected: currentPage == 'cash',
-        onTap: () {
-          if (currentPage != 'cash') {
-            Navigator.of(context).pushReplacement(
-              PageRouteBuilder(
-                pageBuilder: (context, animation, secondaryAnimation) => const CashManagementPage(),
-                transitionDuration: Duration.zero,
-                reverseTransitionDuration: Duration.zero,
-              ),
-            );
-          }
-        },
-      ),
       // Users Admin - Disabled
       // MenuItem(
       //   label: 'Users Admin',

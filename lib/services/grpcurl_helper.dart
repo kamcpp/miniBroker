@@ -1138,6 +1138,155 @@ class GrpcurlHelper {
   }
 
   // ============================================================================
+  // TradingService Methods
+  // ============================================================================
+
+  /// Get historical OHLC data for a security
+  /// TradingService.GetHistoricalOhlcData
+  static Future<Map<String, dynamic>> getHistoricalOhlcData({
+    required String symbol,
+    required String period,
+    int pageSize = 0,
+  }) async {
+    print('📊 Getting historical OHLC data for symbol: $symbol, period: $period');
+
+    return _executeGrpcCall(
+      method: 'GetHistoricalOhlcData',
+      endpoint: 'TradingService/GetHistoricalOhlcData',
+      requestBody: {
+        'proposed_execution_id': 'get_historical_ohlc_${DateTime.now().millisecondsSinceEpoch}',
+        'pagination': {
+          'page_nr': 1,
+          'page_size': pageSize,
+        },
+        'security_iid_or_symbol_regexes': [symbol],
+        'period': period,
+        'include_volume': true,
+      },
+    );
+  }
+
+  /// Get orderbook for a security
+  /// TradingService.GetOrderbook
+  static Future<Map<String, dynamic>> getOrderbook({
+    required String securityIid,
+    String? side,
+    int pageNumber = 1,
+    int pageSize = 10,
+  }) async {
+    print('📋 Getting orderbook for security: $securityIid, side: $side');
+
+    final requestBody = <String, dynamic>{
+      'proposed_execution_id': 'get_orderbook_${DateTime.now().millisecondsSinceEpoch}',
+      'pagination': {
+        'page_nr': pageNumber,
+        'page_size': pageSize,
+      },
+      'security_iid': securityIid,
+    };
+
+    if (side != null && side.isNotEmpty) {
+      requestBody['orderbook_query_filter'] = {
+        'side': side,
+      };
+    }
+
+    return _executeGrpcCall(
+      method: 'GetOrderbook',
+      endpoint: 'TradingService/GetOrderbook',
+      requestBody: requestBody,
+    );
+  }
+
+  /// Cancel an order asynchronously
+  /// TradingService.CancelOrderAsync
+  static Future<Map<String, dynamic>> cancelOrderAsync({
+    required String participantOrderId,
+    String? reason,
+    String refRequestId = 'flutter-cancel-order',
+  }) async {
+    print('❌ Cancelling order: $participantOrderId');
+
+    return _executeGrpcCall(
+      method: 'CancelOrderAsync',
+      endpoint: 'TradingService/CancelOrderAsync',
+      requestBody: {
+        'proposed_execution_id': refRequestId,
+        'participant_order_id': participantOrderId,
+        'reason': reason ?? 'User requested cancellation',
+      },
+    );
+  }
+
+  /// Replace an order asynchronously
+  /// TradingService.ReplaceOrderAsync
+  static Future<Map<String, dynamic>> replaceOrderAsync({
+    required String oldParticipantOrderId,
+    required String newParticipantOrderId,
+    String? newQuantity,
+    String? newPrice,
+    DateTime? newExpireTime,
+    String? reason,
+    String refRequestId = 'flutter-replace-order',
+  }) async {
+    print('🔄 Replacing order: $oldParticipantOrderId -> $newParticipantOrderId');
+
+    final requestBody = <String, dynamic>{
+      'proposed_execution_id': refRequestId,
+      'old_participant_order_id': oldParticipantOrderId,
+      'new_participant_order_id': newParticipantOrderId,
+    };
+
+    if (newQuantity != null) {
+      requestBody['new_quantity'] = newQuantity;
+    }
+    if (newPrice != null) {
+      requestBody['new_price'] = newPrice;
+    }
+    if (newExpireTime != null) {
+      requestBody['new_expire_time'] = {
+        'unix_time_secs': _toUnixTimestamp(newExpireTime),
+      };
+    }
+    if (reason != null) {
+      requestBody['reason'] = reason;
+    }
+
+    return _executeGrpcCall(
+      method: 'ReplaceOrderAsync',
+      endpoint: 'TradingService/ReplaceOrderAsync',
+      requestBody: requestBody,
+    );
+  }
+
+  // ============================================================================
+  // SecurityListingService Methods
+  // ============================================================================
+
+  /// Get trades for a security listing
+  /// SecurityListingService.GetSecurityListingTrades
+  static Future<Map<String, dynamic>> getSecurityTrades({
+    required String securityId,
+    int pageNumber = 1,
+    int pageSize = 50,
+  }) async {
+    print('📋 Getting trades for security: $securityId');
+
+    return _executeGrpcCall(
+      method: 'GetSecurityListingTrades',
+      endpoint: 'SecurityListingService/GetSecurityListingTrades',
+      requestBody: {
+        'proposed_execution_id': 'get_security_trades_${DateTime.now().millisecondsSinceEpoch}',
+        'pagination': {
+          'page_nr': pageNumber,
+          'page_size': pageSize,
+        },
+        'security_listing_iid_and_identifier_regexes': [securityId],
+      },
+    );
+  }
+
+  // ============================================================================
   // Utility Methods
   // ============================================================================
 

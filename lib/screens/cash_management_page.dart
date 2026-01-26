@@ -16,10 +16,9 @@ class CashManagementPage extends StatefulWidget {
 }
 
 class _CashManagementPageState extends State<CashManagementPage> {
-  Map<String, dynamic>? _accountListData;
   bool _isLoadingCashHoldings = false;
   String _buyingPower = '0';
-  String? _cachedAccountId;
+  String? _investorId;
 
   // Supported currencies data - now includes asset_id for cash holdings
   List<Map<String, String>> _supportedCurrencies = [];
@@ -159,7 +158,7 @@ class _CashManagementPageState extends State<CashManagementPage> {
     }
   }
 
-  // Fetch cash holdings - copied and adapted from trading page
+  // Fetch cash holdings using investor ID (username)
   Future<void> _fetchCashHoldings() async {
     try {
       if (!realGrpcClient.isConnected) {
@@ -167,11 +166,28 @@ class _CashManagementPageState extends State<CashManagementPage> {
         return;
       }
 
-      // Check if we already have cached account ID
-      if (_cachedAccountId != null &&
-          _cachedAccountId!.isNotEmpty &&
+      // Get the current logged-in username from AuthService - this IS the investor ID
+      final authService = Provider.of<AuthService>(context, listen: false);
+      final currentUsername = authService.username;
+
+      if (currentUsername.isEmpty) {
+        print('❌ No logged-in user found');
+        setState(() {
+          _isLoadingCashHoldings = false;
+          _buyingPower = '0';
+        });
+        return;
+      }
+
+      // Use the username directly as the investor ID
+      _investorId = currentUsername;
+      print('✅ Using logged-in username as investor ID: $_investorId');
+
+      // Check if we already have investor ID and currency selected
+      if (_investorId != null &&
+          _investorId!.isNotEmpty &&
           _selectedCurrency.isNotEmpty) {
-        await _fetchCashHoldingsForAccount(_cachedAccountId!);
+        await _fetchCashHoldingsForInvestor(_investorId!);
         return;
       }
 
@@ -179,41 +195,7 @@ class _CashManagementPageState extends State<CashManagementPage> {
         _isLoadingCashHoldings = true;
       });
 
-      // Get the current logged-in username from AuthService
-      final authService = Provider.of<AuthService>(context, listen: false);
-      final currentUsername = authService.username;
-
-      print('🔍 Looking for account belonging to logged-in user: $currentUsername');
-
-      // First, get the account ID that belongs to the logged-in user
-      String? accountId;
-      if (_accountListData != null && _accountListData!['success'] == true) {
-        final accounts = _accountListData!['output']['accounts'] as List<dynamic>;
-        accountId = _findUserAccount(accounts, currentUsername);
-      } else {
-        // Fetch account list first to get account ID
-        await _fetchAccountList();
-        if (_accountListData != null && _accountListData!['success'] == true) {
-          final accounts = _accountListData!['output']['accounts'] as List<dynamic>;
-          accountId = _findUserAccount(accounts, currentUsername);
-        }
-      }
-
-      print('🔍 Final account ID selected: "$accountId" for user: $currentUsername');
-      if (accountId == null || accountId.isEmpty) {
-        setState(() {
-          _isLoadingCashHoldings = false;
-          _buyingPower = '0';
-        });
-        print('❌ No account ID found for user: $currentUsername');
-        return;
-      }
-
-      // Cache the account ID for the entire session
-      _cachedAccountId = accountId;
-      print('💾 Cached account ID: $_cachedAccountId for session');
-
-      await _fetchCashHoldingsForAccount(accountId);
+      await _fetchCashHoldingsForInvestor(_investorId!);
 
     } catch (e) {
       // Ultimate crash protection
@@ -233,62 +215,17 @@ class _CashManagementPageState extends State<CashManagementPage> {
     }
   }
 
-  Future<void> _fetchAccountList() async {
-    try {
-      final accountListResponse = await realGrpcClient.getAccountList(
-        pageNumber: 0,
-        pageSize: 0,
-        accountIdRegex: null,
-      ).timeout(
-        const Duration(seconds: 10),
-        onTimeout: () => {
-          'input': {'ref_request_id': 'timeout'},
-          'output': {'error': 'Request timed out', 'message': 'Account list request timed out after 10 seconds'},
-          'requestTime': (DateTime.now().millisecondsSinceEpoch ~/ 1000).toString(),
-          'serverType': 'timeout',
-          'success': false,
-        },
-      );
-
-      if (mounted) {
-        setState(() {
-          _accountListData = accountListResponse;
-        });
-      }
-    } catch (e) {
-      print('❌ Error in _fetchAccountList: $e');
-    }
-  }
-
-  String? _findUserAccount(List<dynamic> accounts, String username) {
-    for (final account in accounts) {
-      final accountMap = account as Map<String, dynamic>;
-      final externalId = accountMap['external_id'] ?? accountMap['externalId'] ?? accountMap['externalAccountId'] ?? '';
-      final accountId = accountMap['id'] ?? accountMap['iid'] ?? '';
-
-      if (externalId.toLowerCase().contains(username.toLowerCase()) ||
-          externalId == username ||
-          accountId.toLowerCase().contains(username.toLowerCase())) {
-        print('✅ Found matching account for user $username: ID=$accountId, ExternalID=$externalId');
-        return accountId;
-      }
-    }
-
-    print('❌ No account found for user $username on the server');
-    return '';
-  }
-
-  Future<void> _fetchCashHoldingsForAccount(String accountId) async {
+  Future<void> _fetchCashHoldingsForInvestor(String investorId) async {
     try {
       setState(() {
         _isLoadingCashHoldings = true;
       });
 
-      // Get the current selected currency's asset_id
-      final selectedAssetId = _selectedCurrency['asset_id'];
-      final cashHoldingsResponse = await realGrpcClient.getAccountCashHoldings(
-        accountId: accountId,
-        cashAssetIds: selectedAssetId != null ? [selectedAssetId] : [], // Use specific asset_id
+      // Get the current selected currency's code (e.g., "USD", "AED", "EUR")
+      final selectedCurrencyCode = _selectedCurrency['code'];
+      final cashHoldingsResponse = await realGrpcClient.getInvestorCashHoldings(
+        investorId: investorId,
+        currencyCodes: selectedCurrencyCode != null && selectedCurrencyCode.isNotEmpty ? [selectedCurrencyCode] : [],
       ).timeout(
         const Duration(seconds: 15),
         onTimeout: () => {
@@ -341,10 +278,10 @@ class _CashManagementPageState extends State<CashManagementPage> {
     }
   }
 
-  Future<void> _fetchCashHoldingsForCurrency(String assetId) async {
-    print('🔍 _fetchCashHoldingsForCurrency called with assetId: $assetId');
-    if (_cachedAccountId == null || _cachedAccountId!.isEmpty) {
-      print('❌ No cached account ID available for currency fetch');
+  Future<void> _fetchCashHoldingsForCurrency(String currencyCode) async {
+    print('🔍 _fetchCashHoldingsForCurrency called with currencyCode: $currencyCode');
+    if (_investorId == null || _investorId!.isEmpty) {
+      print('❌ No investor ID available for currency fetch');
       return;
     }
 
@@ -353,9 +290,9 @@ class _CashManagementPageState extends State<CashManagementPage> {
         _isLoadingCashHoldings = true;
       });
 
-      final cashHoldingsResponse = await realGrpcClient.getAccountCashHoldings(
-        accountId: _cachedAccountId!,
-        cashAssetIds: [assetId], // Use the specific asset_id
+      final cashHoldingsResponse = await realGrpcClient.getInvestorCashHoldings(
+        investorId: _investorId!,
+        currencyCodes: [currencyCode], // Use the currency code (e.g., "USD", "AED", "EUR")
       ).timeout(const Duration(seconds: 15));
 
       print('🔍 Currency fetch response: ${cashHoldingsResponse['output']}');
@@ -370,13 +307,14 @@ class _CashManagementPageState extends State<CashManagementPage> {
           final cashPortfolio = output['cashPortfolio'] as Map<String, dynamic>? ?? {};
           final holdings = cashPortfolio['holdings'] as Map<String, dynamic>? ?? {};
 
-          // Extract currency code from asset ID or use it directly
-          String currencyCode = assetId;
-          if (currencyCode.startsWith('cash_')) {
-            currencyCode = currencyCode.replaceFirst('cash_', '');
+          // The currencyCode parameter is already the code (e.g., "AED", "USD", "EUR")
+          // Strip any 'cash_' prefix if present (for backward compatibility)
+          String normalizedCode = currencyCode;
+          if (normalizedCode.startsWith('cash_')) {
+            normalizedCode = normalizedCode.replaceFirst('cash_', '');
           }
 
-          print('🔍 Looking for currency code: $currencyCode in holdings: ${holdings.keys}');
+          print('🔍 Looking for currency code: $normalizedCode in holdings: ${holdings.keys}');
           print('🔍 Holdings content: $holdings');
 
           // Try to find the holding by currency code
@@ -384,13 +322,13 @@ class _CashManagementPageState extends State<CashManagementPage> {
           String assetBalance = '0';
 
           // First try direct lookup
-          if (holdings.containsKey(currencyCode)) {
-            assetHolding = holdings[currencyCode] as Map<String, dynamic>?;
+          if (holdings.containsKey(normalizedCode)) {
+            assetHolding = holdings[normalizedCode] as Map<String, dynamic>?;
             print('🔍 Direct lookup found: $assetHolding');
           } else {
             // If not found, try to find any holding that matches
             for (String key in holdings.keys) {
-              if (key.toUpperCase() == currencyCode.toUpperCase()) {
+              if (key.toUpperCase() == normalizedCode.toUpperCase()) {
                 assetHolding = holdings[key] as Map<String, dynamic>?;
                 print('🔍 Case-insensitive lookup found: $assetHolding');
                 break;
@@ -411,16 +349,16 @@ class _CashManagementPageState extends State<CashManagementPage> {
             _buyingPower = assetBalance;
           });
 
-          print('✅ Updated buying power for $currencyCode: $assetBalance');
+          print('✅ Updated buying power for $normalizedCode: $assetBalance');
         } else {
-          print('❌ Failed to fetch cash holdings for asset $assetId: ${cashHoldingsResponse['output']}');
+          print('❌ Failed to fetch cash holdings for currency $currencyCode: ${cashHoldingsResponse['output']}');
           setState(() {
             _buyingPower = '0';
           });
         }
       }
     } catch (e) {
-      print('❌ Error fetching cash holdings for asset $assetId: $e');
+      print('❌ Error fetching cash holdings for currency $currencyCode: $e');
       setState(() {
         _buyingPower = '0';
       });
@@ -556,7 +494,7 @@ class _CashManagementPageState extends State<CashManagementPage> {
                       setState(() {
                         _selectedCurrency = newValue;
                       });
-                      _fetchCashHoldingsForCurrency(newValue['asset_id']!);
+                      _fetchCashHoldingsForCurrency(newValue['code']!);
                     }
                   },
                   dropdownColor: isDarkTheme ? const Color(0xFF1e1e1e) : Colors.white,
@@ -772,12 +710,12 @@ class _CashManagementPageState extends State<CashManagementPage> {
                   return;
                 }
 
-                // Check if we have account ID and currency
-                if (_cachedAccountId == null || _cachedAccountId!.isEmpty) {
+                // Check if we have investor ID and currency
+                if (_investorId == null || _investorId!.isEmpty) {
                   navigator.pop();
                   scaffoldMessenger.showSnackBar(
                     const SnackBar(
-                      content: Text('Account not found. Please try again.'),
+                      content: Text('Investor not found. Please try again.'),
                       backgroundColor: Colors.red,
                     ),
                   );
@@ -808,7 +746,7 @@ class _CashManagementPageState extends State<CashManagementPage> {
                 // Call DepositCash API
                 try {
                   final response = await realGrpcClient.depositCash(
-                    accountId: _cachedAccountId!,
+                    investorId: _investorId!,
                     currencyCode: _selectedCurrency['code']!,
                     amount: amount,
                   );
@@ -823,7 +761,7 @@ class _CashManagementPageState extends State<CashManagementPage> {
                       );
 
                       // Refresh balance
-                      _fetchCashHoldingsForCurrency(_selectedCurrency['asset_id']!);
+                      _fetchCashHoldingsForCurrency(_selectedCurrency['code']!);
                     } else {
                       final errorMessage = response['output']?['error'] ??
                                          response['output']?['message'] ??
@@ -987,12 +925,12 @@ class _CashManagementPageState extends State<CashManagementPage> {
                   return;
                 }
 
-                // Check if we have account ID and currency
-                if (_cachedAccountId == null || _cachedAccountId!.isEmpty) {
+                // Check if we have investor ID and currency
+                if (_investorId == null || _investorId!.isEmpty) {
                   navigator.pop();
                   scaffoldMessenger.showSnackBar(
                     const SnackBar(
-                      content: Text('Account not found. Please try again.'),
+                      content: Text('Investor not found. Please try again.'),
                       backgroundColor: Colors.red,
                     ),
                   );
@@ -1023,7 +961,7 @@ class _CashManagementPageState extends State<CashManagementPage> {
                 // Call WithdrawCash API
                 try {
                   final response = await realGrpcClient.withdrawCash(
-                    accountId: _cachedAccountId!,
+                    investorId: _investorId!,
                     currencyCode: _selectedCurrency['code']!,
                     amount: amount,
                   );
@@ -1038,7 +976,7 @@ class _CashManagementPageState extends State<CashManagementPage> {
                       );
 
                       // Refresh balance
-                      _fetchCashHoldingsForCurrency(_selectedCurrency['asset_id']!);
+                      _fetchCashHoldingsForCurrency(_selectedCurrency['code']!);
                     } else {
                       final errorMessage = response['output']?['error'] ??
                                          response['output']?['message'] ??
