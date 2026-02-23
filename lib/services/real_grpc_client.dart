@@ -148,7 +148,7 @@ class RealGrpcClient {
       final response = await GrpcurlHelper.ping(
         stringToBePonged: stringToBePonged,
       ).timeout(
-        const Duration(seconds: 5),
+        const Duration(minutes: 5),
         onTimeout: () {
           print('⏰ Ping request timed out');
           return {
@@ -402,7 +402,7 @@ class RealGrpcClient {
         accountIdRegex: accountIdRegex,
         auxData: auxData,
       ).timeout(
-        const Duration(seconds: 5),
+        const Duration(minutes: 5),
         onTimeout: () {
           print('⏰ GetAccountList request timed out');
           return {
@@ -531,7 +531,7 @@ class RealGrpcClient {
       final response = await GrpcurlHelper.getAccountMarketPortfolio(
         accountId: accountId,
       ).timeout(
-        const Duration(seconds: 10),
+        const Duration(minutes: 5),
         onTimeout: () {
           print('⏰ GetAccountSecurityHoldings request timed out');
           return {
@@ -643,7 +643,7 @@ class RealGrpcClient {
         investorId: investorId,
         currencyCodes: currencyCodes,
       ).timeout(
-        const Duration(seconds: 10),
+        const Duration(minutes: 5),
         onTimeout: () {
           print('⏰ GetInvestorCashHoldings request timed out');
           return {
@@ -763,7 +763,7 @@ class RealGrpcClient {
         amount: amount,
         auxData: auxData,
       ).timeout(
-        const Duration(seconds: 15),
+        const Duration(minutes: 5),
         onTimeout: () {
           print('⏰ DepositCash request timed out');
           return {
@@ -886,7 +886,7 @@ class RealGrpcClient {
         amount: amount,
         auxData: auxData,
       ).timeout(
-        const Duration(seconds: 15),
+        const Duration(minutes: 5),
         onTimeout: () {
           print('⏰ WithdrawCash request timed out');
           return {

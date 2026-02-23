@@ -186,12 +186,12 @@ class _TradingPageState extends State<TradingPage> {
     try {
       print('🏦 Fetching supported currencies...');
       final result = await realGrpcClient.getSupportedCurrencies().timeout(
-        const Duration(seconds: 10),
+        const Duration(minutes: 5),
         onTimeout: () {
-          print('⏰ GetSupportedCurrencies timed out after 10 seconds');
+          print('⏰ GetSupportedCurrencies timed out after 5 minutes');
           return {
             'success': false,
-            'output': {'error': 'Request timed out after 10 seconds'},
+            'output': {'error': 'Request timed out after 5 minutes'},
           };
         },
       );
@@ -360,12 +360,12 @@ class _TradingPageState extends State<TradingPage> {
     try {
       print('🏪 Fetching market list...');
       final result = await realGrpcClient.getMarketList().timeout(
-        const Duration(seconds: 10),
+        const Duration(minutes: 5),
         onTimeout: () {
-          print('⏰ GetMarketList timed out after 10 seconds');
+          print('⏰ GetMarketList timed out after 5 minutes');
           return {
             'success': false,
-            'output': {'error': 'Request timed out after 10 seconds'},
+            'output': {'error': 'Request timed out after 5 minutes'},
           };
         },
       );
@@ -457,12 +457,12 @@ class _TradingPageState extends State<TradingPage> {
 
       // Fetch all venues (no market filter) since the server may not support filtering by market
       final result = await realGrpcClient.getVenueList().timeout(
-        const Duration(seconds: 10),
+        const Duration(minutes: 5),
         onTimeout: () {
-          print('⏰ GetVenueList timed out after 10 seconds');
+          print('⏰ GetVenueList timed out after 5 minutes');
           return {
             'success': false,
-            'output': {'error': 'Request timed out after 10 seconds'},
+            'output': {'error': 'Request timed out after 5 minutes'},
           };
         },
       );
@@ -560,12 +560,12 @@ class _TradingPageState extends State<TradingPage> {
         pageNumber: 0,
         pageSize: 0,
       ).timeout(
-        const Duration(seconds: 10),
+        const Duration(minutes: 5),
         onTimeout: () {
-          print('⏰ GetMarketSecurityList timed out after 10 seconds');
+          print('⏰ GetMarketSecurityList timed out after 5 minutes');
           return {
             'success': false,
-            'output': {'error': 'Request timed out after 10 seconds'},
+            'output': {'error': 'Request timed out after 5 minutes'},
           };
         },
       );
@@ -751,7 +751,7 @@ class _TradingPageState extends State<TradingPage> {
         accountId: _cachedAccountId!,
         marketId: marketId,
         securityIds: [securityId],
-      ).timeout(const Duration(seconds: 10));
+      ).timeout(const Duration(minutes: 5));
 
       print('📬 GetAccountMarketPortfolio RESPONSE: ${portfolioResponse.toString()}');
 
@@ -1077,12 +1077,12 @@ class _TradingPageState extends State<TradingPage> {
 
       // Get account list to find the user's account ID
       final accountListResponse = await realGrpcClient.getAccountList().timeout(
-        const Duration(seconds: 10),
+        const Duration(minutes: 5),
         onTimeout: () {
-          print('⏰ GetAccountList timed out after 10 seconds');
+          print('⏰ GetAccountList timed out after 5 minutes');
           return {
             'success': false,
-            'output': {'error': 'Request timed out after 10 seconds'},
+            'output': {'error': 'Request timed out after 5 minutes'},
           };
         },
       );
@@ -1147,10 +1147,10 @@ class _TradingPageState extends State<TradingPage> {
         investorId: investorId,
         currencyCodes: currencyCodes,
       ).timeout(
-        const Duration(seconds: 15),
+        const Duration(minutes: 5),
         onTimeout: () => {
           'input': {'ref_request_id': 'timeout'},
-          'output': {'error': 'Request timed out', 'message': 'Cash holdings request timed out after 15 seconds'},
+          'output': {'error': 'Request timed out', 'message': 'Cash holdings request timed out after 5 minutes'},
           'requestTime': (DateTime.now().millisecondsSinceEpoch ~/ 1000).toString(),
           'serverType': 'timeout',
           'success': false,
@@ -1229,7 +1229,7 @@ class _TradingPageState extends State<TradingPage> {
           'page_nr': 1,
           'page_size': _ordersPageSize > _historyPageSize ? _ordersPageSize : _historyPageSize, // Use the larger page size to get enough data for both tables
         },
-      ).timeout(const Duration(seconds: 10));
+      ).timeout(const Duration(minutes: 5));
 
       if (result['success'] == true && result['output'] != null) {
         final output = result['output'];
@@ -1386,7 +1386,7 @@ class _TradingPageState extends State<TradingPage> {
         participantOrderId: participantOrderId,
         reason: 'User requested cancellation',
         refRequestId: 'flutter-cancel-${DateTime.now().millisecondsSinceEpoch}',
-      ).timeout(const Duration(seconds: 10));
+      ).timeout(const Duration(minutes: 5));
 
       // Hide loading snackbar
       ScaffoldMessenger.of(context).hideCurrentSnackBar();
@@ -1632,7 +1632,7 @@ class _TradingPageState extends State<TradingPage> {
         newExpireTime: expirationDateTime,
         reason: 'User requested replacement',
         refRequestId: 'flutter-replace-${DateTime.now().millisecondsSinceEpoch}',
-      ).timeout(const Duration(seconds: 10));
+      ).timeout(const Duration(minutes: 5));
 
       // Hide loading snackbar
       ScaffoldMessenger.of(context).hideCurrentSnackBar();
@@ -1791,7 +1791,7 @@ class _TradingPageState extends State<TradingPage> {
           'Content-Type': 'application/json',
           'Accept': 'application/json',
         },
-      ).timeout(const Duration(seconds: 10));
+      ).timeout(const Duration(minutes: 5));
       if (response.statusCode == 200) {
         final Map<String, dynamic> jsonData = json.decode(response.body);
         if (jsonData['success'] == true && jsonData['result'] != null) {
@@ -1827,9 +1827,9 @@ class _TradingPageState extends State<TradingPage> {
           'Accept': 'application/json',
         },
       ).timeout(
-        const Duration(seconds: 10),
+        const Duration(minutes: 5),
         onTimeout: () {
-          throw TimeoutException('API request timed out', const Duration(seconds: 10));
+          throw TimeoutException('API request timed out', const Duration(minutes: 5));
         },
       );
       

@@ -68,7 +68,7 @@ class _PortfolioPageState extends State<PortfolioPage> {
       if (!realGrpcClient.isConnected) return;
 
       final result = await realGrpcClient.getSupportedCurrencies().timeout(
-        const Duration(seconds: 10),
+        const Duration(minutes: 5),
         onTimeout: () => {
           'success': false,
           'output': {'error': 'Request timed out'},
@@ -125,7 +125,7 @@ class _PortfolioPageState extends State<PortfolioPage> {
       final response = await GrpcurlHelper.getInvestorSecurityHoldings(
         investorId: _investorId!,
       ).timeout(
-        const Duration(seconds: 10),
+        const Duration(minutes: 5),
         onTimeout: () => {
           'input': {'proposed_execution_id': 'timeout'},
           'output': {'error': 'Request timed out', 'message': 'Security holdings request timed out'},
@@ -171,7 +171,7 @@ class _PortfolioPageState extends State<PortfolioPage> {
       final response = await GrpcurlHelper.getInvestorCashHoldings(
         investorId: _investorId!,
       ).timeout(
-        const Duration(seconds: 10),
+        const Duration(minutes: 5),
         onTimeout: () => {
           'input': {'proposed_execution_id': 'timeout'},
           'output': {'error': 'Request timed out', 'message': 'Cash holdings request timed out'},

@@ -144,7 +144,7 @@ class GrpcurlHelper {
     required String method,
     required String endpoint,
     required Map<String, dynamic> requestBody,
-    Duration timeout = const Duration(seconds: 10),
+    Duration timeout = const Duration(minutes: 5),
     bool enableRetry = false,
     int maxRetries = 3,
   }) async {
@@ -451,10 +451,10 @@ class GrpcurlHelper {
             path,
             testArgs,
           ).timeout(
-            const Duration(seconds: 30), // 30 second timeout for network operations
+            const Duration(minutes: 5),
             onTimeout: () {
               print('⏰ Timeout testing $path');
-              throw TimeoutException('Command timed out', const Duration(seconds: 30));
+              throw TimeoutException('Command timed out', const Duration(minutes: 5));
             }
           );
         } on TimeoutException catch (e) {
@@ -557,7 +557,7 @@ class GrpcurlHelper {
           'proposed_execution_id': 'ping_${DateTime.now().millisecondsSinceEpoch}',
           'string_to_be_ponged': stringToBePonged,
         },
-        timeout: const Duration(seconds: 3),
+        timeout: const Duration(minutes: 5),
       );
     } finally {
       _isPingInProgress = false;
@@ -1402,7 +1402,7 @@ class GrpcurlHelper {
         result = await Process.run(
           grpcurlPath,
           listArgs,
-        ).timeout(const Duration(seconds: 5));
+        ).timeout(const Duration(minutes: 5));
       } catch (e) {
         print('❌ Process.run failed for listServices in sandboxed app: ${e.runtimeType}: ${e.toString()}');
         return [];
