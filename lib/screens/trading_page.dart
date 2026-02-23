@@ -294,11 +294,6 @@ class _TradingPageState extends State<TradingPage> {
           _isLoadingSupportedCurrencies = false;
         });
 
-        // If a security is already selected, filter currencies for it
-        if (_selectedSymbol.isNotEmpty) {
-          _updateCurrenciesForSecurity(_selectedSymbol);
-        }
-
         print('✅ Loaded ${_supportedCurrencies.length} supported currencies');
       } else {
         print('❌ Failed to fetch supported currencies: ${result['output']}');
@@ -314,20 +309,23 @@ class _TradingPageState extends State<TradingPage> {
     }
   }
 
-  /// Update the currency dropdown to only show currencies that have listings for the given security
-  void _updateCurrenciesForSecurity(String symbol) {
+  /// Update the currency dropdown to only show currencies that have listings for the given security.
+  /// Fetches currencies from CashTokenService if not yet loaded.
+  Future<void> _updateCurrenciesForSecurity(String symbol) async {
+    // Fetch currencies from server if not yet loaded
+    if (_allSupportedCurrencies.isEmpty) {
+      await _fetchSupportedCurrencies();
+    }
+
     final availableCurrencies = _securityCurrencies[symbol] ?? {};
     print('💱 Filtering currencies for $symbol: available=$availableCurrencies');
-    print('💱 All supported currency codes: ${_allSupportedCurrencies.map((c) => c['code']).toList()}');
-    print('💱 All supported currency issueCurrencies: ${_allSupportedCurrencies.map((c) => c['issueCurrency']).toList()}');
 
     if (availableCurrencies.isEmpty) {
-      // No listing info available, show all currencies
       return;
     }
 
     setState(() {
-      // Match by code, issueCurrency, or check if the code contains the listing currency
+      // Match by code, issueCurrency, or prefix
       // SecurityListing.currency is e.g. "EUR", while CashToken code might be "EUR_THIRD_BROKER"
       _supportedCurrencies = _allSupportedCurrencies
           .where((c) {
@@ -608,15 +606,21 @@ class _TradingPageState extends State<TradingPage> {
             final iid = security['iid']?.toString() ?? '';
             final issueCurrency = security['currency'] as String? ?? security['issueCurrency']?.toString() ?? '';
 
-            final securityStatus = security['securityStatus'] as String? ?? '';
+            // security_status is FIX Tag 965 — proto field name is security_status, JSON key is securityStatus
+            final securityStatus = security['securityStatus'] as String? ?? security['security_status'] as String? ?? '';
+            print('🏪 Security: symbol=$symbol, currency=$issueCurrency, status=$securityStatus');
 
             // Track which currencies each active symbol has listings for
-            if (symbol.isNotEmpty && issueCurrency.isNotEmpty && securityStatus.toUpperCase() == 'ACTIVE') {
-              securityCurrenciesMap.putIfAbsent(symbol, () => {}).add(issueCurrency);
+            if (symbol.isNotEmpty && issueCurrency.isNotEmpty) {
+              // Only track currencies for active listings (or if status is empty/unknown, include them)
+              if (securityStatus.isEmpty || securityStatus.toUpperCase() == 'ACTIVE' || securityStatus == '1') {
+                securityCurrenciesMap.putIfAbsent(symbol, () => {}).add(issueCurrency);
+              }
             }
 
             // Only show active listings on the trading page
-            if (securityStatus.isNotEmpty && securityStatus.toUpperCase() != 'ACTIVE') {
+            // FIX Tag 965 values: 1=Active, 2=Inactive — also handle string "ACTIVE"/"INACTIVE"
+            if (securityStatus.isNotEmpty && securityStatus.toUpperCase() != 'ACTIVE' && securityStatus != '1') {
               continue;
             }
 
@@ -657,9 +661,9 @@ class _TradingPageState extends State<TradingPage> {
           _isLoadingMarketSecurities = false;
         });
 
-        // Filter currencies for the selected security
+        // Fetch and filter currencies for the selected security
         if (_selectedSymbol.isNotEmpty) {
-          _updateCurrenciesForSecurity(_selectedSymbol);
+          await _updateCurrenciesForSecurity(_selectedSymbol);
         }
 
         print('✅ Loaded ${_securities.length} securities for market $marketId');
@@ -967,8 +971,7 @@ class _TradingPageState extends State<TradingPage> {
     // Fetch market list for the dropdown
     _fetchMarketList();
     
-    // Fetch supported currencies for the dropdown
-    _fetchSupportedCurrencies();
+    // Currencies are fetched after a security is selected (not at page load)
 
       // Fetch trade history, orderbook, and chart for default symbol when page is shown and assets are loaded
       WidgetsBinding.instance.addPostFrameCallback((_) {
@@ -3089,7 +3092,7 @@ class _TradingPageState extends State<TradingPage> {
                           setState(() {
                             _selectedSymbol = newValue;
                           });
-                          _updateCurrenciesForSecurity(newValue);
+                          await _updateCurrenciesForSecurity(newValue);
                           _loadChartData(newValue);
                           _resetAndFetchTradeHistory(newValue);
                           _fetchOrderbookData(newValue);
