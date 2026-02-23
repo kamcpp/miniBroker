@@ -7,6 +7,7 @@ import 'package:path/path.dart' as path;
 import 'package:grpc/grpc.dart';
 import '../services/theme_service.dart';
 import '../config/ui_constants.dart';
+import '../utils/broker_config_helper.dart';
 import '../generated/prtagent/v1/agent.pbgrpc.dart';
 
 /// Dialog for editing an existing broker configuration (except broker name)
@@ -52,11 +53,12 @@ class _EditBrokerConfigDialogState extends State<EditBrokerConfigDialog> {
       text: broker?['name'] as String? ?? '',
     );
 
-    // Combine host and port into endpoint
+    // Combine host, port, and useSecure into endpoint display
     final host = grpc?['host'] as String? ?? 'localhost';
     final port = grpc?['port'] as int? ?? 50051;
+    final useSecure = grpc?['useSecure'] as bool? ?? false;
     _grpcEndpointController = TextEditingController(
-      text: '$host:$port',
+      text: BrokerConfigHelper.formatEndpoint(host: host, port: port, useSecure: useSecure),
     );
 
     _apiKeyController = TextEditingController(
@@ -94,18 +96,14 @@ class _EditBrokerConfigDialogState extends State<EditBrokerConfigDialog> {
       // Update the config with new values
       final updatedConfig = Map<String, dynamic>.from(widget.existingConfig);
 
-      // Parse endpoint into host and port
+      // Parse endpoint
       final endpoint = _grpcEndpointController.text.trim();
-      final parts = endpoint.split(':');
-      if (parts.length != 2) {
-        throw Exception('Invalid endpoint format. Expected host:port');
-      }
-      final host = parts[0];
-      final port = int.parse(parts[1]);
+      final parsed = BrokerConfigHelper.parseEndpoint(endpoint);
 
       // Update grpc settings
-      (updatedConfig['grpc'] as Map<String, dynamic>?)?['host'] = host;
-      (updatedConfig['grpc'] as Map<String, dynamic>?)?['port'] = port;
+      (updatedConfig['grpc'] as Map<String, dynamic>?)?['host'] = parsed.host;
+      (updatedConfig['grpc'] as Map<String, dynamic>?)?['port'] = parsed.port;
+      (updatedConfig['grpc'] as Map<String, dynamic>?)?['useSecure'] = parsed.useSecure;
 
       // Update participant settings
       (updatedConfig['participant'] as Map<String, dynamic>?)?['apiKey'] =
@@ -154,19 +152,16 @@ class _EditBrokerConfigDialogState extends State<EditBrokerConfigDialog> {
     try {
       // Parse endpoint
       final endpoint = _grpcEndpointController.text.trim();
-      final parts = endpoint.split(':');
-      if (parts.length != 2) {
-        throw Exception('Invalid endpoint format. Expected host:port');
-      }
-      final host = parts[0];
-      final port = int.parse(parts[1]);
+      final parsed = BrokerConfigHelper.parseEndpoint(endpoint);
 
       // Create gRPC channel
       channel = ClientChannel(
-        host,
-        port: port,
-        options: const ChannelOptions(
-          credentials: ChannelCredentials.insecure(),
+        parsed.host,
+        port: parsed.port,
+        options: ChannelOptions(
+          credentials: parsed.useSecure
+              ? const ChannelCredentials.secure()
+              : const ChannelCredentials.insecure(),
         ),
       );
 
@@ -323,7 +318,7 @@ class _EditBrokerConfigDialogState extends State<EditBrokerConfigDialog> {
                               controller: _grpcEndpointController,
                               style: TextStyle(color: textColor, fontSize: UIConstants.textFieldFontSize),
                               decoration: InputDecoration(
-                                hintText: 'localhost:50051',
+                                hintText: 'host:port or https://host',
                                 hintStyle: TextStyle(color: hintColor, fontSize: UIConstants.textFieldFontSize),
                                 filled: true,
                                 fillColor: surfaceColor,
@@ -334,20 +329,7 @@ class _EditBrokerConfigDialogState extends State<EditBrokerConfigDialog> {
                                   borderSide: BorderSide.none,
                                 ),
                               ),
-                              validator: (value) {
-                                if (value == null || value.trim().isEmpty) {
-                                  return 'Endpoint is required';
-                                }
-                                final parts = value.trim().split(':');
-                                if (parts.length != 2) {
-                                  return 'Format must be host:port';
-                                }
-                                final port = int.tryParse(parts[1]);
-                                if (port == null || port < 1 || port > 65535) {
-                                  return 'Invalid port number (1-65535)';
-                                }
-                                return null;
-                              },
+                              validator: BrokerConfigHelper.validateEndpoint,
                             ),
                           ),
                           const SizedBox(width: UIConstants.spacingSm),

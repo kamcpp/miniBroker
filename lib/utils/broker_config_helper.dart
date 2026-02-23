@@ -125,6 +125,7 @@ class BrokerConfigHelper {
     required String grpcHost,
     required int grpcPort,
     required String apiKey,
+    bool useSecure = false,
     String? participantId,
     String? participantName,
     String? configDir,
@@ -161,7 +162,7 @@ class BrokerConfigHelper {
         'grpc': {
           'host': grpcHost,
           'port': grpcPort,
-          'useSecure': false,
+          'useSecure': useSecure,
         },
         'participant': {
           'apiKey': apiKey,
@@ -196,6 +197,64 @@ class BrokerConfigHelper {
       print('❌ Error creating config file: $e');
       return false;
     }
+  }
+
+  /// Parse a gRPC endpoint string into host, port, and useSecure.
+  /// Supports formats:
+  ///   - host:port (e.g., localhost:50051)
+  ///   - https://host (defaults to port 443)
+  ///   - https://host:port
+  ///   - http://host (defaults to port 80)
+  ///   - http://host:port
+  static ({String host, int port, bool useSecure}) parseEndpoint(String endpoint) {
+    final trimmed = endpoint.trim();
+
+    if (trimmed.startsWith('https://') || trimmed.startsWith('http://')) {
+      final uri = Uri.parse(trimmed);
+      final useSecure = uri.scheme == 'https';
+      final defaultPort = useSecure ? 443 : 80;
+      final host = uri.host;
+      final port = uri.hasPort ? uri.port : defaultPort;
+      if (host.isEmpty) {
+        throw FormatException('Invalid URL: missing host');
+      }
+      return (host: host, port: port, useSecure: useSecure);
+    }
+
+    // Legacy host:port format
+    final parts = trimmed.split(':');
+    if (parts.length != 2) {
+      throw FormatException('Invalid endpoint format. Expected host:port or https://host');
+    }
+    final host = parts[0];
+    final port = int.tryParse(parts[1]);
+    if (port == null || port < 1 || port > 65535) {
+      throw FormatException('Invalid port number (1-65535)');
+    }
+    return (host: host, port: port, useSecure: false);
+  }
+
+  /// Validate a gRPC endpoint string.
+  /// Returns null if valid, or an error message string if invalid.
+  static String? validateEndpoint(String? value) {
+    if (value == null || value.trim().isEmpty) {
+      return 'Endpoint is required';
+    }
+    try {
+      parseEndpoint(value);
+      return null;
+    } on FormatException catch (e) {
+      return e.message;
+    }
+  }
+
+  /// Format an endpoint for display from config values.
+  static String formatEndpoint({required String host, required int port, required bool useSecure}) {
+    if (useSecure) {
+      if (port == 443) return 'https://$host';
+      return 'https://$host:$port';
+    }
+    return '$host:$port';
   }
 
   /// Extract API key from config

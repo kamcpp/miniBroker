@@ -270,14 +270,14 @@ class RealGrpcClient {
         externalInvestorId: externalInvestorId,
         auxData: auxData,
       ).timeout(
-        const Duration(seconds: 10),
+        const Duration(minutes: 5),
         onTimeout: () {
           print('⏰ NewInvestor request timed out');
           return {
             'input': request,
             'output': {
               'error': 'Request timed out',
-              'message': 'The new investor request timed out after 10 seconds. Check if server is running properly.',
+              'message': 'The new investor request timed out after 5 minutes. Check if server is running properly.',
             },
             'requestTime': _toUnixTimestamp(DateTime.now()).toString(),
             'serverType': 'timeout',

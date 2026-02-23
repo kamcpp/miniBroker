@@ -347,6 +347,7 @@ class _AppInitializerState extends State<AppInitializer> with SingleTickerProvid
       // Update AppConfig so GrpcurlHelper and other components use the correct host/port
       AppConfig.grpcHost = host;
       AppConfig.grpcPort = port;
+      AppConfig.grpcUseSecure = useSecure;
       AppConfig.grpcApiKey = apiKey;
       print('✅ Updated AppConfig: gRPC server set to $host:$port');
       if (apiKey != null && apiKey.isNotEmpty) {

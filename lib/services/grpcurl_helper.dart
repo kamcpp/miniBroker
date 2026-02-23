@@ -171,7 +171,13 @@ class GrpcurlHelper {
       }
 
       // Build grpcurl arguments with API key header
-      final args = <String>['-plaintext'];
+      final useSecure = AppConfig.grpcUseSecure;
+      final args = <String>[];
+      if (useSecure) {
+        args.add('-insecure'); // Skip CA chain verification for TLS
+      } else {
+        args.add('-plaintext');
+      }
       final headers = <String, String>{};
       final apiKey = AppConfig.grpcApiKey;
       if (apiKey != null && apiKey.isNotEmpty) {
@@ -435,9 +441,12 @@ class GrpcurlHelper {
         ProcessResult? result;
         try {
           print('▶️ Running grpcurl at $path...');
+          final testArgs = AppConfig.grpcUseSecure
+              ? ['-insecure', '$_host:$_port', 'list']
+              : ['-plaintext', '$_host:$_port', 'list'];
           result = await Process.run(
             path,
-            ['-plaintext', '$_host:$_port', 'list'],
+            testArgs,
           ).timeout(
             const Duration(seconds: 30), // 30 second timeout for network operations
             onTimeout: () {
@@ -593,7 +602,8 @@ class GrpcurlHelper {
             'created_at': auxData ?? 'Created from Flutter signup',
           },
         },
-        enableRetry: true,
+        timeout: const Duration(minutes: 5),
+        enableRetry: false,
       );
     } finally {
       _isInvestorOperationInProgress = false;
@@ -1301,9 +1311,12 @@ class GrpcurlHelper {
 
       ProcessResult result;
       try {
+        final listArgs = AppConfig.grpcUseSecure
+            ? ['-insecure', '$_host:$_port', 'list']
+            : ['-plaintext', '$_host:$_port', 'list'];
         result = await Process.run(
           grpcurlPath,
-          ['-plaintext', '$_host:$_port', 'list'],
+          listArgs,
         ).timeout(const Duration(seconds: 5));
       } catch (e) {
         print('❌ Process.run failed for listServices in sandboxed app: ${e.runtimeType}: ${e.toString()}');

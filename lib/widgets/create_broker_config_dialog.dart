@@ -57,14 +57,9 @@ class _CreateBrokerConfigDialogState extends State<CreateBrokerConfigDialog> {
     try {
       final brokerName = _brokerNameController.text.trim();
 
-      // Parse endpoint into host and port
+      // Parse endpoint
       final endpoint = _grpcEndpointController.text.trim();
-      final parts = endpoint.split(':');
-      if (parts.length != 2) {
-        throw Exception('Invalid endpoint format. Expected host:port');
-      }
-      final grpcHost = parts[0];
-      final grpcPort = int.parse(parts[1]);
+      final parsed = BrokerConfigHelper.parseEndpoint(endpoint);
 
       final apiKey = _apiKeyController.text.trim();
       final participantId = _participantIdController.text.trim();
@@ -72,9 +67,10 @@ class _CreateBrokerConfigDialogState extends State<CreateBrokerConfigDialog> {
 
       final success = BrokerConfigHelper.createConfigFile(
         brokerName: brokerName,
-        grpcHost: grpcHost,
-        grpcPort: grpcPort,
+        grpcHost: parsed.host,
+        grpcPort: parsed.port,
         apiKey: apiKey,
+        useSecure: parsed.useSecure,
         participantId: participantId.isEmpty ? null : participantId,
         participantName: participantName.isEmpty ? null : participantName,
         configDir: widget.configDir,
@@ -127,19 +123,16 @@ class _CreateBrokerConfigDialogState extends State<CreateBrokerConfigDialog> {
 
     try {
       // Parse endpoint
-      final parts = endpoint.split(':');
-      if (parts.length != 2) {
-        throw Exception('Invalid endpoint format. Expected host:port');
-      }
-      final host = parts[0];
-      final port = int.parse(parts[1]);
+      final parsed = BrokerConfigHelper.parseEndpoint(endpoint);
 
       // Create gRPC channel
       channel = ClientChannel(
-        host,
-        port: port,
-        options: const ChannelOptions(
-          credentials: ChannelCredentials.insecure(),
+        parsed.host,
+        port: parsed.port,
+        options: ChannelOptions(
+          credentials: parsed.useSecure
+              ? const ChannelCredentials.secure()
+              : const ChannelCredentials.insecure(),
         ),
       );
 
@@ -309,7 +302,7 @@ class _CreateBrokerConfigDialogState extends State<CreateBrokerConfigDialog> {
                               controller: _grpcEndpointController,
                               style: TextStyle(color: textColor, fontSize: UIConstants.textFieldFontSize),
                               decoration: InputDecoration(
-                                hintText: 'localhost:50051',
+                                hintText: 'host:port or https://host',
                                 hintStyle: TextStyle(color: hintColor, fontSize: UIConstants.textFieldFontSize),
                                 filled: true,
                                 fillColor: surfaceColor,
@@ -320,20 +313,7 @@ class _CreateBrokerConfigDialogState extends State<CreateBrokerConfigDialog> {
                                   borderSide: BorderSide.none,
                                 ),
                               ),
-                              validator: (value) {
-                                if (value == null || value.trim().isEmpty) {
-                                  return 'Endpoint is required';
-                                }
-                                final parts = value.trim().split(':');
-                                if (parts.length != 2) {
-                                  return 'Format must be host:port';
-                                }
-                                final port = int.tryParse(parts[1]);
-                                if (port == null || port < 1 || port > 65535) {
-                                  return 'Invalid port number (1-65535)';
-                                }
-                                return null;
-                              },
+                              validator: BrokerConfigHelper.validateEndpoint,
                             ),
                           ),
                           const SizedBox(width: UIConstants.spacingSm),

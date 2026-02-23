@@ -22,6 +22,9 @@ class AppConfig {
   /// This is sent as the X-Agora-Participant-Api-Key header
   static String? grpcApiKey;
 
+  /// Whether to use TLS/SSL for gRPC connections (loaded from config file at runtime)
+  static bool grpcUseSecure = false;
+
   /// Full server address (computed from host and port)
   static String get grpcServerAddress => '$grpcHost:$grpcPort';
 
