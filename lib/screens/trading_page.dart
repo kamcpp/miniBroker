@@ -198,7 +198,7 @@ class _TradingPageState extends State<TradingPage> {
       
       if (result['success'] == true && result['output'] != null) {
         final output = result['output'] as Map<String, dynamic>;
-        final currencies = output['currencies'] as List<dynamic>? ?? [];
+        final currencies = output['cashTokens'] as List<dynamic>? ?? [];
         
         final List<Map<String, String>> currencyData = [];
         
@@ -221,6 +221,11 @@ class _TradingPageState extends State<TradingPage> {
             final currencyName = displayNames['en'] as String? ?? '';
             final labels = currency['labels'] as Map<String, dynamic>? ?? {};
             final currencySymbol = labels['symbol'] as String? ?? '';
+
+            // Fallback: use issueCurrency if identifiers didn't yield a value
+            if (currencyValue.isEmpty) {
+              currencyValue = currency['issueCurrency'] as String? ?? '';
+            }
 
             if (currencyValue.isNotEmpty) {
               final currencyMap = {
@@ -345,6 +350,11 @@ class _TradingPageState extends State<TradingPage> {
               }
             }
 
+            // Fallback to iid if identifiers didn't yield a value
+            if (marketId == null || marketId.isEmpty) {
+              marketId = market['iid']?.toString();
+            }
+
             // Use display name in English, or fall back to market ID
             marketName = displayNames['en'] as String? ?? marketId;
 
@@ -440,6 +450,11 @@ class _TradingPageState extends State<TradingPage> {
               }
             }
 
+            // Fallback to iid if identifiers didn't yield a value
+            if (venueValue.isEmpty) {
+              venueValue = venue['iid']?.toString() ?? '';
+            }
+
             // Fallback to displayName if value not found
             final displayNames = venue['displayNames'] as Map<String, dynamic>? ?? {};
             final displayName = displayNames['en']?.toString() ?? venueValue;
@@ -510,34 +525,33 @@ class _TradingPageState extends State<TradingPage> {
       
       if (result['success'] == true && result['output'] != null) {
         final output = result['output'] as Map<String, dynamic>;
-        final securitys = output['securities'] as List<dynamic>? ?? [];
-        
+        final securitys = output['securityListings'] as List<dynamic>? ?? [];
+
         final List<Map<String, dynamic>> processedAssets = [];
-        
+
         for (final security in securitys) {
           if (security is Map<String, dynamic>) {
-            // Extract symbol from identifiers structure
-            String symbol = '';
-            String description = '';
+            // Extract fields from flat SecurityListing structure
+            String symbol = security['symbol'] as String? ?? '';
+            String description = security['securityDesc'] as String? ?? symbol;
 
-            final identifiers = security['identifiers'] as List<dynamic>? ?? [];
-            final displayNames = security['displayNames'] as Map<String, dynamic>? ?? {};
-
-            // Extract symbol from the complex identifier structure
-            if (identifiers.isNotEmpty) {
-              final identifier = identifiers[0] as Map<String, dynamic>? ?? {};
-              final ids = identifier['ids'] as List<dynamic>? ?? [];
-              if (ids.isNotEmpty) {
-                final idObj = ids[0] as Map<String, dynamic>? ?? {};
-                symbol = idObj['value'] as String? ?? '';
+            // Fallback: try identifiers structure if flat fields are empty
+            if (symbol.isEmpty) {
+              final identifiers = security['identifiers'] as List<dynamic>? ?? [];
+              if (identifiers.isNotEmpty) {
+                final identifier = identifiers[0] as Map<String, dynamic>? ?? {};
+                final ids = identifier['ids'] as List<dynamic>? ?? [];
+                if (ids.isNotEmpty) {
+                  final idObj = ids[0] as Map<String, dynamic>? ?? {};
+                  symbol = idObj['value'] as String? ?? '';
+                }
               }
+              final displayNames = security['displayNames'] as Map<String, dynamic>? ?? {};
+              description = displayNames['en'] as String? ?? symbol;
             }
 
-            // Use display name in English, or fall back to symbol
-            description = displayNames['en'] as String? ?? symbol;
-
             final iid = security['iid']?.toString() ?? '';
-            final issueCurrency = security['issueCurrency']?.toString() ?? '';
+            final issueCurrency = security['currency'] as String? ?? security['issueCurrency']?.toString() ?? '';
 
             if (symbol.isNotEmpty) {
               final assetMap = {
