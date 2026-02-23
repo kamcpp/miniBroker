@@ -13,7 +13,10 @@ import '../config/app_config.dart';
 ///   GetInvestorSecurityHoldings, GetInvestorOrders, GetInvestorTrades,
 ///   GetInvestorSettlements, GetInvestorTransactions, DepositCash, WithdrawCash,
 ///   DepositSecurity, WithdrawSecurity, ActivateVenueForInvestor
-/// - SecurityService: GetSecurityList, GetSecurityInfoBatch
+/// - VenueService: GetVenueList, GetVenueCalendar
+/// - MarketService: GetMarketList
+/// - SecurityListingService: GetSecurityListingList, GetSecurityListingInfoBatch,
+///   GetSecurityListingOrders, GetSecurityListingTrades, GetSecurityListingSettlements
 class GrpcurlHelper {
 
   /// Convert DateTime to Unix timestamp (seconds since epoch)
@@ -1051,59 +1054,136 @@ class GrpcurlHelper {
   }
 
   // ============================================================================
-  // SecurityService Methods
+  // VenueService Methods
   // ============================================================================
 
-  /// Get security list using grpcurl
-  /// SecurityService.GetSecurityList
+  /// Get venue list using grpcurl
+  /// VenueService.GetVenueList
+  static Future<Map<String, dynamic>> getVenueList({
+    int pageNumber = 0,
+    int pageSize = 0,
+    String? venueIdOrSymbolRegex,
+  }) async {
+    print('📋 Getting venue list from real server...');
+
+    final requestBody = <String, dynamic>{
+      'proposed_execution_id': 'get_venue_list_${DateTime.now().millisecondsSinceEpoch}',
+      'pagination': {
+        'page_nr': pageNumber,
+        'page_size': pageSize,
+      },
+    };
+
+    if (venueIdOrSymbolRegex != null && venueIdOrSymbolRegex.isNotEmpty) {
+      requestBody['venue_id_or_symbol_regex'] = venueIdOrSymbolRegex;
+    }
+
+    return _executeGrpcCall(
+      method: 'GetVenueList',
+      endpoint: 'VenueService/GetVenueList',
+      requestBody: requestBody,
+    );
+  }
+
+  // ============================================================================
+  // MarketService Methods
+  // ============================================================================
+
+  /// Get market list using grpcurl
+  /// MarketService.GetMarketList
+  static Future<Map<String, dynamic>> getMarketList({
+    int pageNumber = 0,
+    int pageSize = 0,
+    String? marketIdOrSymbolRegex,
+  }) async {
+    print('📋 Getting market list from real server...');
+
+    final requestBody = <String, dynamic>{
+      'proposed_execution_id': 'get_market_list_${DateTime.now().millisecondsSinceEpoch}',
+      'pagination': {
+        'page_nr': pageNumber,
+        'page_size': pageSize,
+      },
+    };
+
+    if (marketIdOrSymbolRegex != null && marketIdOrSymbolRegex.isNotEmpty) {
+      requestBody['market_id_or_symbol_regex'] = marketIdOrSymbolRegex;
+    }
+
+    return _executeGrpcCall(
+      method: 'GetMarketList',
+      endpoint: 'MarketService/GetMarketList',
+      requestBody: requestBody,
+    );
+  }
+
+  // ============================================================================
+  // SecurityListingService Methods
+  // ============================================================================
+
+  /// Get security listing list using grpcurl
+  /// SecurityListingService.GetSecurityListingList
+  static Future<Map<String, dynamic>> getSecurityListingList({
+    int pageNumber = 0,
+    int pageSize = 0,
+    String? symbolRegex,
+    String? securityIdRegex,
+    String? securityExchangeRegex,
+  }) async {
+    print('📋 Getting security listing list from real server...');
+
+    final requestBody = <String, dynamic>{
+      'proposed_execution_id': 'get_security_listing_list_${DateTime.now().millisecondsSinceEpoch}',
+      'pagination': {
+        'page_nr': pageNumber,
+        'page_size': pageSize,
+      },
+    };
+
+    if (symbolRegex != null && symbolRegex.isNotEmpty) {
+      requestBody['symbol_regex'] = symbolRegex;
+    }
+    if (securityIdRegex != null && securityIdRegex.isNotEmpty) {
+      requestBody['security_id_regex'] = securityIdRegex;
+    }
+    if (securityExchangeRegex != null && securityExchangeRegex.isNotEmpty) {
+      requestBody['security_exchange_regex'] = securityExchangeRegex;
+    }
+
+    return _executeGrpcCall(
+      method: 'GetSecurityListingList',
+      endpoint: 'SecurityListingService/GetSecurityListingList',
+      requestBody: requestBody,
+    );
+  }
+
+  /// Get security listing info batch using grpcurl
+  /// SecurityListingService.GetSecurityListingInfoBatch
+  static Future<Map<String, dynamic>> getSecurityListingInfoBatch({
+    required List<String> symbolAndSecurityIdRegexes,
+  }) async {
+    print('📋 Getting security listing info for: $symbolAndSecurityIdRegexes');
+
+    return _executeGrpcCall(
+      method: 'GetSecurityListingInfoBatch',
+      endpoint: 'SecurityListingService/GetSecurityListingInfoBatch',
+      requestBody: {
+        'proposed_execution_id': 'get_security_listing_info_batch_${DateTime.now().millisecondsSinceEpoch}',
+        'symbol_and_security_id_regexes': symbolAndSecurityIdRegexes,
+      },
+    );
+  }
+
+  /// Legacy alias: getSecurityList now calls SecurityListingService
   static Future<Map<String, dynamic>> getSecurityList({
     int pageNumber = 0,
     int pageSize = 0,
     String? securityIdOrIdentifierRegex,
-  }) async {
-    print('📋 Getting security list from real server...');
-
-    return _executeGrpcCall(
-      method: 'GetSecurityList',
-      endpoint: 'SecurityService/GetSecurityList',
-      requestBody: {
-        'proposed_execution_id': 'get_security_list_${DateTime.now().millisecondsSinceEpoch}',
-        'pagination': {
-          'page_nr': pageNumber,
-          'page_size': pageSize,
-        },
-        'security_iid_or_identifier_regex': securityIdOrIdentifierRegex ?? '',
-      },
-    );
-  }
-
-  /// Legacy alias for getSecurityList with market filter (backwards compatibility)
-  static Future<Map<String, dynamic>> getMarketSecurityList({
-    required String marketId,
-    int pageNumber = 0,
-    int pageSize = 0,
-  }) => getSecurityList(
+  }) => getSecurityListingList(
     pageNumber: pageNumber,
     pageSize: pageSize,
-    securityIdOrIdentifierRegex: marketId,
+    symbolRegex: securityIdOrIdentifierRegex,
   );
-
-  /// Get security info batch using grpcurl
-  /// SecurityService.GetSecurityInfoBatch
-  static Future<Map<String, dynamic>> getSecurityInfoBatch({
-    required List<String> securityIds,
-  }) async {
-    print('📋 Getting security info for: $securityIds');
-
-    return _executeGrpcCall(
-      method: 'GetSecurityInfoBatch',
-      endpoint: 'SecurityService/GetSecurityInfoBatch',
-      requestBody: {
-        'proposed_execution_id': 'get_security_info_batch_${DateTime.now().millisecondsSinceEpoch}',
-        'security_iids': securityIds,
-      },
-    );
-  }
 
   // ============================================================================
   // CashTokenService Methods

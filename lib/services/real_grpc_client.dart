@@ -1226,17 +1226,22 @@ class RealGrpcClient {
       };
     }
 
-    // MarketService not available - returns empty list
-    return {
-      'input': {},
-      'output': {'markets': []},
-      'requestTime': _toUnixTimestamp(DateTime.now()).toString(),
-      'serverType': 'stub',
-      'success': true,
-    };
+    try {
+      print('📋 Getting market list from real server...');
+      return await GrpcurlHelper.getMarketList();
+    } catch (e) {
+      print('❌ Critical error in getMarketList: $e');
+      return {
+        'input': {},
+        'output': {'error': 'Critical error: $e'},
+        'requestTime': _toUnixTimestamp(DateTime.now()).toString(),
+        'serverType': 'critical-error',
+        'success': false,
+      };
+    }
   }
 
-  /// Real GetMarketSecurityList call to MarketService.GetMarketSecurityList using grpcurl
+  /// Get security listings for a market using SecurityListingService
   Future<Map<String, dynamic>> getMarketSecurityList({
     required String marketId,
     int pageNumber = 0,
@@ -1254,27 +1259,13 @@ class RealGrpcClient {
     }
 
     try {
-      print('📋 Getting market security list for market: $marketId from real server...');
+      print('📋 Getting security listings for market: $marketId from real server...');
 
-      final inputParams = {
-        'proposed_execution_id': 'get_security_list_${DateTime.now().millisecondsSinceEpoch}',
-        'market_id': marketId,
-      };
-
-      final result = await GrpcurlHelper.getMarketSecurityList(
-        marketId: marketId,
+      return await GrpcurlHelper.getSecurityListingList(
         pageNumber: pageNumber,
         pageSize: pageSize,
+        symbolRegex: marketId,
       );
-
-      print('📤 GetMarketSecurityList OUTPUT: ${result.toString()}');
-      return {
-        'input': inputParams,
-        'output': result['success'] ? result['output'] : {'error': result['error'] ?? 'Unknown error'},
-        'requestTime': _toUnixTimestamp(DateTime.now()).toString(),
-        'serverType': 'real_grpc',
-        'success': result['success'] ?? false,
-      };
     } catch (e) {
       print('❌ Critical error in getMarketSecurityList: $e');
       return {
@@ -1382,34 +1373,50 @@ class RealGrpcClient {
     };
   }
 
-  /// Real GetVenueList call - VenueService not available, returns empty list
+  /// Real GetVenueList call to VenueService.GetVenueList using grpcurl
   Future<Map<String, dynamic>> getVenueList({
     String? marketId,
     Duration? timeout,
   }) async {
-    return {
-      'input': {'market_id': marketId},
-      'output': {'venues': []},
-      'requestTime': _toUnixTimestamp(DateTime.now()).toString(),
-      'serverType': 'stub',
-      'success': true,
-    };
+    if (!_isConnected) {
+      return {
+        'input': {'market_id': marketId},
+        'output': {'error': 'Not connected to server'},
+        'requestTime': _toUnixTimestamp(DateTime.now()).toString(),
+        'serverType': 'disconnected',
+        'success': false,
+      };
+    }
+
+    try {
+      print('📋 Getting venue list from real server...');
+      return await GrpcurlHelper.getVenueList(
+        venueIdOrSymbolRegex: marketId,
+      );
+    } catch (e) {
+      print('❌ Critical error in getVenueList: $e');
+      return {
+        'input': {'market_id': marketId},
+        'output': {'error': 'Critical error: $e'},
+        'requestTime': _toUnixTimestamp(DateTime.now()).toString(),
+        'serverType': 'critical-error',
+        'success': false,
+      };
+    }
   }
 
-  /// Get security list using the real gRPC server
+  /// Get security listing list using SecurityListingService
   Future<Map<String, dynamic>> getSecurityList({
     int pageNumber = 0,
     int pageSize = 0,
   }) async {
     try {
-      print('🎵 Getting security list...');
+      print('📋 Getting security listing list...');
 
-      final result = await GrpcurlHelper.getSecurityList(
+      return await GrpcurlHelper.getSecurityListingList(
         pageNumber: pageNumber,
         pageSize: pageSize,
       );
-
-      return result;
     } catch (e) {
       print('❌ Critical error in getSecurityList: $e');
       return {

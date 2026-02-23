@@ -21,6 +21,7 @@ service InvestorService {
   rpc GetInvestorInfoBatchAsync(GetInvestorInfoBatchRequest) returns (tech.qomet.agora.api.grpc.common.ExecutionAsyncResponse);
 
   rpc NewInvestor(NewInvestorRequest) returns (tech.qomet.agora.api.grpc.common.ExecutionAsyncResponse);
+  rpc RegisterInvestorAtDepositories(RegisterInvestorAtDepositoriesRequest) returns (tech.qomet.agora.api.grpc.common.ExecutionAsyncResponse);
   rpc ActivateVenueForInvestor(ActivateVenueForInvestorRequest) returns (tech.qomet.agora.api.grpc.common.ExecutionAsyncResponse);
 
   rpc DepositCash(DepositCashRequest) returns (tech.qomet.agora.api.grpc.common.ExecutionAsyncResponse);
@@ -91,6 +92,13 @@ message NewInvestorResponse {
   tech.qomet.agora.api.grpc.common.DateTime activation_dt = 3;                          // REQUIRED: Investor activation timestamp
 
   map<string, string> metadata = 105;                                                   // OPTIONAL: Response metadata
+}
+
+message RegisterInvestorAtDepositoriesRequest {
+  string proposed_execution_id = 1;                                                     // OPTIONAL: Client-proposed execution ID for tracking
+  string investor_iid = 2;                                                              // REQUIRED: Investor internal ID to register at all depositories
+
+  map<string, string> aux_data = 105;                                                   // OPTIONAL: Additional request data
 }
 
 message ActivateVenueForInvestorRequest {

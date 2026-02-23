@@ -93,8 +93,8 @@ message ExecutionResponseEvent {
     // venue responses
     GetVenueListResponse get_venue_list = 501;
     GetVenueCalendarResponse get_venue_calendar = 503;
-    // TODO: Determine if GetVenueSecurityListingListResponse should be included
-    // GetVenueSecurityListingListResponse get_venue_security_listing_list = 504;
+    // TODO: Determine if GetVenueInstrumentListingListResponse should be included
+    // GetVenueInstrumentListingListResponse get_venue_instrument_listing_list = 504;
     // trading responses
     GetOrderFeesResponse get_order_fees = 601;
     // participant responses

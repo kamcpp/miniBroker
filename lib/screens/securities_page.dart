@@ -376,11 +376,13 @@ class _SecuritiesPageState extends State<SecuritiesPage> {
       );
     }
 
-    // Display securitys list
+    // Display security listings
     final securitysOutput = _securitiesData!['output'] as Map<String, dynamic>;
-    final securitys = securitysOutput['securities'] as List<dynamic>? ?? [];
+    final listings = securitysOutput['securityListings'] as List<dynamic>?
+        ?? securitysOutput['security_listings'] as List<dynamic>?
+        ?? [];
 
-    if (securitys.isEmpty) {
+    if (listings.isEmpty) {
       return Center(
         child: Column(
           mainAxisAlignment: MainAxisAlignment.center,
@@ -392,19 +394,11 @@ class _SecuritiesPageState extends State<SecuritiesPage> {
             ),
             const SizedBox(height: UIConstants.spacingMd),
             Text(
-              'No securities found',
+              'No security listings found',
               style: TextStyle(
                 fontSize: UIConstants.fontSizeMd,
                 fontWeight: UIConstants.fontWeightMedium,
                 color: isDarkTheme ? Colors.white : Colors.black,
-              ),
-            ),
-            const SizedBox(height: UIConstants.spacingSm),
-            Text(
-              'This market has no securities',
-              style: TextStyle(
-                fontSize: UIConstants.fontSizeBody,
-                color: isDarkTheme ? Colors.grey[400] : Colors.grey[600],
               ),
             ),
           ],
@@ -412,173 +406,178 @@ class _SecuritiesPageState extends State<SecuritiesPage> {
       );
     }
 
-    return ListView.builder(
-      itemCount: securitys.length,
-      itemBuilder: (context, index) {
-        final security = securitys[index] as Map<String, dynamic>;
-        return Padding(
-          padding: EdgeInsets.only(bottom: index < securitys.length - 1 ? 12 : 0),
-          child: _buildSecurityItem(security, isDarkTheme),
-        );
-      },
+    final headerStyle = TextStyle(
+      fontSize: UIConstants.fontSizeSm,
+      fontWeight: UIConstants.fontWeightBold,
+      color: isDarkTheme ? Colors.grey[300] : Colors.grey[700],
     );
-  }
+    final cellStyle = TextStyle(
+      fontSize: UIConstants.fontSizeBody,
+      color: isDarkTheme ? Colors.grey[300] : Colors.grey[800],
+    );
+    final symbolStyle = TextStyle(
+      fontSize: UIConstants.fontSizeBody,
+      fontWeight: UIConstants.fontWeightMedium,
+      color: isDarkTheme ? Colors.white : Colors.black,
+    );
 
-  Widget _buildSecurityItem(Map<String, dynamic> security, bool isDarkTheme) {
-    final securityId = security['id'] ?? security['iid'] ?? 'Unknown';
-    final cfiCode = security['cfi_code'] ?? security['cfiCode'] ?? '';
-    final issueCurrency = security['issue_currency'] ?? security['issueCurrency'] ?? '';
+    final borderColor = isDarkTheme ? Colors.grey[700]! : Colors.grey[300]!;
 
-    // Extract symbol from identifiers if available
-    String symbol = securityId;
-    final identifiers = security['identifiers'] as List<dynamic>?;
-    if (identifiers != null && identifiers.isNotEmpty) {
-      for (var id in identifiers) {
-        final ids = id['ids'] as List<dynamic>?;
-        if (ids != null && ids.isNotEmpty) {
-          symbol = ids.first['value'];
-          break;
-        }
-      }
-    }
-
-    final status = 'active';
-    final minOrderSize = cfiCode.isNotEmpty ? cfiCode : 'N/A';
-    final maxOrderSize = issueCurrency.isNotEmpty ? issueCurrency : 'N/A';
-
-    return Container(
-      padding: UIConstants.paddingStandard,
-      decoration: BoxDecoration(
-        color: isDarkTheme ? const Color(0xFF404040) : Colors.grey[50],
-        borderRadius: BorderRadius.circular(8),
-        border: Border.all(
-          color: isDarkTheme ? Colors.grey[700]! : Colors.grey[200]!,
-          width: 1,
+    return SingleChildScrollView(
+      child: Table(
+        border: TableBorder(
+          horizontalInside: BorderSide(color: borderColor, width: UIConstants.dividerThickness),
+          bottom: BorderSide(color: borderColor, width: UIConstants.dividerThickness),
+          top: BorderSide(color: borderColor, width: UIConstants.dividerThickness),
         ),
-      ),
-      child: Row(
+        columnWidths: const {
+          0: FlexColumnWidth(1),   // Symbol
+          1: FlexColumnWidth(1),   // Security ID
+          2: FlexColumnWidth(0.8), // Type
+          3: FlexColumnWidth(1),   // Exchange
+          4: FlexColumnWidth(0.7), // Currency
+          5: FlexColumnWidth(0.8), // Tick
+          6: FlexColumnWidth(1.8), // Description
+          7: FlexColumnWidth(0.7), // Status
+        },
+        defaultVerticalAlignment: TableCellVerticalAlignment.middle,
         children: [
-          // Security Icon
-          Container(
-            width: 48,
-            height: 48,
+          // Header row
+          TableRow(
             decoration: BoxDecoration(
-              color: _getColorForSecurity(symbol),
-              borderRadius: BorderRadius.circular(8),
+              color: isDarkTheme ? const Color(0xFF2d2d2d) : Colors.grey[100],
             ),
-            child: Center(
-              child: Text(
-                symbol.length >= 2 ? symbol.substring(0, 2).toUpperCase() : (symbol.isNotEmpty ? symbol.toUpperCase() : '??'),
-                style: const TextStyle(
-                  color: Colors.white,
-                  fontSize: UIConstants.fontSizeBody,
-                  fontWeight: UIConstants.fontWeightMedium,
-                ),
-              ),
-            ),
-          ),
-
-          const SizedBox(width: 16),
-
-          // Security Details
-          Expanded(
-            child: Column(
-              crossAxisAlignment: CrossAxisAlignment.start,
-              children: [
-                Row(
-                  children: [
-                    Text(
-                      symbol,
-                      style: TextStyle(
-                        fontSize: UIConstants.fontSizeMd,
-                        fontWeight: UIConstants.fontWeightMedium,
-                        color: isDarkTheme ? Colors.white : Colors.black,
-                      ),
-                    ),
-                    const SizedBox(width: UIConstants.spacingSm),
-                    Container(
-                      padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
-                      decoration: BoxDecoration(
-                        color: _getStatusColor(status),
-                        borderRadius: BorderRadius.circular(8),
-                      ),
-                      child: Text(
-                        status.toString().toUpperCase(),
-                        style: const TextStyle(
-                          color: Colors.white,
-                          fontSize: UIConstants.fontSizeXs,
-                          fontWeight: UIConstants.fontWeightMedium,
-                        ),
-                      ),
-                    ),
-                  ],
-                ),
-                const SizedBox(height: UIConstants.spacingSm),
-                Text(
-                  'ID: $securityId',
-                  style: TextStyle(
-                    fontSize: UIConstants.fontSizeSm,
-                    color: isDarkTheme ? Colors.grey[400] : Colors.grey[600],
-                  ),
-                ),
-              ],
-            ),
-          ),
-
-          // Security Info
-          Column(
-            crossAxisAlignment: CrossAxisAlignment.end,
             children: [
-              Text(
-                'CFI: $minOrderSize',
-                style: TextStyle(
-                  fontSize: UIConstants.fontSizeSm,
-                  color: isDarkTheme ? Colors.grey[300] : Colors.grey[700],
-                ),
-              ),
-              const SizedBox(height: 4),
-              Text(
-                'Currency: $maxOrderSize',
-                style: TextStyle(
-                  fontSize: UIConstants.fontSizeSm,
-                  color: isDarkTheme ? Colors.grey[300] : Colors.grey[700],
-                ),
-              ),
+              _headerCell('Symbol', headerStyle),
+              _headerCell('Security ID', headerStyle),
+              _headerCell('Type', headerStyle),
+              _headerCell('Exchange', headerStyle),
+              _headerCell('Currency', headerStyle),
+              _headerCell('Tick', headerStyle),
+              _headerCell('Description', headerStyle),
+              _headerCell('Status', headerStyle),
             ],
           ),
+          // Data rows
+          for (var i = 0; i < listings.length; i++)
+            _buildListingRow(listings[i] as Map<String, dynamic>, i, isDarkTheme, cellStyle, symbolStyle),
         ],
       ),
     );
   }
 
-  Color _getColorForSecurity(String baseCurrency) {
-    switch (baseCurrency.toUpperCase()) {
-      case 'BTC':
-        return const Color(0xFFF7931A);
-      case 'ETH':
-        return const Color(0xFF627EEA);
-      case 'XRP':
-        return const Color(0xFF23292F);
-      case 'OXC':
-        return const Color(0xFF85BB65);
-      case 'USD':
-      case 'USDT':
-        return const Color(0xFF26A69A);
-      default:
-        return const Color(0xFF6B73FF);
+  Widget _headerCell(String text, TextStyle style) {
+    return Padding(
+      padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 10),
+      child: Text(text, style: style),
+    );
+  }
+
+  TableRow _buildListingRow(
+    Map<String, dynamic> listing,
+    int index,
+    bool isDarkTheme,
+    TextStyle cellStyle,
+    TextStyle symbolStyle,
+  ) {
+    final symbol = listing['symbol'] ?? '';
+    final securityId = listing['securityId'] ?? '';
+    final securityType = listing['securityType'] ?? '';
+    final cfiCode = listing['cfiCode'] ?? '';
+    final exchange = listing['securityExchange'] ?? '';
+    final currency = listing['currency'] ?? '';
+    final minPriceIncrement = listing['minPriceIncrement'] ?? '';
+    final description = listing['securityDesc'] ?? '';
+    final rawStatus = listing['securityStatus'] ?? '';
+
+    // Type display: securityType + cfiCode if available
+    final typeDisplay = cfiCode.isNotEmpty ? '$securityType / $cfiCode' : securityType;
+
+    final statusLabel = _formatSecurityStatus(rawStatus.toString());
+
+    final rowColor = index.isEven
+        ? (isDarkTheme ? const Color(0xFF1e1e1e) : Colors.white)
+        : (isDarkTheme ? const Color(0xFF262626) : Colors.grey[50]!);
+
+    return TableRow(
+      decoration: BoxDecoration(color: rowColor),
+      children: [
+        _dataCell(Text(symbol.toString(), style: symbolStyle, overflow: TextOverflow.ellipsis)),
+        _dataCell(Text(securityId.toString(), style: cellStyle, overflow: TextOverflow.ellipsis)),
+        _dataCell(Text(typeDisplay.toString(), style: cellStyle, overflow: TextOverflow.ellipsis)),
+        _dataCell(Text(exchange.toString(), style: cellStyle, overflow: TextOverflow.ellipsis)),
+        _dataCell(Text(currency.toString(), style: cellStyle)),
+        _dataCell(Text(minPriceIncrement.toString(), style: cellStyle)),
+        _dataCell(Text(description.toString(), style: cellStyle, overflow: TextOverflow.ellipsis)),
+        _dataCell(_statusBadge(statusLabel)),
+      ],
+    );
+  }
+
+  Widget _dataCell(Widget child) {
+    return Padding(
+      padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 8),
+      child: child,
+    );
+  }
+
+  /// FIX Tag 965 SecurityStatus:
+  /// 1 = Active, 2 = Inactive, others mapped as needed
+  String _formatSecurityStatus(String raw) {
+    // Handle enum-style values
+    if (raw.contains('SECURITY_LISTING_STATUS_ENUM_')) {
+      final stripped = raw
+          .replaceAll('SECURITY_LISTING_STATUS_ENUM_', '')
+          .replaceAll('_', ' ');
+      if (stripped.isEmpty) return 'Unknown';
+      return stripped[0].toUpperCase() + stripped.substring(1).toLowerCase();
     }
+    // Handle FIX numeric status codes
+    switch (raw) {
+      case '1': return 'Active';
+      case '2': return 'Inactive';
+      case '3': return 'Active';
+      default: return raw.isNotEmpty ? raw : 'Unknown';
+    }
+  }
+
+  Widget _statusBadge(String status) {
+    final color = _getStatusColor(status);
+    return Container(
+      padding: const EdgeInsets.symmetric(horizontal: 6, vertical: 3),
+      decoration: BoxDecoration(
+        color: color.withValues(alpha: 0.15),
+        borderRadius: BorderRadius.circular(4),
+      ),
+      child: Text(
+        status,
+        style: TextStyle(
+          fontSize: UIConstants.fontSizeXs,
+          fontWeight: UIConstants.fontWeightMedium,
+          color: color,
+        ),
+      ),
+    );
   }
 
   Color _getStatusColor(String status) {
     switch (status.toLowerCase()) {
       case 'active':
+      case 'listed':
       case 'enabled':
         return Colors.green;
-      case 'disabled':
       case 'inactive':
+      case 'suspended':
+      case 'halted':
+        return Colors.orange;
+      case 'delisted':
+      case 'liquidated':
+      case 'disabled':
         return Colors.red;
       case 'pending':
-        return Colors.orange;
+      case 'pre listing':
+      case 'when issued':
+        return Colors.blue;
       default:
         return Colors.grey;
     }

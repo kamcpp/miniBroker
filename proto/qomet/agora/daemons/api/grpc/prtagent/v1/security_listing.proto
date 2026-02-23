@@ -38,11 +38,10 @@ service SecurityListingService {
 message GetSecurityListingListRequest {
   string proposed_execution_id = 1;                                                        // OPTIONAL: Client-proposed execution ID for tracking
   tech.qomet.agora.api.grpc.common.PaginationParams pagination = 2;                        // OPTIONAL: Pagination parameters
-  string security_listing_iid_or_identifier_regex = 3;                                     // OPTIONAL: Filter by listing IID or identifier regex
-  string security_iid_or_identifier_regex = 4;                                             // OPTIONAL: Filter by security IID or identifier regex
-  string cash_token_iid_or_identifier_regex = 5;                                           // OPTIONAL: Filter by cash token IID or identifier regex
-  string venue_iid_or_identifier_regex = 6;                                                // OPTIONAL: Filter by venue IID or identifier regex
-  repeated tech.qomet.agora.api.grpc.fin.SecurityListingStatusEnum statuses = 7;           // OPTIONAL: Filter by listing status
+  string symbol_regex = 3;                                                                 // OPTIONAL: Filter by symbol regex
+  string security_id_regex = 4;                                                            // OPTIONAL: Filter by security ID regex
+  string security_exchange_regex = 5;                                                      // OPTIONAL: Filter by security exchange regex
+  repeated string statuses = 7;                                                            // OPTIONAL: Filter by security status
 
   map<string, string> aux_data = 105;                                                      // OPTIONAL: Additional request data
 }
@@ -58,8 +57,8 @@ message GetSecurityListingListResponse {
 message GetSecurityListingInfoBatchRequest {
   string proposed_execution_id = 1;                                                        // OPTIONAL: Client-proposed execution ID for tracking
   tech.qomet.agora.api.grpc.common.PaginationParams pagination = 2;                        // OPTIONAL: Pagination parameters
-  repeated string security_listing_iid_and_identifier_regexes = 3;                         // REQUIRED: Listing IID and identifier regexes to retrieve
-  repeated tech.qomet.agora.api.grpc.fin.SecurityListingStatusEnum statuses = 4;           // OPTIONAL: Filter by listing status
+  repeated string symbol_and_security_id_regexes = 3;                                      // REQUIRED: Symbol and security ID regexes to retrieve
+  repeated string statuses = 4;                                                            // OPTIONAL: Filter by security status
 
   map<string, string> aux_data = 105;                                                      // OPTIONAL: Additional request data
 }
