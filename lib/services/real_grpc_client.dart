@@ -494,7 +494,7 @@ class RealGrpcClient {
   Future<Map<String, dynamic>> getAccountMarketPortfolio({
     required String accountId,
     String? marketId,
-    List<String>? assetIds,
+    List<String>? securityIds,
     Duration? timeout,
   }) async {
     // Always test connectivity first to prevent crashes
@@ -1259,12 +1259,12 @@ class RealGrpcClient {
     }
 
     try {
-      print('📋 Getting security listings for market: $marketId from real server...');
+      print('📋 Getting security listings from real server (market: $marketId)...');
 
+      // Fetch all security listings — the SecurityListingListRequest has no market filter field
       return await GrpcurlHelper.getSecurityListingList(
         pageNumber: pageNumber,
         pageSize: pageSize,
-        symbolRegex: marketId,
       );
     } catch (e) {
       print('❌ Critical error in getMarketSecurityList: $e');
@@ -1378,7 +1378,9 @@ class RealGrpcClient {
     String? marketId,
     Duration? timeout,
   }) async {
+    print('🏟️ getVenueList called: marketId=$marketId, isConnected=$_isConnected');
     if (!_isConnected) {
+      print('🏟️ getVenueList: NOT CONNECTED - returning early');
       return {
         'input': {'market_id': marketId},
         'output': {'error': 'Not connected to server'},
@@ -1389,10 +1391,12 @@ class RealGrpcClient {
     }
 
     try {
-      print('📋 Getting venue list from real server...');
-      return await GrpcurlHelper.getVenueList(
-        venueIdOrSymbolRegex: marketId,
+      print('📋 Getting venue list from real server (marketId=$marketId)...');
+      final result = await GrpcurlHelper.getVenueList(
+        marketIdOrSymbolRegex: marketId,
       );
+      print('🏟️ getVenueList result: success=${result['success']}, output=${result['output']}');
+      return result;
     } catch (e) {
       print('❌ Critical error in getVenueList: $e');
       return {
@@ -1440,7 +1444,7 @@ class RealGrpcClient {
     String? fromTime,
     String? toTime,
     String? status,
-    List<String>? assetIdOrNameRegexes,
+    List<String>? securityIdOrNameRegexes,
   }) async {
     if (!_isConnected) {
       return {
@@ -1476,8 +1480,8 @@ class RealGrpcClient {
       if (status != null && status.isNotEmpty) {
         requestParams['status'] = status;
       }
-      if (assetIdOrNameRegexes != null && assetIdOrNameRegexes.isNotEmpty) {
-        requestParams['asset_id_or_name_regexes'] = assetIdOrNameRegexes;
+      if (securityIdOrNameRegexes != null && securityIdOrNameRegexes.isNotEmpty) {
+        requestParams['asset_id_or_name_regexes'] = securityIdOrNameRegexes;
       }
 
       print('📤 GetAccountSettlements Request: $requestParams');
@@ -1491,7 +1495,7 @@ class RealGrpcClient {
           fromTime: fromTime,
           toTime: toTime,
           status: status,
-          assetIdOrNameRegexes: assetIdOrNameRegexes,
+          securityIdOrNameRegexes: securityIdOrNameRegexes,
         ),
       ]).catchError((error) {
         print('❌ GetAccountSettlements execution error: $error');
@@ -1549,7 +1553,7 @@ class RealGrpcClient {
     String? fromTime,
     String? toTime,
     List<String>? transactionTypes,
-    List<String>? assetIdOrNameRegexes,
+    List<String>? securityIdOrNameRegexes,
   }) async {
     if (!_isConnected) {
       return {
@@ -1582,8 +1586,8 @@ class RealGrpcClient {
       if (transactionTypes != null && transactionTypes.isNotEmpty) {
         requestParams['transaction_types'] = transactionTypes;
       }
-      if (assetIdOrNameRegexes != null && assetIdOrNameRegexes.isNotEmpty) {
-        requestParams['asset_id_or_name_regexes'] = assetIdOrNameRegexes;
+      if (securityIdOrNameRegexes != null && securityIdOrNameRegexes.isNotEmpty) {
+        requestParams['asset_id_or_name_regexes'] = securityIdOrNameRegexes;
       }
 
       print('📤 GetAccountTransactions Request: $requestParams');
@@ -1595,7 +1599,7 @@ class RealGrpcClient {
         fromTime: fromTime,
         toTime: toTime,
         transactionTypes: transactionTypes,
-        assetIdOrNameRegexes: assetIdOrNameRegexes,
+        securityIdOrNameRegexes: securityIdOrNameRegexes,
       ).catchError((error) {
         print('❌ GetAccountTransactions execution error: $error');
         return <String, dynamic>{

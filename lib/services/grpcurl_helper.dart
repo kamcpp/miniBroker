@@ -690,10 +690,10 @@ class GrpcurlHelper {
   /// Legacy alias for getInvestorCashHoldings (backwards compatibility)
   static Future<Map<String, dynamic>> getAccountCashHoldings({
     required String accountId,
-    List<String>? cashAssetIds,
+    List<String>? cashSecurityIds,
   }) => getInvestorCashHoldings(
     investorId: accountId,
-    currencyCodes: cashAssetIds,
+    currencyCodes: cashSecurityIds,
   );
 
   /// Get investor security holdings using grpcurl
@@ -720,7 +720,7 @@ class GrpcurlHelper {
   static Future<Map<String, dynamic>> getAccountMarketPortfolio({
     required String accountId,
     String? marketId,
-    List<String>? assetIds,
+    List<String>? securityIds,
   }) => getInvestorSecurityHoldings(
     investorId: accountId,
     venueId: marketId,
@@ -879,7 +879,7 @@ class GrpcurlHelper {
     String? fromTime,
     String? toTime,
     String? status,
-    List<String>? assetIdOrNameRegexes,
+    List<String>? securityIdOrNameRegexes,
   }) async {
     print('📋 Getting settlements for investor: $investorId');
 
@@ -905,8 +905,8 @@ class GrpcurlHelper {
       } catch (_) {}
     }
     if (status != null) requestBody['status'] = status;
-    if (assetIdOrNameRegexes != null && assetIdOrNameRegexes.isNotEmpty) {
-      requestBody['asset_id_or_name_regexes'] = assetIdOrNameRegexes;
+    if (securityIdOrNameRegexes != null && securityIdOrNameRegexes.isNotEmpty) {
+      requestBody['asset_id_or_name_regexes'] = securityIdOrNameRegexes;
     }
 
     return _executeGrpcCall(
@@ -925,7 +925,7 @@ class GrpcurlHelper {
     String? fromTime,
     String? toTime,
     String? status,
-    List<String>? assetIdOrNameRegexes,
+    List<String>? securityIdOrNameRegexes,
   }) => getInvestorSettlements(
     investorId: accountId,
     refRequestId: refRequestId,
@@ -934,7 +934,7 @@ class GrpcurlHelper {
     fromTime: fromTime,
     toTime: toTime,
     status: status,
-    assetIdOrNameRegexes: assetIdOrNameRegexes,
+    securityIdOrNameRegexes: securityIdOrNameRegexes,
   );
 
   /// Get investor transactions using grpcurl
@@ -946,7 +946,7 @@ class GrpcurlHelper {
     String? fromTime,
     String? toTime,
     List<String>? transactionTypes,
-    List<String>? assetIdOrNameRegexes,
+    List<String>? securityIdOrNameRegexes,
   }) async {
     print('📋 Getting transactions for investor: $investorId');
 
@@ -971,8 +971,8 @@ class GrpcurlHelper {
     if (transactionTypes != null && transactionTypes.isNotEmpty) {
       requestBody['transaction_types'] = transactionTypes;
     }
-    if (assetIdOrNameRegexes != null && assetIdOrNameRegexes.isNotEmpty) {
-      requestBody['asset_id_or_name_regexes'] = assetIdOrNameRegexes;
+    if (securityIdOrNameRegexes != null && securityIdOrNameRegexes.isNotEmpty) {
+      requestBody['asset_id_or_name_regexes'] = securityIdOrNameRegexes;
     }
 
     return _executeGrpcCall(
@@ -1063,6 +1063,7 @@ class GrpcurlHelper {
     int pageNumber = 0,
     int pageSize = 0,
     String? venueIdOrSymbolRegex,
+    String? marketIdOrSymbolRegex,
   }) async {
     print('📋 Getting venue list from real server...');
 
@@ -1073,6 +1074,10 @@ class GrpcurlHelper {
         'page_size': pageSize,
       },
     };
+
+    if (marketIdOrSymbolRegex != null && marketIdOrSymbolRegex.isNotEmpty) {
+      requestBody['market_id_or_symbol_regex'] = marketIdOrSymbolRegex;
+    }
 
     if (venueIdOrSymbolRegex != null && venueIdOrSymbolRegex.isNotEmpty) {
       requestBody['venue_id_or_symbol_regex'] = venueIdOrSymbolRegex;

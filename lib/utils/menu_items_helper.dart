@@ -4,7 +4,7 @@ import '../screens/securities_page.dart';
 import '../screens/portfolio_page.dart';
 import '../screens/trading_page.dart';
 // import '../screens/activity_page.dart';  // Disabled
-import '../screens/cash_management_page.dart';
+// import '../screens/cash_management_page.dart';  // Removed
 // import '../screens/users_admin_page.dart';  // Disabled
 
 /// Helper class to build consistent menu items across all pages
@@ -31,22 +31,7 @@ class MenuItemsHelper {
           }
         },
       ),
-      MenuItem(
-        label: 'Cash Management',
-        icon: Icons.payments,
-        isSelected: currentPage == 'cash',
-        onTap: () {
-          if (currentPage != 'cash') {
-            Navigator.of(context).pushReplacement(
-              PageRouteBuilder(
-                pageBuilder: (context, animation, secondaryAnimation) => const CashManagementPage(),
-                transitionDuration: Duration.zero,
-                reverseTransitionDuration: Duration.zero,
-              ),
-            );
-          }
-        },
-      ),
+      // Cash Management - Removed (deposit/withdraw now inline in Portfolio)
       MenuItem(
         label: 'Portfolio',
         icon: Icons.account_balance_wallet,

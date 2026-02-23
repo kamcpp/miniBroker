@@ -73,35 +73,35 @@ class _ActivityPageState extends State<ActivityPage> {
 
   // Filter state for transactions
   String? _selectedTransactionType; // Single selection from dropdown
-  List<String> _transactionAssetFilters = [];
+  List<String> _transactionSecurityFilters = [];
   DateTime? _transactionFromDate;
   DateTime? _transactionToDate;
   int? _transactionPageSize = 15;
   int _transactionPageNumber = 1;
   bool _showTransactionFilters = false;
 
-  // Market and Asset dropdown data
+  // Market and Security dropdown data
   List<Map<String, dynamic>> _availableMarkets = [];
-  List<Map<String, dynamic>> _availableAssets = [];
+  List<Map<String, dynamic>> _availableSecurities = [];
   List<Map<String, dynamic>> _allSecurities = []; // All securitys from all markets for transactions
   String? _selectedOrdersMarket;
-  String? _selectedOrdersAsset;
+  String? _selectedOrdersSecurity;
   String? _selectedTradesMarket;
-  String? _selectedTradesAsset;
+  String? _selectedTradesSecurity;
   String? _selectedSettlementsMarket;
-  String? _selectedSettlementsAsset;
-  String? _selectedTransactionsAsset;
+  String? _selectedSettlementsSecurity;
+  String? _selectedTransactionsSecurity;
   bool _isLoadingMarkets = false;
-  bool _isLoadingAssets = false;
+  bool _isLoadingSecurities = false;
 
   // Temporary filter state (used before applying filters)
   String? _tempSelectedOrdersMarket;
-  String? _tempSelectedOrdersAsset;
+  String? _tempSelectedOrdersSecurity;
   String? _tempSelectedTradesMarket;
-  String? _tempSelectedTradesAsset;
+  String? _tempSelectedTradesSecurity;
   String? _tempSelectedSettlementsMarket;
-  String? _tempSelectedSettlementsAsset;
-  String? _tempSelectedTransactionsAsset;
+  String? _tempSelectedSettlementsSecurity;
+  String? _tempSelectedTransactionsSecurity;
   String? _tempSelectedTransactionType;
   
   // Text controllers for page number fields
@@ -171,7 +171,7 @@ class _ActivityPageState extends State<ActivityPage> {
 
     // Load dropdown data
     _fetchMarketList();
-    // Asset list will be fetched when market is selected
+    // Security list will be fetched when market is selected
 
     // Fetch all securitys for transactions tab (no market filter) - after frame is built
     WidgetsBinding.instance.addPostFrameCallback((_) async {
@@ -547,7 +547,7 @@ class _ActivityPageState extends State<ActivityPage> {
       final marketFilters = _selectedOrdersMarket != null ? [_selectedOrdersMarket!] : <String>[];
       
       // Build security filters array from selected dropdown value  
-      final securityFilters = _selectedOrdersAsset != null ? [_selectedOrdersAsset!] : <String>[];
+      final securityFilters = _selectedOrdersSecurity != null ? [_selectedOrdersSecurity!] : <String>[];
 
       final inputParams = {
         'ref_request_id': 'flutter-get-orders-${DateTime.now().millisecondsSinceEpoch}',
@@ -664,7 +664,7 @@ class _ActivityPageState extends State<ActivityPage> {
       final tradeMarketFilters = _selectedTradesMarket != null ? [_selectedTradesMarket!] : <String>[];
       
       // Build security filters array from selected dropdown value
-      final tradeSecurityFilters = _selectedTradesAsset != null ? [_selectedTradesAsset!] : <String>[];
+      final tradeSecurityFilters = _selectedTradesSecurity != null ? [_selectedTradesSecurity!] : <String>[];
       
       final tradeInputParams = {
         'ref_request_id': 'flutter-get-trades-${DateTime.now().millisecondsSinceEpoch}',
@@ -800,8 +800,8 @@ class _ActivityPageState extends State<ActivityPage> {
       final settlementMarketFilters = _selectedSettlementsMarket != null && _selectedSettlementsMarket!.isNotEmpty
         ? [_selectedSettlementsMarket!]
         : null;
-      final settlementAssetFilters = _selectedSettlementsAsset != null && _selectedSettlementsAsset!.isNotEmpty
-        ? [_selectedSettlementsAsset!]
+      final settlementSecurityFilters = _selectedSettlementsSecurity != null && _selectedSettlementsSecurity!.isNotEmpty
+        ? [_selectedSettlementsSecurity!]
         : null;
       final settlementStatusFilter = _selectedSettlementStatus != null && _selectedSettlementStatus!.isNotEmpty
         ? _selectedSettlementStatus
@@ -811,7 +811,7 @@ class _ActivityPageState extends State<ActivityPage> {
       final settlementsResponse = await realGrpcClient.getAccountSettlements(
         accountId: accountId,
         marketIdOrNameRegexes: settlementMarketFilters,
-        assetIdOrNameRegexes: settlementAssetFilters,
+        securityIdOrNameRegexes: settlementSecurityFilters,
         fromTime: fromTimeFormatted != null ? json.encode(fromTimeFormatted) : null,
         toTime: toTimeFormatted != null ? json.encode(toTimeFormatted) : null,
         status: settlementStatusFilter,
@@ -888,7 +888,7 @@ class _ActivityPageState extends State<ActivityPage> {
         toTimeFormatted = {"utc_unix_epoch_ts_millis": timestamp};
       }
 
-      final transactionAssetFilters = _selectedTransactionsAsset != null ? [_selectedTransactionsAsset!] : <String>[];
+      final transactionSecurityFilters = _selectedTransactionsSecurity != null ? [_selectedTransactionsSecurity!] : <String>[];
 
       final transactionInputParams = {
         'ref_request_id': 'flutter-get-transactions-${DateTime.now().millisecondsSinceEpoch}',
@@ -897,7 +897,7 @@ class _ActivityPageState extends State<ActivityPage> {
         'from_time': fromTimeFormatted,
         'to_time': toTimeFormatted,
         'transaction_types': _selectedTransactionType != null ? [_selectedTransactionType!] : null,
-        'asset_id_or_name_regexes': transactionAssetFilters.isNotEmpty ? transactionAssetFilters : null,
+        'asset_id_or_name_regexes': transactionSecurityFilters.isNotEmpty ? transactionSecurityFilters : null,
       };
 
       transactionInputParams.removeWhere((key, value) => value == null);
@@ -909,7 +909,7 @@ class _ActivityPageState extends State<ActivityPage> {
         fromTime: fromTimeFormatted != null ? json.encode(fromTimeFormatted) : null,
         toTime: toTimeFormatted != null ? json.encode(toTimeFormatted) : null,
         transactionTypes: _selectedTransactionType != null ? [_selectedTransactionType!] : null,
-        assetIdOrNameRegexes: transactionAssetFilters.isNotEmpty ? transactionAssetFilters : null,
+        securityIdOrNameRegexes: transactionSecurityFilters.isNotEmpty ? transactionSecurityFilters : null,
       );
 
       if (mounted) {
@@ -1002,9 +1002,9 @@ class _ActivityPageState extends State<ActivityPage> {
     setState(() {
       // Apply temporary filter state to actual filter state
       _selectedOrdersMarket = _tempSelectedOrdersMarket;
-      _selectedOrdersAsset = _tempSelectedOrdersAsset;
+      _selectedOrdersSecurity = _tempSelectedOrdersSecurity;
       _selectedTradesMarket = _tempSelectedTradesMarket;
-      _selectedTradesAsset = _tempSelectedTradesAsset;
+      _selectedTradesSecurity = _tempSelectedTradesSecurity;
       
       // Reset pagination when filters are applied
       _pageSize = 15;
@@ -1029,9 +1029,9 @@ class _ActivityPageState extends State<ActivityPage> {
       _pageSize = 15;
       _pageNumber = 1;
       _selectedOrdersMarket = null;
-      _selectedOrdersAsset = null;
+      _selectedOrdersSecurity = null;
       _tempSelectedOrdersMarket = null;
-      _tempSelectedOrdersAsset = null;
+      _tempSelectedOrdersSecurity = null;
     });
     _pageNumberController.text = '1';
   }
@@ -1047,9 +1047,9 @@ class _ActivityPageState extends State<ActivityPage> {
       _tradePageSize = 15;
       _tradePageNumber = 1;
       _selectedTradesMarket = null;
-      _selectedTradesAsset = null;
+      _selectedTradesSecurity = null;
       _tempSelectedTradesMarket = null;
-      _tempSelectedTradesAsset = null;
+      _tempSelectedTradesSecurity = null;
     });
     _tradePageNumberController.text = '1';
   }
@@ -1060,9 +1060,9 @@ class _ActivityPageState extends State<ActivityPage> {
       _selectedSettlementStatus = null;
       _selectedSettlementTransactionType = null;
       _selectedSettlementsMarket = null;
-      _selectedSettlementsAsset = null;
+      _selectedSettlementsSecurity = null;
       _tempSelectedSettlementsMarket = null;
-      _tempSelectedSettlementsAsset = null;
+      _tempSelectedSettlementsSecurity = null;
       _settlementFromDate = null;
       _settlementToDate = null;
       _settlementPageSize = 15;
@@ -1076,8 +1076,8 @@ class _ActivityPageState extends State<ActivityPage> {
     setState(() {
       _selectedTransactionType = null;
       _tempSelectedTransactionType = null;
-      _selectedTransactionsAsset = null;
-      _tempSelectedTransactionsAsset = null;
+      _selectedTransactionsSecurity = null;
+      _tempSelectedTransactionsSecurity = null;
       _transactionFromDate = null;
       _transactionToDate = null;
       _transactionPageSize = 15;
@@ -1086,23 +1086,23 @@ class _ActivityPageState extends State<ActivityPage> {
     _transactionPageNumberController.text = '1';
   }
 
-  /// Fetch asset list for dropdown filters using GetOrderbook
-  Future<void> _fetchAssetList(String? marketId) async {
-    if (_isLoadingAssets) return;
+  /// Fetch security list for dropdown filters using GetOrderbook
+  Future<void> _fetchSecurityList(String? marketId) async {
+    if (_isLoadingSecurities) return;
     
     if (marketId == null || marketId.isEmpty) {
       setState(() {
-        _availableAssets = [];
+        _availableSecurities = [];
       });
       return;
     }
 
     setState(() {
-      _isLoadingAssets = true;
+      _isLoadingSecurities = true;
     });
     
     try {
-      print('📋 Fetching assets for market: $marketId...');
+      print('📋 Fetching securities for market: $marketId...');
       
       final result = await realGrpcClient.getMarketSecurityList(
         marketId: marketId,
@@ -1110,7 +1110,7 @@ class _ActivityPageState extends State<ActivityPage> {
       
       if (mounted) {
         setState(() {
-          _isLoadingAssets = false;
+          _isLoadingSecurities = false;
           if (result['success'] == true) {
             final output = result['output'];
             print('✅ GetMarketSecurityList response for market $marketId: $output');
@@ -1120,15 +1120,15 @@ class _ActivityPageState extends State<ActivityPage> {
               final securitys = output['securities'] ?? output['securityList'] ?? output['security_list'] ?? [];
               if (securitys is List && securitys.isNotEmpty) {
                 // Process securitys to extract the symbol values from nested structure
-                final processedAssets = <Map<String, dynamic>>[];
+                final processedSecurities = <Map<String, dynamic>>[];
                 for (final security in securitys) {
                   if (security is Map<String, dynamic>) {
                     // Extract from identifiers structure: identifiers -> ids -> value
-                    String assetId = '';
-                    String assetName = '';
+                    String securityId = '';
+                    String securityName = '';
                     
-                    // Get the iid as asset ID
-                    assetId = security['iid']?.toString() ?? '';
+                    // Get the iid as security ID
+                    securityId = security['iid']?.toString() ?? '';
                     
                     // Extract from identifiers -> ids -> value
                     final identifiers = security['identifiers'] as List?;
@@ -1140,10 +1140,10 @@ class _ActivityPageState extends State<ActivityPage> {
                           final firstId = idsArray.first;
                           if (firstId is Map && firstId.containsKey('value')) {
                             final symbolValue = firstId['value'].toString();
-                            if (assetId.isEmpty) {
-                              assetId = symbolValue;
+                            if (securityId.isEmpty) {
+                              securityId = symbolValue;
                             }
-                            assetName = symbolValue;
+                            securityName = symbolValue;
                           }
                         }
                       }
@@ -1152,46 +1152,46 @@ class _ActivityPageState extends State<ActivityPage> {
                     // Extract display name
                     final displayNames = security['displayNames'] as Map?;
                     if (displayNames != null && displayNames.isNotEmpty) {
-                      assetName = displayNames['en']?.toString() ?? 
-                                  displayNames.values.first?.toString() ?? assetName;
+                      securityName = displayNames['en']?.toString() ?? 
+                                  displayNames.values.first?.toString() ?? securityName;
                     }
                     
-                    if (assetId.isNotEmpty) {
-                      processedAssets.add({
-                        'id': assetId,
-                        'symbol': assetName.isNotEmpty ? assetName : assetId,
-                        'security_id': assetId,
-                        'description': assetName.isNotEmpty ? assetName : assetId,
+                    if (securityId.isNotEmpty) {
+                      processedSecurities.add({
+                        'id': securityId,
+                        'symbol': securityName.isNotEmpty ? securityName : securityId,
+                        'security_id': securityId,
+                        'description': securityName.isNotEmpty ? securityName : securityId,
                       });
                     }
                   }
                 }
                 
-                _availableAssets = processedAssets;
-                print('✅ Assets loaded for market $marketId: ${_availableAssets.length} assets found');
-                if (_availableAssets.isNotEmpty) {
-                  print('📋 Sample assets: ${_availableAssets.take(3).map((a) => a['symbol']).toList()}');
+                _availableSecurities = processedSecurities;
+                print('✅ Securities loaded for market $marketId: ${_availableSecurities.length} securities found');
+                if (_availableSecurities.isNotEmpty) {
+                  print('📋 Sample securities: ${_availableSecurities.take(3).map((a) => a['symbol']).toList()}');
                 }
               } else {
-                _availableAssets = [];
+                _availableSecurities = [];
                 print('⚠️ No securities found in market $marketId response');
               }
             } else {
-              _availableAssets = [];
+              _availableSecurities = [];
               print('⚠️ Unexpected response format for market $marketId');
             }
           } else {
             print('❌ GetMarketSecurityList failed for market $marketId: ${result['output']}');
-            _availableAssets = [];
+            _availableSecurities = [];
           }
         });
       }
     } catch (e) {
-      print('❌ Exception fetching assets: $e');
+      print('❌ Exception fetching securities: $e');
       if (mounted) {
         setState(() {
-          _isLoadingAssets = false;
-          _availableAssets = [];
+          _isLoadingSecurities = false;
+          _availableSecurities = [];
         });
       }
     }
@@ -1199,10 +1199,10 @@ class _ActivityPageState extends State<ActivityPage> {
 
   /// Fetch all securitys from all markets for transactions filter
   Future<void> _fetchAllSecuritys() async {
-    if (_isLoadingAssets) return;
+    if (_isLoadingSecurities) return;
 
     setState(() {
-      _isLoadingAssets = true;
+      _isLoadingSecurities = true;
     });
 
     try {
@@ -1234,10 +1234,10 @@ class _ActivityPageState extends State<ActivityPage> {
                 if (securitys is List && securitys.isNotEmpty) {
                   for (final security in securitys) {
                     if (security is Map<String, dynamic>) {
-                      String assetId = '';
-                      String assetName = '';
+                      String securityId = '';
+                      String securityName = '';
 
-                      assetId = security['iid']?.toString() ?? '';
+                      securityId = security['iid']?.toString() ?? '';
 
                       final identifiers = security['identifiers'] as List?;
                       if (identifiers != null && identifiers.isNotEmpty) {
@@ -1248,10 +1248,10 @@ class _ActivityPageState extends State<ActivityPage> {
                             final firstId = idsArray.first;
                             if (firstId is Map && firstId.containsKey('value')) {
                               final symbolValue = firstId['value'].toString();
-                              if (assetId.isEmpty) {
-                                assetId = symbolValue;
+                              if (securityId.isEmpty) {
+                                securityId = symbolValue;
                               }
-                              assetName = symbolValue;
+                              securityName = symbolValue;
                             }
                           }
                         }
@@ -1259,16 +1259,16 @@ class _ActivityPageState extends State<ActivityPage> {
 
                       final displayNames = security['displayNames'] as Map?;
                       if (displayNames != null && displayNames.isNotEmpty) {
-                        assetName = displayNames['en']?.toString() ??
-                                    displayNames.values.first?.toString() ?? assetName;
+                        securityName = displayNames['en']?.toString() ??
+                                    displayNames.values.first?.toString() ?? securityName;
                       }
 
-                      if (assetId.isNotEmpty) {
+                      if (securityId.isNotEmpty) {
                         allSecuritiesFromMarkets.add({
-                          'id': assetId,
-                          'symbol': assetName.isNotEmpty ? assetName : assetId,
-                          'security_id': assetId,
-                          'description': assetName.isNotEmpty ? assetName : assetId,
+                          'id': securityId,
+                          'symbol': securityName.isNotEmpty ? securityName : securityId,
+                          'security_id': securityId,
+                          'description': securityName.isNotEmpty ? securityName : securityId,
                         });
                       }
                     }
@@ -1300,7 +1300,7 @@ class _ActivityPageState extends State<ActivityPage> {
       if (mounted) {
         setState(() {
           _allSecurities = uniqueSecurities.values.toList();
-          _isLoadingAssets = false;
+          _isLoadingSecurities = false;
         });
         print('✅ All securitys loaded: ${_allSecurities.length} unique securitys found (from ${allSecuritiesFromMarkets.length} total)');
         if (_allSecurities.isNotEmpty) {
@@ -1311,7 +1311,7 @@ class _ActivityPageState extends State<ActivityPage> {
       print('❌ Exception fetching all securitys: $e');
       if (mounted) {
         setState(() {
-          _isLoadingAssets = false;
+          _isLoadingSecurities = false;
           _allSecurities = [];
         });
       }
@@ -1387,7 +1387,7 @@ class _ActivityPageState extends State<ActivityPage> {
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
                   const SizedBox(height: UIConstants.spacingMd),
-                  // Market, Asset and Status filters row
+                  // Market, Security and Status filters row
                   Row(
                     children: [
                       // Market filter
@@ -1485,14 +1485,14 @@ class _ActivityPageState extends State<ActivityPage> {
                                 onChanged: (value) {
                                   setState(() {
                                     _tempSelectedOrdersMarket = value;
-                                    // Reset asset selection when market changes
-                                    _tempSelectedOrdersAsset = null;
+                                    // Reset security selection when market changes
+                                    _tempSelectedOrdersSecurity = null;
                                   });
-                                  // Fetch assets for the selected market
+                                  // Fetch securities for the selected market
                                   if (value != null) {
-                                    _fetchAssetList(value);
+                                    _fetchSecurityList(value);
                                   } else {
-                                    _availableAssets = [];
+                                    _availableSecurities = [];
                                   }
                                 },
                               ),
@@ -1501,13 +1501,13 @@ class _ActivityPageState extends State<ActivityPage> {
                         ),
                       ),
                       const SizedBox(width: UIConstants.spacingMd),
-                      // Asset filter
+                      // Security filter
                       Expanded(
                         child: Column(
                           crossAxisAlignment: CrossAxisAlignment.start,
                           children: [
                             Text(
-                              'Asset',
+                              'Security',
                               style: TextStyle(
                                 fontSize: UIConstants.fontSizeSm,
                                 fontWeight: UIConstants.fontWeightNormal,
@@ -1526,7 +1526,7 @@ class _ActivityPageState extends State<ActivityPage> {
                                 ),
                               ),
                               child: DropdownButton<String?>(
-                                value: _tempSelectedOrdersAsset ?? _selectedOrdersAsset,
+                                value: _tempSelectedOrdersSecurity ?? _selectedOrdersSecurity,
                                 isExpanded: true,
                                 underline: SizedBox.shrink(),
                                 dropdownColor: isDarkTheme ? const Color(0xFF2a2a2a) : Colors.white,
@@ -1535,12 +1535,12 @@ class _ActivityPageState extends State<ActivityPage> {
                                 items: (_tempSelectedOrdersMarket ?? _selectedOrdersMarket) == null ? [
                                   DropdownMenuItem(value: null, child: Text('Select Market First', style: TextStyle(color: isDarkTheme ? Colors.grey : Colors.grey)))
                                 ] : [
-                                  DropdownMenuItem(value: null, child: Text('All Assets', style: TextStyle(color: isDarkTheme ? Colors.white : Colors.black))),
-                                  ..._availableAssets.map<DropdownMenuItem<String?>>((asset) => 
+                                  DropdownMenuItem(value: null, child: Text('All Securities', style: TextStyle(color: isDarkTheme ? Colors.white : Colors.black))),
+                                  ..._availableSecurities.map<DropdownMenuItem<String?>>((security) =>
                                     DropdownMenuItem<String?>(
-                                      value: asset['id'] ?? asset['symbol'] ?? asset['security_id'] ?? '',
+                                      value: security['id'] ?? security['symbol'] ?? security['security_id'] ?? '',
                                       child: Text(
-                                        asset['symbol'] ?? asset['id'] ?? asset['security_id'] ?? 'Unknown',
+                                        security['symbol'] ?? security['id'] ?? security['security_id'] ?? 'Unknown',
                                         style: TextStyle(color: isDarkTheme ? Colors.white : Colors.black)
                                       )
                                     )
@@ -1548,7 +1548,7 @@ class _ActivityPageState extends State<ActivityPage> {
                                 ],
                                 onChanged: (_tempSelectedOrdersMarket ?? _selectedOrdersMarket) == null ? null : (value) {
                                   setState(() {
-                                    _tempSelectedOrdersAsset = value;
+                                    _tempSelectedOrdersSecurity = value;
                                   });
                                 },
                               ),
@@ -2107,7 +2107,7 @@ class _ActivityPageState extends State<ActivityPage> {
               child: Column(
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
-                  // Market and Asset and Side filters row for trades
+                  // Market and Security and Side filters row for trades
                   Row(
                     children: [
                       // Market filter for trades
@@ -2205,14 +2205,14 @@ class _ActivityPageState extends State<ActivityPage> {
                                 onChanged: (value) {
                                   setState(() {
                                     _tempSelectedTradesMarket = value;
-                                    // Reset asset selection when market changes
-                                    _tempSelectedTradesAsset = null;
+                                    // Reset security selection when market changes
+                                    _tempSelectedTradesSecurity = null;
                                   });
-                                  // Fetch assets for the selected market
+                                  // Fetch securities for the selected market
                                   if (value != null) {
-                                    _fetchAssetList(value);
+                                    _fetchSecurityList(value);
                                   } else {
-                                    _availableAssets = [];
+                                    _availableSecurities = [];
                                   }
                                 },
                               ),
@@ -2221,13 +2221,13 @@ class _ActivityPageState extends State<ActivityPage> {
                         ),
                       ),
                       const SizedBox(width: UIConstants.spacingMd),
-                      // Asset filter for trades
+                      // Security filter for trades
                       Expanded(
                         child: Column(
                           crossAxisAlignment: CrossAxisAlignment.start,
                           children: [
                             Text(
-                              'Asset',
+                              'Security',
                               style: TextStyle(
                                 fontSize: UIConstants.fontSizeSm,
                                 fontWeight: UIConstants.fontWeightNormal,
@@ -2246,7 +2246,7 @@ class _ActivityPageState extends State<ActivityPage> {
                                 ),
                               ),
                               child: DropdownButton<String?>(
-                                value: _tempSelectedTradesAsset ?? _selectedTradesAsset,
+                                value: _tempSelectedTradesSecurity ?? _selectedTradesSecurity,
                                 isExpanded: true,
                                 underline: SizedBox.shrink(),
                                 dropdownColor: isDarkTheme ? const Color(0xFF2a2a2a) : Colors.white,
@@ -2255,12 +2255,12 @@ class _ActivityPageState extends State<ActivityPage> {
                                 items: (_tempSelectedTradesMarket ?? _selectedTradesMarket) == null ? [
                                   DropdownMenuItem(value: null, child: Text('Select Market First', style: TextStyle(color: isDarkTheme ? Colors.grey : Colors.grey)))
                                 ] : [
-                                  DropdownMenuItem(value: null, child: Text('All Assets', style: TextStyle(color: isDarkTheme ? Colors.white : Colors.black))),
-                                  ..._availableAssets.map<DropdownMenuItem<String?>>((asset) => 
+                                  DropdownMenuItem(value: null, child: Text('All Securities', style: TextStyle(color: isDarkTheme ? Colors.white : Colors.black))),
+                                  ..._availableSecurities.map<DropdownMenuItem<String?>>((security) =>
                                     DropdownMenuItem<String?>(
-                                      value: asset['id'] ?? asset['symbol'] ?? asset['security_id'] ?? '',
+                                      value: security['id'] ?? security['symbol'] ?? security['security_id'] ?? '',
                                       child: Text(
-                                        asset['symbol'] ?? asset['id'] ?? asset['security_id'] ?? 'Unknown',
+                                        security['symbol'] ?? security['id'] ?? security['security_id'] ?? 'Unknown',
                                         style: TextStyle(color: isDarkTheme ? Colors.white : Colors.black)
                                       )
                                     )
@@ -2268,7 +2268,7 @@ class _ActivityPageState extends State<ActivityPage> {
                                 ],
                                 onChanged: (_tempSelectedTradesMarket ?? _selectedTradesMarket) == null ? null : (value) {
                                   setState(() {
-                                    _tempSelectedTradesAsset = value;
+                                    _tempSelectedTradesSecurity = value;
                                   });
                                 },
                               ),
@@ -2837,7 +2837,7 @@ class _ActivityPageState extends State<ActivityPage> {
               ),
               child: Column(
                 children: [
-                  // First row: Status, Market, Asset
+                  // First row: Status, Market, Security
                   Row(
                     children: [
                       // Market filter
@@ -2918,13 +2918,13 @@ class _ActivityPageState extends State<ActivityPage> {
                                 onChanged: (value) {
                                   setState(() {
                                     _tempSelectedSettlementsMarket = value;
-                                    _tempSelectedSettlementsAsset = null;
+                                    _tempSelectedSettlementsSecurity = null;
                                   });
                                   if (value != null) {
-                                    _fetchAssetList(value);
+                                    _fetchSecurityList(value);
                                   } else {
                                     setState(() {
-                                      _availableAssets = [];
+                                      _availableSecurities = [];
                                     });
                                   }
                                 },
@@ -2934,13 +2934,13 @@ class _ActivityPageState extends State<ActivityPage> {
                         ),
                       ),
                       const SizedBox(width: UIConstants.spacingSm),
-                      // Asset filter
+                      // Security filter
                       Expanded(
                         child: Column(
                           crossAxisAlignment: CrossAxisAlignment.start,
                           children: [
                             Text(
-                              'Asset',
+                              'Security',
                               style: TextStyle(
                                 fontSize: UIConstants.fontSizeSm,
                                 fontWeight: UIConstants.fontWeightNormal,
@@ -2959,7 +2959,7 @@ class _ActivityPageState extends State<ActivityPage> {
                                 ),
                               ),
                               child: DropdownButton<String>(
-                                value: _tempSelectedSettlementsAsset ?? _selectedSettlementsAsset,
+                                value: _tempSelectedSettlementsSecurity ?? _selectedSettlementsSecurity,
                                 isExpanded: true,
                                 underline: SizedBox.shrink(),
                                 dropdownColor: isDarkTheme ? const Color(0xFF2a2a2a) : Colors.white,
@@ -2968,18 +2968,18 @@ class _ActivityPageState extends State<ActivityPage> {
                                 items: (_tempSelectedSettlementsMarket ?? _selectedSettlementsMarket) == null ? [
                                   DropdownMenuItem(value: null, child: Text('Select Market First', style: TextStyle(color: isDarkTheme ? Colors.grey : Colors.grey)))
                                 ] : [
-                                  DropdownMenuItem(value: null, child: Text('All Assets', style: TextStyle(color: isDarkTheme ? Colors.white : Colors.black))),
-                                  ..._availableAssets.map((asset) => DropdownMenuItem(
-                                    value: asset['id']?.toString() ?? asset['symbol']?.toString() ?? '',
+                                  DropdownMenuItem(value: null, child: Text('All Securities', style: TextStyle(color: isDarkTheme ? Colors.white : Colors.black))),
+                                  ..._availableSecurities.map((security) => DropdownMenuItem(
+                                    value: security['id']?.toString() ?? security['symbol']?.toString() ?? '',
                                     child: Text(
-                                      asset['symbol']?.toString() ?? asset['id']?.toString() ?? 'Unknown Asset',
+                                      security['symbol']?.toString() ?? security['id']?.toString() ?? 'Unknown Security',
                                       style: TextStyle(color: isDarkTheme ? Colors.white : Colors.black),
                                     ),
                                   )),
                                 ],
                                 onChanged: (value) {
                                   setState(() {
-                                    _tempSelectedSettlementsAsset = value;
+                                    _tempSelectedSettlementsSecurity = value;
                                   });
                                 },
                               ),
@@ -3165,7 +3165,7 @@ class _ActivityPageState extends State<ActivityPage> {
                         onPressed: () {
                           setState(() {
                             _selectedSettlementsMarket = _tempSelectedSettlementsMarket;
-                            _selectedSettlementsAsset = _tempSelectedSettlementsAsset;
+                            _selectedSettlementsSecurity = _tempSelectedSettlementsSecurity;
                           });
                           _fetchSettlements();
                         },
@@ -3309,7 +3309,7 @@ class _ActivityPageState extends State<ActivityPage> {
                       SizedBox(
                         width: 100,
                         child: Text(
-                          'Asset',
+                          'Security',
                           style: TextStyle(
                             fontSize: UIConstants.textFieldFontSize,
                             color: isDarkTheme ? Colors.grey[400] : Colors.grey[600],
@@ -3542,7 +3542,7 @@ class _ActivityPageState extends State<ActivityPage> {
                                             overflow: TextOverflow.ellipsis,
                                           ),
                                         ),
-                                        // Asset Transferred
+                                        // Security Transferred
                                         SizedBox(
                                           width: 100,
                                           child: Text(
@@ -3746,7 +3746,7 @@ class _ActivityPageState extends State<ActivityPage> {
               ),
               child: Column(
                 children: [
-                  // First row: Transaction Types and Asset
+                  // First row: Transaction Types and Security
                   Row(
                     children: [
                       // Market filter
@@ -3827,13 +3827,13 @@ class _ActivityPageState extends State<ActivityPage> {
                                 onChanged: (value) {
                                   setState(() {
                                     _tempSelectedSettlementsMarket = value;
-                                    _tempSelectedSettlementsAsset = null;
+                                    _tempSelectedSettlementsSecurity = null;
                                   });
                                   if (value != null) {
-                                    _fetchAssetList(value);
+                                    _fetchSecurityList(value);
                                   } else {
                                     setState(() {
-                                      _availableAssets = [];
+                                      _availableSecurities = [];
                                     });
                                   }
                                 },
@@ -3843,13 +3843,13 @@ class _ActivityPageState extends State<ActivityPage> {
                         ),
                       ),
                       const SizedBox(width: UIConstants.spacingSm),
-                      // Asset filter
+                      // Security filter
                       Expanded(
                         child: Column(
                           crossAxisAlignment: CrossAxisAlignment.start,
                           children: [
                             Text(
-                              'Asset',
+                              'Security',
                               style: TextStyle(
                                 fontSize: UIConstants.fontSizeSm,
                                 fontWeight: UIConstants.fontWeightNormal,
@@ -3868,14 +3868,14 @@ class _ActivityPageState extends State<ActivityPage> {
                                 ),
                               ),
                               child: DropdownButton<String?>(
-                                value: _tempSelectedTransactionsAsset ?? _selectedTransactionsAsset,
+                                value: _tempSelectedTransactionsSecurity ?? _selectedTransactionsSecurity,
                                 isExpanded: true,
                                 underline: SizedBox.shrink(),
                                 dropdownColor: isDarkTheme ? const Color(0xFF2a2a2a) : Colors.white,
                                 iconEnabledColor: isDarkTheme ? Colors.grey[300] : Colors.grey[600],
                                 iconDisabledColor: isDarkTheme ? Colors.grey[600] : Colors.grey[400],
                                 items: [
-                                  DropdownMenuItem<String?>(value: null, child: Text('All Assets', style: TextStyle(color: isDarkTheme ? Colors.white : Colors.black))),
+                                  DropdownMenuItem<String?>(value: null, child: Text('All Securities', style: TextStyle(color: isDarkTheme ? Colors.white : Colors.black))),
                                   ..._allSecurities.map<DropdownMenuItem<String?>>((security) =>
                                     DropdownMenuItem<String?>(
                                       value: security['id'] ?? security['symbol'] ?? security['security_id'] ?? '',
@@ -3888,7 +3888,7 @@ class _ActivityPageState extends State<ActivityPage> {
                                 ],
                                 onChanged: (value) {
                                   setState(() {
-                                    _tempSelectedTransactionsAsset = value;
+                                    _tempSelectedTransactionsSecurity = value;
                                   });
                                 },
                               ),
@@ -4114,7 +4114,7 @@ class _ActivityPageState extends State<ActivityPage> {
                       ElevatedButton.icon(
                         onPressed: () {
                           setState(() {
-                            _selectedTransactionsAsset = _tempSelectedTransactionsAsset;
+                            _selectedTransactionsSecurity = _tempSelectedTransactionsSecurity;
                             _selectedTransactionType = _tempSelectedTransactionType;
                           });
                           _fetchActivityData();
@@ -4259,7 +4259,7 @@ class _ActivityPageState extends State<ActivityPage> {
                       SizedBox(
                         width: 100,
                         child: Text(
-                          'Asset IID',
+                          'Security IID',
                           style: TextStyle(
                             fontSize: UIConstants.textFieldFontSize,
                             color: isDarkTheme ? Colors.grey[400] : Colors.grey[600],
@@ -4459,7 +4459,7 @@ class _ActivityPageState extends State<ActivityPage> {
                                                       overflow: TextOverflow.ellipsis,
                                                     ),
                                                   ),
-                                                  // Asset IID
+                                                  // Security IID
                                                   SizedBox(
                                                     width: 100,
                                                     child: Text(
@@ -4576,24 +4576,24 @@ class _ActivityPageState extends State<ActivityPage> {
     }
   }
 
-  String _formatTransactionAmount(String amount, String assetId) {
+  String _formatTransactionAmount(String amount, String securityId) {
     try {
       final double value = double.parse(amount);
-      if (assetId == 'USDC' || assetId == 'USD') {
+      if (securityId == 'USDC' || securityId == 'USD') {
         // USDC typically has 6 decimals
-        return '${(value / 1000000).toStringAsFixed(2)} $assetId';
-      } else if (assetId == 'ETH') {
+        return '${(value / 1000000).toStringAsFixed(2)} $securityId';
+      } else if (securityId == 'ETH') {
         // ETH has 18 decimals
-        return '${(value / 1000000000000000000).toStringAsFixed(4)} $assetId';
-      } else if (assetId == 'BTC') {
+        return '${(value / 1000000000000000000).toStringAsFixed(4)} $securityId';
+      } else if (securityId == 'BTC') {
         // BTC has 8 decimals
-        return '${(value / 100000000).toStringAsFixed(8)} $assetId';
+        return '${(value / 100000000).toStringAsFixed(8)} $securityId';
       } else {
         // Default formatting
-        return '$value $assetId';
+        return '$value $securityId';
       }
     } catch (e) {
-      return '$amount $assetId';
+      return '$amount $securityId';
     }
   }
 

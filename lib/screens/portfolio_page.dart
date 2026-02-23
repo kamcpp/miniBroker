@@ -1,8 +1,10 @@
 import 'package:flutter/material.dart';
+import 'package:flutter/services.dart';
 import 'package:provider/provider.dart';
 import '../services/auth_service.dart';
 import '../services/theme_service.dart';
 import '../services/grpcurl_helper.dart';
+import '../services/real_grpc_client.dart';
 import '../utils/connectivity_checker.dart';
 import '../utils/menu_items_helper.dart';
 import '../config/ui_constants.dart';
@@ -21,6 +23,7 @@ class _PortfolioPageState extends State<PortfolioPage> {
   bool _isLoadingSecurities = false;
   bool _isLoadingCash = false;
   String? _investorId;
+  Set<String> _supportedCashTokenCodes = {};
 
   @override
   void initState() {
@@ -51,11 +54,64 @@ class _PortfolioPageState extends State<PortfolioPage> {
     _investorId = currentUsername;
     print('✅ Using logged-in username as investor ID: $_investorId');
 
-    // Fetch both security and cash holdings in parallel
+    // Fetch supported cash tokens, security holdings, and cash holdings in parallel
     await Future.wait([
+      _fetchSupportedCashTokens(),
       _fetchSecurityHoldings(),
       _fetchCashHoldings(),
     ]);
+  }
+
+  Future<void> _fetchSupportedCashTokens() async {
+    if (!mounted) return;
+    try {
+      if (!realGrpcClient.isConnected) return;
+
+      final result = await realGrpcClient.getSupportedCurrencies().timeout(
+        const Duration(seconds: 10),
+        onTimeout: () => {
+          'success': false,
+          'output': {'error': 'Request timed out'},
+        },
+      );
+
+      if (result['success'] == true && result['output'] != null) {
+        final output = result['output'] as Map<String, dynamic>;
+        final cashTokens = output['cashTokens'] as List<dynamic>? ?? [];
+        final codes = <String>{};
+
+        for (final token in cashTokens) {
+          if (token is Map<String, dynamic>) {
+            // Collect all possible codes so we match however the holdings map keys them
+            final identifiers = token['identifiers'] as List<dynamic>? ?? [];
+            for (final identifier in identifiers) {
+              if (identifier is Map<String, dynamic>) {
+                final ids = identifier['ids'] as List<dynamic>? ?? [];
+                for (final id in ids) {
+                  if (id is Map<String, dynamic>) {
+                    final value = id['value'] as String? ?? '';
+                    if (value.isNotEmpty) codes.add(value);
+                  }
+                }
+              }
+            }
+            final issueCurrency = token['issueCurrency'] as String? ?? '';
+            if (issueCurrency.isNotEmpty) codes.add(issueCurrency);
+            final iid = token['iid']?.toString() ?? '';
+            if (iid.isNotEmpty) codes.add(iid);
+          }
+        }
+        print('✅ Supported cash token codes: $codes');
+
+        if (mounted) {
+          setState(() {
+            _supportedCashTokenCodes = codes;
+          });
+        }
+      }
+    } catch (e) {
+      print('❌ Error fetching supported cash tokens: $e');
+    }
   }
 
   Future<void> _fetchSecurityHoldings() async {
@@ -153,6 +209,7 @@ class _PortfolioPageState extends State<PortfolioPage> {
   Future<void> _refreshData() async {
     if (_investorId != null && _investorId!.isNotEmpty) {
       await Future.wait([
+        _fetchSupportedCashTokens(),
         _fetchSecurityHoldings(),
         _fetchCashHoldings(),
       ]);
@@ -443,7 +500,7 @@ class _PortfolioPageState extends State<PortfolioPage> {
               final securityId = entry.key;
               final holdingData = entry.value as Map<String, dynamic>? ?? {};
               final totalUnits = holdingData['totalUnits']?.toString() ?? '0';
-              final availableUnits = holdingData['availableUnits']?.toString() ?? totalUnits;
+              final availableUnits = holdingData['availableUnits']?.toString() ?? '0';
               final lockedUnits = holdingData['lockedUnits']?.toString() ?? '0';
 
               return Container(
@@ -452,39 +509,14 @@ class _PortfolioPageState extends State<PortfolioPage> {
                   children: [
                     Expanded(
                       flex: 2,
-                      child: Row(
-                        children: [
-                          Container(
-                            width: 32,
-                            height: 32,
-                            decoration: BoxDecoration(
-                              color: _getColorForAsset(securityId),
-                              borderRadius: BorderRadius.circular(6),
-                            ),
-                            child: Center(
-                              child: Text(
-                                securityId.length >= 2 ? securityId.substring(0, 2).toUpperCase() : securityId.toUpperCase(),
-                                style: const TextStyle(
-                                  color: Colors.white,
-                                  fontSize: 12,
-                                  fontWeight: FontWeight.bold,
-                                ),
-                              ),
-                            ),
-                          ),
-                          const SizedBox(width: 8),
-                          Expanded(
-                            child: Text(
-                              securityId,
-                              style: TextStyle(
-                                fontSize: UIConstants.fontSizeBody,
-                                fontWeight: UIConstants.fontWeightMedium,
-                                color: isDarkTheme ? Colors.white : Colors.black,
-                              ),
-                              overflow: TextOverflow.ellipsis,
-                            ),
-                          ),
-                        ],
+                      child: Text(
+                        securityId,
+                        style: TextStyle(
+                          fontSize: UIConstants.fontSizeBody,
+                          fontWeight: UIConstants.fontWeightMedium,
+                          color: isDarkTheme ? Colors.white : Colors.black,
+                        ),
+                        overflow: TextOverflow.ellipsis,
                       ),
                     ),
                     _buildDataCell(totalUnits, flex: 2, isDarkTheme: isDarkTheme),
@@ -506,11 +538,14 @@ class _PortfolioPageState extends State<PortfolioPage> {
     final cashPortfolio = output['cashPortfolio'] as Map<String, dynamic>? ?? {};
     final holdings = cashPortfolio['holdings'] as Map<String, dynamic>? ?? {};
 
-    if (holdings.isEmpty) {
+    // Only show cash tokens that are supported by the gRPC CashTokenService
+    final holdingsList = _supportedCashTokenCodes.isEmpty
+        ? holdings.entries.toList()
+        : holdings.entries.where((e) => _supportedCashTokenCodes.contains(e.key)).toList();
+
+    if (holdingsList.isEmpty) {
       return _buildEmptyState(isDarkTheme, 'No cash holdings');
     }
-
-    final holdingsList = holdings.entries.toList();
 
     return Column(
       children: [
@@ -527,6 +562,7 @@ class _PortfolioPageState extends State<PortfolioPage> {
               _buildHeaderCell('Total Balance', flex: 2, isDarkTheme: isDarkTheme, align: TextAlign.right),
               _buildHeaderCell('Available', flex: 2, isDarkTheme: isDarkTheme, align: TextAlign.right),
               _buildHeaderCell('Reserved', flex: 2, isDarkTheme: isDarkTheme, align: TextAlign.right),
+              _buildHeaderCell('Actions', flex: 2, isDarkTheme: isDarkTheme, align: TextAlign.center),
             ],
           ),
         ),
@@ -544,9 +580,9 @@ class _PortfolioPageState extends State<PortfolioPage> {
               final currencyCode = entry.key;
               final holdingData = entry.value as Map<String, dynamic>? ?? {};
               // The API returns totalUnits, availableUnits, lockedUnits
-              final totalBalance = holdingData['totalUnits']?.toString() ?? holdingData['totalBalance']?.toString() ?? '0';
-              final availableBalance = holdingData['availableUnits']?.toString() ?? holdingData['availableBalance']?.toString() ?? totalBalance;
-              final reservedBalance = holdingData['lockedUnits']?.toString() ?? holdingData['reservedBalance']?.toString() ?? '0';
+              final totalBalance = holdingData['totalUnits']?.toString() ?? '0';
+              final availableBalance = holdingData['availableUnits']?.toString() ?? '0';
+              final reservedBalance = holdingData['lockedUnits']?.toString() ?? '0';
 
               return Container(
                 padding: const EdgeInsets.symmetric(vertical: 12, horizontal: 12),
@@ -554,44 +590,56 @@ class _PortfolioPageState extends State<PortfolioPage> {
                   children: [
                     Expanded(
                       flex: 2,
+                      child: Text(
+                        currencyCode,
+                        style: TextStyle(
+                          fontSize: UIConstants.fontSizeBody,
+                          fontWeight: UIConstants.fontWeightMedium,
+                          color: isDarkTheme ? Colors.white : Colors.black,
+                        ),
+                        overflow: TextOverflow.ellipsis,
+                      ),
+                    ),
+                    _buildDataCell(totalBalance, flex: 2, isDarkTheme: isDarkTheme),
+                    _buildDataCell(availableBalance, flex: 2, isDarkTheme: isDarkTheme, color: Colors.green),
+                    _buildDataCell(reservedBalance, flex: 2, isDarkTheme: isDarkTheme, color: Colors.orange),
+                    Expanded(
+                      flex: 2,
                       child: Row(
+                        mainAxisAlignment: MainAxisAlignment.center,
                         children: [
-                          Container(
-                            width: 32,
-                            height: 32,
-                            decoration: BoxDecoration(
-                              color: _getColorForCurrency(currencyCode),
-                              borderRadius: BorderRadius.circular(6),
-                            ),
-                            child: Center(
-                              child: Text(
-                                _getCurrencySymbol(currencyCode),
-                                style: const TextStyle(
-                                  color: Colors.white,
-                                  fontSize: 14,
-                                  fontWeight: FontWeight.bold,
+                          SizedBox(
+                            height: 28,
+                            child: ElevatedButton(
+                              onPressed: () => _showDepositDialog(currencyCode),
+                              style: ElevatedButton.styleFrom(
+                                backgroundColor: UIConstants.colorSuccess,
+                                padding: const EdgeInsets.symmetric(horizontal: 8),
+                                shape: RoundedRectangleBorder(
+                                  borderRadius: BorderRadius.circular(4),
                                 ),
                               ),
+                              child: const Text('Deposit', style: TextStyle(color: Colors.white, fontSize: 11)),
                             ),
                           ),
-                          const SizedBox(width: 8),
-                          Expanded(
-                            child: Text(
-                              currencyCode,
-                              style: TextStyle(
-                                fontSize: UIConstants.fontSizeBody,
-                                fontWeight: UIConstants.fontWeightMedium,
-                                color: isDarkTheme ? Colors.white : Colors.black,
+                          const SizedBox(width: 6),
+                          SizedBox(
+                            height: 28,
+                            child: ElevatedButton(
+                              onPressed: () => _showWithdrawDialog(currencyCode, availableBalance),
+                              style: ElevatedButton.styleFrom(
+                                backgroundColor: UIConstants.colorDanger,
+                                padding: const EdgeInsets.symmetric(horizontal: 8),
+                                shape: RoundedRectangleBorder(
+                                  borderRadius: BorderRadius.circular(4),
+                                ),
                               ),
-                              overflow: TextOverflow.ellipsis,
+                              child: const Text('Withdraw', style: TextStyle(color: Colors.white, fontSize: 11)),
                             ),
                           ),
                         ],
                       ),
                     ),
-                    _buildDataCell(_formatCurrency(totalBalance, currencyCode), flex: 2, isDarkTheme: isDarkTheme),
-                    _buildDataCell(_formatCurrency(availableBalance, currencyCode), flex: 2, isDarkTheme: isDarkTheme, color: Colors.green),
-                    _buildDataCell(_formatCurrency(reservedBalance, currencyCode), flex: 2, isDarkTheme: isDarkTheme, color: Colors.orange),
                   ],
                 ),
               );
@@ -632,45 +680,6 @@ class _PortfolioPageState extends State<PortfolioPage> {
     );
   }
 
-  Color _getColorForAsset(String assetId) {
-    switch (assetId.toUpperCase()) {
-      case 'ETH':
-        return const Color(0xFF627EEA);
-      case 'BTC':
-        return const Color(0xFFF7931A);
-      case 'OXC':
-        return const Color(0xFF85BB65);
-      case 'XRP':
-        return const Color(0xFF23292F);
-      default:
-        // Generate a color based on the asset ID hash
-        final hash = assetId.hashCode;
-        return Color.fromRGBO(
-          (hash & 0xFF0000) >> 16,
-          (hash & 0x00FF00) >> 8,
-          hash & 0x0000FF,
-          1,
-        );
-    }
-  }
-
-  Color _getColorForCurrency(String currencyCode) {
-    switch (currencyCode.toUpperCase()) {
-      case 'USD':
-        return const Color(0xFF2E7D32); // Green
-      case 'EUR':
-        return const Color(0xFF1565C0); // Blue
-      case 'GBP':
-        return const Color(0xFF6A1B9A); // Purple
-      case 'JPY':
-        return const Color(0xFFC62828); // Red
-      case 'CHF':
-        return const Color(0xFFD84315); // Deep Orange
-      default:
-        return const Color(0xFF37474F); // Blue Grey
-    }
-  }
-
   String _getCurrencySymbol(String currencyCode) {
     switch (currencyCode.toUpperCase()) {
       case 'USD':
@@ -699,5 +708,330 @@ class _PortfolioPageState extends State<PortfolioPage> {
     } catch (e) {
       return amount;
     }
+  }
+
+  void _showDepositDialog(String currencyCode) {
+    final themeService = Provider.of<ThemeService>(context, listen: false);
+    final isDarkTheme = themeService.isDarkTheme;
+    final amountController = TextEditingController();
+
+    showDialog(
+      context: context,
+      builder: (BuildContext context) {
+        return AlertDialog(
+          backgroundColor: isDarkTheme ? const Color(0xFF2A2A2A) : Colors.white,
+          shape: RoundedRectangleBorder(
+            borderRadius: BorderRadius.circular(UIConstants.borderRadiusLg),
+          ),
+          title: Text(
+            'Deposit $currencyCode',
+            style: TextStyle(
+              color: isDarkTheme ? Colors.white : Colors.black,
+              fontWeight: UIConstants.fontWeightMedium,
+            ),
+          ),
+          content: Column(
+            mainAxisSize: MainAxisSize.min,
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              Text(
+                'Enter amount to deposit:',
+                style: TextStyle(
+                  color: isDarkTheme ? Colors.grey[400] : Colors.grey[600],
+                ),
+              ),
+              const SizedBox(height: 10),
+              TextField(
+                controller: amountController,
+                keyboardType: const TextInputType.numberWithOptions(decimal: true),
+                inputFormatters: [
+                  FilteringTextInputFormatter.allow(RegExp(r'^\d*\.?\d*')),
+                ],
+                decoration: InputDecoration(
+                  hintText: '0.00',
+                  hintStyle: TextStyle(
+                    color: isDarkTheme ? Colors.grey[500] : Colors.grey[400],
+                  ),
+                  suffixText: currencyCode,
+                  suffixStyle: TextStyle(
+                    color: isDarkTheme ? Colors.white : Colors.black,
+                  ),
+                  border: OutlineInputBorder(
+                    borderRadius: BorderRadius.circular(UIConstants.textFieldBorderRadius),
+                  ),
+                  filled: true,
+                  fillColor: isDarkTheme ? const Color(0xFF505050) : Colors.grey[200],
+                ),
+                style: TextStyle(
+                  color: isDarkTheme ? Colors.white : Colors.black,
+                ),
+              ),
+            ],
+          ),
+          actions: [
+            TextButton(
+              onPressed: () => Navigator.of(context).pop(),
+              child: Text(
+                'Cancel',
+                style: TextStyle(
+                  color: isDarkTheme ? Colors.grey[400] : Colors.grey[600],
+                ),
+              ),
+            ),
+            ElevatedButton(
+              onPressed: () async {
+                final amount = amountController.text.trim();
+                final scaffoldMessenger = ScaffoldMessenger.of(context);
+                final navigator = Navigator.of(context);
+
+                if (amount.isEmpty) {
+                  navigator.pop();
+                  scaffoldMessenger.showSnackBar(
+                    const SnackBar(content: Text('Please enter an amount'), backgroundColor: Colors.red),
+                  );
+                  return;
+                }
+
+                final parsedAmount = double.tryParse(amount);
+                if (parsedAmount == null || parsedAmount <= 0) {
+                  navigator.pop();
+                  scaffoldMessenger.showSnackBar(
+                    const SnackBar(content: Text('Please enter a valid positive amount'), backgroundColor: Colors.red),
+                  );
+                  return;
+                }
+
+                if (_investorId == null || _investorId!.isEmpty) {
+                  navigator.pop();
+                  scaffoldMessenger.showSnackBar(
+                    const SnackBar(content: Text('Investor not found. Please try again.'), backgroundColor: Colors.red),
+                  );
+                  return;
+                }
+
+                navigator.pop();
+
+                scaffoldMessenger.showSnackBar(
+                  const SnackBar(content: Text('Depositing cash...'), duration: Duration(seconds: 2)),
+                );
+
+                try {
+                  final response = await GrpcurlHelper.depositCash(
+                    investorId: _investorId!,
+                    currencyCode: currencyCode,
+                    amount: amount,
+                  );
+
+                  if (mounted) {
+                    if (response['success'] == true) {
+                      scaffoldMessenger.showSnackBar(
+                        SnackBar(
+                          content: Text('Successfully deposited $amount $currencyCode'),
+                          backgroundColor: Colors.green,
+                        ),
+                      );
+                      _fetchCashHoldings();
+                    } else {
+                      final errorMessage = response['output']?['error'] ??
+                          response['output']?['message'] ??
+                          'Failed to deposit cash';
+                      scaffoldMessenger.showSnackBar(
+                        SnackBar(content: Text('Deposit failed: $errorMessage'), backgroundColor: Colors.red, duration: const Duration(seconds: 5)),
+                      );
+                    }
+                  }
+                } catch (e) {
+                  if (mounted) {
+                    scaffoldMessenger.showSnackBar(
+                      SnackBar(content: Text('Error: ${e.toString()}'), backgroundColor: Colors.red),
+                    );
+                  }
+                }
+              },
+              style: ElevatedButton.styleFrom(
+                backgroundColor: UIConstants.colorSuccess,
+                shape: RoundedRectangleBorder(
+                  borderRadius: BorderRadius.circular(UIConstants.textFieldBorderRadius),
+                ),
+              ),
+              child: const Text('Deposit', style: TextStyle(color: Colors.white)),
+            ),
+          ],
+        );
+      },
+    );
+  }
+
+  void _showWithdrawDialog(String currencyCode, String availableBalance) {
+    final themeService = Provider.of<ThemeService>(context, listen: false);
+    final isDarkTheme = themeService.isDarkTheme;
+    final amountController = TextEditingController();
+
+    showDialog(
+      context: context,
+      builder: (BuildContext context) {
+        return AlertDialog(
+          backgroundColor: isDarkTheme ? const Color(0xFF2A2A2A) : Colors.white,
+          shape: RoundedRectangleBorder(
+            borderRadius: BorderRadius.circular(UIConstants.borderRadiusLg),
+          ),
+          title: Text(
+            'Withdraw $currencyCode',
+            style: TextStyle(
+              color: isDarkTheme ? Colors.white : Colors.black,
+              fontWeight: UIConstants.fontWeightMedium,
+            ),
+          ),
+          content: Column(
+            mainAxisSize: MainAxisSize.min,
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              Text(
+                'Enter amount to withdraw:',
+                style: TextStyle(
+                  color: isDarkTheme ? Colors.grey[400] : Colors.grey[600],
+                ),
+              ),
+              const SizedBox(height: 10),
+              TextField(
+                controller: amountController,
+                keyboardType: const TextInputType.numberWithOptions(decimal: true),
+                inputFormatters: [
+                  FilteringTextInputFormatter.allow(RegExp(r'^\d*\.?\d*')),
+                ],
+                decoration: InputDecoration(
+                  hintText: '0.00',
+                  hintStyle: TextStyle(
+                    color: isDarkTheme ? Colors.grey[500] : Colors.grey[400],
+                  ),
+                  suffixText: currencyCode,
+                  suffixStyle: TextStyle(
+                    color: isDarkTheme ? Colors.white : Colors.black,
+                  ),
+                  border: OutlineInputBorder(
+                    borderRadius: BorderRadius.circular(UIConstants.textFieldBorderRadius),
+                  ),
+                  filled: true,
+                  fillColor: isDarkTheme ? const Color(0xFF505050) : Colors.grey[200],
+                ),
+                style: TextStyle(
+                  color: isDarkTheme ? Colors.white : Colors.black,
+                ),
+              ),
+              const SizedBox(height: 10),
+              Text(
+                'Available: ${_formatCurrency(availableBalance, currencyCode)}',
+                style: TextStyle(
+                  color: isDarkTheme ? Colors.grey[400] : Colors.grey[600],
+                  fontSize: UIConstants.fontSizeSm,
+                ),
+              ),
+            ],
+          ),
+          actions: [
+            TextButton(
+              onPressed: () => Navigator.of(context).pop(),
+              child: Text(
+                'Cancel',
+                style: TextStyle(
+                  color: isDarkTheme ? Colors.grey[400] : Colors.grey[600],
+                ),
+              ),
+            ),
+            ElevatedButton(
+              onPressed: () async {
+                final amount = amountController.text.trim();
+                final scaffoldMessenger = ScaffoldMessenger.of(context);
+                final navigator = Navigator.of(context);
+
+                if (amount.isEmpty) {
+                  navigator.pop();
+                  scaffoldMessenger.showSnackBar(
+                    const SnackBar(content: Text('Please enter an amount'), backgroundColor: Colors.red),
+                  );
+                  return;
+                }
+
+                final parsedAmount = double.tryParse(amount);
+                if (parsedAmount == null || parsedAmount <= 0) {
+                  navigator.pop();
+                  scaffoldMessenger.showSnackBar(
+                    const SnackBar(content: Text('Please enter a valid positive amount'), backgroundColor: Colors.red),
+                  );
+                  return;
+                }
+
+                final availBal = double.tryParse(availableBalance) ?? 0.0;
+                if (parsedAmount > availBal) {
+                  navigator.pop();
+                  scaffoldMessenger.showSnackBar(
+                    SnackBar(
+                      content: Text('Insufficient balance. Available: ${_formatCurrency(availableBalance, currencyCode)}'),
+                      backgroundColor: Colors.red,
+                      duration: const Duration(seconds: 4),
+                    ),
+                  );
+                  return;
+                }
+
+                if (_investorId == null || _investorId!.isEmpty) {
+                  navigator.pop();
+                  scaffoldMessenger.showSnackBar(
+                    const SnackBar(content: Text('Investor not found. Please try again.'), backgroundColor: Colors.red),
+                  );
+                  return;
+                }
+
+                navigator.pop();
+
+                scaffoldMessenger.showSnackBar(
+                  const SnackBar(content: Text('Withdrawing cash...'), duration: Duration(seconds: 2)),
+                );
+
+                try {
+                  final response = await GrpcurlHelper.withdrawCash(
+                    investorId: _investorId!,
+                    currencyCode: currencyCode,
+                    amount: amount,
+                  );
+
+                  if (mounted) {
+                    if (response['success'] == true) {
+                      scaffoldMessenger.showSnackBar(
+                        SnackBar(
+                          content: Text('Successfully withdrew $amount $currencyCode'),
+                          backgroundColor: Colors.green,
+                        ),
+                      );
+                      _fetchCashHoldings();
+                    } else {
+                      final errorMessage = response['output']?['error'] ??
+                          response['output']?['message'] ??
+                          'Failed to withdraw cash';
+                      scaffoldMessenger.showSnackBar(
+                        SnackBar(content: Text('Withdrawal failed: $errorMessage'), backgroundColor: Colors.red, duration: const Duration(seconds: 5)),
+                      );
+                    }
+                  }
+                } catch (e) {
+                  if (mounted) {
+                    scaffoldMessenger.showSnackBar(
+                      SnackBar(content: Text('Error: ${e.toString()}'), backgroundColor: Colors.red),
+                    );
+                  }
+                }
+              },
+              style: ElevatedButton.styleFrom(
+                backgroundColor: UIConstants.colorDanger,
+                shape: RoundedRectangleBorder(
+                  borderRadius: BorderRadius.circular(UIConstants.textFieldBorderRadius),
+                ),
+              ),
+              child: const Text('Withdraw', style: TextStyle(color: Colors.white)),
+            ),
+          ],
+        );
+      },
+    );
   }
 }

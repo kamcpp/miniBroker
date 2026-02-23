@@ -24,7 +24,7 @@ class TradingPage extends StatefulWidget {
 }
 
 class _TradingPageState extends State<TradingPage> {
-  Future<void> _fetchTradeHistoryForAsset(String symbol, {int pageSize = 15}) async {
+  Future<void> _fetchTradeHistoryForSecurity(String symbol, {int pageSize = 15}) async {
     print('[TradeHistory] Fetching for symbol: $symbol, pageSize: $pageSize');
 
     setState(() {
@@ -32,11 +32,11 @@ class _TradingPageState extends State<TradingPage> {
       _isLoadingMoreTradeHistory = pageSize > 15; // Loading more data
     });
 
-    // Find the asset data for this symbol
-    final asset = _assets.firstWhere(
-      (asset) => asset['symbol'] == symbol,
+    // Find the security data for this symbol
+    final security = _securities.firstWhere(
+      (s) => s['symbol'] == symbol,
       orElse: () {
-        print('[TradeHistory] Asset not found for symbol: $symbol');
+        print('[TradeHistory] Security not found for symbol: $symbol');
         setState(() {
           _tradeHistory = [];
           _isLoadingTradeHistory = false;
@@ -46,12 +46,12 @@ class _TradingPageState extends State<TradingPage> {
       },
     );
 
-    if (asset.isEmpty) {
-      print('[TradeHistory] Asset is empty for symbol: $symbol');
+    if (security.isEmpty) {
+      print('[TradeHistory] Security is empty for symbol: $symbol');
       return;
     }
 
-    final securityIid = asset['iid']?.toString() ?? '';
+    final securityIid = security['iid']?.toString() ?? '';
     print('[TradeHistory] securityIid: $securityIid');
 
     if (securityIid.isEmpty) {
@@ -165,14 +165,14 @@ class _TradingPageState extends State<TradingPage> {
   void _loadMoreTradeHistory() {
     if (!_isLoadingMoreTradeHistory && _hasMoreTradeHistory && _selectedSymbol.isNotEmpty) {
       print('[TradeHistory] Loading more - increasing page size from $_tradeHistoryPageSize to ${_tradeHistoryPageSize + 10}');
-      _fetchTradeHistoryForAsset(_selectedSymbol, pageSize: _tradeHistoryPageSize + 10);
+      _fetchTradeHistoryForSecurity(_selectedSymbol, pageSize: _tradeHistoryPageSize + 10);
     }
   }
 
   void _resetAndFetchTradeHistory(String symbol) {
     _tradeHistoryPageSize = 15;
     _hasMoreTradeHistory = true;
-    _fetchTradeHistoryForAsset(symbol, pageSize: 15);
+    _fetchTradeHistoryForSecurity(symbol, pageSize: 15);
   }
 
   /// Fetch supported currencies from the server
@@ -227,12 +227,16 @@ class _TradingPageState extends State<TradingPage> {
               currencyValue = currency['issueCurrency'] as String? ?? '';
             }
 
+            // Also extract issueCurrency for matching with SecurityListing.currency
+            final issueCurrency = currency['issueCurrency'] as String? ?? '';
+
             if (currencyValue.isNotEmpty) {
               final currencyMap = {
                 'code': currencyValue,
                 'symbol': currencySymbol.isNotEmpty ? currencySymbol : currencyValue,
                 'display': currencyValue, // Show currencies > identifiers > ids[0] > value
                 'asset_id': currencyValue, // For compatibility with existing code
+                'issueCurrency': issueCurrency,
               };
               currencyData.add(currencyMap);
               continue;
@@ -282,13 +286,19 @@ class _TradingPageState extends State<TradingPage> {
         }
         
         setState(() {
+          _allSupportedCurrencies = currencyData;
           _supportedCurrencies = currencyData;
           if (_selectedCurrency.isEmpty && _supportedCurrencies.isNotEmpty) {
             _selectedCurrency = _supportedCurrencies.first;
           }
           _isLoadingSupportedCurrencies = false;
         });
-        
+
+        // If a security is already selected, filter currencies for it
+        if (_selectedSymbol.isNotEmpty) {
+          _updateCurrenciesForSecurity(_selectedSymbol);
+        }
+
         print('✅ Loaded ${_supportedCurrencies.length} supported currencies');
       } else {
         print('❌ Failed to fetch supported currencies: ${result['output']}');
@@ -302,6 +312,43 @@ class _TradingPageState extends State<TradingPage> {
         _isLoadingSupportedCurrencies = false;
       });
     }
+  }
+
+  /// Update the currency dropdown to only show currencies that have listings for the given security
+  void _updateCurrenciesForSecurity(String symbol) {
+    final availableCurrencies = _securityCurrencies[symbol] ?? {};
+    print('💱 Filtering currencies for $symbol: available=$availableCurrencies');
+    print('💱 All supported currency codes: ${_allSupportedCurrencies.map((c) => c['code']).toList()}');
+    print('💱 All supported currency issueCurrencies: ${_allSupportedCurrencies.map((c) => c['issueCurrency']).toList()}');
+
+    if (availableCurrencies.isEmpty) {
+      // No listing info available, show all currencies
+      return;
+    }
+
+    setState(() {
+      // Match by code, issueCurrency, or check if the code contains the listing currency
+      // SecurityListing.currency is e.g. "EUR", while CashToken code might be "EUR_THIRD_BROKER"
+      _supportedCurrencies = _allSupportedCurrencies
+          .where((c) {
+            final code = c['code'] ?? '';
+            final issueCurr = c['issueCurrency'] ?? '';
+            return availableCurrencies.contains(code) ||
+                   availableCurrencies.contains(issueCurr) ||
+                   availableCurrencies.any((ac) => code.startsWith(ac) || ac.startsWith(code));
+          })
+          .toList();
+
+      // Reset selected currency if it's no longer in the filtered list
+      if (_supportedCurrencies.isNotEmpty) {
+        final stillValid = _supportedCurrencies.any((c) => c['code'] == _selectedCurrency['code']);
+        if (!stillValid) {
+          _selectedCurrency = _supportedCurrencies.first;
+        }
+      }
+    });
+
+    print('💱 Filtered to ${_supportedCurrencies.length} currencies for $symbol');
   }
 
   /// Fetch markets from the server
@@ -380,7 +427,7 @@ class _TradingPageState extends State<TradingPage> {
         
         print('✅ Loaded ${_markets.length} markets');
 
-        // Load venues and securitys for the first market if available
+        // Load venues and securities for the first market if available
         if (_selectedMarket.isNotEmpty && _selectedMarket['id']!.isNotEmpty) {
           await _fetchVenues(_selectedMarket['id']!);
           _fetchMarketSecurities(_selectedMarket['id']!);
@@ -399,7 +446,7 @@ class _TradingPageState extends State<TradingPage> {
     }
   }
 
-  /// Fetch venues for a specific market
+  /// Fetch venues (optionally filtered by market)
   Future<void> _fetchVenues(String marketId) async {
     if (_isLoadingVenues) return;
 
@@ -410,9 +457,8 @@ class _TradingPageState extends State<TradingPage> {
     try {
       print('🏟️ Fetching venues for market: $marketId...');
 
-      final result = await realGrpcClient.getVenueList(
-        marketId: marketId,
-      ).timeout(
+      // Fetch all venues (no market filter) since the server may not support filtering by market
+      final result = await realGrpcClient.getVenueList().timeout(
         const Duration(seconds: 10),
         onTimeout: () {
           print('⏰ GetVenueList timed out after 10 seconds');
@@ -423,8 +469,11 @@ class _TradingPageState extends State<TradingPage> {
         },
       );
 
+      print('🏟️ GetVenueList result: success=${result['success']}, output keys=${result['output']?.keys?.toList()}');
+
       if (result['success'] == true && result['output'] != null) {
         final output = result['output'];
+        print('🏟️ GetVenueList output: $output');
         final venues = output['venues'] as List<dynamic>? ?? [];
 
         final venueData = <Map<String, String>>[];
@@ -497,14 +546,14 @@ class _TradingPageState extends State<TradingPage> {
     }
   }
 
-  /// Fetch securitys for a specific market
+  /// Fetch securities for a specific market
   Future<void> _fetchMarketSecurities(String marketId) async {
     try {
       print('🏪 Fetching securities for market: $marketId');
       
       setState(() {
         _isLoadingMarketSecurities = true;
-        _assets.clear(); // Clear existing assets
+        _securities.clear(); // Clear existing assets
         _selectedSymbol = ''; // Reset selected symbol
       });
       
@@ -523,13 +572,19 @@ class _TradingPageState extends State<TradingPage> {
         },
       );
       
+      print('🏪 GetSecurityListingList result: success=${result['success']}, output keys=${result['output']?.keys?.toList()}');
+
       if (result['success'] == true && result['output'] != null) {
         final output = result['output'] as Map<String, dynamic>;
-        final securitys = output['securityListings'] as List<dynamic>? ?? [];
+        print('🏪 GetSecurityListingList output keys: ${output.keys.toList()}');
+        final securities = output['securityListings'] as List<dynamic>? ?? [];
+        print('🏪 Found ${securities.length} security listings');
 
-        final List<Map<String, dynamic>> processedAssets = [];
+        final List<Map<String, dynamic>> processedSecurities = [];
+        final addedSymbols = <String>{}; // Track symbols to prevent duplicates
+        final securityCurrenciesMap = <String, Set<String>>{}; // symbol → currencies
 
-        for (final security in securitys) {
+        for (final security in securities) {
           if (security is Map<String, dynamic>) {
             // Extract fields from flat SecurityListing structure
             String symbol = security['symbol'] as String? ?? '';
@@ -553,31 +608,47 @@ class _TradingPageState extends State<TradingPage> {
             final iid = security['iid']?.toString() ?? '';
             final issueCurrency = security['currency'] as String? ?? security['issueCurrency']?.toString() ?? '';
 
-            if (symbol.isNotEmpty) {
-              final assetMap = {
+            final securityStatus = security['securityStatus'] as String? ?? '';
+
+            // Track which currencies each active symbol has listings for
+            if (symbol.isNotEmpty && issueCurrency.isNotEmpty && securityStatus.toUpperCase() == 'ACTIVE') {
+              securityCurrenciesMap.putIfAbsent(symbol, () => {}).add(issueCurrency);
+            }
+
+            // Only show active listings on the trading page
+            if (securityStatus.isNotEmpty && securityStatus.toUpperCase() != 'ACTIVE') {
+              continue;
+            }
+
+            if (symbol.isNotEmpty && !addedSymbols.contains(symbol)) {
+              addedSymbols.add(symbol);
+              final securityMap = {
                 'symbol': symbol,
                 'description': description,
                 'exchangePairId': iid,
                 'price': '0.00',
                 'change': '0.00',
                 'changePercent': '0.00%',
-                'coverAddress': 'https://picsum.photos/112/120?random=${processedAssets.length}',
+                'coverAddress': 'https://picsum.photos/112/120?random=${processedSecurities.length}',
                 'last': 0.0,
                 'orderbook': '',
                 'quoteTokenDecimal': 8, // Default decimal places
                 'issueCurrency': issueCurrency,
                 'iid': iid,
               };
-              processedAssets.add(assetMap);
+              processedSecurities.add(securityMap);
             }
           }
         }
+
+        print('🏪 Security currencies map: $securityCurrenciesMap');
         
         setState(() {
-          _assets.clear();
-          _assets.addAll(processedAssets);
-          if (_selectedSymbol.isEmpty && _assets.isNotEmpty) {
-            _selectedSymbol = _assets.first['symbol'];
+          _securities.clear();
+          _securities.addAll(processedSecurities);
+          _securityCurrencies = securityCurrenciesMap;
+          if (_selectedSymbol.isEmpty && _securities.isNotEmpty) {
+            _selectedSymbol = _securities.first['symbol'];
             // Load chart immediately when symbol is first set
             WidgetsBinding.instance.addPostFrameCallback((_) {
               _loadChartData(_selectedSymbol);
@@ -585,33 +656,38 @@ class _TradingPageState extends State<TradingPage> {
           }
           _isLoadingMarketSecurities = false;
         });
-        
-        print('✅ Loaded ${_assets.length} securitys for market $marketId');
-        if (_assets.isNotEmpty) {
-          print('📋 Sample securitys: ${_assets.take(3).map((a) => a['symbol']).toList()}');
+
+        // Filter currencies for the selected security
+        if (_selectedSymbol.isNotEmpty) {
+          _updateCurrenciesForSecurity(_selectedSymbol);
+        }
+
+        print('✅ Loaded ${_securities.length} securities for market $marketId');
+        if (_securities.isNotEmpty) {
+          print('📋 Sample securities: ${_securities.take(3).map((a) => a['symbol']).toList()}');
           
-          // Fetch last prices for the loaded securitys
-          for (final asset in _assets) {
-            _fetchLastPriceForAsset(asset);
+          // Fetch last prices for the loaded securities
+          for (final security in _securities) {
+            _fetchLastPriceForSecurity(security);
           }
           
-          // Load trade history and orderbook for the first asset
+          // Load trade history and orderbook for the first security
           if (_selectedSymbol.isNotEmpty) {
-            _fetchTradeHistoryForAsset(_selectedSymbol, pageSize: 15);
+            _fetchTradeHistoryForSecurity(_selectedSymbol, pageSize: 15);
             _fetchOrderbookData(_selectedSymbol);
           }
         }
       } else {
         print('❌ Failed to fetch securities for market $marketId: ${result['output']}');
         setState(() {
-          _assets.clear();
+          _securities.clear();
           _isLoadingMarketSecurities = false;
         });
       }
     } catch (e) {
-      print('❌ Error fetching securitys for market $marketId: $e');
+      print('❌ Error fetching securities for market $marketId: $e');
       setState(() {
-        _assets.clear();
+        _securities.clear();
         _isLoadingMarketSecurities = false;
       });
     }
@@ -655,22 +731,22 @@ class _TradingPageState extends State<TradingPage> {
       }
 
       if (_selectedSymbol.isEmpty) {
-        print('❌ No asset selected for portfolio');
+        print('❌ No security selected for portfolio');
         return;
       }
 
-      // Extract asset ID from selected symbol (e.g., "ETH/USD" -> "ETH")
-      final assetId = _selectedSymbol.split('/').first;
+      // Extract security ID from selected symbol (e.g., "ETH/USD" -> "ETH")
+      final securityId = _selectedSymbol.split('/').first;
 
       print('📨 GetAccountMarketPortfolio REQUEST:');
       print('   account_id: ${_cachedAccountId!}');
       print('   market_id: $marketId');
-      print('   asset_ids: [$assetId]');
+      print('   asset_ids: [$securityId]');
 
       final portfolioResponse = await realGrpcClient.getAccountMarketPortfolio(
         accountId: _cachedAccountId!,
         marketId: marketId,
-        assetIds: [assetId],
+        securityIds: [securityId],
       ).timeout(const Duration(seconds: 10));
 
       print('📬 GetAccountMarketPortfolio RESPONSE: ${portfolioResponse.toString()}');
@@ -688,18 +764,18 @@ class _TradingPageState extends State<TradingPage> {
           if (portfolio['balances'] != null) {
             final balances = portfolio['balances'] as Map<String, dynamic>? ?? {};
             print('💰 Found balances: $balances');
-            balance = balances[assetId]?.toString() ?? '0';
-            print('✅ Extracted balance for $assetId: $balance');
+            balance = balances[securityId]?.toString() ?? '0';
+            print('✅ Extracted balance for $securityId: $balance');
           }
         } else if (output['balances'] != null) {
           final balances = output['balances'] as Map<String, dynamic>? ?? {};
-          balance = balances[assetId]?.toString() ?? '0';
+          balance = balances[securityId]?.toString() ?? '0';
         } else if (output['balance'] != null) {
           balance = output['balance'].toString();
         } else if (output['holdings'] != null) {
           final holdings = output['holdings'] as List<dynamic>? ?? [];
           for (final holding in holdings) {
-            if (holding is Map<String, dynamic> && holding['asset_id'] == assetId) {
+            if (holding is Map<String, dynamic> && holding['asset_id'] == securityId) {
               balance = holding['balance']?.toString() ?? '0';
               break;
             }
@@ -710,7 +786,7 @@ class _TradingPageState extends State<TradingPage> {
           _availableBalance = balance;
         });
 
-        print('✅ Updated available balance for $assetId: $balance (market: $marketId)');
+        print('✅ Updated available balance for $securityId: $balance (market: $marketId)');
       } else {
         print('❌ Failed to fetch account market portfolio: ${portfolioResponse['output']}');
         setState(() {
@@ -725,9 +801,9 @@ class _TradingPageState extends State<TradingPage> {
     }
   }
   
-  final List<Map<String, dynamic>> _assets = [];
+  final List<Map<String, dynamic>> _securities = [];
   List<Map<String, dynamic>> _tradeHistory = [];
-  String _selectedSymbol = '';  // Will be set when assets are loaded
+  String _selectedSymbol = '';  // Will be set when securities are loaded
   String _orderType = 'Limit';
   String _expiryPeriod = '1 Month'; // Add expiry period variable
   String _replaceExpiryPeriod = 'Select new expiration time'; // Add replace order expiry period variable
@@ -746,8 +822,12 @@ class _TradingPageState extends State<TradingPage> {
 
   // Supported currencies data
   List<Map<String, String>> _supportedCurrencies = [];
+  List<Map<String, String>> _allSupportedCurrencies = []; // All currencies from CashTokenService
   Map<String, String> _selectedCurrency = {};
   bool _isLoadingSupportedCurrencies = false;
+
+  // Map of security symbol → set of currencies it has listings for
+  Map<String, Set<String>> _securityCurrencies = {};
   
   // Trade history pagination
   int _currentTradeHistoryPage = 1;
@@ -764,12 +844,11 @@ class _TradingPageState extends State<TradingPage> {
   final TextEditingController _newQuantityController = TextEditingController();
   final TextEditingController _newPriceController = TextEditingController();
   final TextEditingController _replaceReasonController = TextEditingController();
-  final ScrollController _scrollController = ScrollController();
   
   // Cash holdings data
   bool _isLoadingCashHoldings = false;
   String _buyingPower = '0'; // Default fallback value
-  String _availableBalance = '0'; // For sell orders - available asset balance
+  String _availableBalance = '0'; // For sell orders - available security balance
   String? _cachedAccountId; // Cache account ID for entire session (doesn't change until logout)
   Map<String, dynamic>? _cachedHoldings; // Cache all holdings data
 
@@ -1638,7 +1717,7 @@ class _TradingPageState extends State<TradingPage> {
     try {
       print('💰 Calculating order fees...');
 
-      final securityId = _selectedSymbol.split('/').first; // Extract asset part from symbol
+      final securityId = _selectedSymbol.split('/').first; // Extract security part from symbol
       final orderTypeApi = _orderType == 'Limit' ? 'LIMIT' : 'MARKET';
       final sideApi = _isBuySelected ? 'BUY' : 'SELL';
       final quantity = _quantityController.text.trim();
@@ -1697,10 +1776,10 @@ class _TradingPageState extends State<TradingPage> {
     }
   }
 
-  // Fetch last price for asset using exchangePairId
-  Future<void> _fetchLastPriceForAsset(Map<String, dynamic> asset) async {
-    final exchangePairId = asset['exchangePairId']?.toString() ?? '';
-    final quoteTokenDecimal = asset['quoteTokenDecimal'] ?? 0;
+  // Fetch last price for security using exchangePairId
+  Future<void> _fetchLastPriceForSecurity(Map<String, dynamic> security) async {
+    final exchangePairId = security['exchangePairId']?.toString() ?? '';
+    final quoteTokenDecimal = security['quoteTokenDecimal'] ?? 0;
     if (exchangePairId.isEmpty) return;
     try {
       final response = await http.get(
@@ -1718,8 +1797,8 @@ class _TradingPageState extends State<TradingPage> {
           if (lastTradePriceRaw != null) {
             final lastTradePrice = double.tryParse(lastTradePriceRaw.toString()) ?? 0.0;
             final lastPrice = lastTradePrice / (pow(10, quoteTokenDecimal));
-            asset['last'] = lastPrice;
-            asset['price'] = '${lastPrice.toStringAsFixed(2)}';
+            security['last'] = lastPrice;
+            security['price'] = '${lastPrice.toStringAsFixed(2)}';
           }
         }
       }
@@ -1729,7 +1808,7 @@ class _TradingPageState extends State<TradingPage> {
   }
   Future<void> _fetchPairsFromAPI() async {
     // Only skip if we already have data AND we've already requested it
-    if (_hasRequestedSecurityDefinitions && _assets.isNotEmpty) {
+    if (_hasRequestedSecurityDefinitions && _securities.isNotEmpty) {
       return; // Already requested and have data
     }
     
@@ -1759,7 +1838,7 @@ class _TradingPageState extends State<TradingPage> {
           
           print('✅ Received ${pairs.length} trading pairs from API');
           
-          _assets.clear(); // Clear any existing assets
+          _securities.clear(); // Clear any existing assets
           List<Future<void>> priceFutures = [];
           for (final pair in pairs) {
             final symbol = pair['symbol']?.toString() ?? '';
@@ -1770,12 +1849,12 @@ class _TradingPageState extends State<TradingPage> {
             final exchangePairId = pair['exchangePairId']?.toString() ?? '';
             final quoteTokenDecimal = int.tryParse(pair['quoteTokenDecimal']?.toString() ?? '0') ?? 0;
             if (symbol.isNotEmpty) {
-              final asset = {
+              final securityItem = {
                 'symbol': symbol,
                 'name': title,
                 'title': title,
                 'logoAddress': logoAddress,
-                'coverAddress': coverAddress.isNotEmpty ? coverAddress : 'https://picsum.photos/112/120?random=${_assets.length}',
+                'coverAddress': coverAddress.isNotEmpty ? coverAddress : 'https://picsum.photos/112/120?random=${_securities.length}',
                 'orderbook': orderbook,
                 'exchangePairId': exchangePairId,
                 'quoteTokenDecimal': quoteTokenDecimal,
@@ -1784,10 +1863,10 @@ class _TradingPageState extends State<TradingPage> {
                 'changeColor': Colors.grey,
                 'last': null,
               };
-              _assets.add(asset);
-              // Fetch last price for this asset
+              _securities.add(securityItem);
+              // Fetch last price for this security
               if (exchangePairId.isNotEmpty) {
-                priceFutures.add(_fetchLastPriceForAsset(asset));
+                priceFutures.add(_fetchLastPriceForSecurity(securityItem));
               }
             }
           }
@@ -1795,8 +1874,8 @@ class _TradingPageState extends State<TradingPage> {
           await Future.wait(priceFutures);
           setState(() {
             // Update selected symbol if this is the first time or current is empty
-            if (_selectedSymbol.isEmpty && _assets.isNotEmpty) {
-              _selectedSymbol = _assets.first['symbol'];
+            if (_selectedSymbol.isEmpty && _securities.isNotEmpty) {
+              _selectedSymbol = _securities.first['symbol'];
               WidgetsBinding.instance.addPostFrameCallback((_) {
                 Future.delayed(const Duration(milliseconds: 500), () {
                   if (mounted) {
@@ -1813,7 +1892,7 @@ class _TradingPageState extends State<TradingPage> {
           
           // Removed notification for loaded pairs count to reduce UI noise
           
-          print('🎉 Successfully loaded ${_assets.length} trading pairs');
+          print('🎉 Successfully loaded ${_securities.length} trading pairs');
         } else {
           throw Exception('API response indicates failure: ${jsonData['error'] ?? 'Unknown error'}');
         }
@@ -1836,8 +1915,8 @@ class _TradingPageState extends State<TradingPage> {
       
       // Fallback: Add some default pairs if API fails
       setState(() {
-        if (_assets.isEmpty) {
-          _assets.addAll([
+        if (_securities.isEmpty) {
+          _securities.addAll([
             {
               'symbol': 'BTC-USD',
               'name': 'Bitcoin / US Dollar',
@@ -1857,7 +1936,7 @@ class _TradingPageState extends State<TradingPage> {
           ]);
           
           if (_selectedSymbol.isEmpty) {
-            _selectedSymbol = _assets.first['symbol'];
+            _selectedSymbol = _securities.first['symbol'];
             // Load chart immediately when symbol is first set
             WidgetsBinding.instance.addPostFrameCallback((_) {
               _loadChartData(_selectedSymbol);
@@ -2119,11 +2198,11 @@ class _TradingPageState extends State<TradingPage> {
   Future<void> _fetchSellOrders(String symbol, {int pageSize = 5, bool append = false}) async {
     print('📊 Fetching sell orders for symbol: $symbol, pageSize: $pageSize');
 
-    // Find the asset data for this symbol
-    final asset = _assets.firstWhere(
-      (asset) => asset['symbol'] == symbol,
+    // Find the security data for this symbol
+    final security = _securities.firstWhere(
+      (s) => s['symbol'] == symbol,
       orElse: () {
-        print('[Orderbook] Asset not found for symbol: $symbol');
+        print('[Orderbook] Security not found for symbol: $symbol');
         setState(() {
           if (!append) _sellOrders = [];
           _isLoadingSellOrders = false;
@@ -2132,12 +2211,12 @@ class _TradingPageState extends State<TradingPage> {
       },
     );
 
-    if (asset.isEmpty) {
-      print('❌ Asset not found for sell orders: $symbol');
+    if (security.isEmpty) {
+      print('❌ Security not found for sell orders: $symbol');
       return;
     }
 
-    final securityIid = asset['iid']?.toString() ?? '';
+    final securityIid = security['iid']?.toString() ?? '';
 
     print('[Orderbook-Sell] $symbol: securityIid="$securityIid"');
 
@@ -2244,11 +2323,11 @@ class _TradingPageState extends State<TradingPage> {
   Future<void> _fetchBuyOrders(String symbol, {int pageSize = 5, bool append = false}) async {
     print('📊 Fetching buy orders for symbol: $symbol, pageSize: $pageSize');
 
-    // Find the asset data for this symbol
-    final asset = _assets.firstWhere(
-      (asset) => asset['symbol'] == symbol,
+    // Find the security data for this symbol
+    final security = _securities.firstWhere(
+      (s) => s['symbol'] == symbol,
       orElse: () {
-        print('[Orderbook] Asset not found for symbol: $symbol');
+        print('[Orderbook] Security not found for symbol: $symbol');
         setState(() {
           if (!append) _buyOrders = [];
           _isLoadingBuyOrders = false;
@@ -2257,12 +2336,12 @@ class _TradingPageState extends State<TradingPage> {
       },
     );
 
-    if (asset.isEmpty) {
-      print('❌ Asset not found for buy orders: $symbol');
+    if (security.isEmpty) {
+      print('❌ Security not found for buy orders: $symbol');
       return;
     }
 
-    final securityIid = asset['iid']?.toString() ?? '';
+    final securityIid = security['iid']?.toString() ?? '';
 
     print('[Orderbook-Buy] $symbol: securityIid="$securityIid"');
 
@@ -2527,105 +2606,9 @@ class _TradingPageState extends State<TradingPage> {
     _newQuantityController.dispose();
     _newPriceController.dispose();
     _replaceReasonController.dispose();
-    _scrollController.dispose();
     super.dispose();
   }
-  
-  void _scrollLeft() async {
-    if (_assets.isNotEmpty) {
-      final currentIndex = _assets.indexWhere((asset) => asset['symbol'] == _selectedSymbol);
-      final newIndex = currentIndex > 0 ? currentIndex - 1 : _assets.length - 1;
 
-      setState(() {
-        _selectedSymbol = _assets[newIndex]['symbol'];
-      });
-
-  // Fetch chart data for newly selected symbol
-  _loadChartData(_assets[newIndex]['symbol']);
-  // Fetch trade history for newly selected symbol
-  _resetAndFetchTradeHistory(_assets[newIndex]['symbol']);
-  // Fetch orderbook data for newly selected symbol
-  _fetchOrderbookData(_assets[newIndex]['symbol']);
-  // Update portfolio for sell orders if currently in sell mode
-  // Asset has changed, so asset_ids parameter changes
-  if (!_isBuySelected) {
-    await _fetchAccountMarketPortfolioForMarket(_selectedMarket['id'] ?? '');
-  }
-      
-      // Scroll to center the selected asset (162px width + 16px margin = 178px per card)
-      _scrollToIndex(newIndex);
-    }
-  }
-  
-  void _scrollRight() async {
-    if (_assets.isNotEmpty) {
-      final currentIndex = _assets.indexWhere((asset) => asset['symbol'] == _selectedSymbol);
-      final newIndex = currentIndex < _assets.length - 1 ? currentIndex + 1 : 0;
-
-      setState(() {
-        _selectedSymbol = _assets[newIndex]['symbol'];
-      });
-
-  // Fetch chart data for newly selected symbol
-  _loadChartData(_assets[newIndex]['symbol']);
-  // Fetch trade history for newly selected symbol
-  _resetAndFetchTradeHistory(_assets[newIndex]['symbol']);
-  // Fetch orderbook data for newly selected symbol
-  _fetchOrderbookData(_assets[newIndex]['symbol']);
-  // Update portfolio for sell orders if currently in sell mode
-  // Asset has changed, so asset_ids parameter changes
-  if (!_isBuySelected) {
-    await _fetchAccountMarketPortfolioForMarket(_selectedMarket['id'] ?? '');
-  }
-      
-      // Scroll to center the selected asset (162px width + 16px margin = 178px per card)
-      _scrollToIndex(newIndex);
-    }
-  }
-  
-  void _scrollToSelectedAsset() {
-    if (_assets.isNotEmpty && _scrollController.hasClients) {
-      final currentIndex = _assets.indexWhere((asset) => asset['symbol'] == _selectedSymbol);
-      if (currentIndex >= 0) {
-        // Add a small delay to ensure the UI has updated
-        Future.delayed(const Duration(milliseconds: 50), () {
-          _scrollToIndex(currentIndex);
-        });
-      }
-    }
-  }
-  
-  void _scrollToIndex(int index) {
-    if (_scrollController.hasClients) {
-      // Calculate position to center the selected asset
-      final cardWidth = 162.0; // Width of each card
-      final cardMargin = 16.0; // margin between cards (only right margin)
-      final totalCardWidth = cardWidth + cardMargin;
-      
-      // Get the available width of the ListView viewport
-      final viewportWidth = _scrollController.position.viewportDimension;
-      
-      // Calculate the scroll offset to center the card
-      // Position of the left edge of the card in the ListView content
-      final cardLeftPosition = index * totalCardWidth;
-      
-      // To center the card:
-      // We want the card center to be at the center of the ListView viewport
-      // Card center position = cardLeftPosition + (cardWidth / 2)
-      // Viewport center = viewportWidth / 2
-      // Required scroll offset = cardLeftPosition + (cardWidth / 2) - (viewportWidth / 2)
-      final targetOffset = cardLeftPosition + (cardWidth / 2) - (viewportWidth / 2);
-      
-      print('📍 Centering card $index: cardLeft=$cardLeftPosition, viewportWidth=$viewportWidth, targetOffset=$targetOffset');
-      
-      _scrollController.animateTo(
-        targetOffset.clamp(0.0, _scrollController.position.maxScrollExtent),
-        duration: const Duration(milliseconds: 400),
-        curve: Curves.easeInOut,
-      );
-    }
-  }
-  
 
   @override
   Widget build(BuildContext context) {
@@ -2676,7 +2659,7 @@ class _TradingPageState extends State<TradingPage> {
                               themeService: themeService,
                             ),
 
-                            // Middle Panel - Asset Selection and Chart
+                            // Middle Panel - Security Selection and Chart
                             Expanded(
                               child: LayoutBuilder(
                                 builder: (context, constraints) {
@@ -2690,10 +2673,10 @@ class _TradingPageState extends State<TradingPage> {
 
                                   return Column(
                                     children: [
-                                      // Asset Selection at the top of middle panel
+                                      // Security Selection at the top of middle panel
                                       Container(
                                         height: _marketOverviewHeight,
-                                        child: _buildAssetSection(themeService),
+                                        child: _buildSecuritySection(themeService),
                                       ),
 
                                       // Horizontal Splitter between Market and Chart
@@ -2866,9 +2849,9 @@ class _TradingPageState extends State<TradingPage> {
     );
   }
 
-  // Helper method to get selected asset symbol
-  String _getSelectedAssetSymbol() {
-    if (_assets.isEmpty || _selectedSymbol.isEmpty) {
+  // Helper method to get selected security symbol
+  String _getSelectedSecuritySymbol() {
+    if (_securities.isEmpty || _selectedSymbol.isEmpty) {
       return ''; // Default fallback
     }
     
@@ -2932,7 +2915,7 @@ class _TradingPageState extends State<TradingPage> {
     }
   }
 
-  Widget _buildAssetSection(ThemeService themeService) {
+  Widget _buildSecuritySection(ThemeService themeService) {
     final isDarkTheme = themeService.isDarkTheme;
     return Container(
       padding: UIConstants.paddingStandard,
@@ -2983,7 +2966,7 @@ class _TradingPageState extends State<TradingPage> {
                           });
                           // Load venues for the selected market
                           await _fetchVenues(newValue['id']!);
-                          // Load securitys for the selected market
+                          // Load securities for the selected market
                           await _fetchMarketSecurities(newValue['id']!);
                           // Update portfolio for sell orders if currently in sell mode
                           // Use the newValue market ID to ensure we're using the correct market
@@ -3047,7 +3030,7 @@ class _TradingPageState extends State<TradingPage> {
                           setState(() {
                             _selectedVenue = newValue;
                           });
-                          // TODO: Filter securitys by venue if needed
+                          // TODO: Filter securities by venue if needed
                           print('📍 Selected venue: ${newValue['display']} (${newValue['id']})');
                         }
                       },
@@ -3074,233 +3057,70 @@ class _TradingPageState extends State<TradingPage> {
             ],
           ),
 
-          const SizedBox(height: 10), // Space between dropdown and asset boxes
-          Expanded(
-            child: _isLoadingMarketSecurities 
-                ? Center(
-                    child: Column(
-                      mainAxisAlignment: MainAxisAlignment.center,
-                      children: [
-                        CircularProgressIndicator(
-                          valueColor: AlwaysStoppedAnimation<Color>(
-                            isDarkTheme ? Colors.white : const Color(0xFF1a1754),
-                          ),
-                        ),
-                        SizedBox(height: UIConstants.spacingMd),
-                        Text(
-                          'Loading...',
-                          style: TextStyle(
-                            fontSize: UIConstants.textFieldFontSize,
-                            color: isDarkTheme ? Colors.grey[400] : Colors.grey[600],
-                          ),
-                        ),
-                      ],
-                    ),
-                  )
-                : _assets.isEmpty 
-                    ? Center(
-                        child: Column(
-                          mainAxisAlignment: MainAxisAlignment.center,
-                          children: [
-                            Icon(
-                              Icons.search_off,
-                              size: 48,
-                              color: isDarkTheme ? Colors.grey[400] : Colors.grey[600],
-                            ),
-                            SizedBox(height: UIConstants.spacingSm),
-                            Text(
-                              'No asset found',
-                              style: TextStyle(
-                                fontSize: UIConstants.textFieldFontSize,
-                                color: isDarkTheme ? Colors.grey[400] : Colors.grey[600],
-                              ),
-                            ),
-                          ],
-                        ),
-                      )
-                : SizedBox(
-                    height: 70,
-                    child: Stack(
-                      children: [
-                        // Main scrollable list
-                        ListView.builder(
-                          controller: _scrollController,
-                          scrollDirection: Axis.horizontal,
-                          padding: const EdgeInsets.symmetric(horizontal: 50),
-                          itemCount: _assets.length,
-                          itemBuilder: (context, index) {
-                            final asset = _assets[index];
-                            final isSelected = asset['symbol'] == _selectedSymbol;
-                            
-                            return Container(
-                              width: 120,
-                              margin: const EdgeInsets.only(right: 12),
-                              child: MouseRegion(
-                                cursor: SystemMouseCursors.click,
-                                child: GestureDetector(
-                                  onTap: () async {
-                                    setState(() {
-                                      _selectedSymbol = asset['symbol'];
-                                    });
-                                    _loadChartData(asset['symbol']);
-                                    _resetAndFetchTradeHistory(asset['symbol']);
-                                    _fetchOrderbookData(asset['symbol']);
-                                    _calculateOrderFees();
-                                    // Update portfolio for sell orders if currently in sell mode
-                                    // Asset has changed, so asset_ids parameter changes
-                                    if (!_isBuySelected) {
-                                      await _fetchAccountMarketPortfolioForMarket(_selectedMarket['id'] ?? '');
-                                    }
-                                  },
-                                  child: Container(
-                                    padding: UIConstants.paddingStandard,
-                                    decoration: BoxDecoration(
-                                      border: isSelected 
-                                          ? Border.all(color: const Color(0xFF00b8fb), width: 2)
-                                          : Border.all(
-                                              color: isDarkTheme ? Colors.grey[700]! : Colors.grey[300]!,
-                                              width: 1,
-                                            ),
-                                      borderRadius: BorderRadius.circular(UIConstants.textFieldBorderRadius),
-                                      color: isSelected 
-                                          ? (isDarkTheme ? const Color(0xFF00b8fb).withOpacity(0.1) : const Color(0xFF00b8fb).withOpacity(0.05))
-                                          : (isDarkTheme ? Colors.black : Colors.white),
-                                    ),
-                                  child: Column(
-                                    crossAxisAlignment: CrossAxisAlignment.start,
-                                    mainAxisSize: MainAxisSize.min,
-                                    children: [
-                                      // Value (symbol)
-                                      Text(
-                                        asset['symbol'],
-                                        style: TextStyle(
-                                          fontSize: UIConstants.textFieldFontSize,
-                                          fontWeight: UIConstants.fontWeightMedium,
-                                          color: isSelected
-                                              ? (isDarkTheme ? Colors.white : Colors.black)
-                                              : Colors.grey,
-                                        ),
-                                        maxLines: 1,
-                                        overflow: TextOverflow.ellipsis,
-                                      ),
-                                      const SizedBox(height: UIConstants.spacingSm),
-                                      // Description
-                                      Text(
-                                        asset['description'] ?? '',
-                                        style: TextStyle(
-                                          fontSize: 7,
-                                          color: isDarkTheme ? Colors.grey[400] : Colors.grey[600],
-                                        ),
-                                        maxLines: 2,
-                                        overflow: TextOverflow.ellipsis,
-                                      ),
-                                    ],
-                                  ),
-                                ),
-                              ),
-                            ),
-                            );
-                          },
-                        ),
-                        
-                        // Left fade and button
-                        Positioned(
-                          left: 0,
-                          top: 0,
-                          bottom: 0,
-                          child: Container(
-                            width: 50,
-                            decoration: BoxDecoration(
-                              gradient: LinearGradient(
-                                begin: Alignment.centerLeft,
-                                end: Alignment.centerRight,
-                                colors: [
-                                  isDarkTheme ? const Color(0xFF1e1e1e) : Colors.grey[50]!,
-                                  (isDarkTheme ? const Color(0xFF1e1e1e) : Colors.grey[50]!).withOpacity(0),
-                                ],
-                              ),
-                            ),
-                            child: Center(
-                              child: MouseRegion(
-                                cursor: SystemMouseCursors.click,
-                                child: GestureDetector(
-                                  onTap: _scrollLeft,
-                                  child: Container(
-                                  width: 32,
-                                  height: 32,
-                                  decoration: BoxDecoration(
-                                    color: isDarkTheme ? Colors.grey[800] : Colors.white,
-                                    borderRadius: BorderRadius.circular(UIConstants.borderRadiusLg),
-                                    boxShadow: [
-                                      BoxShadow(
-                                        color: Colors.black.withOpacity(0.1),
-                                        blurRadius: 4,
-                                        offset: const Offset(0, 2),
-                                      ),
-                                    ],
-                                  ),
-                                  child: Icon(
-                                    Icons.chevron_left,
-                                    color: isDarkTheme ? Colors.white : Colors.black,
-                                    size: 20,
-                                  ),
-                                ),
-                              ),
-                            ),
-                            ),
-                          ),
-                        ),
-                        
-                        // Right fade and button
-                        Positioned(
-                          right: 0,
-                          top: 0,
-                          bottom: 0,
-                          child: Container(
-                            width: 50,
-                            decoration: BoxDecoration(
-                              gradient: LinearGradient(
-                                begin: Alignment.centerRight,
-                                end: Alignment.centerLeft,
-                                colors: [
-                                  isDarkTheme ? const Color(0xFF1e1e1e) : Colors.grey[50]!,
-                                  (isDarkTheme ? const Color(0xFF1e1e1e) : Colors.grey[50]!).withOpacity(0),
-                                ],
-                              ),
-                            ),
-                            child: Center(
-                              child: MouseRegion(
-                                cursor: SystemMouseCursors.click,
-                                child: GestureDetector(
-                                  onTap: _scrollRight,
-                                  child: Container(
-                                  width: 32,
-                                  height: 32,
-                                  decoration: BoxDecoration(
-                                    color: isDarkTheme ? Colors.grey[800] : Colors.white,
-                                    borderRadius: BorderRadius.circular(UIConstants.borderRadiusLg),
-                                    boxShadow: [
-                                      BoxShadow(
-                                        color: Colors.black.withOpacity(0.1),
-                                        blurRadius: 4,
-                                        offset: const Offset(0, 2),
-                                      ),
-                                    ],
-                                  ),
-                                  child: Icon(
-                                    Icons.chevron_right,
-                                    color: isDarkTheme ? Colors.white : Colors.black,
-                                    size: 20,
-                                  ),
-                                ),
-                              ),
-                            ),
-                            ),
-                          ),
-                        ),
-                      ],
+          const SizedBox(height: 10), // Space between rows
+
+          // Security Row - Label and Dropdown on same line
+          Row(
+            children: [
+              SizedBox(
+                width: 60,
+                child: Text(
+                  'Security',
+                  style: TextStyle(
+                    fontSize: UIConstants.textFieldFontSize,
+                    fontWeight: UIConstants.fontWeightNormal,
+                    color: isDarkTheme ? Colors.white : Colors.black,
+                  ),
+                ),
+              ),
+              Expanded(
+                child: _HoverDropdownField(
+                  isDarkTheme: isDarkTheme,
+                  child: DropdownButtonHideUnderline(
+                    child: DropdownButton<String>(
+                      value: _securities.isEmpty
+                          ? null
+                          : (_securities.any((s) => s['symbol'] == _selectedSymbol)
+                              ? _selectedSymbol
+                              : _securities.isNotEmpty ? _securities.first['symbol'] as String : null),
+                      isExpanded: true,
+                      onChanged: _securities.isEmpty ? null : (String? newValue) async {
+                        if (newValue != null) {
+                          setState(() {
+                            _selectedSymbol = newValue;
+                          });
+                          _updateCurrenciesForSecurity(newValue);
+                          _loadChartData(newValue);
+                          _resetAndFetchTradeHistory(newValue);
+                          _fetchOrderbookData(newValue);
+                          _calculateOrderFees();
+                          if (!_isBuySelected) {
+                            await _fetchAccountMarketPortfolioForMarket(_selectedMarket['id'] ?? '');
+                          }
+                        }
+                      },
+                      dropdownColor: isDarkTheme ? const Color(0xFF1e1e1e) : Colors.white,
+                      style: TextStyle(
+                        color: isDarkTheme ? Colors.white : Colors.black,
+                        fontSize: UIConstants.textFieldFontSize,
+                      ),
+                      items: _securities.isEmpty
+                          ? [DropdownMenuItem<String>(
+                              value: '',
+                              child: Text(_isLoadingMarketSecurities ? 'Loading securities...' : 'No securities available'),
+                            )]
+                          : _securities.map<DropdownMenuItem<String>>((security) {
+                              final symbol = security['symbol'] as String;
+                              return DropdownMenuItem<String>(
+                                value: symbol,
+                                child: Text(symbol),
+                              );
+                            }).toList(),
                     ),
                   ),
+                ),
+              ),
+            ],
           ),
         ],
       ),
@@ -5408,7 +5228,7 @@ class _TradingPageState extends State<TradingPage> {
                               ),
                             ),
                       const SizedBox(width: 4),
-                      (!_isBuySelected && _assets.isEmpty)
+                      (!_isBuySelected && _securities.isEmpty)
                           ? SizedBox(
                               width: 14,
                               height: 14,
@@ -5421,7 +5241,7 @@ class _TradingPageState extends State<TradingPage> {
                             )
                           : (!_isBuySelected
                               ? Text(
-                                  _getSelectedAssetSymbol(),
+                                  _getSelectedSecuritySymbol(),
                                   style: TextStyle(
                                     fontSize: UIConstants.fontSizeMd,
                                     fontWeight: UIConstants.fontWeightMedium,
@@ -5485,7 +5305,7 @@ class _TradingPageState extends State<TradingPage> {
                           ),
                           const SizedBox(width: UIConstants.spacingSm),
                         ],
-                        _assets.isEmpty
+                        _securities.isEmpty
                             ? SizedBox(
                                 width: 14,
                                 height: 14,
@@ -5497,7 +5317,7 @@ class _TradingPageState extends State<TradingPage> {
                                 ),
                               )
                             : Text(
-                                _getSelectedAssetSymbol(),
+                                _getSelectedSecuritySymbol(),
                                 style: TextStyle(
                                   color: isDarkTheme ? Colors.white : Colors.black,
                                   fontSize: UIConstants.textFieldFontSize,
