@@ -412,6 +412,7 @@ class _LoginPageState extends State<LoginPage> with TickerProviderStateMixin {
                         fillColor: Colors.white.withOpacity(0.9),
                         prefixIcon: const Icon(Icons.lock, color: Colors.grey, size: UIConstants.textFieldIconSize),
                         suffixIcon: IconButton(
+                          focusNode: FocusNode(skipTraversal: true),
                           icon: Icon(
                             _isPasswordVisible ? Icons.visibility : Icons.visibility_off,
                             color: Colors.grey,
@@ -438,6 +439,8 @@ class _LoginPageState extends State<LoginPage> with TickerProviderStateMixin {
                           borderSide: const BorderSide(color: Color(0xFF1a1754), width: 2),
                         ),
                       ),
+                      textInputAction: TextInputAction.go,
+                      onFieldSubmitted: (_) => _isLoading ? null : _handleLogin(),
                       validator: (value) {
                         if (value == null || value.isEmpty) {
                           return 'Please enter your password';
@@ -606,6 +609,7 @@ class _LoginPageState extends State<LoginPage> with TickerProviderStateMixin {
               fillColor: Colors.white.withOpacity(0.9),
               prefixIcon: const Icon(Icons.lock, color: Colors.grey, size: UIConstants.textFieldIconSize),
               suffixIcon: IconButton(
+                focusNode: FocusNode(skipTraversal: true),
                 icon: Icon(
                   _isSignupPasswordVisible ? Icons.visibility : Icons.visibility_off,
                   color: Colors.grey,
@@ -655,6 +659,7 @@ class _LoginPageState extends State<LoginPage> with TickerProviderStateMixin {
               fillColor: Colors.white.withOpacity(0.9),
               prefixIcon: const Icon(Icons.lock_outline, color: Colors.grey, size: UIConstants.textFieldIconSize),
               suffixIcon: IconButton(
+                focusNode: FocusNode(skipTraversal: true),
                 icon: Icon(
                   _isConfirmPasswordVisible ? Icons.visibility : Icons.visibility_off,
                   color: Colors.grey,

@@ -173,6 +173,7 @@ class _SignupPageState extends State<SignupPage> {
                         hintStyle: const TextStyle(color: Colors.grey),
                         prefixIcon: const Icon(Icons.lock),
                         suffixIcon: IconButton(
+                          focusNode: FocusNode(skipTraversal: true),
                           icon: Icon(
                             _isPasswordVisible ? Icons.visibility : Icons.visibility_off,
                           ),
@@ -215,11 +216,14 @@ class _SignupPageState extends State<SignupPage> {
                     TextFormField(
                       controller: _confirmPasswordController,
                       obscureText: !_isConfirmPasswordVisible,
+                      textInputAction: TextInputAction.go,
+                      onFieldSubmitted: (_) => _isLoading ? null : _handleSignup(),
                       decoration: InputDecoration(
                         hintText: 'Confirm your password',
                         hintStyle: const TextStyle(color: Colors.grey),
                         prefixIcon: const Icon(Icons.lock_outline),
                         suffixIcon: IconButton(
+                          focusNode: FocusNode(skipTraversal: true),
                           icon: Icon(
                             _isConfirmPasswordVisible ? Icons.visibility : Icons.visibility_off,
                           ),

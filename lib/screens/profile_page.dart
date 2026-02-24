@@ -293,6 +293,7 @@ class _ProfilePageState extends State<ProfilePage> {
                 contentPadding: UIConstants.textFieldPadding,
                         isDense: true,
                 suffixIcon: IconButton(
+                  focusNode: FocusNode(skipTraversal: true),
                   icon: Icon(_isPasswordVisible ? Icons.visibility_off : Icons.visibility),
                   onPressed: () => setState(() => _isPasswordVisible = !_isPasswordVisible),
                 ),

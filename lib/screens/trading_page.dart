@@ -697,6 +697,33 @@ class _TradingPageState extends State<TradingPage> {
     }
   }
 
+  /// Extract available balance from a holding entry.
+  /// Proto Holdings has total_units and stash_units (map). No availableUnits field.
+  String _getAvailableFromHolding(Map<String, dynamic> holdingData) {
+    final stashUnits = holdingData['stashUnits'] as Map<String, dynamic>? ?? {};
+    if (stashUnits.containsKey('available')) {
+      return stashUnits['available']?.toString() ?? '0';
+    }
+    return holdingData['totalUnits']?.toString() ?? '0';
+  }
+
+  /// Find a holding entry by currency code, trying direct key lookup first,
+  /// then scanning entries for a matching currencyCode field.
+  Map<String, dynamic> _findHoldingForCurrency(Map<String, dynamic> holdings, String currencyCode) {
+    // Direct key lookup
+    if (holdings.containsKey(currencyCode)) {
+      return holdings[currencyCode] as Map<String, dynamic>? ?? {};
+    }
+    // Scan entries for matching currencyCode field (in case map is keyed by IID)
+    for (final entry in holdings.entries) {
+      final data = entry.value as Map<String, dynamic>? ?? {};
+      if (data['currencyCode'] == currencyCode) {
+        return data;
+      }
+    }
+    return {};
+  }
+
   /// Update buying power from cached holdings data when currency changes
   void _updateBuyingPowerFromCachedData() {
     if (_cachedHoldings == null || _selectedCurrency.isEmpty) {
@@ -704,12 +731,13 @@ class _TradingPageState extends State<TradingPage> {
       return;
     }
 
-    final selectedCurrencyCode = _selectedCurrency['code'];
-    final currencyHolding = _cachedHoldings![selectedCurrencyCode] as Map<String, dynamic>? ?? {};
-    final currencyBalance = currencyHolding['totalUnits']?.toString() ?? '0';
+    // Use issueCurrency (ISO code like "EUR") to match holdings keys, not ticker
+    final issueCurrency = _selectedCurrency['issueCurrency'] ?? _selectedCurrency['code'] ?? '';
+    final currencyHolding = _findHoldingForCurrency(_cachedHoldings!, issueCurrency);
+    final currencyBalance = _getAvailableFromHolding(currencyHolding);
 
     _buyingPower = currencyBalance;
-    print('✅ Updated buying power from cache for $selectedCurrencyCode: $currencyBalance');
+    print('✅ Updated buying power from cache for $issueCurrency: $currencyBalance');
   }
 
 
@@ -759,30 +787,31 @@ class _TradingPageState extends State<TradingPage> {
         final output = portfolioResponse['output'] as Map<String, dynamic>;
 
         // Look for balance in the response
+        // Proto: GetInvestorSecurityHoldingsResponse { portfolio: Portfolio { holdings: map<string, Holdings> } }
+        // Holdings { instrument_iid, total_units, stash_units }
         String balance = '0';
 
-        // Check if response has portfolio.balances structure
         if (output['portfolio'] != null) {
           final portfolio = output['portfolio'] as Map<String, dynamic>? ?? {};
           print('📊 Found portfolio section: $portfolio');
-          if (portfolio['balances'] != null) {
-            final balances = portfolio['balances'] as Map<String, dynamic>? ?? {};
-            print('💰 Found balances: $balances');
-            balance = balances[securityId]?.toString() ?? '0';
-            print('✅ Extracted balance for $securityId: $balance');
-          }
-        } else if (output['balances'] != null) {
-          final balances = output['balances'] as Map<String, dynamic>? ?? {};
-          balance = balances[securityId]?.toString() ?? '0';
-        } else if (output['balance'] != null) {
-          balance = output['balance'].toString();
-        } else if (output['holdings'] != null) {
-          final holdings = output['holdings'] as List<dynamic>? ?? [];
-          for (final holding in holdings) {
-            if (holding is Map<String, dynamic> && holding['asset_id'] == securityId) {
-              balance = holding['balance']?.toString() ?? '0';
-              break;
+          final holdings = portfolio['holdings'] as Map<String, dynamic>? ?? {};
+          if (holdings.isNotEmpty) {
+            // Try direct key lookup first
+            Map<String, dynamic> holdingData = {};
+            if (holdings.containsKey(securityId)) {
+              holdingData = holdings[securityId] as Map<String, dynamic>? ?? {};
+            } else {
+              // Scan entries for matching instrumentIid
+              for (final entry in holdings.entries) {
+                final data = entry.value as Map<String, dynamic>? ?? {};
+                if (data['instrumentIid'] == securityId) {
+                  holdingData = data;
+                  break;
+                }
+              }
             }
+            balance = _getAvailableFromHolding(holdingData);
+            print('✅ Extracted balance for $securityId: $balance');
           }
         }
 
@@ -1002,27 +1031,28 @@ class _TradingPageState extends State<TradingPage> {
   
   /// Find the account that belongs to the logged-in user
   String? _findUserAccount(List<dynamic> accounts, String username) {
-    print('🔍 Searching for account matching user: "$username"');
-    print('📋 Available accounts:');
-    
+    print('🔍 Searching for investor matching user: "$username"');
+    print('📋 Available investors (${accounts.length}):');
+
     for (int i = 0; i < accounts.length; i++) {
       final accountMap = accounts[i] as Map<String, dynamic>;
-      final externalId = accountMap['external_id'] ?? accountMap['externalId'] ?? accountMap['externalAccountId'] ?? '';
-      final accountId = accountMap['id'] ?? accountMap['iid'] ?? '';
-      print('   [$i] ID: "$accountId", ExternalID: "$externalId"');
-      
+      // Proto Investor: iid (field 1), external_investor_id (field 3) -> JSON: iid, externalInvestorId
+      final externalId = accountMap['externalInvestorId'] ?? accountMap['external_investor_id'] ?? accountMap['externalId'] ?? accountMap['external_id'] ?? accountMap['externalAccountId'] ?? '';
+      final accountId = accountMap['iid'] ?? accountMap['id'] ?? '';
+      print('   [$i] IID: "$accountId", ExternalInvestorId: "$externalId"');
+
       // Try exact match first (case-sensitive)
       if (externalId == username) {
-        print('✅ Found EXACT match for user "$username": ID="$accountId", ExternalID="$externalId"');
+        print('✅ Found EXACT match for user "$username": IID="$accountId", ExternalInvestorId="$externalId"');
         return accountId;
       }
     }
-    
+
     // If no exact match, try case-insensitive
     for (final account in accounts) {
       final accountMap = account as Map<String, dynamic>;
-      final externalId = accountMap['external_id'] ?? accountMap['externalId'] ?? accountMap['externalAccountId'] ?? '';
-      final accountId = accountMap['id'] ?? accountMap['iid'] ?? '';
+      final externalId = accountMap['externalInvestorId'] ?? accountMap['external_investor_id'] ?? accountMap['externalId'] ?? accountMap['external_id'] ?? accountMap['externalAccountId'] ?? '';
+      final accountId = accountMap['iid'] ?? accountMap['id'] ?? '';
       
       if (externalId.toLowerCase() == username.toLowerCase()) {
         print('✅ Found case-insensitive match for user "$username": ID="$accountId", ExternalID="$externalId"');
@@ -1033,19 +1063,19 @@ class _TradingPageState extends State<TradingPage> {
     // If still no match, try contains
     for (final account in accounts) {
       final accountMap = account as Map<String, dynamic>;
-      final externalId = accountMap['external_id'] ?? accountMap['externalId'] ?? accountMap['externalAccountId'] ?? '';
-      final accountId = accountMap['id'] ?? accountMap['iid'] ?? '';
-      
-      if (externalId.toLowerCase().contains(username.toLowerCase()) || 
+      final externalId = accountMap['externalInvestorId'] ?? accountMap['external_investor_id'] ?? accountMap['externalId'] ?? accountMap['external_id'] ?? accountMap['externalAccountId'] ?? '';
+      final accountId = accountMap['iid'] ?? accountMap['id'] ?? '';
+
+      if (externalId.toLowerCase().contains(username.toLowerCase()) ||
           accountId.toLowerCase().contains(username.toLowerCase())) {
-        print('⚠️ Found partial match for user "$username": ID="$accountId", ExternalID="$externalId"');
+        print('⚠️ Found partial match for user "$username": IID="$accountId", ExternalInvestorId="$externalId"');
         return accountId;
       }
     }
-    
+
     // If no match found for the logged-in user, return empty string
-    print('❌ No account found for user "$username" on the server');
-    print('🔍 Searched in ${accounts.length} accounts');
+    print('❌ No investor found for user "$username" on the server');
+    print('🔍 Searched in ${accounts.length} investors');
     return '';
   }
 
@@ -1089,7 +1119,8 @@ class _TradingPageState extends State<TradingPage> {
       
       String? accountId;
       if (accountListResponse['success'] == true) {
-        final accounts = accountListResponse['output']['accounts'] as List<dynamic>;
+        // Proto field is 'investors' (GetInvestorListResponse.investors)
+        final accounts = (accountListResponse['output']['investors'] ?? accountListResponse['output']['accounts']) as List<dynamic>? ?? [];
         accountId = _findUserAccount(accounts, currentUsername);
       }
 
@@ -1134,13 +1165,14 @@ class _TradingPageState extends State<TradingPage> {
   /// Fetch cash holdings for a specific investor ID
   Future<void> _fetchCashHoldingsForInvestor(String investorId) async {
     try {
-      // Get the selected currency code to pass to GetInvestorCashHoldings
-      final selectedCurrencyCode = _selectedCurrency.isNotEmpty ? _selectedCurrency['code'] : 'USD';
-      final currencyCodes = selectedCurrencyCode != null && selectedCurrencyCode.isNotEmpty
-          ? [selectedCurrencyCode]
+      // Use issueCurrency (ISO code like "EUR") for the holdings API, not the ticker ("EUR_TOKENISE_BROKER")
+      final issueCurrency = _selectedCurrency.isNotEmpty ? (_selectedCurrency['issueCurrency'] ?? _selectedCurrency['code'] ?? 'USD') : 'USD';
+      final currencyCodes = issueCurrency.isNotEmpty
+          ? [issueCurrency]
           : <String>[];
 
-      print('📋 Fetching cash holdings for currency: $selectedCurrencyCode');
+      print('📋 Fetching cash holdings for currency: $issueCurrency (ticker: ${_selectedCurrency['code']})');
+
 
       // Fetch cash holdings with comprehensive crash protection
       final cashHoldingsResponse = await realGrpcClient.getInvestorCashHoldings(
@@ -1165,22 +1197,32 @@ class _TradingPageState extends State<TradingPage> {
         if (cashHoldingsResponse['success'] == true) {
           // Extract balance for selected currency from the response
           final output = cashHoldingsResponse['output'] as Map<String, dynamic>;
+          print('🔍 DEBUG cash holdings output keys: ${output.keys.toList()}');
+          print('🔍 DEBUG cash holdings full output: $output');
           final cashPortfolio = output['cashPortfolio'] as Map<String, dynamic>? ?? {};
+          print('🔍 DEBUG cashPortfolio keys: ${cashPortfolio.keys.toList()}');
           final holdings = cashPortfolio['holdings'] as Map<String, dynamic>? ?? {};
+          print('🔍 DEBUG holdings keys: ${holdings.keys.toList()}');
+          for (final entry in holdings.entries) {
+            print('🔍 DEBUG holding[${entry.key}] = ${entry.value}');
+          }
 
           // Cache the holdings data for currency switching
           _cachedHoldings = holdings;
 
-          // Get balance for currently selected currency
-          final selectedCurrencyCode = _selectedCurrency.isNotEmpty ? _selectedCurrency['code'] : 'USD';
-          final currencyHolding = holdings[selectedCurrencyCode] as Map<String, dynamic>? ?? {};
-          final currencyBalance = currencyHolding['totalUnits']?.toString() ?? '0';
+          // Use issueCurrency (ISO code like "EUR") to match holdings keys, not ticker
+          final issueCurrency = _selectedCurrency.isNotEmpty ? (_selectedCurrency['issueCurrency'] ?? _selectedCurrency['code'] ?? 'USD') : 'USD';
+          print('🔍 DEBUG issueCurrency for lookup: "$issueCurrency" (ticker: ${_selectedCurrency['code']})');
+          final currencyHolding = _findHoldingForCurrency(holdings, issueCurrency);
+          print('🔍 DEBUG currencyHolding for $issueCurrency: $currencyHolding');
+          final currencyBalance = _getAvailableFromHolding(currencyHolding);
+          print('🔍 DEBUG currencyBalance: $currencyBalance');
 
           setState(() {
             _buyingPower = currencyBalance;
           });
 
-          print('✅ Cash holdings loaded successfully! $selectedCurrencyCode balance: $currencyBalance');
+          print('✅ Cash holdings loaded successfully! $selectedCurrencyCode balance: $currencyBalance (holdings keys: ${holdings.keys.toList()})');
         } else {
           final output = cashHoldingsResponse['output'] as Map<String, dynamic>;
           setState(() {
