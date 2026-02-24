@@ -231,10 +231,12 @@ class _TradingPageState extends State<TradingPage> {
             final issueCurrency = currency['issueCurrency'] as String? ?? '';
 
             if (currencyValue.isNotEmpty) {
+              // Use ISO code (issueCurrency like "EUR") for display, fall back to ticker
+              final displayName = issueCurrency.isNotEmpty ? issueCurrency : currencyValue;
               final currencyMap = {
                 'code': currencyValue,
-                'symbol': currencySymbol.isNotEmpty ? currencySymbol : currencyValue,
-                'display': currencyValue, // Show currencies > identifiers > ids[0] > value
+                'symbol': issueCurrency.isNotEmpty ? issueCurrency : (currencySymbol.isNotEmpty ? currencySymbol : currencyValue),
+                'display': displayName,
                 'asset_id': currencyValue, // For compatibility with existing code
                 'issueCurrency': issueCurrency,
               };
@@ -347,6 +349,15 @@ class _TradingPageState extends State<TradingPage> {
     });
 
     print('💱 Filtered to ${_supportedCurrencies.length} currencies for $symbol');
+
+    // Update buying power for the (potentially new) selected currency
+    if (_cachedHoldings != null) {
+      _updateBuyingPowerFromCachedData();
+      setState(() {});
+    } else {
+      // Holdings not cached yet — fetch them (also handles investor ID lookup)
+      _fetchCashHoldings();
+    }
   }
 
   /// Fetch markets from the server
@@ -707,18 +718,31 @@ class _TradingPageState extends State<TradingPage> {
     return holdingData['totalUnits']?.toString() ?? '0';
   }
 
-  /// Find a holding entry by currency code, trying direct key lookup first,
-  /// then scanning entries for a matching currencyCode field.
+  /// Find a holding entry by currency code, trying multiple matching strategies.
+  /// [currencyCode] is the issueCurrency (ISO code like "EUR").
+  /// Also tries the full ticker from _selectedCurrency['code'] (e.g. "EUR_TOKENISE_BROKER").
   Map<String, dynamic> _findHoldingForCurrency(Map<String, dynamic> holdings, String currencyCode) {
-    // Direct key lookup
+    // 1. Direct key lookup by ISO code (e.g. "EUR")
     if (holdings.containsKey(currencyCode)) {
       return holdings[currencyCode] as Map<String, dynamic>? ?? {};
     }
-    // Scan entries for matching currencyCode field (in case map is keyed by IID)
+    // 2. Direct key lookup by ticker code (e.g. "EUR_TOKENISE_BROKER")
+    final ticker = _selectedCurrency['code'] ?? '';
+    if (ticker.isNotEmpty && holdings.containsKey(ticker)) {
+      return holdings[ticker] as Map<String, dynamic>? ?? {};
+    }
+    // 3. Scan entries for matching currencyCode field (in case map is keyed by IID)
     for (final entry in holdings.entries) {
       final data = entry.value as Map<String, dynamic>? ?? {};
-      if (data['currencyCode'] == currencyCode) {
+      if (data['currencyCode'] == currencyCode || data['currencyCode'] == ticker) {
         return data;
+      }
+    }
+    // 4. Case-insensitive prefix match (e.g. key "eur" matches "EUR")
+    final lowerCode = currencyCode.toLowerCase();
+    for (final entry in holdings.entries) {
+      if (entry.key.toLowerCase() == lowerCode || entry.key.toLowerCase().startsWith('${lowerCode}_')) {
+        return entry.value as Map<String, dynamic>? ?? {};
       }
     }
     return {};
@@ -1079,16 +1103,13 @@ class _TradingPageState extends State<TradingPage> {
     return '';
   }
 
-  /// Fetch cash holdings for the logged-in user to get buying power
+  /// Fetch cash holdings for the logged-in user to get buying power.
+  /// Uses the logged-in username directly as the investor ID
+  /// (same approach as portfolio page).
   Future<void> _fetchCashHoldings() async {
     try {
-      if (!realGrpcClient.isConnected) {
-        print('❌ Not connected to real gRPC server for cash holdings');
-        return;
-      }
-
-      // Check if we already have cached account ID (account ID doesn't change during session)
-      if (_cachedAccountId != null && 
+      // Check if we already have cached account ID
+      if (_cachedAccountId != null &&
           _cachedAccountId!.isNotEmpty &&
           !_isLoadingCashHoldings) {
         print('✅ Using cached account ID for fresh cash holdings: $_cachedAccountId');
@@ -1096,53 +1117,30 @@ class _TradingPageState extends State<TradingPage> {
         return;
       }
 
-      // First time - need to lookup account ID
       setState(() {
         _isLoadingCashHoldings = true;
       });
 
+      // Use the logged-in username directly as the investor ID (external_investor_id)
       final authService = Provider.of<AuthService>(context, listen: false);
       final currentUsername = authService.username;
-      print('🔍 First time lookup for user: $currentUsername');
 
-      // Get account list to find the user's account ID
-      final accountListResponse = await realGrpcClient.getAccountList().timeout(
-        const Duration(minutes: 5),
-        onTimeout: () {
-          print('⏰ GetAccountList timed out after 5 minutes');
-          return {
-            'success': false,
-            'output': {'error': 'Request timed out after 5 minutes'},
-          };
-        },
-      );
-      
-      String? accountId;
-      if (accountListResponse['success'] == true) {
-        // Proto field is 'investors' (GetInvestorListResponse.investors)
-        final accounts = (accountListResponse['output']['investors'] ?? accountListResponse['output']['accounts']) as List<dynamic>? ?? [];
-        accountId = _findUserAccount(accounts, currentUsername);
-      }
-
-      print('🔍 Account ID found: "$accountId" for user: $currentUsername');
-
-      if (accountId == null || accountId.isEmpty) {
+      if (currentUsername.isEmpty) {
         setState(() {
           _isLoadingCashHoldings = false;
           _buyingPower = '0';
         });
-        print('❌ No account ID found for user: $currentUsername');
+        print('❌ No logged-in user found');
         return;
       }
 
-      // Cache the account ID for the entire session
-      _cachedAccountId = accountId;
-      print('💾 Cached account ID: $_cachedAccountId for session');
+      _cachedAccountId = currentUsername;
+      print('✅ Using logged-in username as investor ID: $_cachedAccountId');
 
       // Fetch real orders now that we have the account ID
       _fetchRealOrders();
 
-      await _fetchCashHoldingsForInvestor(accountId);
+      await _fetchCashHoldingsForInvestor(currentUsername);
     } catch (e) {
       // Ultimate crash protection
       try {
@@ -1165,19 +1163,15 @@ class _TradingPageState extends State<TradingPage> {
   /// Fetch cash holdings for a specific investor ID
   Future<void> _fetchCashHoldingsForInvestor(String investorId) async {
     try {
-      // Use issueCurrency (ISO code like "EUR") for the holdings API, not the ticker ("EUR_TOKENISE_BROKER")
       final issueCurrency = _selectedCurrency.isNotEmpty ? (_selectedCurrency['issueCurrency'] ?? _selectedCurrency['code'] ?? 'USD') : 'USD';
-      final currencyCodes = issueCurrency.isNotEmpty
-          ? [issueCurrency]
-          : <String>[];
 
-      print('📋 Fetching cash holdings for currency: $issueCurrency (ticker: ${_selectedCurrency['code']})');
+      print('📋 Fetching ALL cash holdings (will look up $issueCurrency / ${_selectedCurrency['code']})');
 
-
-      // Fetch cash holdings with comprehensive crash protection
+      // Fetch ALL cash holdings without currency filter — the filter may not match
+      // the server's key format, causing empty results. Instead, fetch everything
+      // and look up the right entry client-side (same approach as portfolio page).
       final cashHoldingsResponse = await realGrpcClient.getInvestorCashHoldings(
         investorId: investorId,
-        currencyCodes: currencyCodes,
       ).timeout(
         const Duration(minutes: 5),
         onTimeout: () => {
@@ -1209,20 +1203,15 @@ class _TradingPageState extends State<TradingPage> {
 
           // Cache the holdings data for currency switching
           _cachedHoldings = holdings;
+          print('✅ Cash holdings cached (keys: ${holdings.keys.toList()})');
 
-          // Use issueCurrency (ISO code like "EUR") to match holdings keys, not ticker
-          final issueCurrency = _selectedCurrency.isNotEmpty ? (_selectedCurrency['issueCurrency'] ?? _selectedCurrency['code'] ?? 'USD') : 'USD';
-          print('🔍 DEBUG issueCurrency for lookup: "$issueCurrency" (ticker: ${_selectedCurrency['code']})');
-          final currencyHolding = _findHoldingForCurrency(holdings, issueCurrency);
-          print('🔍 DEBUG currencyHolding for $issueCurrency: $currencyHolding');
-          final currencyBalance = _getAvailableFromHolding(currencyHolding);
-          print('🔍 DEBUG currencyBalance: $currencyBalance');
+          // Only look up buying power if a currency is already selected;
+          // otherwise it will be looked up when _updateCurrenciesForSecurity runs.
+          if (_selectedCurrency.isNotEmpty) {
+            _updateBuyingPowerFromCachedData();
+          }
 
-          setState(() {
-            _buyingPower = currencyBalance;
-          });
-
-          print('✅ Cash holdings loaded successfully! $selectedCurrencyCode balance: $currencyBalance (holdings keys: ${holdings.keys.toList()})');
+          setState(() {});
         } else {
           final output = cashHoldingsResponse['output'] as Map<String, dynamic>;
           setState(() {
@@ -5401,7 +5390,9 @@ class _TradingPageState extends State<TradingPage> {
                     suffixWidget: Container(
                       padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 6),
                       child: Text(
-                        '\$',
+                        _selectedCurrency['issueCurrency']?.isNotEmpty == true
+                            ? _selectedCurrency['issueCurrency']!
+                            : (_selectedCurrency['symbol'] ?? '\$'),
                         style: TextStyle(
                           color: isDarkTheme ? Colors.white : Colors.black,
                           fontSize: UIConstants.textFieldFontSize,
