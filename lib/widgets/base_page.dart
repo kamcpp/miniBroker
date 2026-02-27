@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 import '../services/theme_service.dart';
+import '../config/ui_constants.dart';
 import '../widgets/app_header.dart';
 import '../widgets/left_menu.dart';
 import '../widgets/copyright_bar.dart';
@@ -53,7 +54,7 @@ class _BasePageState extends State<BasePage> {
           ),
         ),
         child: Container(
-          color: (_isDarkTheme ? const Color(0xFF1a1754) : Colors.white).withOpacity(0.95),
+          color: (_isDarkTheme ? UIConstants.colorCommand : Colors.white).withOpacity(0.95),
           child: Column(
             children: [
               // Header Section

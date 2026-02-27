@@ -2,6 +2,7 @@ import 'dart:async';
 import 'dart:io';
 import 'package:flutter/material.dart';
 import '../config/app_config.dart';
+import '../config/ui_constants.dart';
 import '../main.dart';
 
 /// Singleton connectivity manager with caching and debouncing
@@ -318,7 +319,7 @@ class _ServerErrorDialogContentState extends State<_ServerErrorDialogContent> {
         ElevatedButton(
           onPressed: _isRetrying ? null : _retryConnection,
           style: ElevatedButton.styleFrom(
-            backgroundColor: const Color(0xFF1a1754),
+            backgroundColor: UIConstants.colorCommand,
             foregroundColor: Colors.white,
           ),
           child: _isRetrying

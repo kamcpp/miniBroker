@@ -55,10 +55,16 @@ class UIConstants {
   // TEXT FIELD SETTINGS - Compact input field styling
   // ============================================================================
 
-  /// Text field content padding for compact height
+  /// Text field content padding for compact height (login/signup full-height fields)
   static const EdgeInsets textFieldPadding = EdgeInsets.symmetric(
     horizontal: 8.0,
     vertical: 15.0,
+  );
+
+  /// Standard content padding for inline text fields and dropdowns
+  static const EdgeInsets textFieldContentPadding = EdgeInsets.symmetric(
+    horizontal: 12.0,
+    vertical: 8.0,
   );
 
   /// Text field font size
@@ -173,17 +179,23 @@ class UIConstants {
   // COLORS - Standard colors for consistency across the app
   // ============================================================================
 
-  /// Standard green for success, buy, positive actions
-  static const Color colorSuccess = Color(0xFF00C853);
+  /// Soft green for OK, accept, buy, deposit, confirm buttons
+  static const Color colorAccept = Color(0xFF4CAF50);
 
-  /// Standard red for error, sell, negative actions
-  static const Color colorDanger = Color(0xFFFF1744);
+  /// Light red for cancel, sell, withdraw, reject, delete buttons
+  static const Color colorReject = Color(0xFFEF5350);
 
-  /// Standard blue for info, primary actions
+  /// Dark blueish for neutral command buttons (login, fetch, apply, save)
+  static const Color colorCommand = Color(0xFF1a1754);
+
+  /// Standard blue for info, links
   static const Color colorPrimary = Color(0xFF2196F3);
 
   /// Standard orange for warning
   static const Color colorWarning = Color(0xFFFF9800);
+
+  /// Dark fill color for dropdowns/fields in dark theme
+  static const Color colorDarkFill = Color(0xFF2d2d2d);
 
   // ============================================================================
   // BORDER RADIUS - Minimal rounding for sharp, professional look
@@ -228,5 +240,18 @@ class UIConstants {
   /// Get compact padding for vertical lists
   static EdgeInsets paddingVertical(double value) {
     return EdgeInsets.symmetric(vertical: value);
+  }
+
+  /// Standard button style with consistent shape, height, and color
+  static ButtonStyle buttonStyle(Color backgroundColor) {
+    return ElevatedButton.styleFrom(
+      backgroundColor: backgroundColor,
+      foregroundColor: Colors.white,
+      padding: const EdgeInsets.symmetric(horizontal: 16),
+      shape: RoundedRectangleBorder(
+        borderRadius: BorderRadius.circular(borderRadiusSm),
+      ),
+      minimumSize: const Size(0, buttonHeightStandard),
+    );
   }
 }

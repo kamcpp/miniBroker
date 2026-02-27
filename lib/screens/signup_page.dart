@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 import '../services/auth_service.dart';
 import '../utils/connectivity_checker.dart';
+import '../config/ui_constants.dart';
 
 class SignupPage extends StatefulWidget {
   const SignupPage({super.key});
@@ -102,7 +103,7 @@ class _SignupPageState extends State<SignupPage> {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      backgroundColor: const Color(0xFF1a1754), // Dark blue background
+      backgroundColor: UIConstants.colorCommand, // Dark blue background
       body: Center(
         child: SingleChildScrollView(
           padding: const EdgeInsets.all(24.0),
@@ -139,21 +140,18 @@ class _SignupPageState extends State<SignupPage> {
                         hintStyle: const TextStyle(color: Colors.grey),
                         prefixIcon: const Icon(Icons.person),
                         border: OutlineInputBorder(
-                          borderRadius: BorderRadius.circular(8),
+                          borderRadius: BorderRadius.circular(UIConstants.textFieldBorderRadius),
                           borderSide: const BorderSide(color: Colors.grey),
                         ),
                         enabledBorder: OutlineInputBorder(
-                          borderRadius: BorderRadius.circular(8),
+                          borderRadius: BorderRadius.circular(UIConstants.textFieldBorderRadius),
                           borderSide: const BorderSide(color: Colors.grey),
                         ),
                         focusedBorder: OutlineInputBorder(
-                          borderRadius: BorderRadius.circular(8),
-                          borderSide: const BorderSide(color: Color(0xFF1a1754)),
+                          borderRadius: BorderRadius.circular(UIConstants.textFieldBorderRadius),
+                          borderSide: const BorderSide(color: UIConstants.colorCommand),
                         ),
-                        contentPadding: const EdgeInsets.symmetric(
-                          horizontal: 16,
-                          vertical: 16,
-                        ),
+                        contentPadding: UIConstants.textFieldContentPadding,
                       ),
                       validator: (value) {
                         if (value == null || value.trim().isEmpty) {
@@ -184,21 +182,18 @@ class _SignupPageState extends State<SignupPage> {
                           },
                         ),
                         border: OutlineInputBorder(
-                          borderRadius: BorderRadius.circular(8),
+                          borderRadius: BorderRadius.circular(UIConstants.textFieldBorderRadius),
                           borderSide: const BorderSide(color: Colors.grey),
                         ),
                         enabledBorder: OutlineInputBorder(
-                          borderRadius: BorderRadius.circular(8),
+                          borderRadius: BorderRadius.circular(UIConstants.textFieldBorderRadius),
                           borderSide: const BorderSide(color: Colors.grey),
                         ),
                         focusedBorder: OutlineInputBorder(
-                          borderRadius: BorderRadius.circular(8),
-                          borderSide: const BorderSide(color: Color(0xFF1a1754)),
+                          borderRadius: BorderRadius.circular(UIConstants.textFieldBorderRadius),
+                          borderSide: const BorderSide(color: UIConstants.colorCommand),
                         ),
-                        contentPadding: const EdgeInsets.symmetric(
-                          horizontal: 16,
-                          vertical: 16,
-                        ),
+                        contentPadding: UIConstants.textFieldContentPadding,
                       ),
                       validator: (value) {
                         if (value == null || value.isEmpty) {
@@ -234,21 +229,18 @@ class _SignupPageState extends State<SignupPage> {
                           },
                         ),
                         border: OutlineInputBorder(
-                          borderRadius: BorderRadius.circular(8),
+                          borderRadius: BorderRadius.circular(UIConstants.textFieldBorderRadius),
                           borderSide: const BorderSide(color: Colors.grey),
                         ),
                         enabledBorder: OutlineInputBorder(
-                          borderRadius: BorderRadius.circular(8),
+                          borderRadius: BorderRadius.circular(UIConstants.textFieldBorderRadius),
                           borderSide: const BorderSide(color: Colors.grey),
                         ),
                         focusedBorder: OutlineInputBorder(
-                          borderRadius: BorderRadius.circular(8),
-                          borderSide: const BorderSide(color: Color(0xFF1a1754)),
+                          borderRadius: BorderRadius.circular(UIConstants.textFieldBorderRadius),
+                          borderSide: const BorderSide(color: UIConstants.colorCommand),
                         ),
-                        contentPadding: const EdgeInsets.symmetric(
-                          horizontal: 16,
-                          vertical: 16,
-                        ),
+                        contentPadding: UIConstants.textFieldContentPadding,
                       ),
                       validator: (value) {
                         if (value == null || value.isEmpty) {
@@ -269,10 +261,10 @@ class _SignupPageState extends State<SignupPage> {
                       child: ElevatedButton(
                         onPressed: _isLoading ? null : _handleSignup,
                         style: ElevatedButton.styleFrom(
-                          backgroundColor: const Color(0xFF1a1754),
+                          backgroundColor: UIConstants.colorCommand,
                           foregroundColor: Colors.white,
                           shape: RoundedRectangleBorder(
-                            borderRadius: BorderRadius.circular(8),
+                            borderRadius: BorderRadius.circular(UIConstants.textFieldBorderRadius),
                           ),
                           elevation: 0,
                         ),
@@ -314,7 +306,7 @@ class _SignupPageState extends State<SignupPage> {
                           child: const Text(
                             'Login',
                             style: TextStyle(
-                              color: Color(0xFF1a1754),
+                              color: UIConstants.colorCommand,
                               fontSize: 14,
                               fontWeight: FontWeight.w600,
                             ),

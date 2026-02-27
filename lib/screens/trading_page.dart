@@ -128,7 +128,7 @@ class _TradingPageState extends State<TradingPage> {
             }
           })();
 
-          final priceColor = isBuy ? const Color(0xFF00D4AA) : const Color(0xFFFF4081);
+          final priceColor = isBuy ? UIConstants.colorAccept : UIConstants.colorReject;
 
           return {
             'price': price,
@@ -3884,7 +3884,7 @@ class _TradingPageState extends State<TradingPage> {
       itemCount: orders.length,
       itemBuilder: (context, index) {
         final order = orders[index];
-        final color = side == 'sell' ? const Color(0xFFFF4081) : const Color(0xFF00D4AA);
+        final color = side == 'sell' ? UIConstants.colorReject : UIConstants.colorAccept;
 
         return Container(
           padding: const EdgeInsets.symmetric(vertical: 2, horizontal: 4),
@@ -4142,7 +4142,7 @@ class _TradingPageState extends State<TradingPage> {
     final side = formatSide(order['side'] ?? '');
     final status = getStatus(order);
     final statusColor = getStatusColor(status);
-    final sideColor = side == 'BUY' ? const Color(0xFF00D4AA) : const Color(0xFFFF4081);
+    final sideColor = side == 'BUY' ? UIConstants.colorAccept : UIConstants.colorReject;
 
     return Container(
       margin: const EdgeInsets.only(bottom: 8),
@@ -4517,7 +4517,7 @@ class _TradingPageState extends State<TradingPage> {
     final side = formatSide(order['side'] ?? '');
     final status = getStatus(order);
     final statusColor = getStatusColor(status);
-    final sideColor = side == 'BUY' ? const Color(0xFF00D4AA) : const Color(0xFFFF4081);
+    final sideColor = side == 'BUY' ? UIConstants.colorAccept : UIConstants.colorReject;
 
     return Container(
       margin: const EdgeInsets.only(bottom: 8),
@@ -4670,7 +4670,7 @@ class _TradingPageState extends State<TradingPage> {
                                                       _formatPrice(order['price']),
                                                       style: const TextStyle(
                                                         fontSize: UIConstants.textFieldFontSize,
-                                                        color: Color(0xFFFF4081),
+                                                        color: UIConstants.colorReject,
                                                         fontWeight: UIConstants.fontWeightNormal,
                                                       ),
                                                     ),
@@ -4819,7 +4819,7 @@ class _TradingPageState extends State<TradingPage> {
                                                       _formatPrice(order['price']),
                                                       style: const TextStyle(
                                                         fontSize: UIConstants.textFieldFontSize,
-                                                        color: Color(0xFF00D4AA),
+                                                        color: UIConstants.colorAccept,
                                                         fontWeight: UIConstants.fontWeightNormal,
                                                       ),
                                                     ),
@@ -4983,7 +4983,7 @@ class _TradingPageState extends State<TradingPage> {
             ],
           ),
           duration: Duration(seconds: 30), // Long duration for loading
-          backgroundColor: _isBuySelected ? const Color(0xFF00D4AA) : Colors.red,
+          backgroundColor: _isBuySelected ? UIConstants.colorAccept : UIConstants.colorReject,
         ),
       );
 
@@ -5179,7 +5179,7 @@ class _TradingPageState extends State<TradingPage> {
                   child: _HoverTradeButton(
                     text: 'Buy',
                     isSelected: _isBuySelected,
-                    selectedColor: const Color(0xFF00D4AA),
+                    selectedColor: UIConstants.colorAccept,
                     isDarkTheme: isDarkTheme,
                     onTap: () {
                       setState(() => _isBuySelected = true);
@@ -5191,7 +5191,7 @@ class _TradingPageState extends State<TradingPage> {
                   child: _HoverTradeButton(
                     text: 'Sell',
                     isSelected: !_isBuySelected,
-                    selectedColor: const Color(0xFFFF4081),
+                    selectedColor: UIConstants.colorReject,
                     isDarkTheme: isDarkTheme,
                     onTap: () {
                       setState(() => _isBuySelected = false);
@@ -5350,7 +5350,7 @@ class _TradingPageState extends State<TradingPage> {
                               child: Text(
                                 'Max',
                                 style: TextStyle(
-                                  color: const Color(0xFFFF4081), // Pink for sell
+                                  color: UIConstants.colorReject, // Pink for sell
                                   fontSize: UIConstants.textFieldFontSize,
                                   fontWeight: UIConstants.fontWeightMedium,
                                 ),
@@ -5557,16 +5557,8 @@ class _TradingPageState extends State<TradingPage> {
             width: double.infinity,
             child: ElevatedButton(
               onPressed: _placeOrder,
-              style: ElevatedButton.styleFrom(
-                backgroundColor: _isBuySelected
-                    ? const Color(0xFF00D4AA) // Cyan for buy
-                    : const Color(0xFFFF4081), // Pink for sell
-                foregroundColor: Colors.white,
-                padding: const EdgeInsets.symmetric(vertical: 16),
-                shape: RoundedRectangleBorder(
-                  borderRadius: BorderRadius.circular(30),
-                ),
-                elevation: 0,
+              style: UIConstants.buttonStyle(
+                _isBuySelected ? UIConstants.colorAccept : UIConstants.colorReject,
               ),
               child: Text(
                 '${_isBuySelected ? 'Buy' : 'Sell'} Order',
@@ -5712,8 +5704,8 @@ class _HoverOrderTypeButtonState extends State<_HoverOrderTypeButton> {
   bool _isHovered = false;
 
   Color get _selectedColor => widget.isBuySelected
-      ? const Color(0xFF00D4AA)  // Cyan for buy
-      : const Color(0xFFFF4081); // Pink for sell
+      ? UIConstants.colorAccept  // Cyan for buy
+      : UIConstants.colorReject; // Pink for sell
 
   @override
   Widget build(BuildContext context) {

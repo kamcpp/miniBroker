@@ -62,7 +62,7 @@ class _ProfilePageState extends State<ProfilePage> {
         backgroundColor: isDarkTheme ? const Color(0xFF1A1A1A) : Colors.grey[100],
         appBar: AppBar(
           title: const Text('Profile'),
-          backgroundColor: const Color(0xFF1a1754),
+          backgroundColor: UIConstants.colorCommand,
           foregroundColor: Colors.white,
           elevation: 0,
           leading: IconButton(
@@ -169,7 +169,7 @@ class _ProfilePageState extends State<ProfilePage> {
                   child: Text(
                     'Edit',
                     style: TextStyle(
-                      color: isDarkTheme ? Colors.lightBlue : const Color(0xFF1a1754),
+                      color: isDarkTheme ? Colors.lightBlue : UIConstants.colorCommand,
                       fontSize: UIConstants.textFieldFontSize,
                       fontWeight: UIConstants.fontWeightNormal,
                     ),
@@ -209,7 +209,7 @@ class _ProfilePageState extends State<ProfilePage> {
                 ElevatedButton(
                   onPressed: onSave,
                   style: ElevatedButton.styleFrom(
-                    backgroundColor: const Color(0xFF1a1754),
+                    backgroundColor: UIConstants.colorCommand,
                     foregroundColor: Colors.white,
                   ),
                   child: const Text('Save'),
@@ -266,7 +266,7 @@ class _ProfilePageState extends State<ProfilePage> {
                   child: Text(
                     'Edit',
                     style: TextStyle(
-                      color: isDarkTheme ? Colors.lightBlue : const Color(0xFF1a1754),
+                      color: isDarkTheme ? Colors.lightBlue : UIConstants.colorCommand,
                       fontSize: UIConstants.textFieldFontSize,
                       fontWeight: UIConstants.fontWeightNormal,
                     ),
@@ -341,7 +341,7 @@ class _ProfilePageState extends State<ProfilePage> {
                 ElevatedButton(
                   onPressed: _savePassword,
                   style: ElevatedButton.styleFrom(
-                    backgroundColor: const Color(0xFF1a1754),
+                    backgroundColor: UIConstants.colorCommand,
                     foregroundColor: Colors.white,
                   ),
                   child: const Text('Save'),

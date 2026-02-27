@@ -271,7 +271,7 @@ class _ExecutionReportsPageState extends State<ExecutionReportsPage> {
         SizedBox(width: UIConstants.spacingLg),
         Expanded(
           child: SizedBox(
-            height: 36,
+            height: UIConstants.buttonHeightStandard,
             child: TextField(
               controller: _requestIdController,
               style: TextStyle(
@@ -287,7 +287,7 @@ class _ExecutionReportsPageState extends State<ExecutionReportsPage> {
                 border: OutlineInputBorder(
                   borderRadius: BorderRadius.circular(UIConstants.textFieldBorderRadius),
                 ),
-                contentPadding: const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
+                contentPadding: UIConstants.textFieldContentPadding,
                 isDense: true,
                 suffixIcon: _requestIdController.text.isNotEmpty
                     ? IconButton(
@@ -306,16 +306,12 @@ class _ExecutionReportsPageState extends State<ExecutionReportsPage> {
         ),
         SizedBox(width: UIConstants.spacingSm),
         SizedBox(
-          height: 36,
+          height: UIConstants.buttonHeightStandard,
           child: ElevatedButton.icon(
             onPressed: _isLoading ? null : _fetchExecutionReports,
             icon: Icon(Icons.search, size: 16),
             label: Text('Fetch', style: TextStyle(fontSize: UIConstants.fontSizeSm)),
-            style: ElevatedButton.styleFrom(
-              backgroundColor: const Color(0xFF00D4AA),
-              foregroundColor: Colors.white,
-              padding: const EdgeInsets.symmetric(horizontal: 16),
-            ),
+            style: UIConstants.buttonStyle(UIConstants.colorCommand),
           ),
         ),
       ],
@@ -335,7 +331,7 @@ class _ExecutionReportsPageState extends State<ExecutionReportsPage> {
       border: OutlineInputBorder(
         borderRadius: BorderRadius.circular(UIConstants.textFieldBorderRadius),
       ),
-      contentPadding: const EdgeInsets.symmetric(horizontal: 10, vertical: 6),
+      contentPadding: UIConstants.textFieldContentPadding,
       isDense: true,
     );
 
@@ -375,7 +371,7 @@ class _ExecutionReportsPageState extends State<ExecutionReportsPage> {
             isExpanded: true,
             decoration: inputDecoration.copyWith(hintText: 'Exec Type', hintStyle: hintStyle),
             style: textStyle,
-            dropdownColor: isDarkTheme ? const Color(0xFF2a2760) : Colors.white,
+            dropdownColor: isDarkTheme ? UIConstants.colorDarkFill : Colors.white,
             items: _execTypeOptions.entries
                 .map((e) => DropdownMenuItem(
                       value: e.key.isEmpty ? null : e.key,
@@ -401,7 +397,7 @@ class _ExecutionReportsPageState extends State<ExecutionReportsPage> {
             isExpanded: true,
             decoration: inputDecoration.copyWith(hintText: 'Sort By', hintStyle: hintStyle),
             style: textStyle,
-            dropdownColor: isDarkTheme ? const Color(0xFF2a2760) : Colors.white,
+            dropdownColor: isDarkTheme ? UIConstants.colorDarkFill : Colors.white,
             items: _sortByOptions.entries
                 .map((e) => DropdownMenuItem(
                       value: e.key.isEmpty ? null : e.key,
@@ -446,11 +442,7 @@ class _ExecutionReportsPageState extends State<ExecutionReportsPage> {
               _currentPage = 1;
               _fetchExecutionReports();
             },
-            style: ElevatedButton.styleFrom(
-              backgroundColor: const Color(0xFF00D4AA),
-              foregroundColor: Colors.white,
-              padding: const EdgeInsets.symmetric(horizontal: 12),
-            ),
+            style: UIConstants.buttonStyle(UIConstants.colorCommand),
             child: Text('Apply', style: TextStyle(fontSize: UIConstants.fontSizeSm)),
           ),
         ),
@@ -513,7 +505,7 @@ class _ExecutionReportsPageState extends State<ExecutionReportsPage> {
 
   Widget _buildSentOrderCard(bool isDarkTheme) {
     final order = _sentOrder!;
-    final cardColor = isDarkTheme ? const Color(0xFF2a2760) : Colors.grey[100];
+    final cardColor = isDarkTheme ? UIConstants.colorDarkFill : Colors.grey[100];
     final textColor = isDarkTheme ? Colors.white : Colors.black;
     final labelColor = isDarkTheme ? Colors.grey[400] : Colors.grey[600];
 
@@ -615,7 +607,7 @@ class _ExecutionReportsPageState extends State<ExecutionReportsPage> {
             DataCell(Text(
               side,
               style: cellStyle.copyWith(
-                color: side.toUpperCase() == 'BUY' ? const Color(0xFF00D4AA) : Colors.red,
+                color: side.toUpperCase() == 'BUY' ? UIConstants.colorAccept : Colors.red,
                 fontWeight: FontWeight.w600,
               ),
             )),
@@ -654,7 +646,7 @@ class _ExecutionReportsPageState extends State<ExecutionReportsPage> {
         break;
       case '2':
       case 'F':
-        bgColor = const Color(0xFF00D4AA);
+        bgColor = UIConstants.colorAccept;
         break;
       case '4':
         bgColor = Colors.grey;
@@ -693,7 +685,7 @@ class _ExecutionReportsPageState extends State<ExecutionReportsPage> {
         break;
       case 'FILLED':
       case '2':
-        color = const Color(0xFF00D4AA);
+        color = UIConstants.colorAccept;
         break;
       case 'CANCELED':
       case '4':
@@ -806,11 +798,11 @@ class _ExecutionReportsPageState extends State<ExecutionReportsPage> {
               border: OutlineInputBorder(
                 borderRadius: BorderRadius.circular(UIConstants.textFieldBorderRadius),
               ),
-              contentPadding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
+              contentPadding: UIConstants.textFieldContentPadding,
               isDense: true,
             ),
             style: TextStyle(color: textColor, fontSize: UIConstants.fontSizeSm),
-            dropdownColor: isDarkTheme ? const Color(0xFF2a2760) : Colors.white,
+            dropdownColor: isDarkTheme ? UIConstants.colorDarkFill : Colors.white,
             items: [10, 20, 50, 100]
                 .map((size) => DropdownMenuItem(
                       value: size,

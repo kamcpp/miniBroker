@@ -249,9 +249,9 @@ class _PortfolioPageState extends State<PortfolioPage> {
                       contentPadding: const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
                       isDense: true,
                       filled: true,
-                      fillColor: isDarkTheme ? const Color(0xFF2d2d2d) : Colors.white,
+                      fillColor: isDarkTheme ? UIConstants.colorDarkFill : Colors.white,
                     ),
-                    dropdownColor: isDarkTheme ? const Color(0xFF2d2d2d) : Colors.white,
+                    dropdownColor: isDarkTheme ? UIConstants.colorDarkFill : Colors.white,
                     style: TextStyle(
                       color: isDarkTheme ? Colors.white : Colors.black,
                       fontSize: UIConstants.fontSizeBody,
@@ -272,26 +272,18 @@ class _PortfolioPageState extends State<PortfolioPage> {
                 const SizedBox(width: 12),
                 // Deposit button
                 SizedBox(
-                  height: 36,
+                  height: UIConstants.buttonHeightStandard,
                   child: ElevatedButton.icon(
                     onPressed: _selectedCashToken == null ? null : () => _showDepositDialog(_selectedCashToken!),
                     icon: const Icon(Icons.add, size: 16),
                     label: const Text('Deposit'),
-                    style: ElevatedButton.styleFrom(
-                      backgroundColor: UIConstants.colorSuccess,
-                      foregroundColor: Colors.white,
-                      disabledBackgroundColor: isDarkTheme ? Colors.grey[700] : Colors.grey[300],
-                      padding: const EdgeInsets.symmetric(horizontal: 16),
-                      shape: RoundedRectangleBorder(
-                        borderRadius: BorderRadius.circular(UIConstants.textFieldBorderRadius),
-                      ),
-                    ),
+                    style: UIConstants.buttonStyle(UIConstants.colorAccept),
                   ),
                 ),
                 const SizedBox(width: 8),
                 // Withdraw button
                 SizedBox(
-                  height: 36,
+                  height: UIConstants.buttonHeightStandard,
                   child: ElevatedButton.icon(
                     onPressed: _selectedCashToken == null ? null : () {
                       final availableBalance = _getAvailableBalanceForToken(_selectedCashToken!);
@@ -299,15 +291,7 @@ class _PortfolioPageState extends State<PortfolioPage> {
                     },
                     icon: const Icon(Icons.remove, size: 16),
                     label: const Text('Withdraw'),
-                    style: ElevatedButton.styleFrom(
-                      backgroundColor: UIConstants.colorDanger,
-                      foregroundColor: Colors.white,
-                      disabledBackgroundColor: isDarkTheme ? Colors.grey[700] : Colors.grey[300],
-                      padding: const EdgeInsets.symmetric(horizontal: 16),
-                      shape: RoundedRectangleBorder(
-                        borderRadius: BorderRadius.circular(UIConstants.textFieldBorderRadius),
-                      ),
-                    ),
+                    style: UIConstants.buttonStyle(UIConstants.colorReject),
                   ),
                 ),
                 const Spacer(),
@@ -380,7 +364,7 @@ class _PortfolioPageState extends State<PortfolioPage> {
           Container(
             padding: UIConstants.paddingStandard,
             decoration: BoxDecoration(
-              color: isDarkTheme ? const Color(0xFF2d2d2d) : Colors.grey[50],
+              color: isDarkTheme ? UIConstants.colorDarkFill : Colors.grey[50],
               borderRadius: const BorderRadius.only(
                 topLeft: Radius.circular(8),
                 topRight: Radius.circular(8),
@@ -553,7 +537,7 @@ class _PortfolioPageState extends State<PortfolioPage> {
         Container(
           padding: const EdgeInsets.symmetric(vertical: 8, horizontal: 12),
           decoration: BoxDecoration(
-            color: isDarkTheme ? const Color(0xFF2d2d2d) : Colors.grey[100],
+            color: isDarkTheme ? UIConstants.colorDarkFill : Colors.grey[100],
             borderRadius: BorderRadius.circular(4),
           ),
           child: Row(
@@ -632,7 +616,7 @@ class _PortfolioPageState extends State<PortfolioPage> {
         Container(
           padding: const EdgeInsets.symmetric(vertical: 8, horizontal: 12),
           decoration: BoxDecoration(
-            color: isDarkTheme ? const Color(0xFF2d2d2d) : Colors.grey[100],
+            color: isDarkTheme ? UIConstants.colorDarkFill : Colors.grey[100],
             borderRadius: BorderRadius.circular(4),
           ),
           child: Row(
@@ -965,12 +949,7 @@ class _PortfolioPageState extends State<PortfolioPage> {
                       );
                     }
                   },
-                  style: ElevatedButton.styleFrom(
-                    backgroundColor: UIConstants.colorSuccess,
-                    shape: RoundedRectangleBorder(
-                      borderRadius: BorderRadius.circular(UIConstants.textFieldBorderRadius),
-                    ),
-                  ),
+                  style: UIConstants.buttonStyle(UIConstants.colorAccept),
                   child: const Text('Deposit', style: TextStyle(color: Colors.white)),
                 ),
               ],
@@ -1141,12 +1120,7 @@ class _PortfolioPageState extends State<PortfolioPage> {
                       );
                     }
                   },
-                  style: ElevatedButton.styleFrom(
-                    backgroundColor: UIConstants.colorDanger,
-                    shape: RoundedRectangleBorder(
-                      borderRadius: BorderRadius.circular(UIConstants.textFieldBorderRadius),
-                    ),
-                  ),
+                  style: UIConstants.buttonStyle(UIConstants.colorReject),
                   child: const Text('Withdraw', style: TextStyle(color: Colors.white)),
                 ),
               ],

@@ -44,7 +44,7 @@ class MyApp extends StatelessWidget {
         title: 'miniBroker-v1.0.0',
         debugShowCheckedModeBanner: false,
         theme: ThemeData(
-          colorScheme: ColorScheme.fromSeed(seedColor: const Color(0xFF1a1754)),
+          colorScheme: ColorScheme.fromSeed(seedColor: UIConstants.colorCommand),
           useMaterial3: true,
           scrollbarTheme: ScrollbarThemeData(
             thumbColor: WidgetStateProperty.all(Colors.grey[400]),
@@ -142,7 +142,7 @@ class _AppInitializerState extends State<AppInitializer> with SingleTickerProvid
             ),
           ),
           child: Container(
-            color: const Color(0xFF1a1754).withOpacity(0.9),
+            color: UIConstants.colorCommand.withOpacity(0.9),
           ),
         ),
       );
@@ -168,7 +168,7 @@ class _AppInitializerState extends State<AppInitializer> with SingleTickerProvid
                     ),
                     // Semi-transparent overlay for fading
                     Container(
-                      color: const Color(0xFF1a1754).withOpacity(0.9), // 90% fade with dark blue
+                      color: UIConstants.colorCommand.withOpacity(0.9), // 90% fade with dark blue
                     ),
                     // Main content
                     Center(
@@ -211,7 +211,7 @@ class _AppInitializerState extends State<AppInitializer> with SingleTickerProvid
               print('❌ Initialization error: ${snapshot.error}');
               // Show error but don't exit - let user see the error
               return Scaffold(
-                backgroundColor: const Color(0xFF1a1754),
+                backgroundColor: UIConstants.colorCommand,
                 body: Center(
                   child: Padding(
                     padding: const EdgeInsets.all(32.0),
@@ -261,7 +261,7 @@ class _AppInitializerState extends State<AppInitializer> with SingleTickerProvid
               // Start fade animation when showing login page
               _fadeController.forward();
               return Container(
-                color: const Color(0xFF1a1754), // Match login page background
+                color: UIConstants.colorCommand, // Match login page background
                 child: FadeTransition(
                   opacity: _fadeAnimation,
                   child: const LoginPage(),

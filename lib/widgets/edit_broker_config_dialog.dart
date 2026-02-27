@@ -219,7 +219,7 @@ class _EditBrokerConfigDialogState extends State<EditBrokerConfigDialog> {
     final surfaceColor = isDarkTheme ? const Color(0xFF1e1e1e) : Colors.grey[100]!;
     final textColor = isDarkTheme ? Colors.white : Colors.black;
     final hintColor = isDarkTheme ? Colors.grey[400] : Colors.grey[600];
-    final primaryColor = isDarkTheme ? const Color(0xFF6b9eff) : const Color(0xFF1a1754);
+    final primaryColor = isDarkTheme ? const Color(0xFF6b9eff) : UIConstants.colorCommand;
 
     return Dialog(
       backgroundColor: backgroundColor,

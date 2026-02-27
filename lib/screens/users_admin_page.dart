@@ -155,7 +155,7 @@ class _UsersAdminPageState extends State<UsersAdminPage> {
                       mainAxisAlignment: MainAxisAlignment.center,
                       children: [
                         CircularProgressIndicator(
-                          color: isDarkTheme ? Colors.white : const Color(0xFF1a1754),
+                          color: isDarkTheme ? Colors.white : UIConstants.colorCommand,
                         ),
                         const SizedBox(height: UIConstants.spacingMd),
                         Text(
@@ -190,7 +190,7 @@ class _UsersAdminPageState extends State<UsersAdminPage> {
                             margin: const EdgeInsets.only(bottom: 12),
                             child: ListTile(
                               leading: CircleAvatar(
-                                backgroundColor: const Color(0xFF1a1754),
+                                backgroundColor: UIConstants.colorCommand,
                                 child: Text(
                                   user['username']?.substring(0, 1).toUpperCase() ?? 'U',
                                   style: const TextStyle(

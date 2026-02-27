@@ -223,7 +223,7 @@ class _LoginPageState extends State<LoginPage> with TickerProviderStateMixin {
           ),
           // Semi-transparent overlay for fading
           Container(
-            color: const Color(0xFF1a1754).withOpacity(0.9), // 90% fade with dark blue
+            color: UIConstants.colorCommand.withOpacity(0.9), // 90% fade with dark blue
           ),
           // Selected broker name and settings button in top-right corner
           Positioned(
@@ -384,7 +384,7 @@ class _LoginPageState extends State<LoginPage> with TickerProviderStateMixin {
                         ),
                         focusedBorder: OutlineInputBorder(
                           borderRadius: BorderRadius.circular(UIConstants.textFieldBorderRadius),
-                          borderSide: const BorderSide(color: Color(0xFF1a1754), width: 2),
+                          borderSide: const BorderSide(color: UIConstants.colorCommand, width: 2),
                         ),
                         prefixIcon: const Icon(Icons.person, color: Colors.grey, size: UIConstants.textFieldIconSize),
                       ),
@@ -436,7 +436,7 @@ class _LoginPageState extends State<LoginPage> with TickerProviderStateMixin {
                         ),
                         focusedBorder: OutlineInputBorder(
                           borderRadius: BorderRadius.circular(UIConstants.textFieldBorderRadius),
-                          borderSide: const BorderSide(color: Color(0xFF1a1754), width: 2),
+                          borderSide: const BorderSide(color: UIConstants.colorCommand, width: 2),
                         ),
                       ),
                       textInputAction: TextInputAction.go,
@@ -470,7 +470,7 @@ class _LoginPageState extends State<LoginPage> with TickerProviderStateMixin {
                           child: const Text(
                             'Forgot password?',
                             style: TextStyle(
-                              color: Color(0xFF1a1754),
+                              color: UIConstants.colorCommand,
                               fontSize: UIConstants.fontSizeSm,
                             ),
                           ),
@@ -486,7 +486,7 @@ class _LoginPageState extends State<LoginPage> with TickerProviderStateMixin {
                       child: ElevatedButton(
                         onPressed: _isLoading ? null : _handleLogin,
                         style: ElevatedButton.styleFrom(
-                          backgroundColor: const Color(0xFF1a1754),
+                          backgroundColor: UIConstants.colorCommand,
                           foregroundColor: Colors.white,
                           shape: RoundedRectangleBorder(
                             borderRadius: BorderRadius.circular(UIConstants.textFieldBorderRadius),
@@ -529,7 +529,7 @@ class _LoginPageState extends State<LoginPage> with TickerProviderStateMixin {
                           child: const Text(
                             'Signup',
                             style: TextStyle(
-                              color: Color(0xFF1a1754),
+                              color: UIConstants.colorCommand,
                               fontSize: UIConstants.fontSizeSm,
                               fontWeight: FontWeight.w600,
                             ),
@@ -580,7 +580,7 @@ class _LoginPageState extends State<LoginPage> with TickerProviderStateMixin {
               ),
               focusedBorder: OutlineInputBorder(
                 borderRadius: BorderRadius.circular(UIConstants.textFieldBorderRadius),
-                borderSide: const BorderSide(color: Color(0xFF1a1754), width: 2),
+                borderSide: const BorderSide(color: UIConstants.colorCommand, width: 2),
               ),
               contentPadding: UIConstants.textFieldPadding,
                         isDense: true,
@@ -630,7 +630,7 @@ class _LoginPageState extends State<LoginPage> with TickerProviderStateMixin {
               ),
               focusedBorder: OutlineInputBorder(
                 borderRadius: BorderRadius.circular(UIConstants.textFieldBorderRadius),
-                borderSide: const BorderSide(color: Color(0xFF1a1754), width: 2),
+                borderSide: const BorderSide(color: UIConstants.colorCommand, width: 2),
               ),
               contentPadding: UIConstants.textFieldPadding,
                         isDense: true,
@@ -680,7 +680,7 @@ class _LoginPageState extends State<LoginPage> with TickerProviderStateMixin {
               ),
               focusedBorder: OutlineInputBorder(
                 borderRadius: BorderRadius.circular(UIConstants.textFieldBorderRadius),
-                borderSide: const BorderSide(color: Color(0xFF1a1754), width: 2),
+                borderSide: const BorderSide(color: UIConstants.colorCommand, width: 2),
               ),
               contentPadding: UIConstants.textFieldPadding,
                         isDense: true,
@@ -704,7 +704,7 @@ class _LoginPageState extends State<LoginPage> with TickerProviderStateMixin {
             child: ElevatedButton(
               onPressed: _isLoading ? null : _handleSignup,
               style: ElevatedButton.styleFrom(
-                backgroundColor: const Color(0xFF1a1754),
+                backgroundColor: UIConstants.colorCommand,
                 foregroundColor: Colors.white,
                 shape: RoundedRectangleBorder(
                   borderRadius: BorderRadius.circular(UIConstants.textFieldBorderRadius),
@@ -747,7 +747,7 @@ class _LoginPageState extends State<LoginPage> with TickerProviderStateMixin {
                 child: const Text(
                   'Login',
                   style: TextStyle(
-                    color: Color(0xFF1a1754),
+                    color: UIConstants.colorCommand,
                     fontSize: UIConstants.fontSizeSm,
                     fontWeight: FontWeight.w600,
                   ),

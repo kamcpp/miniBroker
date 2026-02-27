@@ -26,7 +26,7 @@ class AppHeader extends StatelessWidget {
     return Container(
       padding: UIConstants.paddingStandard,
       decoration: BoxDecoration(
-        color: isDarkTheme ? const Color(0xFF1a1754) : Colors.white,
+        color: isDarkTheme ? UIConstants.colorCommand : Colors.white,
         border: Border(
           bottom: BorderSide(
             color: isDarkTheme ? Colors.white24 : Colors.black12,
@@ -86,7 +86,7 @@ class AppHeader extends StatelessWidget {
           style: TextStyle(
             fontSize: UIConstants.fontSizeLg,
             fontWeight: UIConstants.fontWeightMedium,
-            color: isDarkTheme ? Colors.white : const Color(0xFF1a1754),
+            color: isDarkTheme ? Colors.white : UIConstants.colorCommand,
           ),
         ),
       ],
@@ -117,14 +117,14 @@ class AppHeader extends StatelessWidget {
             children: [
               Icon(
                 Icons.account_circle,
-                color: isDarkTheme ? Colors.white : const Color(0xFF1a1754),
+                color: isDarkTheme ? Colors.white : UIConstants.colorCommand,
                 size: 20,
               ),
               const SizedBox(width: UIConstants.spacingSm),
               Text(
                 authService.username,
                 style: TextStyle(
-                  color: isDarkTheme ? Colors.white : const Color(0xFF1a1754),
+                  color: isDarkTheme ? Colors.white : UIConstants.colorCommand,
                   fontSize: UIConstants.fontSizeBody,
                   fontWeight: UIConstants.fontWeightMedium,
                 ),
@@ -142,7 +142,7 @@ class AppHeader extends StatelessWidget {
       child: IconButton(
         icon: Icon(
           isDarkTheme ? Icons.light_mode : Icons.dark_mode,
-          color: isDarkTheme ? Colors.white : const Color(0xFF1a1754),
+          color: isDarkTheme ? Colors.white : UIConstants.colorCommand,
         ),
         onPressed: () {
           themeService.toggleTheme();

@@ -1800,10 +1800,7 @@ class _ActivityPageState extends State<ActivityPage> {
                         },
                         icon: const Icon(Icons.check),
                         label: const Text('Apply Filters'),
-                        style: ElevatedButton.styleFrom(
-                          backgroundColor: Colors.blue,
-                          foregroundColor: Colors.white,
-                        ),
+                        style: UIConstants.buttonStyle(UIConstants.colorCommand),
                       ),
                       const SizedBox(width: UIConstants.spacingMd),
                       ElevatedButton.icon(
@@ -1812,10 +1809,7 @@ class _ActivityPageState extends State<ActivityPage> {
                         },
                         icon: const Icon(Icons.clear),
                         label: const Text('Clear'),
-                        style: ElevatedButton.styleFrom(
-                          backgroundColor: Colors.grey,
-                          foregroundColor: Colors.white,
-                        ),
+                        style: UIConstants.buttonStyle(UIConstants.colorReject),
                       ),
                     ],
                   ),
@@ -2023,14 +2017,7 @@ class _ActivityPageState extends State<ActivityPage> {
                   },
                   icon: const Icon(Icons.add),
                   label: const Text('Show More'),
-                  style: ElevatedButton.styleFrom(
-                    backgroundColor: isDarkTheme
-                        ? const Color(0xFF2d2d2d)
-                        : Colors.grey[100],
-                    foregroundColor: isDarkTheme
-                        ? Colors.white
-                        : Colors.black,
-                  ),
+                  style: UIConstants.buttonStyle(UIConstants.colorCommand),
                 ),
               ),
             ),
@@ -2472,10 +2459,7 @@ class _ActivityPageState extends State<ActivityPage> {
                         },
                         icon: const Icon(Icons.check),
                         label: const Text('Apply Filters'),
-                        style: ElevatedButton.styleFrom(
-                          backgroundColor: Colors.blue,
-                          foregroundColor: Colors.white,
-                        ),
+                        style: UIConstants.buttonStyle(UIConstants.colorCommand),
                       ),
                       const SizedBox(width: UIConstants.spacingMd),
                       ElevatedButton.icon(
@@ -2484,10 +2468,7 @@ class _ActivityPageState extends State<ActivityPage> {
                         },
                         icon: const Icon(Icons.clear),
                         label: const Text('Clear'),
-                        style: ElevatedButton.styleFrom(
-                          backgroundColor: Colors.grey,
-                          foregroundColor: Colors.white,
-                        ),
+                        style: UIConstants.buttonStyle(UIConstants.colorReject),
                       ),
                     ],
                   ),
@@ -2621,14 +2602,7 @@ class _ActivityPageState extends State<ActivityPage> {
                   },
                   icon: const Icon(Icons.add),
                   label: const Text('Show More'),
-                  style: ElevatedButton.styleFrom(
-                    backgroundColor: isDarkTheme 
-                        ? const Color(0xFF2d2d2d) 
-                        : Colors.grey[100],
-                    foregroundColor: isDarkTheme 
-                        ? Colors.white 
-                        : Colors.black,
-                  ),
+                  style: UIConstants.buttonStyle(UIConstants.colorCommand),
                 ),
               ),
             ),
@@ -3171,10 +3145,7 @@ class _ActivityPageState extends State<ActivityPage> {
                         },
                         icon: const Icon(Icons.check),
                         label: const Text('Apply Filters'),
-                        style: ElevatedButton.styleFrom(
-                          backgroundColor: Colors.blue,
-                          foregroundColor: Colors.white,
-                        ),
+                        style: UIConstants.buttonStyle(UIConstants.colorCommand),
                       ),
                       const SizedBox(width: UIConstants.spacingMd),
                       ElevatedButton.icon(
@@ -3183,10 +3154,7 @@ class _ActivityPageState extends State<ActivityPage> {
                         },
                         icon: const Icon(Icons.clear),
                         label: const Text('Clear'),
-                        style: ElevatedButton.styleFrom(
-                          backgroundColor: Colors.grey,
-                          foregroundColor: Colors.white,
-                        ),
+                        style: UIConstants.buttonStyle(UIConstants.colorReject),
                       ),
                     ],
                   ),
@@ -3651,14 +3619,7 @@ class _ActivityPageState extends State<ActivityPage> {
                                 },
                                 icon: const Icon(Icons.add),
                                 label: const Text('Show More'),
-                                style: ElevatedButton.styleFrom(
-                                  backgroundColor: isDarkTheme
-                                      ? const Color(0xFF2d2d2d)
-                                      : Colors.grey[100],
-                                  foregroundColor: isDarkTheme
-                                      ? Colors.white
-                                      : Colors.black,
-                                ),
+                                style: UIConstants.buttonStyle(UIConstants.colorCommand),
                               ),
                             ),
                           ),
@@ -4121,10 +4082,7 @@ class _ActivityPageState extends State<ActivityPage> {
                         },
                         icon: const Icon(Icons.check),
                         label: const Text('Apply Filters'),
-                        style: ElevatedButton.styleFrom(
-                          backgroundColor: Colors.blue,
-                          foregroundColor: Colors.white,
-                        ),
+                        style: UIConstants.buttonStyle(UIConstants.colorCommand),
                       ),
                       const SizedBox(width: UIConstants.spacingMd),
                       ElevatedButton.icon(
@@ -4133,10 +4091,7 @@ class _ActivityPageState extends State<ActivityPage> {
                         },
                         icon: const Icon(Icons.clear),
                         label: const Text('Clear'),
-                        style: ElevatedButton.styleFrom(
-                          backgroundColor: Colors.grey,
-                          foregroundColor: Colors.white,
-                        ),
+                        style: UIConstants.buttonStyle(UIConstants.colorReject),
                       ),
                     ],
                   ),
@@ -4535,14 +4490,7 @@ class _ActivityPageState extends State<ActivityPage> {
                               },
                               icon: const Icon(Icons.add),
                               label: const Text('Show More'),
-                              style: ElevatedButton.styleFrom(
-                                backgroundColor: isDarkTheme
-                                    ? const Color(0xFF2d2d2d)
-                                    : Colors.grey[100],
-                                foregroundColor: isDarkTheme
-                                    ? Colors.white
-                                    : Colors.black,
-                              ),
+                              style: UIConstants.buttonStyle(UIConstants.colorCommand),
                             ),
                           ),
                         ),

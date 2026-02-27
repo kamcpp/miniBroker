@@ -133,7 +133,7 @@ class _LeftMenuState extends State<LeftMenu> with SingleTickerProviderStateMixin
           children: [
             Icon(
               _isExpanded ? Icons.chevron_left : Icons.chevron_right,
-              color: widget.isDarkTheme ? Colors.white : const Color(0xFF1a1754),
+              color: widget.isDarkTheme ? Colors.white : UIConstants.colorCommand,
             ),
           ],
         ),
@@ -143,7 +143,7 @@ class _LeftMenuState extends State<LeftMenu> with SingleTickerProviderStateMixin
 
   Widget _buildMenuItem(MenuItem item) {
     final isSelected = item.isSelected;
-    final color = widget.isDarkTheme ? Colors.white : const Color(0xFF1a1754);
+    final color = widget.isDarkTheme ? Colors.white : UIConstants.colorCommand;
     final selectedColor = widget.isDarkTheme ? Colors.blue.shade300 : Colors.blue.shade700;
 
     return Tooltip(

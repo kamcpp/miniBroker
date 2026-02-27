@@ -393,8 +393,8 @@ class _ConfigFinderDialogState extends State<ConfigFinderDialog> {
     final hoverColor = isDarkTheme ? const Color(0xFF3d3d3d) : Colors.grey[200]!;
     final textColor = isDarkTheme ? Colors.white : Colors.black;
     final hintColor = isDarkTheme ? Colors.grey[400]! : Colors.grey[600]!;
-    final primaryColor = isDarkTheme ? const Color(0xFF6b9eff) : const Color(0xFF1a1754);
-    final selectedColor = isDarkTheme ? const Color(0xFF00b8fb) : const Color(0xFF1a1754);
+    final primaryColor = isDarkTheme ? const Color(0xFF6b9eff) : UIConstants.colorCommand;
+    final selectedColor = isDarkTheme ? const Color(0xFF00b8fb) : UIConstants.colorCommand;
 
     return Dialog(
       backgroundColor: Colors.transparent,
