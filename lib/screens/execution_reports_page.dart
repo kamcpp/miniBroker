@@ -210,9 +210,12 @@ class _ExecutionReportsPageState extends State<ExecutionReportsPage> {
     final themeService = Provider.of<ThemeService>(context);
     final isDarkTheme = themeService.isDarkTheme;
 
+    final backgroundColor = isDarkTheme ? const Color(0xFF1e1e1e) : Colors.grey[50]!;
+
     return BasePage(
       menuItems: MenuItemsHelper.buildMenuItems(context, 'execution_reports'),
-      content: Padding(
+      content: Container(
+        color: backgroundColor,
         padding: UIConstants.paddingComfortable,
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.start,

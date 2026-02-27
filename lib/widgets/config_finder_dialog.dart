@@ -287,13 +287,7 @@ class _ConfigFinderDialogState extends State<ConfigFinderDialog> {
             ),
             ElevatedButton(
               onPressed: () => Navigator.of(context).pop(true),
-              style: ElevatedButton.styleFrom(
-                backgroundColor: Colors.red[600],
-                foregroundColor: Colors.white,
-                shape: RoundedRectangleBorder(
-                  borderRadius: BorderRadius.circular(UIConstants.textFieldBorderRadius),
-                ),
-              ),
+              style: UIConstants.buttonStyle(UIConstants.colorReject),
               child: const Text('Delete', style: TextStyle(fontSize: UIConstants.fontSizeBody)),
             ),
           ],
@@ -333,11 +327,7 @@ class _ConfigFinderDialogState extends State<ConfigFinderDialog> {
           ),
           ElevatedButton(
             onPressed: () => Navigator.of(context).pop(true),
-            style: ElevatedButton.styleFrom(
-              shape: RoundedRectangleBorder(
-                borderRadius: BorderRadius.circular(UIConstants.textFieldBorderRadius),
-              ),
-            ),
+            style: UIConstants.buttonStyle(UIConstants.colorCommand),
             child: const Text('Create', style: TextStyle(fontSize: UIConstants.fontSizeBody)),
           ),
         ],
@@ -362,13 +352,7 @@ class _ConfigFinderDialogState extends State<ConfigFinderDialog> {
               // Exit the application
               exit(0);
             },
-            style: ElevatedButton.styleFrom(
-              backgroundColor: Colors.red,
-              foregroundColor: Colors.white,
-              shape: RoundedRectangleBorder(
-                borderRadius: BorderRadius.circular(UIConstants.borderRadiusSm),
-              ),
-            ),
+            style: UIConstants.buttonStyle(UIConstants.colorReject),
             icon: const Icon(Icons.exit_to_app, size: UIConstants.textFieldIconSize),
             label: const Text('Exit App', style: TextStyle(fontSize: UIConstants.fontSizeBody)),
           ),
@@ -485,7 +469,7 @@ class _ConfigFinderDialogState extends State<ConfigFinderDialog> {
                         borderRadius: BorderRadius.circular(UIConstants.textFieldBorderRadius),
                         borderSide: BorderSide.none,
                       ),
-                      contentPadding: UIConstants.textFieldPadding,
+                      contentPadding: UIConstants.textFieldContentPadding,
                       isDense: true,
                     ),
                   ),
@@ -493,14 +477,7 @@ class _ConfigFinderDialogState extends State<ConfigFinderDialog> {
                 const SizedBox(width: UIConstants.spacingSm),
                 ElevatedButton.icon(
                   onPressed: _changeConfigDir,
-                  style: ElevatedButton.styleFrom(
-                    backgroundColor: primaryColor,
-                    foregroundColor: Colors.white,
-                    shape: RoundedRectangleBorder(
-                      borderRadius: BorderRadius.circular(UIConstants.textFieldBorderRadius),
-                    ),
-                    padding: UIConstants.paddingCompact,
-                  ),
+                  style: UIConstants.buttonStyle(primaryColor),
                   icon: const Icon(Icons.folder, size: UIConstants.textFieldIconSize),
                   label: const Text('Change', style: TextStyle(fontSize: UIConstants.fontSizeBody)),
                 ),
@@ -530,7 +507,7 @@ class _ConfigFinderDialogState extends State<ConfigFinderDialog> {
                   style: TextButton.styleFrom(
                     foregroundColor: primaryColor,
                     shape: RoundedRectangleBorder(
-                      borderRadius: BorderRadius.circular(UIConstants.textFieldBorderRadius),
+                      borderRadius: BorderRadius.circular(UIConstants.borderRadiusSm),
                     ),
                   ),
                   icon: const Icon(Icons.add_circle_outline, size: 20),
@@ -780,14 +757,7 @@ class _ConfigFinderDialogState extends State<ConfigFinderDialog> {
                     // Exit the application
                     exit(0);
                   },
-                  style: ElevatedButton.styleFrom(
-                    backgroundColor: Colors.red,
-                    foregroundColor: Colors.white,
-                    padding: UIConstants.paddingCompact,
-                    shape: RoundedRectangleBorder(
-                      borderRadius: BorderRadius.circular(UIConstants.borderRadiusSm),
-                    ),
-                  ),
+                  style: UIConstants.buttonStyle(UIConstants.colorReject),
                   icon: const Icon(Icons.exit_to_app, size: UIConstants.textFieldIconSize),
                   label: const Text('Exit App', style: TextStyle(fontSize: UIConstants.fontSizeBody)),
                 ),
@@ -804,15 +774,7 @@ class _ConfigFinderDialogState extends State<ConfigFinderDialog> {
                           Navigator.of(context).pop(_selectedConfig);
                         }
                       : null,
-                  style: ElevatedButton.styleFrom(
-                    backgroundColor: primaryColor,
-                    foregroundColor: Colors.white,
-                    padding: UIConstants.paddingCompact,
-                    shape: RoundedRectangleBorder(
-                      borderRadius: BorderRadius.circular(UIConstants.borderRadiusSm),
-                    ),
-                    disabledBackgroundColor: hintColor?.withOpacity(0.3),
-                  ),
+                  style: UIConstants.buttonStyle(primaryColor),
                   child: const Text(
                     'Launch',
                     style: TextStyle(

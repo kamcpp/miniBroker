@@ -235,6 +235,7 @@ class _PortfolioPageState extends State<PortfolioPage> {
                 // Cash token dropdown
                 SizedBox(
                   width: 180,
+                  height: UIConstants.buttonHeightStandard,
                   child: DropdownButtonFormField<String>(
                     value: _selectedCashToken,
                     decoration: InputDecoration(
@@ -246,7 +247,7 @@ class _PortfolioPageState extends State<PortfolioPage> {
                       border: OutlineInputBorder(
                         borderRadius: BorderRadius.circular(UIConstants.textFieldBorderRadius),
                       ),
-                      contentPadding: const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
+                      contentPadding: UIConstants.textFieldContentPadding,
                       isDense: true,
                       filled: true,
                       fillColor: isDarkTheme ? UIConstants.colorDarkFill : Colors.white,

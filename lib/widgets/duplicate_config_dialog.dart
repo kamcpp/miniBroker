@@ -106,7 +106,7 @@ class _DuplicateConfigDialogState extends State<DuplicateConfigDialog> {
                   hintStyle: TextStyle(color: hintColor, fontSize: UIConstants.textFieldFontSize),
                   filled: true,
                   fillColor: surfaceColor,
-                          contentPadding: UIConstants.textFieldPadding,
+                          contentPadding: UIConstants.textFieldContentPadding,
                           isDense: true,
                           border: OutlineInputBorder(
                     borderRadius: BorderRadius.circular(UIConstants.textFieldBorderRadius),
@@ -135,6 +135,9 @@ class _DuplicateConfigDialogState extends State<DuplicateConfigDialog> {
                     onPressed: () => Navigator.of(context).pop(),
                     style: TextButton.styleFrom(
                       foregroundColor: hintColor,
+                      shape: RoundedRectangleBorder(
+                        borderRadius: BorderRadius.circular(UIConstants.borderRadiusSm),
+                      ),
                     ),
                     child: const Text('Cancel'),
                   ),
@@ -145,17 +148,7 @@ class _DuplicateConfigDialogState extends State<DuplicateConfigDialog> {
                         Navigator.of(context).pop(_brokerNameController.text.trim());
                       }
                     },
-                    style: ElevatedButton.styleFrom(
-                      backgroundColor: primaryColor,
-                      foregroundColor: Colors.white,
-                      padding: const EdgeInsets.symmetric(
-                        horizontal: 24,
-                        vertical: 14,
-                      ),
-                      shape: RoundedRectangleBorder(
-                        borderRadius: BorderRadius.circular(UIConstants.textFieldBorderRadius),
-                      ),
-                    ),
+                    style: UIConstants.buttonStyle(primaryColor),
                     child: const Text(
                       'Duplicate',
                       style: TextStyle(fontWeight: UIConstants.fontWeightMedium),

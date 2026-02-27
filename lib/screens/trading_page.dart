@@ -5795,7 +5795,7 @@ class _HoverInputFieldState extends State<_HoverInputField> {
                   ),
                   border: InputBorder.none,
                   isDense: true,
-                  contentPadding: UIConstants.textFieldPadding,
+                  contentPadding: UIConstants.textFieldContentPadding,
                 ),
               ),
             ),
@@ -5834,7 +5834,7 @@ class _HoverDropdownFieldState extends State<_HoverDropdownField> {
       onEnter: (_) => setState(() => _isHovered = true),
       onExit: (_) => setState(() => _isHovered = false),
       child: Container(
-        height: 35,
+        height: UIConstants.buttonHeightStandard,
         padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
         decoration: BoxDecoration(
           color: backgroundColor,

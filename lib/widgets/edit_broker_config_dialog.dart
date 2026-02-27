@@ -287,7 +287,7 @@ class _EditBrokerConfigDialogState extends State<EditBrokerConfigDialog> {
                         decoration: InputDecoration(
                           filled: true,
                           fillColor: surfaceColor.withOpacity(0.5),
-                          contentPadding: UIConstants.textFieldPadding,
+                          contentPadding: UIConstants.textFieldContentPadding,
                           isDense: true,
                           border: OutlineInputBorder(
                             borderRadius: BorderRadius.circular(UIConstants.textFieldBorderRadius),
@@ -322,7 +322,7 @@ class _EditBrokerConfigDialogState extends State<EditBrokerConfigDialog> {
                                 hintStyle: TextStyle(color: hintColor, fontSize: UIConstants.textFieldFontSize),
                                 filled: true,
                                 fillColor: surfaceColor,
-                                contentPadding: UIConstants.textFieldPadding,
+                                contentPadding: UIConstants.textFieldContentPadding,
                                 isDense: true,
                                 border: OutlineInputBorder(
                                   borderRadius: BorderRadius.circular(UIConstants.textFieldBorderRadius),
@@ -346,17 +346,7 @@ class _EditBrokerConfigDialogState extends State<EditBrokerConfigDialog> {
                                   )
                                 : Icon(Icons.network_ping, size: 18),
                             label: Text('Test'),
-                            style: ElevatedButton.styleFrom(
-                              backgroundColor: primaryColor,
-                              foregroundColor: Colors.white,
-                              padding: const EdgeInsets.symmetric(
-                                horizontal: 16,
-                                vertical: 12,
-                              ),
-                              shape: RoundedRectangleBorder(
-                                borderRadius: BorderRadius.circular(UIConstants.textFieldBorderRadius),
-                              ),
-                            ),
+                            style: UIConstants.buttonStyle(primaryColor),
                           ),
                         ],
                       ),
@@ -391,7 +381,7 @@ class _EditBrokerConfigDialogState extends State<EditBrokerConfigDialog> {
                           hintStyle: TextStyle(color: hintColor, fontSize: UIConstants.textFieldFontSize),
                           filled: true,
                           fillColor: surfaceColor,
-                          contentPadding: UIConstants.textFieldPadding,
+                          contentPadding: UIConstants.textFieldContentPadding,
                           isDense: true,
                           border: OutlineInputBorder(
                             borderRadius: BorderRadius.circular(UIConstants.textFieldBorderRadius),
@@ -425,7 +415,7 @@ class _EditBrokerConfigDialogState extends State<EditBrokerConfigDialog> {
                           hintStyle: TextStyle(color: hintColor, fontSize: UIConstants.textFieldFontSize),
                           filled: true,
                           fillColor: surfaceColor,
-                          contentPadding: UIConstants.textFieldPadding,
+                          contentPadding: UIConstants.textFieldContentPadding,
                           isDense: true,
                           border: OutlineInputBorder(
                             borderRadius: BorderRadius.circular(UIConstants.textFieldBorderRadius),
@@ -453,7 +443,7 @@ class _EditBrokerConfigDialogState extends State<EditBrokerConfigDialog> {
                           hintStyle: TextStyle(color: hintColor, fontSize: UIConstants.textFieldFontSize),
                           filled: true,
                           fillColor: surfaceColor,
-                          contentPadding: UIConstants.textFieldPadding,
+                          contentPadding: UIConstants.textFieldContentPadding,
                           isDense: true,
                           border: OutlineInputBorder(
                             borderRadius: BorderRadius.circular(UIConstants.textFieldBorderRadius),
@@ -526,23 +516,16 @@ class _EditBrokerConfigDialogState extends State<EditBrokerConfigDialog> {
                     onPressed: _isSaving ? null : () => Navigator.of(context).pop(false),
                     style: TextButton.styleFrom(
                       foregroundColor: hintColor,
+                      shape: RoundedRectangleBorder(
+                        borderRadius: BorderRadius.circular(UIConstants.borderRadiusSm),
+                      ),
                     ),
                     child: const Text('Cancel'),
                   ),
                   const SizedBox(width: UIConstants.spacingSm),
                   ElevatedButton(
                     onPressed: _isSaving ? null : _saveConfig,
-                    style: ElevatedButton.styleFrom(
-                      backgroundColor: primaryColor,
-                      foregroundColor: Colors.white,
-                      padding: const EdgeInsets.symmetric(
-                        horizontal: 32,
-                        vertical: 16,
-                      ),
-                      shape: RoundedRectangleBorder(
-                        borderRadius: BorderRadius.circular(UIConstants.textFieldBorderRadius),
-                      ),
-                    ),
+                    style: UIConstants.buttonStyle(primaryColor),
                     child: _isSaving
                         ? const SizedBox(
                             width: 20,

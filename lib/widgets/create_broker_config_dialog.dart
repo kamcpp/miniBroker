@@ -260,7 +260,7 @@ class _CreateBrokerConfigDialogState extends State<CreateBrokerConfigDialog> {
                           hintStyle: TextStyle(color: hintColor, fontSize: UIConstants.textFieldFontSize),
                           filled: true,
                           fillColor: surfaceColor,
-                          contentPadding: UIConstants.textFieldPadding,
+                          contentPadding: UIConstants.textFieldContentPadding,
                           isDense: true,
                           border: OutlineInputBorder(
                             borderRadius: BorderRadius.circular(UIConstants.textFieldBorderRadius),
@@ -306,7 +306,7 @@ class _CreateBrokerConfigDialogState extends State<CreateBrokerConfigDialog> {
                                 hintStyle: TextStyle(color: hintColor, fontSize: UIConstants.textFieldFontSize),
                                 filled: true,
                                 fillColor: surfaceColor,
-                                contentPadding: UIConstants.textFieldPadding,
+                                contentPadding: UIConstants.textFieldContentPadding,
                                 isDense: true,
                                 border: OutlineInputBorder(
                                   borderRadius: BorderRadius.circular(UIConstants.textFieldBorderRadius),
@@ -330,17 +330,7 @@ class _CreateBrokerConfigDialogState extends State<CreateBrokerConfigDialog> {
                                   )
                                 : Icon(Icons.network_ping, size: 18),
                             label: Text('Test'),
-                            style: ElevatedButton.styleFrom(
-                              backgroundColor: primaryColor,
-                              foregroundColor: Colors.white,
-                              padding: const EdgeInsets.symmetric(
-                                horizontal: 16,
-                                vertical: 12,
-                              ),
-                              shape: RoundedRectangleBorder(
-                                borderRadius: BorderRadius.circular(UIConstants.textFieldBorderRadius),
-                              ),
-                            ),
+                            style: UIConstants.buttonStyle(primaryColor),
                           ),
                         ],
                       ),
@@ -375,7 +365,7 @@ class _CreateBrokerConfigDialogState extends State<CreateBrokerConfigDialog> {
                           hintStyle: TextStyle(color: hintColor, fontSize: UIConstants.textFieldFontSize),
                           filled: true,
                           fillColor: surfaceColor,
-                          contentPadding: UIConstants.textFieldPadding,
+                          contentPadding: UIConstants.textFieldContentPadding,
                           isDense: true,
                           border: OutlineInputBorder(
                             borderRadius: BorderRadius.circular(UIConstants.textFieldBorderRadius),
@@ -409,7 +399,7 @@ class _CreateBrokerConfigDialogState extends State<CreateBrokerConfigDialog> {
                           hintStyle: TextStyle(color: hintColor, fontSize: UIConstants.textFieldFontSize),
                           filled: true,
                           fillColor: surfaceColor,
-                          contentPadding: UIConstants.textFieldPadding,
+                          contentPadding: UIConstants.textFieldContentPadding,
                           isDense: true,
                           border: OutlineInputBorder(
                             borderRadius: BorderRadius.circular(UIConstants.textFieldBorderRadius),
@@ -437,7 +427,7 @@ class _CreateBrokerConfigDialogState extends State<CreateBrokerConfigDialog> {
                           hintStyle: TextStyle(color: hintColor, fontSize: UIConstants.textFieldFontSize),
                           filled: true,
                           fillColor: surfaceColor,
-                          contentPadding: UIConstants.textFieldPadding,
+                          contentPadding: UIConstants.textFieldContentPadding,
                           isDense: true,
                           border: OutlineInputBorder(
                             borderRadius: BorderRadius.circular(UIConstants.textFieldBorderRadius),
@@ -512,23 +502,16 @@ class _CreateBrokerConfigDialogState extends State<CreateBrokerConfigDialog> {
                         : () => Navigator.of(context).pop(),
                     style: TextButton.styleFrom(
                       foregroundColor: hintColor,
+                      shape: RoundedRectangleBorder(
+                        borderRadius: BorderRadius.circular(UIConstants.borderRadiusSm),
+                      ),
                     ),
                     child: const Text('Cancel'),
                   ),
                   const SizedBox(width: UIConstants.spacingSm),
                   ElevatedButton(
                     onPressed: _isCreating ? null : _createConfig,
-                    style: ElevatedButton.styleFrom(
-                      backgroundColor: primaryColor,
-                      foregroundColor: Colors.white,
-                      padding: const EdgeInsets.symmetric(
-                        horizontal: 32,
-                        vertical: 16,
-                      ),
-                      shape: RoundedRectangleBorder(
-                        borderRadius: BorderRadius.circular(UIConstants.textFieldBorderRadius),
-                      ),
-                    ),
+                    style: UIConstants.buttonStyle(primaryColor),
                     child: _isCreating
                         ? const SizedBox(
                             width: 20,

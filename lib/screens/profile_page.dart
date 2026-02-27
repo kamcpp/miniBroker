@@ -191,7 +191,7 @@ class _ProfilePageState extends State<ProfilePage> {
                 border: OutlineInputBorder(
                   borderRadius: BorderRadius.circular(UIConstants.textFieldBorderRadius),
                 ),
-                contentPadding: UIConstants.textFieldPadding,
+                contentPadding: UIConstants.textFieldContentPadding,
                         isDense: true,
               ),
               validator: (value) {
@@ -208,10 +208,7 @@ class _ProfilePageState extends State<ProfilePage> {
               children: [
                 ElevatedButton(
                   onPressed: onSave,
-                  style: ElevatedButton.styleFrom(
-                    backgroundColor: UIConstants.colorCommand,
-                    foregroundColor: Colors.white,
-                  ),
+                  style: UIConstants.buttonStyle(UIConstants.colorCommand),
                   child: const Text('Save'),
                 ),
                 const SizedBox(width: UIConstants.spacingSm),
@@ -290,7 +287,7 @@ class _ProfilePageState extends State<ProfilePage> {
                 border: OutlineInputBorder(
                   borderRadius: BorderRadius.circular(UIConstants.textFieldBorderRadius),
                 ),
-                contentPadding: UIConstants.textFieldPadding,
+                contentPadding: UIConstants.textFieldContentPadding,
                         isDense: true,
                 suffixIcon: IconButton(
                   focusNode: FocusNode(skipTraversal: true),
@@ -323,7 +320,7 @@ class _ProfilePageState extends State<ProfilePage> {
                 border: OutlineInputBorder(
                   borderRadius: BorderRadius.circular(UIConstants.textFieldBorderRadius),
                 ),
-                contentPadding: UIConstants.textFieldPadding,
+                contentPadding: UIConstants.textFieldContentPadding,
                         isDense: true,
               ),
               validator: (value) {
@@ -340,10 +337,7 @@ class _ProfilePageState extends State<ProfilePage> {
               children: [
                 ElevatedButton(
                   onPressed: _savePassword,
-                  style: ElevatedButton.styleFrom(
-                    backgroundColor: UIConstants.colorCommand,
-                    foregroundColor: Colors.white,
-                  ),
+                  style: UIConstants.buttonStyle(UIConstants.colorCommand),
                   child: const Text('Save'),
                 ),
                 const SizedBox(width: UIConstants.spacingSm),

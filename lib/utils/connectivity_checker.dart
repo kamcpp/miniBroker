@@ -318,10 +318,7 @@ class _ServerErrorDialogContentState extends State<_ServerErrorDialogContent> {
         ),
         ElevatedButton(
           onPressed: _isRetrying ? null : _retryConnection,
-          style: ElevatedButton.styleFrom(
-            backgroundColor: UIConstants.colorCommand,
-            foregroundColor: Colors.white,
-          ),
+          style: UIConstants.buttonStyle(UIConstants.colorCommand),
           child: _isRetrying
               ? const SizedBox(
                   width: 16,

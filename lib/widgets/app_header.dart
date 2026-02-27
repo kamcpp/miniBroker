@@ -171,10 +171,7 @@ class AppHeader extends StatelessWidget {
                 ),
                 ElevatedButton(
                   onPressed: () => Navigator.pop(context, true),
-                  style: ElevatedButton.styleFrom(
-                    backgroundColor: Colors.red,
-                    foregroundColor: Colors.white,
-                  ),
+                  style: UIConstants.buttonStyle(UIConstants.colorReject),
                   child: const Text('Logout'),
                 ),
               ],
@@ -191,17 +188,7 @@ class AppHeader extends StatelessWidget {
         },
         icon: const Icon(Icons.logout, size: UIConstants.textFieldIconSize),
         label: const Text('Logout', style: TextStyle(fontSize: UIConstants.fontSizeBody)),
-        style: ElevatedButton.styleFrom(
-          backgroundColor: isDarkTheme ? Colors.red.shade700 : Colors.red,
-          foregroundColor: Colors.white,
-          padding: const EdgeInsets.symmetric(
-            horizontal: UIConstants.paddingMd,
-            vertical: UIConstants.paddingSm,
-          ),
-          shape: RoundedRectangleBorder(
-            borderRadius: BorderRadius.circular(UIConstants.borderRadiusSm),
-          ),
-        ),
+        style: UIConstants.buttonStyle(UIConstants.colorReject),
       ),
     );
   }
