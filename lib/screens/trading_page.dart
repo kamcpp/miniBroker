@@ -15,6 +15,7 @@ import '../services/chart_service.dart';
 import '../utils/connectivity_checker.dart';
 import '../utils/menu_items_helper.dart';
 import '../widgets/base_page.dart';
+import 'execution_reports_page.dart';
 
 class TradingPage extends StatefulWidget {
   const TradingPage({super.key});
@@ -5006,29 +5007,48 @@ class _TradingPageState extends State<TradingPage> {
         // Success - handle ExecutionAsyncResponse structure
         final output = result['output'] as Map<String, dynamic>?;
 
-        // For async responses, extract order ID from different possible fields
-        final orderId = output?['id'] ??
-                       output?['refExecutionId'] ??
-                       output?['asyncResponseData']?['order_id'] ??
-                       output?['metadata']?['order_id'] ??
-                       'Unknown';
+        // For async responses, extract request_id / execution ID
+        final requestId = output?['refExecutionId'] ??
+                         output?['ref_execution_id'] ??
+                         output?['id'] ??
+                         output?['asyncResponseData']?['order_id'] ??
+                         output?['metadata']?['order_id'] ??
+                         'Unknown';
 
         print('📋 CreateOrderAsync response: $output');
 
         ScaffoldMessenger.of(context).showSnackBar(
           SnackBar(
-            content: Text(
-              '$side order submitted successfully!\nExecution ID: $orderId',
+            content: Row(
+              children: [
+                Expanded(
+                  child: Text(
+                    '$side order submitted!\nRequest ID: $requestId',
+                  ),
+                ),
+                TextButton(
+                  onPressed: () {
+                    ScaffoldMessenger.of(context).hideCurrentSnackBar();
+                    Navigator.of(context).push(
+                      PageRouteBuilder(
+                        pageBuilder: (context, animation, secondaryAnimation) =>
+                            ExecutionReportsPage(initialRequestId: requestId),
+                        transitionDuration: Duration.zero,
+                        reverseTransitionDuration: Duration.zero,
+                      ),
+                    );
+                  },
+                  child: Text('View Reports', style: TextStyle(color: Colors.white, fontWeight: FontWeight.bold)),
+                ),
+              ],
             ),
             backgroundColor: Colors.green,
-            duration: Duration(seconds: 5),
+            duration: Duration(seconds: 8),
           ),
         );
 
         // Refresh orders list to show the new order
         _fetchRealOrders();
-
-        // Order list functionality removed since tabs were removed
 
         // Clear form after successful order
         _quantityController.clear();

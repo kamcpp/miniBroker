@@ -260,6 +260,14 @@ message GetOrderbookResponse {
 message GetOrderExecutionReportsRequest {
   string proposed_execution_id = 1;                                     // OPTIONAL: Client-proposed execution ID
   string request_id = 2;                                                // REQUIRED: The request_id from CreateOrderAsync response
+  tech.qomet.agora.api.grpc.common.PaginationParams pagination = 3;    // OPTIONAL: Pagination parameters
+  string symbol_filter = 4;                                             // OPTIONAL: Filter by symbol (exact match)
+  string currency_filter = 5;                                           // OPTIONAL: Filter by currency
+  string exec_type_filter = 6;                                          // OPTIONAL: Filter by exec_type (e.g. "0"=NEW, "8"=REJECTED)
+  string from_date = 7;                                                 // OPTIONAL: ISO8601/RFC3339 lower bound on created_at
+  string to_date = 8;                                                   // OPTIONAL: ISO8601/RFC3339 upper bound on created_at
+  string sort_by = 9;                                                   // OPTIONAL: Field to sort by (default: "created_at")
+  string sort_direction = 10;                                           // OPTIONAL: "asc" or "desc" (default: "asc")
 
   map<string, string> aux_data = 105;                                   // OPTIONAL: Additional request data
 }
@@ -312,6 +320,7 @@ message GetOrderExecutionReportsResponse {
   repeated OrderBusinessReject business_rejects = 5;
   int32 total_execution_reports = 6;
   int32 total_business_rejects = 7;
+  tech.qomet.agora.api.grpc.common.PaginationInfo pagination_info = 8; // OPTIONAL: Pagination info for execution reports
 
   map<string, string> metadata = 105;
 }

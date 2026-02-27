@@ -1354,6 +1354,119 @@ class GrpcurlHelper {
     );
   }
 
+  /// Create an order asynchronously
+  /// TradingService.CreateOrderAsync
+  static Future<Map<String, dynamic>> createOrderAsync({
+    required String accountIid,
+    required String feePayerAccountIid,
+    required String securityListingIid,
+    required String orderType,
+    required String side,
+    required String quantity,
+    required String price,
+    String timeInForce = '0',
+    required String participantOrderIid,
+    DateTime? expireTime,
+    Map<String, String>? auxData,
+  }) async {
+    print('📝 Creating order: $side $quantity @ $price for $securityListingIid');
+
+    // Map side string to proto enum value
+    String sideEnum;
+    switch (side.toUpperCase()) {
+      case 'BUY':
+        sideEnum = 'ORDER_SIDE_ENUM_BUY';
+        break;
+      case 'SELL':
+        sideEnum = 'ORDER_SIDE_ENUM_SELL';
+        break;
+      default:
+        sideEnum = 'ORDER_SIDE_ENUM_UNKNOWN';
+    }
+
+    final requestBody = <String, dynamic>{
+      'proposed_execution_id': 'create_order_${DateTime.now().millisecondsSinceEpoch}',
+      'account_iid': accountIid,
+      'fee_payer_account_iid': feePayerAccountIid,
+      'security_listing_iid': securityListingIid,
+      'order_type': orderType,
+      'side': sideEnum,
+      'quantity': quantity,
+      'price': price,
+      'time_in_force': timeInForce,
+      'participant_order_iid': participantOrderIid,
+    };
+
+    if (expireTime != null) {
+      requestBody['expire_dt'] = {
+        'unix_time_secs': _toUnixTimestamp(expireTime),
+      };
+    }
+    if (auxData != null) {
+      requestBody['aux_data'] = auxData;
+    }
+
+    return _executeGrpcCall(
+      method: 'CreateOrderAsync',
+      endpoint: 'TradingService/CreateOrderAsync',
+      requestBody: requestBody,
+    );
+  }
+
+  /// Get execution reports for an order
+  /// TradingService.GetOrderExecutionReports
+  static Future<Map<String, dynamic>> getOrderExecutionReports({
+    required String requestId,
+    int pageNumber = 1,
+    int pageSize = 20,
+    String? symbolFilter,
+    String? currencyFilter,
+    String? execTypeFilter,
+    String? fromDate,
+    String? toDate,
+    String? sortBy,
+    String? sortDirection,
+  }) async {
+    print('📋 Getting execution reports for requestId: $requestId');
+
+    final requestBody = <String, dynamic>{
+      'proposed_execution_id': 'get_exec_reports_${DateTime.now().millisecondsSinceEpoch}',
+      'request_id': requestId,
+      'pagination': {
+        'page_nr': pageNumber,
+        'page_size': pageSize,
+      },
+    };
+
+    if (symbolFilter != null && symbolFilter.isNotEmpty) {
+      requestBody['symbol_filter'] = symbolFilter;
+    }
+    if (currencyFilter != null && currencyFilter.isNotEmpty) {
+      requestBody['currency_filter'] = currencyFilter;
+    }
+    if (execTypeFilter != null && execTypeFilter.isNotEmpty) {
+      requestBody['exec_type_filter'] = execTypeFilter;
+    }
+    if (fromDate != null && fromDate.isNotEmpty) {
+      requestBody['from_date'] = fromDate;
+    }
+    if (toDate != null && toDate.isNotEmpty) {
+      requestBody['to_date'] = toDate;
+    }
+    if (sortBy != null && sortBy.isNotEmpty) {
+      requestBody['sort_by'] = sortBy;
+    }
+    if (sortDirection != null && sortDirection.isNotEmpty) {
+      requestBody['sort_direction'] = sortDirection;
+    }
+
+    return _executeGrpcCall(
+      method: 'GetOrderExecutionReports',
+      endpoint: 'TradingService/GetOrderExecutionReports',
+      requestBody: requestBody,
+    );
+  }
+
   // ============================================================================
   // SecurityListingService Methods
   // ============================================================================

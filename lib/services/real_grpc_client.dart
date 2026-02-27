@@ -1337,8 +1337,7 @@ class RealGrpcClient {
     };
   }
 
-  /// Create order using the real gRPC server
-  /// NOTE: TradingService not available on current server
+  /// Create order using the real gRPC server via TradingService.CreateOrderAsync
   Future<Map<String, dynamic>> createOrder({
     required String accountId,
     required String feePayerAccountId,
@@ -1353,24 +1352,101 @@ class RealGrpcClient {
     String? metadata,
     String? auxData,
   }) async {
-    print('⚠️ createOrder: TradingService not available on server');
-    return {
-      'input': {
-        'account_iid': accountId,
-        'fee_payer_account_iid': feePayerAccountId,
-        'security_listing_iid': securityId,
-        'order_type': orderType,
-        'side': side,
-        'quantity': quantity,
-        'price': price,
-        'time_in_force': timeInForce,
-        'participant_order_iid': participantOrderId,
-      },
-      'output': {'error': 'TradingService not available on server'},
-      'requestTime': _toUnixTimestamp(DateTime.now()).toString(),
-      'serverType': 'service-unavailable',
-      'success': false,
-    };
+    print('📝 createOrder called: side=$side, type=$orderType, qty=$quantity, price=$price, isConnected=$_isConnected');
+    if (!_isConnected) {
+      return {
+        'input': {
+          'account_iid': accountId,
+          'security_listing_iid': securityId,
+          'side': side,
+        },
+        'output': {'error': 'Not connected to server'},
+        'requestTime': _toUnixTimestamp(DateTime.now()).toString(),
+        'serverType': 'disconnected',
+        'success': false,
+      };
+    }
+
+    try {
+      final result = await GrpcurlHelper.createOrderAsync(
+        accountIid: accountId,
+        feePayerAccountIid: feePayerAccountId,
+        securityListingIid: securityId,
+        orderType: orderType,
+        side: side,
+        quantity: quantity,
+        price: price,
+        timeInForce: timeInForce,
+        participantOrderIid: participantOrderId,
+        expireTime: expireTime,
+      );
+      print('📝 createOrder result: success=${result['success']}');
+      return result;
+    } catch (e) {
+      print('❌ Critical error in createOrder: $e');
+      return {
+        'input': {
+          'account_iid': accountId,
+          'security_listing_iid': securityId,
+          'side': side,
+        },
+        'output': {'error': 'Critical error: $e'},
+        'requestTime': _toUnixTimestamp(DateTime.now()).toString(),
+        'serverType': 'critical-error',
+        'success': false,
+      };
+    }
+  }
+
+  /// Get execution reports for an order via TradingService.GetOrderExecutionReports
+  Future<Map<String, dynamic>> getOrderExecutionReports({
+    required String requestId,
+    int pageNumber = 1,
+    int pageSize = 20,
+    String? symbolFilter,
+    String? currencyFilter,
+    String? execTypeFilter,
+    String? fromDate,
+    String? toDate,
+    String? sortBy,
+    String? sortDirection,
+  }) async {
+    print('📋 getOrderExecutionReports called: requestId=$requestId, isConnected=$_isConnected');
+    if (!_isConnected) {
+      return {
+        'input': {'request_id': requestId},
+        'output': {'error': 'Not connected to server'},
+        'requestTime': _toUnixTimestamp(DateTime.now()).toString(),
+        'serverType': 'disconnected',
+        'success': false,
+      };
+    }
+
+    try {
+      final result = await GrpcurlHelper.getOrderExecutionReports(
+        requestId: requestId,
+        pageNumber: pageNumber,
+        pageSize: pageSize,
+        symbolFilter: symbolFilter,
+        currencyFilter: currencyFilter,
+        execTypeFilter: execTypeFilter,
+        fromDate: fromDate,
+        toDate: toDate,
+        sortBy: sortBy,
+        sortDirection: sortDirection,
+      );
+      print('📋 getOrderExecutionReports result: success=${result['success']}');
+      return result;
+    } catch (e) {
+      print('❌ Critical error in getOrderExecutionReports: $e');
+      return {
+        'input': {'request_id': requestId},
+        'output': {'error': 'Critical error: $e'},
+        'requestTime': _toUnixTimestamp(DateTime.now()).toString(),
+        'serverType': 'critical-error',
+        'success': false,
+      };
+    }
   }
 
   /// Real GetVenueList call to VenueService.GetVenueList using grpcurl

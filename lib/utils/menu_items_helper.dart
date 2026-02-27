@@ -3,6 +3,7 @@ import '../widgets/left_menu.dart';
 import '../screens/securities_page.dart';
 import '../screens/portfolio_page.dart';
 import '../screens/trading_page.dart';
+import '../screens/execution_reports_page.dart';
 // import '../screens/activity_page.dart';  // Disabled
 // import '../screens/cash_management_page.dart';  // Removed
 // import '../screens/users_admin_page.dart';  // Disabled
@@ -57,6 +58,22 @@ class MenuItemsHelper {
             Navigator.of(context).pushReplacement(
               PageRouteBuilder(
                 pageBuilder: (context, animation, secondaryAnimation) => const TradingPage(),
+                transitionDuration: Duration.zero,
+                reverseTransitionDuration: Duration.zero,
+              ),
+            );
+          }
+        },
+      ),
+      MenuItem(
+        label: 'Exec Reports',
+        icon: Icons.receipt_long,
+        isSelected: currentPage == 'execution_reports',
+        onTap: () {
+          if (currentPage != 'execution_reports') {
+            Navigator.of(context).pushReplacement(
+              PageRouteBuilder(
+                pageBuilder: (context, animation, secondaryAnimation) => const ExecutionReportsPage(),
                 transitionDuration: Duration.zero,
                 reverseTransitionDuration: Duration.zero,
               ),
