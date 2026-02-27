@@ -33,7 +33,7 @@ enum AssetClassEnum {
   ASSET_CLASS_ENUM_CREDIT = 18;
   ASSET_CLASS_ENUM_DIGITAL = 19;
   ASSET_CLASS_ENUM_LEDGER_NATIVE_COIN = 20;
-  ASSET_CLASS_ENUM_EXTERNAL_SECURITY = 21;
+  ASSET_CLASS_ENUM_EXTERNAL_INSTRUMENT = 21;
 
   ASSET_CLASS_ENUM_OTHER = 0x0fff0000;
 }
@@ -64,7 +64,7 @@ message Asset {
 
 message Holdings {
   oneof asset_id {                                                                         // REQUIRED: Must specify one asset type
-    string security_iid = 1;                                                               // Security internal ID
+    string instrument_iid = 1;                                                             // Instrument internal ID
     string currency_code = 2;                                                              // ISO 4217 currency code
   }
   string total_units = 3;                                                                  // REQUIRED: Total units held

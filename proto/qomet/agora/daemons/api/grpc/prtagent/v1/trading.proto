@@ -28,6 +28,8 @@ service TradingService {
 
   rpc GetOrderbook(GetOrderbookRequest) returns (GetOrderbookResponse);
   rpc GetOrderbookAsync(GetOrderbookRequest) returns (tech.qomet.agora.api.grpc.common.ExecutionAsyncResponse);
+
+  rpc GetOrderExecutionReports(GetOrderExecutionReportsRequest) returns (GetOrderExecutionReportsResponse);
 }
 
 message SecurityQuote {
@@ -252,4 +254,64 @@ message GetOrderbookResponse {
   OrderList sell_list = 5;                                              // REQUIRED: Sell side orders (can be empty)
 
   map<string, string> metadata = 105;                                   // OPTIONAL: Response metadata
+}
+
+// GetOrderExecutionReports — polls for execution reports via marketmgr relay
+message GetOrderExecutionReportsRequest {
+  string proposed_execution_id = 1;                                     // OPTIONAL: Client-proposed execution ID
+  string request_id = 2;                                                // REQUIRED: The request_id from CreateOrderAsync response
+
+  map<string, string> aux_data = 105;                                   // OPTIONAL: Additional request data
+}
+
+message OrderExecutionReport {
+  string order_id = 1;
+  string exec_id = 2;
+  string exec_type = 3;
+  string ord_status = 4;
+  string symbol = 5;
+  string side = 6;
+  string leaves_qty = 7;
+  string cum_qty = 8;
+  string avg_px = 9;
+  string cl_ord_id = 10;
+  string price = 11;
+  string order_qty = 12;
+  string currency = 13;
+  string transact_time = 14;
+  string text = 15;
+}
+
+message OrderBusinessReject {
+  string ref_seq_num = 1;
+  string ref_msg_type = 2;
+  string business_reject_reason = 3;
+  string text = 4;
+}
+
+message SentOrderInfo {
+  string request_id = 1;
+  string venue_iid = 2;
+  string cl_ord_id = 3;
+  string symbol = 4;
+  string side = 5;
+  string order_type = 6;
+  string quantity = 7;
+  string price = 8;
+  string currency = 9;
+  string status = 10;
+  string participant_iid = 11;
+  string investor_iid = 12;
+}
+
+message GetOrderExecutionReportsResponse {
+  string ref_execution_id = 1;
+  string request_id = 2;
+  SentOrderInfo sent_order = 3;
+  repeated OrderExecutionReport execution_reports = 4;
+  repeated OrderBusinessReject business_rejects = 5;
+  int32 total_execution_reports = 6;
+  int32 total_business_rejects = 7;
+
+  map<string, string> metadata = 105;
 }

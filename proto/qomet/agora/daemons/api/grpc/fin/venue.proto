@@ -16,6 +16,11 @@ enum VenueTypeEnum {
   VENUE_TYPE_ENUM_UNKNOWN = 0;
 
   VENUE_TYPE_ENUM_EXCHANGE = 1;
+  VENUE_TYPE_ENUM_STOCK_EXCHANGE = 2;
+  VENUE_TYPE_ENUM_FUTURES_EXCHANGE = 3;
+  VENUE_TYPE_ENUM_OPTIONS_EXCHANGE = 4;
+  VENUE_TYPE_ENUM_CRYPTO_EXCHANGE = 5;
+  VENUE_TYPE_ENUM_OVER_THE_COUNTER = 6;
 
   VENUE_TYPE_ENUM_OTHER = 0x0fff0000;
 }
@@ -49,12 +54,12 @@ message Venue {
     Market market_obj = 4;                                                                 // Market object
   }
 
-  string dominant_currency = 5;                                                            // OPTIONAL: ISO 4217 currency code
+  string domestic_currency = 5;                                                            // OPTIONAL: ISO 4217 currency code
 
-  VenueTypeEnum venue_type = 6;                                                            // REQUIRED: Type of venue
+  repeated VenueTypeEnum venue_types = 6;                                                  // OPTIONAL: Venue classification types
 
   tech.qomet.agora.api.grpc.common.DateTime established_dt = 7;                            // OPTIONAL: Venue establishment date
-  string country_code = 8;                                                                 // OPTIONAL: ISO 3166-1 alpha-2
+  repeated string operating_country_codes = 8;                                             // OPTIONAL: ISO 3166-1 alpha-2 codes
   string city_code = 9;                                                                    // OPTIONAL: UN/LOCODE
   string website_url = 10;                                                                 // OPTIONAL: Venue website URL
   string timezone = 11;                                                                    // OPTIONAL: ISO 8601 time zone
@@ -65,6 +70,11 @@ message Venue {
   repeated OneOfIdOrParticipant settlement_depositories = 15;                              // OPTIONAL: CSDs
   repeated OneOfIdOrParticipant clearing_houses = 16;                                      // OPTIONAL: Clearing houses
   repeated OneOfIdOrParticipant regulators = 17;                                           // OPTIONAL: Regulators
+
+  string short_name = 20;                                                                  // OPTIONAL: Short name (e.g., "NASDAQ", "NYSE")
+  string name = 21;                                                                        // OPTIONAL: Full official name
+  string description = 22;                                                                 // OPTIONAL: Description of the venue
+  string calendar_iid = 23;                                                                // OPTIONAL: Calendar internal identifier
 
   map<string, string> display_names = 101;                                                 // OPTIONAL: Display names for localization
   map<string, string> descriptions = 102;                                                  // OPTIONAL: Descriptions for localization
