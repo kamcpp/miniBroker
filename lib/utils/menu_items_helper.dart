@@ -4,6 +4,7 @@ import '../screens/securities_page.dart';
 import '../screens/portfolio_page.dart';
 import '../screens/trading_page.dart';
 import '../screens/execution_reports_page.dart';
+import '../screens/broker_info_page.dart';
 // import '../screens/activity_page.dart';  // Disabled
 // import '../screens/cash_management_page.dart';  // Removed
 // import '../screens/users_admin_page.dart';  // Disabled
@@ -74,6 +75,22 @@ class MenuItemsHelper {
             Navigator.of(context).pushReplacement(
               PageRouteBuilder(
                 pageBuilder: (context, animation, secondaryAnimation) => const ExecutionReportsPage(),
+                transitionDuration: Duration.zero,
+                reverseTransitionDuration: Duration.zero,
+              ),
+            );
+          }
+        },
+      ),
+      MenuItem(
+        label: 'Broker Info',
+        icon: Icons.business,
+        isSelected: currentPage == 'broker_info',
+        onTap: () {
+          if (currentPage != 'broker_info') {
+            Navigator.of(context).pushReplacement(
+              PageRouteBuilder(
+                pageBuilder: (context, animation, secondaryAnimation) => const BrokerInfoPage(),
                 transitionDuration: Duration.zero,
                 reverseTransitionDuration: Duration.zero,
               ),

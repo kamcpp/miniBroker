@@ -157,11 +157,11 @@ class UIConstants {
   // COMPONENT SIZES - Compact dimensions
   // ============================================================================
 
-  /// Button height - compact (28px)
-  static const double buttonHeightCompact = 28.0;
+  /// Button height - compact (34px)
+  static const double buttonHeightCompact = 34.0;
 
-  /// Button height - standard (32px)
-  static const double buttonHeightStandard = 32.0;
+  /// Button height - standard (38px)
+  static const double buttonHeightStandard = 38.0;
 
   /// Input field height - compact (32px)
   static const double inputHeightCompact = 32.0;

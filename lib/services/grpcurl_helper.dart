@@ -1495,6 +1495,50 @@ class GrpcurlHelper {
   }
 
   // ============================================================================
+  // ParticipantService Methods
+  // ============================================================================
+
+  /// Get participant info using grpcurl
+  /// ParticipantService.GetParticipantInfo
+  static Future<Map<String, dynamic>> getParticipantInfo() async {
+    print('📋 Getting participant info from real server...');
+
+    return _executeGrpcCall(
+      method: 'GetParticipantInfo',
+      endpoint: 'ParticipantService/GetParticipantInfo',
+      requestBody: {
+        'proposed_execution_id': 'get_participant_info_${DateTime.now().millisecondsSinceEpoch}',
+      },
+    );
+  }
+
+  /// Get participant holdings using grpcurl
+  /// ParticipantService.GetParticipantHoldings
+  static Future<Map<String, dynamic>> getParticipantHoldings({
+    String? mode,
+    String? issuedInstrumentIid,
+  }) async {
+    print('📋 Getting participant holdings from real server...');
+
+    final requestBody = <String, dynamic>{
+      'proposed_execution_id': 'get_participant_holdings_${DateTime.now().millisecondsSinceEpoch}',
+    };
+
+    if (mode != null && mode.isNotEmpty) {
+      requestBody['mode'] = mode;
+    }
+    if (issuedInstrumentIid != null && issuedInstrumentIid.isNotEmpty) {
+      requestBody['issued_instrument_iid'] = issuedInstrumentIid;
+    }
+
+    return _executeGrpcCall(
+      method: 'GetParticipantHoldings',
+      endpoint: 'ParticipantService/GetParticipantHoldings',
+      requestBody: requestBody,
+    );
+  }
+
+  // ============================================================================
   // Utility Methods
   // ============================================================================
 
