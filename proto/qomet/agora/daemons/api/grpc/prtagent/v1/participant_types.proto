@@ -3,6 +3,7 @@ syntax = "proto3";
 package tech.qomet.agora.api.grpc.prtagent.v1;
 
 import "common.proto";
+import "fin/asset.proto";
 import "fin/participant.proto";
 import "fin/trading.proto";
 
@@ -96,6 +97,21 @@ message GetParticipantSettlementsResponse {
   tech.qomet.agora.api.grpc.common.DateTime generated_at_dt = 3;         // REQUIRED: Response generation timestamp
   repeated tech.qomet.agora.api.grpc.fin.Settlement settlements = 4;  // REQUIRED: List of settlements (can be empty)
   map<string, string> account_summaries = 5;                             // OPTIONAL: Account ID -> settlement summary
+
+  map<string, string> metadata = 105;                                    // OPTIONAL: Response metadata
+}
+
+message GetParticipantHoldingsRequest {
+  string proposed_execution_id = 1;                                      // OPTIONAL: Client-proposed execution ID for tracking
+  string mode = 2;                                                       // OPTIONAL: Query mode: 'treasury' (default) or 'direct'
+  string issued_instrument_iid = 3;                                      // OPTIONAL: Filter by issued instrument IID
+
+  map<string, string> aux_data = 105;                                    // OPTIONAL: Additional request data
+}
+
+message GetParticipantHoldingsResponse {
+  string ref_execution_id = 1;                                           // REQUIRED: Reference to the execution ID
+  tech.qomet.agora.api.grpc.fin.Portfolio portfolio = 2;                 // REQUIRED: Portfolio with all holdings (cash + security)
 
   map<string, string> metadata = 105;                                    // OPTIONAL: Response metadata
 }

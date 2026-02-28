@@ -25,6 +25,7 @@ class _PortfolioPageState extends State<PortfolioPage> {
   String? _investorId;
   Set<String> _supportedCashTokenCodes = {};
   String? _selectedCashToken;
+  Map<String, String> _securityIidToSymbol = {};
 
   @override
   void initState() {
@@ -138,11 +139,36 @@ class _PortfolioPageState extends State<PortfolioPage> {
 
       print('📊 Security holdings response: $response');
 
+      // Log individual security balances
+      if (response['success'] == true) {
+        final output = response['output'] as Map<String, dynamic>? ?? {};
+        final portfolio = output['portfolio'] as Map<String, dynamic>? ?? {};
+        final holdings = portfolio['holdings'] as Map<String, dynamic>? ?? {};
+        print('📊 Security holdings count: ${holdings.length}');
+        for (final entry in holdings.entries) {
+          final holdingData = entry.value as Map<String, dynamic>? ?? {};
+          final totalUnits = holdingData['totalUnits'] ?? holdingData['total_units'] ?? '0';
+          final stashUnits = holdingData['stashUnits'] ?? holdingData['stash_units'] ?? {};
+          print('📊 Security [${entry.key}]: total=$totalUnits, stashes=$stashUnits');
+        }
+      }
+
+      // Set holdings data first, then resolve symbols asynchronously
       if (mounted) {
         setState(() {
           _securityHoldingsData = response;
           _isLoadingSecurities = false;
         });
+      }
+
+      // Resolve IIDs to symbols in the background (non-blocking)
+      if (response['success'] == true) {
+        final output = response['output'] as Map<String, dynamic>? ?? {};
+        final portfolio = output['portfolio'] as Map<String, dynamic>? ?? {};
+        final holdings = portfolio['holdings'] as Map<String, dynamic>? ?? {};
+        if (holdings.isNotEmpty) {
+          _resolveSecuritySymbols(holdings.keys.toList());
+        }
       }
     } catch (e) {
       print('❌ Error fetching security holdings: $e');
@@ -158,6 +184,51 @@ class _PortfolioPageState extends State<PortfolioPage> {
           };
         });
       }
+    }
+  }
+
+  Future<void> _resolveSecuritySymbols(List<String> iids) async {
+    try {
+      final result = await GrpcurlHelper.getSecurityListingInfoBatch(
+        symbolAndSecurityIdRegexes: iids,
+      ).timeout(
+        const Duration(minutes: 5),
+        onTimeout: () => {
+          'success': false,
+          'output': {'error': 'Request timed out'},
+        },
+      );
+
+      if (result['success'] == true) {
+        final output = result['output'] as Map<String, dynamic>? ?? {};
+        final listings = output['securityListings'] ?? output['security_listings'];
+        final listingsList = listings is List<dynamic> ? listings : <dynamic>[];
+        final symbolMap = <String, String>{};
+
+        print('📊 SecurityListingInfoBatch returned ${listingsList.length} listings');
+
+        for (final listing in listingsList) {
+          if (listing is Map<String, dynamic>) {
+            final securityId = listing['securityId'] ?? listing['security_id'] ?? '';
+            final symbol = listing['symbol']?.toString() ?? '';
+
+            if (securityId.toString().isNotEmpty && symbol.isNotEmpty) {
+              symbolMap[securityId.toString()] = symbol;
+              print('📊 Resolved security ID $securityId -> $symbol');
+            }
+          }
+        }
+
+        if (mounted && symbolMap.isNotEmpty) {
+          setState(() {
+            _securityIidToSymbol = symbolMap;
+          });
+        }
+      } else {
+        print('⚠️ Failed to resolve security symbols: ${result['output']?['error']}');
+      }
+    } catch (e) {
+      print('⚠️ Error resolving security symbols: $e');
     }
   }
 
@@ -183,6 +254,21 @@ class _PortfolioPageState extends State<PortfolioPage> {
       );
 
       print('💰 Cash holdings response: $response');
+
+      // Log individual cash balances
+      if (response['success'] == true) {
+        final output = response['output'] as Map<String, dynamic>? ?? {};
+        final cashPortfolio = output['cashPortfolio'] as Map<String, dynamic>? ??
+            output['cash_portfolio'] as Map<String, dynamic>? ?? {};
+        final holdings = cashPortfolio['holdings'] as Map<String, dynamic>? ?? {};
+        print('💰 Cash holdings count: ${holdings.length}');
+        for (final entry in holdings.entries) {
+          final holdingData = entry.value as Map<String, dynamic>? ?? {};
+          final totalUnits = holdingData['totalUnits'] ?? holdingData['total_units'] ?? '0';
+          final stashUnits = holdingData['stashUnits'] ?? holdingData['stash_units'] ?? {};
+          print('💰 Cash [${entry.key}]: total=$totalUnits, stashes=$stashUnits');
+        }
+      }
 
       if (mounted) {
         setState(() {
@@ -525,6 +611,11 @@ class _PortfolioPageState extends State<PortfolioPage> {
     final output = _securityHoldingsData!['output'] as Map<String, dynamic>;
     final portfolio = output['portfolio'] as Map<String, dynamic>? ?? {};
     final holdings = portfolio['holdings'] as Map<String, dynamic>? ?? {};
+    print('📊 _buildSecurityHoldingsContent: portfolio keys=${portfolio.keys.toList()}, holdings keys=${holdings.keys.toList()}');
+    if (holdings.isNotEmpty) {
+      final firstEntry = holdings.entries.first;
+      print('📊 First holding entry: key=${firstEntry.key}, value=${firstEntry.value}');
+    }
 
     if (holdings.isEmpty) {
       return _buildEmptyState(isDarkTheme, 'No security holdings');
@@ -561,9 +652,11 @@ class _PortfolioPageState extends State<PortfolioPage> {
             ),
             itemBuilder: (context, index) {
               final entry = holdingsList[index];
-              final securityId = entry.key;
+              final securityIid = entry.key;
+              final symbol = _securityIidToSymbol[securityIid] ?? securityIid;
               final holdingData = entry.value as Map<String, dynamic>? ?? {};
-              final totalUnits = holdingData['totalUnits']?.toString() ?? '0';
+              final totalUnits = holdingData['totalUnits']?.toString()
+                  ?? holdingData['total_units']?.toString() ?? '0';
               final availableUnits = _getAvailableFromHolding(holdingData);
               final lockedUnits = _getLockedFromHolding(holdingData);
 
@@ -573,14 +666,17 @@ class _PortfolioPageState extends State<PortfolioPage> {
                   children: [
                     Expanded(
                       flex: 2,
-                      child: Text(
-                        securityId,
-                        style: TextStyle(
-                          fontSize: UIConstants.fontSizeBody,
-                          fontWeight: UIConstants.fontWeightMedium,
-                          color: isDarkTheme ? Colors.white : Colors.black,
+                      child: Tooltip(
+                        message: securityIid,
+                        child: Text(
+                          symbol,
+                          style: TextStyle(
+                            fontSize: UIConstants.fontSizeBody,
+                            fontWeight: UIConstants.fontWeightMedium,
+                            color: isDarkTheme ? Colors.white : Colors.black,
+                          ),
+                          overflow: TextOverflow.ellipsis,
                         ),
-                        overflow: TextOverflow.ellipsis,
                       ),
                     ),
                     _buildDataCell(totalUnits, flex: 2, isDarkTheme: isDarkTheme),
@@ -642,7 +738,8 @@ class _PortfolioPageState extends State<PortfolioPage> {
               final entry = holdingsList[index];
               final currencyCode = entry.key;
               final holdingData = entry.value as Map<String, dynamic>? ?? {};
-              final totalBalance = holdingData['totalUnits']?.toString() ?? '0';
+              final totalBalance = holdingData['totalUnits']?.toString()
+                  ?? holdingData['total_units']?.toString() ?? '0';
               final availableBalance = _getAvailableFromHolding(holdingData);
               final reservedBalance = _getLockedFromHolding(holdingData);
 
@@ -766,17 +863,20 @@ class _PortfolioPageState extends State<PortfolioPage> {
   /// The proto Holdings has total_units and stash_units (map<string,string>).
   /// Available balance comes from stashUnits['available'], falling back to totalUnits.
   String _getAvailableFromHolding(Map<String, dynamic> holdingData) {
-    final stashUnits = holdingData['stashUnits'] as Map<String, dynamic>? ?? {};
+    final stashUnits = holdingData['stashUnits'] as Map<String, dynamic>?
+        ?? holdingData['stash_units'] as Map<String, dynamic>? ?? {};
     if (stashUnits.containsKey('available')) {
       return stashUnits['available']?.toString() ?? '0';
     }
     // If no stash breakdown, total = available
-    return holdingData['totalUnits']?.toString() ?? '0';
+    return holdingData['totalUnits']?.toString()
+        ?? holdingData['total_units']?.toString() ?? '0';
   }
 
   /// Extract locked/reserved units from a holding entry.
   String _getLockedFromHolding(Map<String, dynamic> holdingData) {
-    final stashUnits = holdingData['stashUnits'] as Map<String, dynamic>? ?? {};
+    final stashUnits = holdingData['stashUnits'] as Map<String, dynamic>?
+        ?? holdingData['stash_units'] as Map<String, dynamic>? ?? {};
     if (stashUnits.containsKey('locked')) {
       return stashUnits['locked']?.toString() ?? '0';
     }
@@ -785,7 +885,9 @@ class _PortfolioPageState extends State<PortfolioPage> {
     }
     // If stashUnits has 'available', locked = total - available
     if (stashUnits.containsKey('available')) {
-      final total = double.tryParse(holdingData['totalUnits']?.toString() ?? '0') ?? 0;
+      final totalStr = holdingData['totalUnits']?.toString()
+          ?? holdingData['total_units']?.toString() ?? '0';
+      final total = double.tryParse(totalStr) ?? 0;
       final available = double.tryParse(stashUnits['available']?.toString() ?? '0') ?? 0;
       final locked = total - available;
       return locked > 0 ? locked.toString() : '0';

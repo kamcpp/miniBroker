@@ -1010,7 +1010,7 @@ class RealGrpcClient {
         'type': 'simprtagent-real',
         'server_name': 'Mock Participant Agent gRPC server',
         'timestamp': _toUnixTimestamp(DateTime.now()).toString(),
-        'services': 'AgentService, AccountService, MarketService, SecurityService',
+        'services': 'AgentService, AccountService, MarketService, SecurityListingService',
       };
     } catch (e) {
       throw Exception('Failed to get real server info: $e');

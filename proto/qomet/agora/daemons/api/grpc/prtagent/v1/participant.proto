@@ -26,5 +26,8 @@ service ParticipantService {
   rpc GetParticipantSettlementsAsync(GetParticipantSettlementsRequest)
     returns (tech.qomet.agora.api.grpc.common.ExecutionAsyncResponse);
 
+  rpc GetParticipantHoldings(GetParticipantHoldingsRequest) returns (GetParticipantHoldingsResponse);
+  rpc GetParticipantHoldingsAsync(GetParticipantHoldingsRequest) returns (tech.qomet.agora.api.grpc.common.ExecutionAsyncResponse);
+
   rpc SubscribeToEvents(EventSubscriptionParams) returns (stream Event);
 }

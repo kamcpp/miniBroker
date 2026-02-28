@@ -102,6 +102,7 @@ message ExecutionResponseEvent {
     GetParticipantOrdersResponse get_participant_orders = 702;
     GetParticipantTradesResponse get_participant_trades = 703;
     GetParticipantSettlementsResponse get_participant_settlements = 704;
+    GetParticipantHoldingsResponse get_participant_holdings = 705;
     // agent responses
     // TODO: Determine if GetSupportedCurrenciesResponse should be included
     // GetSupportedCurrenciesResponse get_supported_currencies = 801;

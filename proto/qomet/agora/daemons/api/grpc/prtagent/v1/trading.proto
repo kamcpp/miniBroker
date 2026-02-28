@@ -206,6 +206,7 @@ message CreateOrderAsyncRequest {
 
   // Additional parameters
   string participant_order_iid = 11;                                    // REQUIRED: Client's order ID (mandatory in FIX)
+  string csd_account_iid = 12;                                          // OPTIONAL: CSD account IID for settlement
 
   map<string, string> aux_data = 105;                                   // OPTIONAL: Additional request data
 }
