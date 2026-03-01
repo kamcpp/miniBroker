@@ -210,8 +210,7 @@ class _BrokerInfoPageState extends State<BrokerInfoPage> {
       return Text('No participant data', style: TextStyle(color: labelColor, fontSize: UIConstants.fontSizeSm));
     }
 
-    final participant = _participantData!['participant'] as Map<String, dynamic>? ?? {};
-
+    // Render the entire response dynamically so every field is visible
     return Container(
       width: double.infinity,
       padding: UIConstants.paddingStandard,
@@ -228,90 +227,146 @@ class _BrokerInfoPageState extends State<BrokerInfoPage> {
             style: TextStyle(color: textColor, fontSize: UIConstants.fontSizeMd, fontWeight: FontWeight.bold),
           ),
           SizedBox(height: UIConstants.spacingSm),
-          Wrap(
-            spacing: UIConstants.spacingXl,
-            runSpacing: UIConstants.spacingMd,
-            children: [
-              // IID
-              _infoField('IID', participant['iid']?.toString() ?? '-', labelColor, textColor),
-
-              // Identifiers
-              ..._buildIdentifierFields(participant, labelColor, textColor),
-
-              // Types
-              if (participant['types'] != null)
-                _infoField('Types', (participant['types'] as List<dynamic>).join(', '), labelColor, textColor),
-
-              // Display names
-              ..._buildMapFields('Display Name', participant['displayNames'] ?? participant['display_names'], labelColor, textColor),
-
-              // Descriptions
-              ..._buildMapFields('Description', participant['descriptions'], labelColor, textColor),
-
-              // Labels
-              ..._buildMapFields('Label', participant['labels'], labelColor, textColor),
-
-              // Tags
-              if (participant['tags'] != null && (participant['tags'] as List<dynamic>).isNotEmpty)
-                _infoField('Tags', (participant['tags'] as List<dynamic>).join(', '), labelColor, textColor),
-
-              // Metadata
-              ..._buildMapFields('Metadata', participant['metadata'], labelColor, textColor),
-            ],
-          ),
-
-          // Response metadata
-          if (_participantData!['metadata'] != null) ...[
-            SizedBox(height: UIConstants.spacingMd),
-            Divider(color: isDarkTheme ? Colors.white24 : Colors.grey[300], height: 1),
-            SizedBox(height: UIConstants.spacingSm),
-            Text('Response Metadata', style: TextStyle(color: labelColor, fontSize: 10, fontWeight: FontWeight.bold)),
-            SizedBox(height: UIConstants.spacingXs),
-            Wrap(
-              spacing: UIConstants.spacingXl,
-              runSpacing: UIConstants.spacingXs,
-              children: _buildMapFields('', _participantData!['metadata'], labelColor, textColor),
-            ),
-          ],
-
-          // Ref execution ID
-          if (_participantData!['refExecutionId'] != null || _participantData!['ref_execution_id'] != null) ...[
-            SizedBox(height: UIConstants.spacingSm),
-            _infoField(
-              'Ref Execution ID',
-              _participantData!['refExecutionId']?.toString() ?? _participantData!['ref_execution_id']?.toString() ?? '-',
-              labelColor,
-              textColor,
-            ),
-          ],
+          ..._buildDynamicFields(_participantData!, labelColor, textColor, isDarkTheme),
         ],
       ),
     );
   }
 
-  List<Widget> _buildIdentifierFields(Map<String, dynamic> participant, Color labelColor, Color textColor) {
-    final identifiers = participant['identifiers'] as List<dynamic>?;
-    if (identifiers == null || identifiers.isEmpty) return [];
+  /// Recursively render all fields from a dynamic JSON object
+  List<Widget> _buildDynamicFields(
+    Map<String, dynamic> data,
+    Color labelColor,
+    Color textColor,
+    bool isDarkTheme, {
+    String prefix = '',
+  }) {
+    final widgets = <Widget>[];
 
-    return identifiers.map<Widget>((id) {
-      final idMap = id as Map<String, dynamic>;
-      final scheme = idMap['scheme']?.toString() ?? '';
-      final value = idMap['value']?.toString() ?? '';
-      final label = scheme.isNotEmpty ? 'ID ($scheme)' : 'Identifier';
-      return _infoField(label, value, labelColor, textColor);
-    }).toList();
+    for (final entry in data.entries) {
+      final key = entry.key;
+      final value = entry.value;
+      final displayKey = _formatFieldName(key);
+      final fullLabel = prefix.isNotEmpty ? '$prefix > $displayKey' : displayKey;
+
+      if (value == null) continue;
+
+      if (value is String || value is num || value is bool) {
+        widgets.add(
+          Padding(
+            padding: const EdgeInsets.only(bottom: 4),
+            child: _infoField(fullLabel, value.toString(), labelColor, textColor),
+          ),
+        );
+      } else if (value is List) {
+        if (value.isEmpty) continue;
+        if (value.first is Map) {
+          // List of objects (e.g. identifiers)
+          for (var i = 0; i < value.length; i++) {
+            final item = value[i] as Map<String, dynamic>;
+            widgets.add(
+              Padding(
+                padding: const EdgeInsets.only(top: 6),
+                child: _buildNestedSection(
+                  '$fullLabel [${i + 1}]',
+                  item,
+                  labelColor,
+                  textColor,
+                  isDarkTheme,
+                ),
+              ),
+            );
+          }
+        } else {
+          // List of primitives (e.g. tags, types)
+          widgets.add(
+            Padding(
+              padding: const EdgeInsets.only(bottom: 4),
+              child: _infoField(fullLabel, value.map((e) => e.toString()).join(', '), labelColor, textColor),
+            ),
+          );
+        }
+      } else if (value is Map) {
+        final map = value as Map<String, dynamic>;
+        if (map.isEmpty) continue;
+        widgets.add(
+          Padding(
+            padding: const EdgeInsets.only(top: 6),
+            child: _buildNestedSection(fullLabel, map, labelColor, textColor, isDarkTheme),
+          ),
+        );
+      }
+    }
+
+    return widgets;
   }
 
-  List<Widget> _buildMapFields(String prefix, dynamic mapData, Color labelColor, Color textColor) {
-    if (mapData == null) return [];
-    if (mapData is! Map) return [];
-    final map = mapData as Map<String, dynamic>;
-    if (map.isEmpty) return [];
+  /// Render a nested object as a labeled sub-section
+  Widget _buildNestedSection(
+    String title,
+    Map<String, dynamic> data,
+    Color labelColor,
+    Color textColor,
+    bool isDarkTheme,
+  ) {
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: [
+        Text(title, style: TextStyle(color: labelColor, fontSize: 10, fontWeight: FontWeight.bold)),
+        SizedBox(height: UIConstants.spacingXs),
+        Padding(
+          padding: const EdgeInsets.only(left: 12),
+          child: Wrap(
+            spacing: UIConstants.spacingXl,
+            runSpacing: UIConstants.spacingXs,
+            children: data.entries.where((e) => e.value != null).map((e) {
+              final v = e.value;
+              if (v is Map) {
+                return _buildNestedSection(
+                  _formatFieldName(e.key),
+                  v as Map<String, dynamic>,
+                  labelColor,
+                  textColor,
+                  isDarkTheme,
+                );
+              } else if (v is List) {
+                if (v.isEmpty) return const SizedBox.shrink();
+                if (v.first is Map) {
+                  return Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      for (var i = 0; i < v.length; i++)
+                        _buildNestedSection(
+                          '${_formatFieldName(e.key)} [${i + 1}]',
+                          v[i] as Map<String, dynamic>,
+                          labelColor,
+                          textColor,
+                          isDarkTheme,
+                        ),
+                    ],
+                  );
+                }
+                return _infoField(_formatFieldName(e.key), v.map((x) => x.toString()).join(', '), labelColor, textColor);
+              }
+              return _infoField(_formatFieldName(e.key), v.toString(), labelColor, textColor);
+            }).toList(),
+          ),
+        ),
+      ],
+    );
+  }
 
-    return map.entries.map<Widget>((entry) {
-      final label = prefix.isNotEmpty ? '$prefix (${entry.key})' : entry.key;
-      return _infoField(label, entry.value?.toString() ?? '-', labelColor, textColor);
-    }).toList();
+  /// Convert snake_case or camelCase field names to readable labels
+  String _formatFieldName(String name) {
+    // Handle snake_case
+    var result = name.replaceAllMapped(RegExp(r'_([a-z])'), (m) => ' ${m.group(1)!.toUpperCase()}');
+    // Handle camelCase
+    result = result.replaceAllMapped(RegExp(r'([a-z])([A-Z])'), (m) => '${m.group(1)} ${m.group(2)}');
+    // Capitalize first letter
+    if (result.isNotEmpty) {
+      result = result[0].toUpperCase() + result.substring(1);
+    }
+    return result;
   }
 
   Widget _infoField(String label, String value, Color labelColor, Color textColor) {
