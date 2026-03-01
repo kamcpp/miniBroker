@@ -193,7 +193,17 @@ class _BrokerInfoPageState extends State<BrokerInfoPage> {
     }
 
     if (_errorInfo != null) {
-      return Text(_errorInfo!, style: TextStyle(color: Colors.red, fontSize: UIConstants.fontSizeSm));
+      return InkWell(
+        onTap: () => _copyToClipboard(_errorInfo!),
+        child: Row(
+          mainAxisSize: MainAxisSize.min,
+          children: [
+            Flexible(child: Text(_errorInfo!, style: TextStyle(color: Colors.red, fontSize: UIConstants.fontSizeSm))),
+            const SizedBox(width: 4),
+            Icon(Icons.copy, size: 10, color: Colors.red[300]),
+          ],
+        ),
+      );
     }
 
     if (_participantData == null) {
@@ -345,7 +355,17 @@ class _BrokerInfoPageState extends State<BrokerInfoPage> {
     }
 
     if (_errorHoldings != null) {
-      return Text(_errorHoldings!, style: TextStyle(color: Colors.red, fontSize: UIConstants.fontSizeSm));
+      return InkWell(
+        onTap: () => _copyToClipboard(_errorHoldings!),
+        child: Row(
+          mainAxisSize: MainAxisSize.min,
+          children: [
+            Flexible(child: Text(_errorHoldings!, style: TextStyle(color: Colors.red, fontSize: UIConstants.fontSizeSm))),
+            const SizedBox(width: 4),
+            Icon(Icons.copy, size: 10, color: Colors.red[300]),
+          ],
+        ),
+      );
     }
 
     if (_holdingsData == null) {
