@@ -25,7 +25,8 @@ class _PortfolioPageState extends State<PortfolioPage> {
   String? _investorId;
   Set<String> _supportedCashTokenCodes = {};
   String? _selectedCashToken;
-  Map<String, String> _securityIidToSymbol = {};
+  // Maps holding key (e.g. "issued-instr-fsec-1772477677") → {symbol, currency}
+  Map<String, Map<String, String>> _securityIidToInfo = {};
   // Cash token info: key (IID, currency code, ticker) → {currency, divisibility}
   Map<String, Map<String, String>> _cashTokenInfo = {};
 
@@ -205,45 +206,76 @@ class _PortfolioPageState extends State<PortfolioPage> {
     }
   }
 
-  Future<void> _resolveSecuritySymbols(List<String> iids) async {
+  Future<void> _resolveSecuritySymbols(List<String> holdingKeys) async {
     try {
-      final result = await GrpcurlHelper.getSecurityListingInfoBatch(
-        symbolAndSecurityIdRegexes: iids,
+      // Fetch ALL security listings and build a comprehensive lookup
+      final result = await GrpcurlHelper.getSecurityListingList(
+        pageSize: 0, // get all
       ).timeout(
-        const Duration(minutes: 5),
-        onTimeout: () => {
-          'success': false,
-          'output': {'error': 'Request timed out'},
-        },
+        const Duration(minutes: 2),
+        onTimeout: () => {'success': false, 'output': {'error': 'timed out'}},
       );
 
-      if (result['success'] == true) {
-        final output = result['output'] as Map<String, dynamic>? ?? {};
-        final listings = output['securityListings'] ?? output['security_listings'];
-        final listingsList = listings is List<dynamic> ? listings : <dynamic>[];
-        final symbolMap = <String, String>{};
+      if (result['success'] != true) {
+        print('⚠️ Failed to fetch security listing list: ${result['output']?['error']}');
+        return;
+      }
 
-        print('📊 SecurityListingInfoBatch returned ${listingsList.length} listings');
+      final output = result['output'] as Map<String, dynamic>? ?? {};
+      final listings = output['securityListings'] as List<dynamic>? ??
+          output['security_listings'] as List<dynamic>? ?? [];
 
-        for (final listing in listingsList) {
-          if (listing is Map<String, dynamic>) {
-            final securityId = listing['securityId'] ?? listing['security_id'] ?? '';
-            final symbol = listing['symbol']?.toString() ?? '';
+      print('📊 Fetched ${listings.length} security listings for symbol resolution');
 
-            if (securityId.toString().isNotEmpty && symbol.isNotEmpty) {
-              symbolMap[securityId.toString()] = symbol;
-              print('📊 Resolved security ID $securityId -> $symbol');
-            }
-          }
+      // Build lookup by securityId, symbol, and all metadata values
+      final listingMap = <String, Map<String, String>>{};
+      final allEntries = <Map<String, String>>[];
+
+      for (final listing in listings) {
+        final l = listing as Map<String, dynamic>;
+        final symbol = l['symbol']?.toString() ?? '';
+        final securityId = l['securityId']?.toString() ?? l['security_id']?.toString() ?? '';
+        final currency = l['currency']?.toString() ?? '';
+        final meta = l['metadata'] as Map<String, dynamic>? ?? {};
+
+        final entry = {'symbol': symbol, 'currency': currency};
+        allEntries.add(entry);
+
+        if (securityId.isNotEmpty) listingMap[securityId] = entry;
+        if (symbol.isNotEmpty) listingMap[symbol] = entry;
+
+        // Index by all metadata values (may contain issued instrument IID)
+        for (final mv in meta.values) {
+          final v = mv?.toString() ?? '';
+          if (v.isNotEmpty) listingMap[v] = entry;
         }
+      }
 
-        if (mounted && symbolMap.isNotEmpty) {
-          setState(() {
-            _securityIidToSymbol = symbolMap;
-          });
+      // Match holding keys against the lookup
+      final infoMap = <String, Map<String, String>>{};
+      final unresolved = <String>[];
+
+      for (final key in holdingKeys) {
+        if (listingMap.containsKey(key)) {
+          infoMap[key] = listingMap[key]!;
+          print('📊 Resolved $key → ${listingMap[key]}');
+        } else {
+          unresolved.add(key);
         }
-      } else {
-        print('⚠️ Failed to resolve security symbols: ${result['output']?['error']}');
+      }
+
+      // Fallback: single-listing ↔ single-unresolved match
+      if (allEntries.length == 1 && unresolved.length == 1) {
+        infoMap[unresolved.first] = allEntries.first;
+        print('📊 Resolved ${unresolved.first} via single-listing match → ${allEntries.first}');
+      } else if (unresolved.isNotEmpty) {
+        print('⚠️ Could not resolve holdings: $unresolved');
+      }
+
+      if (mounted && infoMap.isNotEmpty) {
+        setState(() {
+          _securityIidToInfo = infoMap;
+        });
       }
     } catch (e) {
       print('⚠️ Error resolving security symbols: $e');
@@ -671,7 +703,12 @@ class _PortfolioPageState extends State<PortfolioPage> {
             itemBuilder: (context, index) {
               final entry = holdingsList[index];
               final securityIid = entry.key;
-              final symbol = _securityIidToSymbol[securityIid] ?? securityIid;
+              final secInfo = _securityIidToInfo[securityIid];
+              final ticker = secInfo?['symbol'] ?? '';
+              final currency = secInfo?['currency'] ?? '';
+              final symbol = ticker.isNotEmpty
+                  ? (currency.isNotEmpty ? '$ticker ($currency)' : ticker)
+                  : securityIid;
               final holdingData = entry.value as Map<String, dynamic>? ?? {};
               final totalUnits = holdingData['totalUnits']?.toString()
                   ?? holdingData['total_units']?.toString() ?? '0';
@@ -990,11 +1027,39 @@ class _PortfolioPageState extends State<PortfolioPage> {
     return _getAvailableFromHolding(holdingData);
   }
 
+  /// Convert a user-entered decimal amount to raw integer units for the server.
+  /// e.g. "15.00" with divisibility 2 → "1500"
+  String _toRawUnits(String decimalAmount, int divisibility) {
+    if (divisibility <= 0) return decimalAmount;
+    try {
+      final value = double.parse(decimalAmount);
+      double multiplier = 1;
+      for (var i = 0; i < divisibility; i++) {
+        multiplier *= 10;
+      }
+      return (value * multiplier).round().toString();
+    } catch (_) {
+      return decimalAmount;
+    }
+  }
+
+  /// Get divisibility for a currency code from cash token info or defaults.
+  int _getDivisibilityForCurrency(String currencyCode) {
+    final info = _cashTokenInfo[currencyCode];
+    var div = info?['divisibility'] ?? '';
+    if (div.isEmpty) {
+      div = _defaultDivisibility(currencyCode);
+    }
+    return int.tryParse(div) ?? 2;
+  }
+
   void _showDepositDialog(String currencyCode) {
     final themeService = Provider.of<ThemeService>(context, listen: false);
     final isDarkTheme = themeService.isDarkTheme;
     final amountController = TextEditingController();
     final pageScaffoldMessenger = ScaffoldMessenger.of(context);
+    final divisibility = _getDivisibilityForCurrency(currencyCode);
+    final hintText = divisibility > 0 ? '0.${'0' * divisibility}' : '0';
 
     showDialog(
       context: context,
@@ -1042,10 +1107,14 @@ class _PortfolioPageState extends State<PortfolioPage> {
                       controller: amountController,
                       keyboardType: const TextInputType.numberWithOptions(decimal: true),
                       inputFormatters: [
-                        FilteringTextInputFormatter.allow(RegExp(r'^\d*\.?\d*')),
+                        FilteringTextInputFormatter.allow(
+                          divisibility > 0
+                              ? RegExp('^\\d*\\.?\\d{0,$divisibility}')
+                              : RegExp(r'^\d*'),
+                        ),
                       ],
                       decoration: InputDecoration(
-                        hintText: '0.00',
+                        hintText: hintText,
                         hintStyle: TextStyle(
                           color: isDarkTheme ? Colors.grey[500] : Colors.grey[400],
                         ),
@@ -1103,10 +1172,13 @@ class _PortfolioPageState extends State<PortfolioPage> {
                     });
 
                     try {
+                      // Convert decimal amount to raw integer units for the server
+                      final rawAmount = _toRawUnits(amount, divisibility);
+
                       final response = await GrpcurlHelper.depositCash(
                         investorId: _investorId!,
                         currencyCode: currencyCode,
-                        amount: amount,
+                        amount: rawAmount,
                       );
 
                       if (!mounted) return;
@@ -1152,6 +1224,10 @@ class _PortfolioPageState extends State<PortfolioPage> {
     final isDarkTheme = themeService.isDarkTheme;
     final amountController = TextEditingController();
     final pageScaffoldMessenger = ScaffoldMessenger.of(context);
+    final divisibility = _getDivisibilityForCurrency(currencyCode);
+    final hintText = divisibility > 0 ? '0.${'0' * divisibility}' : '0';
+    // Format available balance with divisibility for display
+    final formattedAvailable = _formatAmountWithDivisibility(availableBalance, divisibility.toString());
 
     showDialog(
       context: context,
@@ -1199,10 +1275,14 @@ class _PortfolioPageState extends State<PortfolioPage> {
                       controller: amountController,
                       keyboardType: const TextInputType.numberWithOptions(decimal: true),
                       inputFormatters: [
-                        FilteringTextInputFormatter.allow(RegExp(r'^\d*\.?\d*')),
+                        FilteringTextInputFormatter.allow(
+                          divisibility > 0
+                              ? RegExp('^\\d*\\.?\\d{0,$divisibility}')
+                              : RegExp(r'^\d*'),
+                        ),
                       ],
                       decoration: InputDecoration(
-                        hintText: '0.00',
+                        hintText: hintText,
                         hintStyle: TextStyle(
                           color: isDarkTheme ? Colors.grey[500] : Colors.grey[400],
                         ),
@@ -1223,7 +1303,7 @@ class _PortfolioPageState extends State<PortfolioPage> {
                     ),
                     const SizedBox(height: 10),
                     Text(
-                      'Available: ${_formatCurrency(availableBalance, currencyCode)}',
+                      'Available: $formattedAvailable ${_getCurrencySymbol(currencyCode)}',
                       style: TextStyle(
                         color: isDarkTheme ? Colors.grey[400] : Colors.grey[600],
                         fontSize: UIConstants.fontSizeSm,
@@ -1257,9 +1337,10 @@ class _PortfolioPageState extends State<PortfolioPage> {
                       return;
                     }
 
-                    final availBal = double.tryParse(availableBalance) ?? 0.0;
-                    if (parsedAmount > availBal) {
-                      setDialogState(() => errorText = 'Insufficient balance. Available: ${_formatCurrency(availableBalance, currencyCode)}');
+                    // Compare in decimal space: convert raw available to decimal for comparison
+                    final availDecimal = double.tryParse(formattedAvailable) ?? 0.0;
+                    if (parsedAmount > availDecimal) {
+                      setDialogState(() => errorText = 'Insufficient balance. Available: $formattedAvailable $currencyCode');
                       return;
                     }
 
@@ -1274,10 +1355,13 @@ class _PortfolioPageState extends State<PortfolioPage> {
                     });
 
                     try {
+                      // Convert decimal amount to raw integer units for the server
+                      final rawAmount = _toRawUnits(amount, divisibility);
+
                       final response = await GrpcurlHelper.withdrawCash(
                         investorId: _investorId!,
                         currencyCode: currencyCode,
-                        amount: amount,
+                        amount: rawAmount,
                       );
 
                       if (!mounted) return;
