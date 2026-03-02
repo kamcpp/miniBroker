@@ -5,6 +5,7 @@ import '../screens/portfolio_page.dart';
 import '../screens/trading_page.dart';
 import '../screens/execution_reports_page.dart';
 import '../screens/broker_info_page.dart';
+import '../screens/investor_info_page.dart';
 // import '../screens/activity_page.dart';  // Disabled
 // import '../screens/cash_management_page.dart';  // Removed
 // import '../screens/users_admin_page.dart';  // Disabled
@@ -91,6 +92,22 @@ class MenuItemsHelper {
             Navigator.of(context).pushReplacement(
               PageRouteBuilder(
                 pageBuilder: (context, animation, secondaryAnimation) => const BrokerInfoPage(),
+                transitionDuration: Duration.zero,
+                reverseTransitionDuration: Duration.zero,
+              ),
+            );
+          }
+        },
+      ),
+      MenuItem(
+        label: 'Investor Info',
+        icon: Icons.person,
+        isSelected: currentPage == 'investor_info',
+        onTap: () {
+          if (currentPage != 'investor_info') {
+            Navigator.of(context).pushReplacement(
+              PageRouteBuilder(
+                pageBuilder: (context, animation, secondaryAnimation) => const InvestorInfoPage(),
                 transitionDuration: Duration.zero,
                 reverseTransitionDuration: Duration.zero,
               ),

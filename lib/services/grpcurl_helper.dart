@@ -1495,6 +1495,27 @@ class GrpcurlHelper {
   }
 
   // ============================================================================
+  // InvestorService - GetInvestorInfoBatch
+  // ============================================================================
+
+  /// Get investor info batch using grpcurl
+  /// InvestorService.GetInvestorInfoBatch
+  static Future<Map<String, dynamic>> getInvestorInfoBatch({
+    required List<String> investorIids,
+  }) async {
+    print('📋 Getting investor info for: $investorIids');
+
+    return _executeGrpcCall(
+      method: 'GetInvestorInfoBatch',
+      endpoint: 'InvestorService/GetInvestorInfoBatch',
+      requestBody: {
+        'proposed_execution_id': 'get_investor_info_batch_${DateTime.now().millisecondsSinceEpoch}',
+        'investor_iids': investorIids,
+      },
+    );
+  }
+
+  // ============================================================================
   // ParticipantService Methods
   // ============================================================================
 

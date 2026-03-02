@@ -711,12 +711,52 @@ class _TradingPageState extends State<TradingPage> {
 
   /// Extract available balance from a holding entry.
   /// Proto Holdings has total_units and stash_units (map). No availableUnits field.
+  /// Stash keys can be lowercase (available/locked) or uppercase (LIQUID/LOCKED/TOTAL).
   String _getAvailableFromHolding(Map<String, dynamic> holdingData) {
-    final stashUnits = holdingData['stashUnits'] as Map<String, dynamic>? ?? {};
+    final stashUnits = holdingData['stashUnits'] as Map<String, dynamic>? ??
+        holdingData['stash_units'] as Map<String, dynamic>? ?? {};
     if (stashUnits.containsKey('available')) {
       return stashUnits['available']?.toString() ?? '0';
     }
-    return holdingData['totalUnits']?.toString() ?? '0';
+    if (stashUnits.containsKey('LIQUID')) {
+      return stashUnits['LIQUID']?.toString() ?? '0';
+    }
+    return holdingData['totalUnits']?.toString() ??
+        holdingData['total_units']?.toString() ?? '0';
+  }
+
+  /// Default divisibility for known fiat currencies when server doesn't return it.
+  String _defaultDivisibility(String currencyCode) {
+    final code = currencyCode.toUpperCase();
+    final shortCode = code.length >= 3 ? code.substring(0, 3) : code;
+    const zeroDivisibility = {'JPY', 'KRW', 'VND', 'CLP'};
+    if (zeroDivisibility.contains(shortCode)) return '0';
+    const threeDivisibility = {'BHD', 'KWD', 'OMR'};
+    if (threeDivisibility.contains(shortCode)) return '3';
+    return '2';
+  }
+
+  /// Format an amount using divisibility (decimal places).
+  String _formatAmount(String rawAmount, String? divisibility) {
+    if (divisibility == null || divisibility.isEmpty) {
+      return rawAmount;
+    }
+    try {
+      final decimals = int.parse(divisibility);
+      if (decimals <= 0) return rawAmount;
+      final value = double.parse(rawAmount);
+      if (rawAmount.contains('.')) {
+        return value.toStringAsFixed(decimals);
+      } else {
+        double divisor = 1;
+        for (var i = 0; i < decimals; i++) {
+          divisor *= 10;
+        }
+        return (value / divisor).toStringAsFixed(decimals);
+      }
+    } catch (_) {
+      return rawAmount;
+    }
   }
 
   /// Find a holding entry by currency code, trying multiple matching strategies.
@@ -759,10 +799,12 @@ class _TradingPageState extends State<TradingPage> {
     // Use issueCurrency (ISO code like "EUR") to match holdings keys, not ticker
     final issueCurrency = _selectedCurrency['issueCurrency'] ?? _selectedCurrency['code'] ?? '';
     final currencyHolding = _findHoldingForCurrency(_cachedHoldings!, issueCurrency);
-    final currencyBalance = _getAvailableFromHolding(currencyHolding);
+    final rawBalance = _getAvailableFromHolding(currencyHolding);
 
-    _buyingPower = currencyBalance;
-    print('✅ Updated buying power from cache for $issueCurrency: $currencyBalance');
+    // Apply divisibility formatting
+    final divisibility = _defaultDivisibility(issueCurrency);
+    _buyingPower = _formatAmount(rawBalance, divisibility);
+    print('✅ Updated buying power from cache for $issueCurrency: $_buyingPower (raw=$rawBalance, div=$divisibility)');
   }
 
 
@@ -826,10 +868,14 @@ class _TradingPageState extends State<TradingPage> {
             if (holdings.containsKey(securityId)) {
               holdingData = holdings[securityId] as Map<String, dynamic>? ?? {};
             } else {
-              // Scan entries for matching instrumentIid
+              // Scan entries for matching instrumentIid or symbol substring in key
+              final lowerSecId = securityId.toLowerCase();
               for (final entry in holdings.entries) {
                 final data = entry.value as Map<String, dynamic>? ?? {};
-                if (data['instrumentIid'] == securityId) {
+                final instrIid = data['instrumentIid']?.toString() ?? data['instrument_iid']?.toString() ?? '';
+                if (instrIid == securityId ||
+                    entry.key.toLowerCase().contains(lowerSecId) ||
+                    instrIid.toLowerCase().contains(lowerSecId)) {
                   holdingData = data;
                   break;
                 }

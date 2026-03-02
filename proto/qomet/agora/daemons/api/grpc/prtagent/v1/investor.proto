@@ -64,6 +64,11 @@ message GetInvestorListResponse {
   map<string, string> metadata = 105;                                                   // OPTIONAL: Response metadata
 }
 
+message InvestorInfo {
+  tech.qomet.agora.api.grpc.fin.Investor investor = 1;                                  // REQUIRED: Investor details
+  repeated tech.qomet.agora.api.grpc.fin.InvestorToAccountRelation account_relations = 2; // OPTIONAL: Connected account relations
+}
+
 message GetInvestorInfoBatchRequest {
   string proposed_execution_id = 1;                                                     // OPTIONAL: Client-proposed execution ID for tracking
   repeated string investor_iids = 2;                                                    // REQUIRED: List of investor IIDs to retrieve
@@ -73,7 +78,7 @@ message GetInvestorInfoBatchRequest {
 
 message GetInvestorInfoBatchResponse {
   string ref_execution_id = 1;                                                          // REQUIRED: Reference to the execution ID
-  repeated tech.qomet.agora.api.grpc.fin.Investor investors = 2;                     // REQUIRED: List of investor details (can be empty)
+  repeated InvestorInfo investor_infos = 2;                                             // REQUIRED: List of investor info entries (can be empty)
 
   map<string, string> metadata = 105;                                                   // OPTIONAL: Response metadata
 }

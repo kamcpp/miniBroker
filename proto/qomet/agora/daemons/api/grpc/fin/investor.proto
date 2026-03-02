@@ -54,3 +54,30 @@ message Investor {
   repeated string tags = 104;                                                              // OPTIONAL: Tags for categorization
   map<string, string> metadata = 105;                                                      // OPTIONAL: Additional metadata
 }
+
+enum InvestorToAccountRelationTypeEnum {
+  INVESTOR_TO_ACCOUNT_RELATION_TYPE_ENUM_UNKNOWN = 0;
+
+  INVESTOR_TO_ACCOUNT_RELATION_TYPE_ENUM_OWNER = 1;                                        // Investor owns the account
+  INVESTOR_TO_ACCOUNT_RELATION_TYPE_ENUM_AUTHORIZED = 2;                                   // Investor is authorized to trade
+
+  INVESTOR_TO_ACCOUNT_RELATION_TYPE_ENUM_OTHER = 0x0fff0000;
+}
+
+message InvestorToAccountRelation {
+  string iid = 1;                                                                          // REQUIRED: Internal relation identifier
+
+  string investor_iid = 2;                                                                 // REQUIRED: Investor internal identifier
+  string account_iid = 3;                                                                  // REQUIRED: Account internal identifier
+
+  repeated InvestorToAccountRelationTypeEnum relations = 4;                                // REQUIRED: Relation types
+
+  string effective_from_ts = 5;                                                            // OPTIONAL: Effective from timestamp (ISO 8601)
+  string effective_to_ts = 6;                                                              // OPTIONAL: Effective to timestamp (ISO 8601)
+
+  map<string, string> display_names = 101;                                                 // OPTIONAL: Display names for localization
+  map<string, string> descriptions = 102;                                                  // OPTIONAL: Descriptions for localization
+  map<string, string> labels = 103;                                                        // OPTIONAL: Key-value labels
+  repeated string tags = 104;                                                              // OPTIONAL: Tags for categorization
+  map<string, string> metadata = 105;                                                      // OPTIONAL: Additional metadata
+}
