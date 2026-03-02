@@ -1227,7 +1227,7 @@ class GrpcurlHelper {
       endpoint: 'CashTokenService/GetCashTokenInfoBatch',
       requestBody: {
         'proposed_execution_id': 'get_cash_token_info_batch_${DateTime.now().millisecondsSinceEpoch}',
-        'cash_token_iids': cashTokenIds,
+        'cash_token_iid_and_identifier_regexes': cashTokenIds,
       },
     );
   }

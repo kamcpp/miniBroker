@@ -26,6 +26,8 @@ class _PortfolioPageState extends State<PortfolioPage> {
   Set<String> _supportedCashTokenCodes = {};
   String? _selectedCashToken;
   Map<String, String> _securityIidToSymbol = {};
+  // Cash token info: key (IID, currency code, ticker) → {currency, divisibility}
+  Map<String, Map<String, String>> _cashTokenInfo = {};
 
   @override
   void initState() {
@@ -82,8 +84,16 @@ class _PortfolioPageState extends State<PortfolioPage> {
         final cashTokens = output['cashTokens'] as List<dynamic>? ?? [];
         final codes = <String>{};
 
+        final tokenInfo = <String, Map<String, String>>{};
         for (final token in cashTokens) {
           if (token is Map<String, dynamic>) {
+            final issueCurrency = token['issueCurrency'] as String? ??
+                token['issue_currency'] as String? ?? '';
+            final issueDivisibility = token['issueDivisibility']?.toString() ??
+                token['issue_divisibility']?.toString() ?? '';
+            final iid = token['iid']?.toString() ?? '';
+            final entry = {'currency': issueCurrency, 'divisibility': issueDivisibility};
+
             // Collect all possible codes so we match however the holdings map keys them
             final identifiers = token['identifiers'] as List<dynamic>? ?? [];
             for (final identifier in identifiers) {
@@ -92,15 +102,22 @@ class _PortfolioPageState extends State<PortfolioPage> {
                 for (final id in ids) {
                   if (id is Map<String, dynamic>) {
                     final value = id['value'] as String? ?? '';
-                    if (value.isNotEmpty) codes.add(value);
+                    if (value.isNotEmpty) {
+                      codes.add(value);
+                      tokenInfo[value] = entry;
+                    }
                   }
                 }
               }
             }
-            final issueCurrency = token['issueCurrency'] as String? ?? '';
-            if (issueCurrency.isNotEmpty) codes.add(issueCurrency);
-            final iid = token['iid']?.toString() ?? '';
-            if (iid.isNotEmpty) codes.add(iid);
+            if (issueCurrency.isNotEmpty) {
+              codes.add(issueCurrency);
+              tokenInfo[issueCurrency] = entry;
+            }
+            if (iid.isNotEmpty) {
+              codes.add(iid);
+              tokenInfo[iid] = entry;
+            }
           }
         }
         print('✅ Supported cash token codes: $codes');
@@ -108,6 +125,7 @@ class _PortfolioPageState extends State<PortfolioPage> {
         if (mounted) {
           setState(() {
             _supportedCashTokenCodes = codes;
+            _cashTokenInfo = tokenInfo;
           });
         }
       }
@@ -719,6 +737,7 @@ class _PortfolioPageState extends State<PortfolioPage> {
           child: Row(
             children: [
               _buildHeaderCell('Currency', flex: 2, isDarkTheme: isDarkTheme),
+              _buildHeaderCell('Div', flex: 1, isDarkTheme: isDarkTheme),
               _buildHeaderCell('Total Balance', flex: 2, isDarkTheme: isDarkTheme, align: TextAlign.right),
               _buildHeaderCell('Available', flex: 2, isDarkTheme: isDarkTheme, align: TextAlign.right),
               _buildHeaderCell('Reserved', flex: 2, isDarkTheme: isDarkTheme, align: TextAlign.right),
@@ -738,10 +757,21 @@ class _PortfolioPageState extends State<PortfolioPage> {
               final entry = holdingsList[index];
               final currencyCode = entry.key;
               final holdingData = entry.value as Map<String, dynamic>? ?? {};
-              final totalBalance = holdingData['totalUnits']?.toString()
+              final totalBalanceRaw = holdingData['totalUnits']?.toString()
                   ?? holdingData['total_units']?.toString() ?? '0';
-              final availableBalance = _getAvailableFromHolding(holdingData);
-              final reservedBalance = _getLockedFromHolding(holdingData);
+              final availableBalanceRaw = _getAvailableFromHolding(holdingData);
+              final reservedBalanceRaw = _getLockedFromHolding(holdingData);
+
+              // Look up divisibility from cash token info, fallback to default for fiat
+              final info = _cashTokenInfo[currencyCode];
+              var divisibility = info?['divisibility'] ?? '';
+              if (divisibility.isEmpty) {
+                divisibility = _defaultDivisibility(currencyCode);
+              }
+
+              final totalBalance = _formatAmountWithDivisibility(totalBalanceRaw, divisibility);
+              final availableBalance = _formatAmountWithDivisibility(availableBalanceRaw, divisibility);
+              final reservedBalance = _formatAmountWithDivisibility(reservedBalanceRaw, divisibility);
 
               return Container(
                 padding: const EdgeInsets.symmetric(vertical: 12, horizontal: 12),
@@ -759,6 +789,7 @@ class _PortfolioPageState extends State<PortfolioPage> {
                         overflow: TextOverflow.ellipsis,
                       ),
                     ),
+                    _buildDataCell(divisibility, flex: 1, isDarkTheme: isDarkTheme),
                     _buildDataCell(totalBalance, flex: 2, isDarkTheme: isDarkTheme),
                     _buildDataCell(availableBalance, flex: 2, isDarkTheme: isDarkTheme, color: Colors.green),
                     _buildDataCell(reservedBalance, flex: 2, isDarkTheme: isDarkTheme, color: Colors.orange),
@@ -859,14 +890,62 @@ class _PortfolioPageState extends State<PortfolioPage> {
     return allCodes.toList()..sort();
   }
 
+  /// Format an amount using divisibility (decimal places).
+  /// If the amount already contains a decimal point, format to correct decimal places.
+  /// If it's a raw integer, divide by 10^divisibility.
+  String _formatAmountWithDivisibility(String rawAmount, String? divisibility) {
+    if (divisibility == null || divisibility.isEmpty) {
+      try {
+        final value = double.parse(rawAmount);
+        if (rawAmount.contains('.')) return rawAmount;
+        return value.toStringAsFixed(0);
+      } catch (_) {
+        return rawAmount;
+      }
+    }
+    try {
+      final decimals = int.parse(divisibility);
+      if (decimals <= 0) return rawAmount;
+      final value = double.parse(rawAmount);
+
+      if (rawAmount.contains('.')) {
+        return value.toStringAsFixed(decimals);
+      } else {
+        double divisor = 1;
+        for (var i = 0; i < decimals; i++) {
+          divisor *= 10;
+        }
+        return (value / divisor).toStringAsFixed(decimals);
+      }
+    } catch (_) {
+      return rawAmount;
+    }
+  }
+
+  /// Default divisibility for known fiat currencies when server doesn't return it.
+  String _defaultDivisibility(String currencyCode) {
+    final code = currencyCode.toUpperCase();
+    // Extract 3-letter currency code if the key is longer (e.g. "EUR" from "EUR_TOKENISE_BROKER")
+    final shortCode = code.length >= 3 ? code.substring(0, 3) : code;
+    const zeroDivisibility = {'JPY', 'KRW', 'VND', 'CLP'};
+    if (zeroDivisibility.contains(shortCode)) return '0';
+    // Most fiat currencies use 2 decimal places
+    const threeDivisibility = {'BHD', 'KWD', 'OMR'};
+    if (threeDivisibility.contains(shortCode)) return '3';
+    return '2';
+  }
+
   /// Extract available units from a holding entry.
   /// The proto Holdings has total_units and stash_units (map<string,string>).
-  /// Available balance comes from stashUnits['available'], falling back to totalUnits.
+  /// Available balance comes from stashUnits['available'] or ['LIQUID'], falling back to totalUnits.
   String _getAvailableFromHolding(Map<String, dynamic> holdingData) {
     final stashUnits = holdingData['stashUnits'] as Map<String, dynamic>?
         ?? holdingData['stash_units'] as Map<String, dynamic>? ?? {};
     if (stashUnits.containsKey('available')) {
       return stashUnits['available']?.toString() ?? '0';
+    }
+    if (stashUnits.containsKey('LIQUID')) {
+      return stashUnits['LIQUID']?.toString() ?? '0';
     }
     // If no stash breakdown, total = available
     return holdingData['totalUnits']?.toString()
@@ -880,15 +959,20 @@ class _PortfolioPageState extends State<PortfolioPage> {
     if (stashUnits.containsKey('locked')) {
       return stashUnits['locked']?.toString() ?? '0';
     }
+    if (stashUnits.containsKey('LOCKED')) {
+      return stashUnits['LOCKED']?.toString() ?? '0';
+    }
     if (stashUnits.containsKey('reserved')) {
       return stashUnits['reserved']?.toString() ?? '0';
     }
-    // If stashUnits has 'available', locked = total - available
-    if (stashUnits.containsKey('available')) {
+    // If stashUnits has 'available' or 'LIQUID', locked = total - available
+    final availableKey = stashUnits.containsKey('available') ? 'available' :
+        stashUnits.containsKey('LIQUID') ? 'LIQUID' : null;
+    if (availableKey != null) {
       final totalStr = holdingData['totalUnits']?.toString()
           ?? holdingData['total_units']?.toString() ?? '0';
       final total = double.tryParse(totalStr) ?? 0;
-      final available = double.tryParse(stashUnits['available']?.toString() ?? '0') ?? 0;
+      final available = double.tryParse(stashUnits[availableKey]?.toString() ?? '0') ?? 0;
       final locked = total - available;
       return locked > 0 ? locked.toString() : '0';
     }

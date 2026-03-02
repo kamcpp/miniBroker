@@ -22,6 +22,9 @@ class _BrokerInfoPageState extends State<BrokerInfoPage> {
   String? _errorInfo;
   String? _errorHoldings;
 
+  // Cash token info keyed by IID: {currency, divisibility}
+  Map<String, Map<String, String>> _cashTokenInfo = {};
+
   @override
   void initState() {
     super.initState();
@@ -90,8 +93,14 @@ class _BrokerInfoPageState extends State<BrokerInfoPage> {
       if (!mounted) return;
 
       if (result['success'] == true) {
+        final output = result['output'] as Map<String, dynamic>? ?? {};
         setState(() {
-          _holdingsData = result['output'] as Map<String, dynamic>? ?? {};
+          _holdingsData = output;
+        });
+        // Resolve cash token info for holdings asset IDs
+        await _fetchCashTokenInfo(output);
+        if (!mounted) return;
+        setState(() {
           _isLoadingHoldings = false;
         });
       } else {
@@ -106,6 +115,175 @@ class _BrokerInfoPageState extends State<BrokerInfoPage> {
         _errorHoldings = 'Error: $e';
         _isLoadingHoldings = false;
       });
+    }
+  }
+
+  Future<void> _fetchCashTokenInfo(Map<String, dynamic> holdingsOutput) async {
+    final portfolio = holdingsOutput['portfolio'] as Map<String, dynamic>? ?? {};
+    final holdings = portfolio['holdings'] as Map<String, dynamic>? ?? {};
+    if (holdings.isEmpty) return;
+
+    final info = <String, Map<String, String>>{};
+
+    // 1. Fetch ALL cash tokens and build a lookup
+    try {
+      final result = await GrpcurlHelper.getCashTokenList().timeout(
+        const Duration(minutes: 2),
+        onTimeout: () => {'success': false, 'output': {'error': 'Cash token list timed out'}},
+      );
+
+      if (result['success'] == true) {
+        final output = result['output'] as Map<String, dynamic>? ?? {};
+        final cashTokens = output['cashTokens'] as List<dynamic>? ??
+            output['cash_tokens'] as List<dynamic>? ?? [];
+
+        for (final token in cashTokens) {
+          final t = token as Map<String, dynamic>;
+          final iid = t['iid']?.toString() ?? '';
+          final currency = t['issueCurrency']?.toString() ?? t['issue_currency']?.toString() ?? '';
+          final divisibility = t['issueDivisibility']?.toString() ?? t['issue_divisibility']?.toString() ?? '';
+          final entry = {'currency': currency, 'divisibility': divisibility};
+
+          if (iid.isNotEmpty) info[iid] = entry;
+          if (currency.isNotEmpty) info[currency] = entry;
+        }
+        print('💰 Cash token info resolved: ${info.keys.toList()}');
+      }
+    } catch (e) {
+      print('Failed to fetch cash token list: $e');
+    }
+
+    // 2. Fetch ALL security listings and build a lookup by securityId, symbol, and metadata
+    final unresolvedIds = holdings.keys.where((k) => !info.containsKey(k)).toList();
+    if (unresolvedIds.isNotEmpty) {
+      print('🔍 Unresolved holdings after cash tokens: $unresolvedIds');
+      try {
+        final result = await GrpcurlHelper.getSecurityListingList(
+          pageSize: 0, // get all
+        ).timeout(
+          const Duration(minutes: 2),
+          onTimeout: () => {'success': false, 'output': {'error': 'timed out'}},
+        );
+
+        if (result['success'] == true) {
+          final output = result['output'] as Map<String, dynamic>? ?? {};
+          final listings = output['securityListings'] as List<dynamic>? ??
+              output['security_listings'] as List<dynamic>? ?? [];
+
+          print('📊 Fetched ${listings.length} security listings');
+
+          // Build listing entries with divisibility derived from minPriceIncrement
+          final listingEntries = <Map<String, String>>[];
+          final secListingMap = <String, Map<String, String>>{};
+          for (final listing in listings) {
+            final l = listing as Map<String, dynamic>;
+            final symbol = l['symbol']?.toString() ?? '';
+            final securityId = l['securityId']?.toString() ?? l['security_id']?.toString() ?? '';
+            final currency = l['currency']?.toString() ?? '';
+            final securityDesc = l['securityDesc']?.toString() ?? l['security_desc']?.toString() ?? '';
+            final meta = l['metadata'] as Map<String, dynamic>? ?? {};
+
+            // Derive divisibility from minPriceIncrement (e.g. "0.01" → "2")
+            final minPriceIncrement = l['minPriceIncrement']?.toString() ??
+                l['min_price_increment']?.toString() ?? '';
+            var divisibility = meta['issue_divisibility']?.toString() ??
+                meta['divisibility']?.toString() ?? '';
+            if (divisibility.isEmpty && minPriceIncrement.contains('.')) {
+              divisibility = minPriceIncrement.split('.').last.length.toString();
+            }
+
+            final entry = {'currency': currency, 'divisibility': divisibility, 'symbol': symbol};
+            listingEntries.add(entry);
+
+            if (securityId.isNotEmpty) secListingMap[securityId] = entry;
+            if (symbol.isNotEmpty) secListingMap[symbol] = entry;
+            if (securityDesc.isNotEmpty) secListingMap[securityDesc] = entry;
+
+            // Index by all metadata values
+            for (final mk in meta.entries) {
+              final mv = mk.value?.toString() ?? '';
+              if (mv.isNotEmpty) secListingMap[mv] = entry;
+            }
+          }
+
+          // Match unresolved holdings against the listing map
+          for (final holdingKey in unresolvedIds) {
+            if (secListingMap.containsKey(holdingKey)) {
+              info[holdingKey] = secListingMap[holdingKey]!;
+              print('📊 Resolved $holdingKey → ${info[holdingKey]}');
+            } else {
+              // Try matching by instrumentIid inside the holding data
+              final holdingData = holdings[holdingKey] as Map<String, dynamic>? ?? {};
+              final instrumentIid = holdingData['instrumentIid']?.toString() ??
+                  holdingData['instrument_iid']?.toString() ?? '';
+              if (instrumentIid.isNotEmpty && secListingMap.containsKey(instrumentIid)) {
+                info[holdingKey] = secListingMap[instrumentIid]!;
+                print('📊 Resolved $holdingKey via instrumentIid → ${info[holdingKey]}');
+              } else if (listingEntries.length == 1 && unresolvedIds.length == 1) {
+                // Only 1 security listing and 1 unresolved holding — match them
+                info[holdingKey] = listingEntries.first;
+                print('📊 Resolved $holdingKey via single-listing match → ${info[holdingKey]}');
+              } else {
+                print('⚠️ Could not resolve holding: $holdingKey');
+              }
+            }
+          }
+        }
+      } catch (e) {
+        print('Failed to fetch security listing list: $e');
+      }
+    }
+
+    if (mounted) {
+      setState(() {
+        _cashTokenInfo = info;
+      });
+    }
+  }
+
+  /// Default divisibility for known fiat currencies when server doesn't return it.
+  String _defaultDivisibility(String currencyCode) {
+    final code = currencyCode.toUpperCase();
+    final shortCode = code.length >= 3 ? code.substring(0, 3) : code;
+    const zeroDivisibility = {'JPY', 'KRW', 'VND', 'CLP'};
+    if (zeroDivisibility.contains(shortCode)) return '0';
+    const threeDivisibility = {'BHD', 'KWD', 'OMR'};
+    if (threeDivisibility.contains(shortCode)) return '3';
+    return '2';
+  }
+
+  /// Format an amount using divisibility (decimal places).
+  /// If the amount already contains a decimal point, just ensure correct decimal places.
+  /// If it's a raw integer, divide by 10^divisibility.
+  String _formatAmount(String rawAmount, String? divisibility) {
+    if (divisibility == null || divisibility.isEmpty) {
+      // No divisibility info — try to show as-is but with sensible formatting
+      try {
+        final value = double.parse(rawAmount);
+        if (rawAmount.contains('.')) return rawAmount;
+        return value.toStringAsFixed(0);
+      } catch (_) {
+        return rawAmount;
+      }
+    }
+    try {
+      final decimals = int.parse(divisibility);
+      if (decimals <= 0) return rawAmount;
+      final value = double.parse(rawAmount);
+
+      if (rawAmount.contains('.')) {
+        // Already a decimal — just format to correct decimal places
+        return value.toStringAsFixed(decimals);
+      } else {
+        // Raw integer units — divide by 10^divisibility
+        double divisor = 1;
+        for (var i = 0; i < decimals; i++) {
+          divisor *= 10;
+        }
+        return (value / divisor).toStringAsFixed(decimals);
+      }
+    } catch (_) {
+      return rawAmount;
     }
   }
 
@@ -430,6 +608,15 @@ class _BrokerInfoPageState extends State<BrokerInfoPage> {
     final portfolio = _holdingsData!['portfolio'] as Map<String, dynamic>? ?? {};
     final holdings = portfolio['holdings'] as Map<String, dynamic>? ?? {};
 
+    // Collect all non-holdings fields from the response and portfolio for display
+    final responseFields = Map<String, dynamic>.from(_holdingsData!);
+    responseFields.remove('portfolio'); // shown separately below
+
+    final portfolioFields = Map<String, dynamic>.from(portfolio);
+    portfolioFields.remove('holdings'); // shown as grid below
+
+    final cardColor = isDarkTheme ? UIConstants.colorDarkFill : Colors.grey[100]!;
+
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
@@ -437,17 +624,53 @@ class _BrokerInfoPageState extends State<BrokerInfoPage> {
           'Holdings',
           style: TextStyle(color: textColor, fontSize: UIConstants.fontSizeMd, fontWeight: FontWeight.bold),
         ),
-        if (portfolio['accountIid'] != null || portfolio['account_iid'] != null) ...[
-          SizedBox(height: UIConstants.spacingXs),
-          _infoField(
-            'Account IID',
-            portfolio['accountIid']?.toString() ?? portfolio['account_iid']?.toString() ?? '-',
-            labelColor,
-            textColor,
-          ),
-        ],
         SizedBox(height: UIConstants.spacingSm),
 
+        // Response-level fields (ref_execution_id, metadata with custody_account_iid, etc.)
+        if (responseFields.isNotEmpty) ...[
+          Container(
+            width: double.infinity,
+            padding: UIConstants.paddingStandard,
+            decoration: BoxDecoration(
+              color: cardColor,
+              borderRadius: BorderRadius.circular(8),
+              border: Border.all(color: isDarkTheme ? Colors.white12 : Colors.grey[300]!),
+            ),
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                Text('Response Details', style: TextStyle(color: labelColor, fontSize: 10, fontWeight: FontWeight.bold)),
+                SizedBox(height: UIConstants.spacingXs),
+                ..._buildDynamicFields(responseFields, labelColor, textColor, isDarkTheme),
+              ],
+            ),
+          ),
+          SizedBox(height: UIConstants.spacingSm),
+        ],
+
+        // Portfolio-level fields (account_iid, generated_at_dt, metadata, etc.)
+        if (portfolioFields.isNotEmpty) ...[
+          Container(
+            width: double.infinity,
+            padding: UIConstants.paddingStandard,
+            decoration: BoxDecoration(
+              color: cardColor,
+              borderRadius: BorderRadius.circular(8),
+              border: Border.all(color: isDarkTheme ? Colors.white12 : Colors.grey[300]!),
+            ),
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                Text('Portfolio Details', style: TextStyle(color: labelColor, fontSize: 10, fontWeight: FontWeight.bold)),
+                SizedBox(height: UIConstants.spacingXs),
+                ..._buildDynamicFields(portfolioFields, labelColor, textColor, isDarkTheme),
+              ],
+            ),
+          ),
+          SizedBox(height: UIConstants.spacingSm),
+        ],
+
+        // Holdings grid
         if (holdings.isEmpty)
           Text('No holdings found', style: TextStyle(color: labelColor, fontSize: UIConstants.fontSizeSm))
         else
@@ -464,6 +687,8 @@ class _BrokerInfoPageState extends State<BrokerInfoPage> {
               ),
               columns: [
                 DataColumn(label: Text('Asset ID', style: headerStyle)),
+                DataColumn(label: Text('Currency', style: headerStyle)),
+                DataColumn(label: Text('Divisibility', style: headerStyle)),
                 DataColumn(label: Text('Total', style: headerStyle)),
                 DataColumn(label: Text('Available', style: headerStyle)),
                 DataColumn(label: Text('Locked', style: headerStyle)),
@@ -471,15 +696,40 @@ class _BrokerInfoPageState extends State<BrokerInfoPage> {
               rows: holdings.entries.map((entry) {
                 final assetId = entry.key;
                 final holdingData = entry.value as Map<String, dynamic>? ?? {};
-                final totalUnits = holdingData['totalUnits']?.toString() ??
+                final totalUnitsRaw = holdingData['totalUnits']?.toString() ??
                     holdingData['total_units']?.toString() ?? '0';
                 final stashUnits = holdingData['stashUnits'] as Map<String, dynamic>? ??
                     holdingData['stash_units'] as Map<String, dynamic>? ?? {};
-                final available = stashUnits['available']?.toString() ?? totalUnits;
-                final locked = stashUnits['locked']?.toString() ?? '0';
+                // Stash keys can be: available/locked OR LIQUID/LOCKED/TOTAL
+                final availableRaw = stashUnits['available']?.toString() ??
+                    stashUnits['LIQUID']?.toString() ?? totalUnitsRaw;
+                final lockedRaw = stashUnits['locked']?.toString() ??
+                    stashUnits['LOCKED']?.toString() ?? '0';
+
+                // Look up currency and divisibility from resolved info
+                final tokenInfo = _cashTokenInfo[assetId];
+                var currency = tokenInfo?['currency'] ?? '';
+                var divisibility = tokenInfo?['divisibility'] ?? '';
+
+                // Also check if the holding itself has currency_code
+                final holdingCurrency = holdingData['currencyCode']?.toString() ??
+                    holdingData['currency_code']?.toString() ?? '';
+                final displayCurrency = currency.isNotEmpty ? currency : holdingCurrency;
+
+                // Default divisibility for fiat currencies when server doesn't provide it
+                if (divisibility.isEmpty && displayCurrency.isNotEmpty) {
+                  divisibility = _defaultDivisibility(displayCurrency);
+                }
+
+                // Format amounts using divisibility
+                final totalUnits = _formatAmount(totalUnitsRaw, divisibility);
+                final available = _formatAmount(availableRaw, divisibility);
+                final locked = _formatAmount(lockedRaw, divisibility);
 
                 return DataRow(cells: [
                   DataCell(_copyableCell(assetId, cellStyle)),
+                  DataCell(_copyableCell(displayCurrency.isNotEmpty ? displayCurrency : '-', cellStyle)),
+                  DataCell(_copyableCell(divisibility.isNotEmpty ? divisibility : '-', cellStyle)),
                   DataCell(_copyableCell(totalUnits, cellStyle)),
                   DataCell(_copyableCell(available, cellStyle)),
                   DataCell(_copyableCell(locked, cellStyle)),
