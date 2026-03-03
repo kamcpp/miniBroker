@@ -909,6 +909,7 @@ class _TradingPageState extends State<TradingPage> {
   List<Map<String, dynamic>> _tradeHistory = [];
   String _selectedSymbol = '';  // Will be set when securities are loaded
   String _orderType = 'Limit';
+  String _timeInForce = 'DAY';
   String _expiryPeriod = '1 Month'; // Add expiry period variable
   String _replaceExpiryPeriod = 'Select new expiration time'; // Add replace order expiry period variable
   bool _isBuySelected = true;
@@ -1812,7 +1813,7 @@ class _TradingPageState extends State<TradingPage> {
         side: sideApi,
         quantity: quantity,
         price: orderTypeApi == 'LIMIT' ? price : null,
-        timeInForce: "0",
+        timeInForce: _timeInForce,
       );
 
       if (result['success'] == true && result['output'] != null) {
@@ -4996,8 +4997,9 @@ class _TradingPageState extends State<TradingPage> {
         return;
       }
 
-      // Use the full symbol as security listing ID (e.g., "ETH/USD")
-      final securityId = _selectedSymbol;
+      // Build security listing ID as TICKER:CURRENCY (e.g., "FRSTSEC:EUR")
+      final currency = _selectedCurrency['issueCurrency'] ?? _selectedCurrency['code'] ?? '';
+      final securityId = currency.isNotEmpty ? '$_selectedSymbol:$currency' : _selectedSymbol;
       print('🏷️ Using securityId: $securityId');
 
       // Generate unique participant order ID
@@ -5042,7 +5044,7 @@ class _TradingPageState extends State<TradingPage> {
         side: side,
         quantity: _quantityController.text.trim(),
         price: price,
-        timeInForce: "0", // GTC by default
+        timeInForce: _timeInForce,
         participantOrderId: participantOrderId,
       );
 
@@ -5288,7 +5290,60 @@ class _TradingPageState extends State<TradingPage> {
             ),
           ),
 
-          const SizedBox(height: UIConstants.spacingMd), // Reduced space after order type
+          const SizedBox(height: UIConstants.spacingSm),
+
+          // Time In Force Dropdown
+          Row(
+            children: [
+              SizedBox(
+                width: 80,
+                child: Text(
+                  'TIF',
+                  style: TextStyle(
+                    fontSize: UIConstants.textFieldFontSize,
+                    color: isDarkTheme ? Colors.grey[400] : Colors.grey[600],
+                  ),
+                ),
+              ),
+              Expanded(
+                child: _HoverDropdownField(
+                  isDarkTheme: isDarkTheme,
+                  child: Padding(
+                    padding: const EdgeInsets.symmetric(horizontal: 4, vertical: 2),
+                    child: DropdownButtonHideUnderline(
+                      child: DropdownButton<String>(
+                        value: _timeInForce,
+                        isExpanded: true,
+                        isDense: true,
+                        onChanged: (String? newValue) {
+                          setState(() {
+                            _timeInForce = newValue!;
+                          });
+                        },
+                        dropdownColor: isDarkTheme ? const Color(0xFF1e1e1e) : Colors.white,
+                        style: TextStyle(
+                          color: isDarkTheme ? Colors.white : Colors.black,
+                          fontSize: UIConstants.textFieldFontSize,
+                        ),
+                        items: ['DAY', 'GTC']
+                            .map<DropdownMenuItem<String>>((String value) {
+                          return DropdownMenuItem<String>(
+                            value: value,
+                            child: Padding(
+                              padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 2),
+                              child: Text(value),
+                            ),
+                          );
+                        }).toList(),
+                      ),
+                    ),
+                  ),
+                ),
+              ),
+            ],
+          ),
+
+          const SizedBox(height: UIConstants.spacingSm),
 
           // Available Balance / Buying Power Row Layout
           SizedBox(
