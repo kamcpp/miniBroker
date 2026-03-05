@@ -1301,13 +1301,13 @@ class _TradingPageState extends State<TradingPage> {
     try {
       print('📋 Fetching real orders for account: $_cachedAccountId');
 
-      final result = await GrpcurlHelper.getAccountOrders(
-        accountId: _cachedAccountId!,
+      final pageSize = _ordersPageSize > _historyPageSize ? _ordersPageSize : _historyPageSize;
+      final result = await GrpcurlHelper.getInvestorOrders(
+        investorId: _cachedAccountId!,
         refRequestId: 'flutter-trading-page-${DateTime.now().millisecondsSinceEpoch}',
-        pagination: {
-          'page_nr': 1,
-          'page_size': _ordersPageSize > _historyPageSize ? _ordersPageSize : _historyPageSize, // Use the larger page size to get enough data for both tables
-        },
+        pagination: pageSize > 0 ? {
+          'page_size': pageSize,
+        } : null,
       ).timeout(const Duration(minutes: 5));
 
       if (result['success'] == true && result['output'] != null) {
