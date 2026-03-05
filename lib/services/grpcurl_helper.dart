@@ -1254,7 +1254,7 @@ class GrpcurlHelper {
           'page_nr': 1,
           'page_size': pageSize,
         },
-        'security_iid_or_symbol_regexes': [symbol],
+        'security_listing_iid_or_symbol_regexes': [symbol],
         'period': period,
         'include_volume': true,
       },
@@ -1277,7 +1277,7 @@ class GrpcurlHelper {
         'page_nr': pageNumber,
         'page_size': pageSize,
       },
-      'security_iid': securityIid,
+      'security_listing_iid': securityIid,
     };
 
     if (side != null && side.isNotEmpty) {

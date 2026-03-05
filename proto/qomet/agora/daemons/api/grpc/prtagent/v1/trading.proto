@@ -63,7 +63,7 @@ message OhlcDataResponse {
 
 message GetLatestQuoteRequest {
   string proposed_execution_id = 1;                                     // OPTIONAL: Client-proposed execution ID for tracking
-  repeated string security_iid_or_symbol_regexes = 2;                   // REQUIRED: Security IID or symbol regexes
+  repeated string security_listing_iid_or_symbol_regexes = 2;            // REQUIRED: Security listing IID or symbol regexes
 
   map<string, string> aux_data = 105;                                   // OPTIONAL: Additional request data
 }
@@ -78,7 +78,7 @@ message LiveQuoteFetchParams {
 
 message FetchLiveQuoteRequest {
   string proposed_execution_id = 1;                                     // OPTIONAL: Client-proposed execution ID for tracking
-  repeated string security_iid_or_symbol_regexes = 2;                   // REQUIRED: Security IID or symbol regexes
+  repeated string security_listing_iid_or_symbol_regexes = 2;            // REQUIRED: Security listing IID or symbol regexes
   LiveQuoteFetchParams fetch_params = 3;                                // OPTIONAL: Live quote fetch parameters
 
   map<string, string> aux_data = 105;                                   // OPTIONAL: Additional request data
@@ -87,7 +87,7 @@ message FetchLiveQuoteRequest {
 message GetHistoricalQuoteRequest {
   string proposed_execution_id = 1;                                     // OPTIONAL: Client-proposed execution ID for tracking
   tech.qomet.agora.api.grpc.common.PaginationParams pagination = 2;     // OPTIONAL: Pagination parameters
-  repeated string security_iid_or_symbol_regexes = 3;                   // REQUIRED: Security IID or symbol regexes
+  repeated string security_listing_iid_or_symbol_regexes = 3;            // REQUIRED: Security listing IID or symbol regexes
   optional tech.qomet.agora.api.grpc.common.Duration duration = 4;      // OPTIONAL: Time range duration
 
   map<string, string> aux_data = 105;                                   // OPTIONAL: Additional request data
@@ -111,7 +111,7 @@ message LiveOhlcDataFetchParams {
 
 message FetchLiveOhlcDataRequest {
   string proposed_execution_id = 1;                                     // OPTIONAL: Client-proposed execution ID for tracking
-  repeated string security_iid_or_symbol_regexes = 2;                   // REQUIRED: Security IID or symbol regexes
+  repeated string security_listing_iid_or_symbol_regexes = 2;            // REQUIRED: Security listing IID or symbol regexes
   LiveOhlcDataFetchParams fetch_params = 3;                             // OPTIONAL: Live OHLC fetch parameters
 
   map<string, string> aux_data = 105;                                   // OPTIONAL: Additional request data
@@ -120,7 +120,7 @@ message FetchLiveOhlcDataRequest {
 message GetHistoricalOhlcDataRequest {
   string proposed_execution_id = 1;                                     // OPTIONAL: Client-proposed execution ID for tracking
   tech.qomet.agora.api.grpc.common.PaginationParams pagination = 2;     // OPTIONAL: Pagination parameters
-  repeated string security_iid_or_symbol_regexes = 3;                   // REQUIRED: Security IID or symbol regexes
+  repeated string security_listing_iid_or_symbol_regexes = 3;            // REQUIRED: Security listing IID or symbol regexes
   optional tech.qomet.agora.api.grpc.common.Duration duration = 4;      // OPTIONAL: Time range duration
   string period = 5;                                                    // REQUIRED: Time period ("1m", "5m", "15m", "1h", "1d")
   bool include_volume = 6;                                              // OPTIONAL: Include volume data (default: false)
@@ -208,6 +208,10 @@ message CreateOrderAsyncRequest {
   string participant_order_iid = 11;                                    // REQUIRED: Client's order ID (mandatory in FIX)
   string csd_account_iid = 12;                                          // OPTIONAL: CSD account IID for settlement
 
+  // Currency and fee (required for create_investor_order saga)
+  string currency = 13;                                                 // REQUIRED: ISO 4217 3-letter currency code (e.g., "EUR", "USD")
+  string fee_amount = 14;                                               // REQUIRED: Fee amount in same currency (human-readable decimal)
+
   map<string, string> aux_data = 105;                                   // OPTIONAL: Additional request data
 }
 
@@ -236,12 +240,21 @@ message CancelOrderAsyncRequest {
   map<string, string> aux_data = 105;                                   // OPTIONAL: Additional request data
 }
 
+enum OrderbookModeEnum {
+  ORDERBOOK_MODE_ENUM_UNSPECIFIED = 0;                                  // Default: L2 aggregated price levels
+  ORDERBOOK_MODE_ENUM_L1_BEST_BID_ASK = 1;                             // Level 1: best bid/ask with VWAP snapshot (top of book)
+  ORDERBOOK_MODE_ENUM_L2_AGGREGATED_PRICE_LEVELS = 2;                  // Level 2: aggregated quantity at each price level
+  ORDERBOOK_MODE_ENUM_L3_INDIVIDUAL_ORDERS = 3;                        // Level 3: full order-by-order book
+  ORDERBOOK_MODE_ENUM_CUMULATIVE_DEPTH = 4;                            // Cumulative depth chart (bids/asks with running totals)
+}
+
 message GetOrderbookRequest {
   string proposed_execution_id = 1;                                     // OPTIONAL: Client-proposed execution ID for tracking
 
   tech.qomet.agora.api.grpc.common.PaginationParams pagination = 2;     // OPTIONAL: Pagination parameters
-  string security_iid = 3;                                              // REQUIRED: Security internal ID
+  string security_listing_iid = 3;                                      // REQUIRED: Security listing internal ID
   OrderbookQueryFilter orderbook_query_filter = 4;                      // OPTIONAL: Orderbook query filters
+  OrderbookModeEnum mode = 5;                                           // OPTIONAL: Orderbook mode (default: L2)
 
   map<string, string> aux_data = 105;                                   // OPTIONAL: Additional request data
 }

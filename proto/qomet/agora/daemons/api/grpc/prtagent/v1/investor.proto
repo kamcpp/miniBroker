@@ -126,7 +126,7 @@ message GetInvestorSecurityHoldingsRequest {
   string proposed_execution_id = 1;                                                     // OPTIONAL: Client-proposed execution ID for tracking
   string investor_iid = 2;                                                              // REQUIRED: Investor internal ID
   string venue_iid = 3;                                                                 // OPTIONAL: Venue internal ID (filter by venue)
-  repeated string security_iids = 4;                                                    // OPTIONAL: Specific security IIDs to retrieve
+  repeated string security_listing_iids = 4;                                             // OPTIONAL: Specific security listing IIDs to retrieve
 
   map<string, string> aux_data = 105;                                                   // OPTIONAL: Additional request data
 }
@@ -171,7 +171,7 @@ message DepositCashResponse {
 message DepositSecurityRequest {
   string proposed_execution_id = 1;                                                     // OPTIONAL: Client-proposed execution ID for tracking
   string investor_iid = 2;                                                              // REQUIRED: Investor internal ID
-  string security_iid = 3;                                                              // REQUIRED: Security internal ID
+  string security_listing_iid = 3;                                                      // REQUIRED: Security listing internal ID
   string units = 4;                                                                     // REQUIRED: Number of units to deposit
 
   map<string, string> aux_data = 105;                                                   // OPTIONAL: Additional request data
@@ -201,7 +201,7 @@ message WithdrawCashResponse {
 message WithdrawSecurityRequest {
   string proposed_execution_id = 1;                                                     // OPTIONAL: Client-proposed execution ID for tracking
   string investor_iid = 2;                                                              // REQUIRED: Investor internal ID
-  string security_iid = 3;                                                              // REQUIRED: Security internal ID
+  string security_listing_iid = 3;                                                      // REQUIRED: Security listing internal ID
   string units = 4;                                                                     // REQUIRED: Number of units to withdraw
 
   map<string, string> aux_data = 105;                                                   // OPTIONAL: Additional request data
@@ -239,7 +239,7 @@ message GetInvestorTradesRequest {
   tech.qomet.agora.api.grpc.common.PaginationParams pagination = 4;                     // OPTIONAL: Pagination parameters
   tech.qomet.agora.api.grpc.common.DateTime from_dt = 5;                                // OPTIONAL: Start of time range
   tech.qomet.agora.api.grpc.common.DateTime to_dt = 6;                                  // OPTIONAL: End of time range
-  repeated string security_iid_or_symbol_regexes = 7;                                   // OPTIONAL: Filter by security IID or symbol regex
+  repeated string security_listing_iid_or_symbol_regexes = 7;                            // OPTIONAL: Filter by security listing IID or symbol regex
   tech.qomet.agora.api.grpc.fin.OrderSideEnum side = 8;                              // OPTIONAL: Filter by order side
 
   map<string, string> aux_data = 105;                                                   // OPTIONAL: Additional request data
