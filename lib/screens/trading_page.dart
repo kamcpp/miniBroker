@@ -3,6 +3,7 @@ import 'dart:math';
 import 'dart:async';
 import 'dart:convert';
 import 'package:flutter/material.dart';
+import 'package:flutter/services.dart';
 import '../config/ui_constants.dart';
 import 'package:provider/provider.dart';
 import 'package:http/http.dart' as http;
@@ -1323,20 +1324,31 @@ class _TradingPageState extends State<TradingPage> {
 
           // Process all orders first
           final allProcessedOrders = ordersData.map<Map<String, dynamic>>((order) {
+            // Extract creation timestamp: prefer explicit field, fall back to first event log
+            final eventLogs = order['eventLogs'] ?? order['event_logs'] ?? [];
+            String? createTs = order['createTimestamp'] ?? order['createdAtDt']?['ts'] ?? order['create_timestamp'];
+            if (createTs == null && eventLogs is List && eventLogs.isNotEmpty) {
+              createTs = eventLogs.first['timestamp'] ?? eventLogs.first['ts'];
+            }
             return {
-              'order_id': order['orderIid'] ?? order['order_id'] ?? 'N/A',
+              'order_id': order['orderId'] ?? order['orderIid'] ?? order['order_id'] ?? 'N/A',
               'participantOrderId': order['participantOrderId'] ?? order['participant_order_id'] ?? order['orderIid'] ?? order['order_id'] ?? 'N/A',
               'side': order['side'] ?? 'N/A',
               'symbol': order['securityIid'] ?? order['symbol'] ?? 'N/A',
               'quantity': order['quantity'] ?? '0',
               'price': order['price'] ?? '0',
-              'create_timestamp': order['createTimestamp'] ?? order['createdAtDt']?['ts'] ?? order['create_timestamp'],
+              'create_timestamp': createTs,
               'expire_timestamp': order['expireTimestamp'] ?? order['expireAtDt']?['ts'] ?? order['expire_timestamp'],
               'is_filled': order['isFilled'] ?? order['is_filled'] ?? false,
               'is_cancelled': order['isCancelled'] ?? order['is_cancelled'] ?? false,
               'is_expired': order['isExpired'] ?? order['is_expired'] ?? false,
-              'order_status': order['orderStatus'] ?? 'UNKNOWN',
+              'order_status': order['orderStatus'] ?? order['order_status'] ?? 'UNKNOWN',
               'order_type': order['orderType'] ?? order['order_type'] ?? 'UNKNOWN',
+              'status': order['orderStatus'] ?? order['status'] ?? '',
+              'fee_amount': order['feeAmount'] ?? order['fee_amount'] ?? '',
+              'event_logs': eventLogs,
+              'security_listing_iid': order['securityListingIid'] ?? order['security_listing_iid'] ?? '',
+              '_raw': order,
             };
           }).toList();
 
@@ -4154,18 +4166,295 @@ class _TradingPageState extends State<TradingPage> {
     }
   }
 
-  Widget _buildOrderRow(Map<String, dynamic> order, bool isDarkTheme) {
-    // Helper function to format timestamps
-    String formatTimestamp(String? timestamp) {
-      if (timestamp == null) return 'N/A';
-      try {
-        final dt = DateTime.fromMillisecondsSinceEpoch(int.parse(timestamp) * 1000);
-        return '${dt.day}/${dt.month}/${dt.year.toString().substring(2)} ${dt.hour.toString().padLeft(2, '0')}:${dt.minute.toString().padLeft(2, '0')}';
-      } catch (e) {
-        return 'N/A';
+  /// Clean enum prefix and title-case the result (e.g., ORDER_REQUEST_STATUS_ENUM_SUBMITTED → Submitted)
+  String _cleanEnumPrefix(String raw) {
+    // Strip known prefixes
+    var cleaned = raw;
+    for (final prefix in [
+      'ORDER_REQUEST_STATUS_ENUM_',
+      'ORDER_REQUEST_EVENT_TYPE_ENUM_',
+      'ORDER_STATUS_ENUM_',
+      'ORDER_STATUS_',
+      'ORDER_SIDE_ENUM_',
+    ]) {
+      if (cleaned.toUpperCase().startsWith(prefix)) {
+        cleaned = cleaned.substring(prefix.length);
+        break;
       }
     }
+    if (cleaned.isEmpty) return cleaned;
+    // Title-case: replace underscores with spaces, capitalize each word
+    return cleaned.split('_').map((w) =>
+      w.isEmpty ? '' : w[0].toUpperCase() + w.substring(1).toLowerCase()
+    ).join(' ');
+  }
 
+  /// Get display status preferring server order_status, falling back to boolean flags
+  String _getOrderStatus(Map<String, dynamic> order) {
+    final rawStatus = (order['status'] ?? order['order_status'] ?? '').toString();
+    if (rawStatus.isNotEmpty && rawStatus != 'UNKNOWN') {
+      return _cleanEnumPrefix(rawStatus);
+    }
+    if (order['is_filled'] == true) return 'Filled';
+    if (order['is_cancelled'] == true) return 'Cancelled';
+    if (order['is_expired'] == true) return 'Expired';
+    return 'Active';
+  }
+
+  /// Whether a status is terminal (non-actionable)
+  bool _isTerminalStatus(String status) {
+    final s = status.toLowerCase().trim();
+    return ['filled', 'cancelled', 'expired', 'rejected'].contains(s);
+  }
+
+  /// Get color for an order status
+  Color _getStatusColor(String status, bool isDarkTheme) {
+    switch (status.toLowerCase().trim()) {
+      case 'pending': return Colors.amber.shade700;
+      case 'validated': return Colors.blue;
+      case 'submitted': return Colors.teal;
+      case 'filled': return Colors.green;
+      case 'cancelled': return Colors.red;
+      case 'expired': return Colors.orange;
+      case 'rejected': return Colors.red;
+      case 'active': return const Color(0xFF000080);
+      default: return isDarkTheme ? Colors.white : Colors.black;
+    }
+  }
+
+  /// Format a timestamp that could be ISO 8601 string, unix seconds, or null
+  String _formatOrderTimestamp(dynamic timestamp) {
+    if (timestamp == null) return 'N/A';
+    final str = timestamp.toString();
+    if (str.isEmpty) return 'N/A';
+    try {
+      // Try ISO 8601 first (e.g., 2026-03-06T00:02:13Z)
+      final dt = DateTime.parse(str);
+      return '${dt.day}/${dt.month}/${dt.year.toString().substring(2)} ${dt.hour.toString().padLeft(2, '0')}:${dt.minute.toString().padLeft(2, '0')}';
+    } catch (_) {}
+    try {
+      // Try unix seconds
+      final dt = DateTime.fromMillisecondsSinceEpoch(int.parse(str) * 1000);
+      return '${dt.day}/${dt.month}/${dt.year.toString().substring(2)} ${dt.hour.toString().padLeft(2, '0')}:${dt.minute.toString().padLeft(2, '0')}';
+    } catch (_) {}
+    return str;
+  }
+
+  /// Show order details dialog with info section, event logs, and refresh
+  void _showOrderDetails(Map<String, dynamic> order) {
+    final themeService = Provider.of<ThemeService>(context, listen: false);
+
+    showDialog(
+      context: context,
+      builder: (BuildContext dialogContext) {
+        return StatefulBuilder(
+          builder: (BuildContext context, StateSetter setDialogState) {
+            var currentOrder = Map<String, dynamic>.from(order);
+            bool isRefreshing = false;
+            final isDark = themeService.isDarkTheme;
+            final textColor = isDark ? Colors.white : Colors.black;
+            final subtextColor = isDark ? Colors.grey[400]! : Colors.grey[600]!;
+            final bgColor = isDark ? const Color(0xFF1E1E1E) : Colors.white;
+            final surfaceColor = isDark ? const Color(0xFF2A2A2A) : Colors.grey.shade50;
+            final borderColor = isDark ? Colors.grey[700]! : Colors.grey.shade300;
+
+            void copyToClipboard(String text) {
+              Clipboard.setData(ClipboardData(text: text));
+              ScaffoldMessenger.of(dialogContext).showSnackBar(
+                SnackBar(content: Text('Copied: $text'), duration: const Duration(seconds: 1)),
+              );
+            }
+
+            Widget infoChip(String label, String value) {
+              return Padding(
+                padding: const EdgeInsets.only(right: 12, bottom: 8),
+                child: InkWell(
+                  onTap: () => copyToClipboard(value),
+                  child: Row(
+                    mainAxisSize: MainAxisSize.min,
+                    children: [
+                      Text('$label: ', style: TextStyle(color: subtextColor, fontSize: 12)),
+                      Text(value, style: TextStyle(color: textColor, fontSize: 12, fontWeight: FontWeight.w600)),
+                      const SizedBox(width: 4),
+                      Icon(Icons.copy, size: 12, color: subtextColor),
+                    ],
+                  ),
+                ),
+              );
+            }
+
+            final status = _getOrderStatus(currentOrder);
+            final side = _cleanEnumPrefix(currentOrder['side']?.toString() ?? '');
+            final eventLogs = (currentOrder['event_logs'] as List<dynamic>?) ?? [];
+
+            // Format details map to readable string
+            String formatDetails(dynamic details) {
+              if (details == null) return '';
+              if (details is Map) {
+                return details.entries.map((e) => '${e.key}: ${e.value}').join(', ');
+              }
+              return details.toString();
+            }
+
+            return AlertDialog(
+              backgroundColor: bgColor,
+              title: Row(
+                children: [
+                  Expanded(child: Text('Order Details', style: TextStyle(fontSize: 18, color: textColor))),
+                  IconButton(
+                    icon: isRefreshing
+                        ? SizedBox(width: 20, height: 20, child: CircularProgressIndicator(strokeWidth: 2, color: textColor))
+                        : Icon(Icons.refresh, color: textColor),
+                    tooltip: 'Refresh order',
+                    onPressed: isRefreshing ? null : () async {
+                      setDialogState(() { isRefreshing = true; });
+                      try {
+                        final result = await GrpcurlHelper.getInvestorOrders(
+                          investorId: _cachedAccountId!,
+                          refRequestId: 'flutter-order-detail-${DateTime.now().millisecondsSinceEpoch}',
+                          pagination: {'page_size': 100},
+                        ).timeout(const Duration(minutes: 2));
+
+                        if (result['success'] == true && result['output']?['orders'] != null) {
+                          final orders = result['output']['orders'] as List<dynamic>;
+                          final poid = currentOrder['participantOrderId']?.toString();
+                          final match = orders.cast<Map<String, dynamic>>().where((o) =>
+                            (o['participantOrderId'] ?? o['participant_order_id'] ?? o['orderIid'] ?? o['order_id'])?.toString() == poid
+                          );
+                          if (match.isNotEmpty) {
+                            final raw = match.first;
+                            final newEventLogs = raw['eventLogs'] ?? raw['event_logs'] ?? [];
+                            String? newCreateTs = raw['createTimestamp'] ?? raw['createdAtDt']?['ts'] ?? raw['create_timestamp'];
+                            if (newCreateTs == null && newEventLogs is List && newEventLogs.isNotEmpty) {
+                              newCreateTs = newEventLogs.first['timestamp'] ?? newEventLogs.first['ts'];
+                            }
+                            setDialogState(() {
+                              currentOrder = {
+                                ...currentOrder,
+                                'order_status': raw['orderStatus'] ?? raw['order_status'] ?? '',
+                                'status': raw['orderStatus'] ?? raw['status'] ?? '',
+                                'fee_amount': raw['feeAmount'] ?? raw['fee_amount'] ?? '',
+                                'event_logs': newEventLogs,
+                                'create_timestamp': newCreateTs ?? currentOrder['create_timestamp'],
+                                'is_filled': raw['isFilled'] ?? raw['is_filled'] ?? false,
+                                'is_cancelled': raw['isCancelled'] ?? raw['is_cancelled'] ?? false,
+                                'is_expired': raw['isExpired'] ?? raw['is_expired'] ?? false,
+                                '_raw': raw,
+                              };
+                              isRefreshing = false;
+                            });
+                            return;
+                          }
+                        }
+                        setDialogState(() { isRefreshing = false; });
+                      } catch (e) {
+                        print('Error refreshing order: $e');
+                        setDialogState(() { isRefreshing = false; });
+                      }
+                    },
+                  ),
+                ],
+              ),
+              content: SizedBox(
+                width: 800,
+                height: 500,
+                child: SingleChildScrollView(
+                  child: Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      // Info section
+                      Wrap(
+                        children: [
+                          infoChip('Order ID', currentOrder['order_id']?.toString() ?? 'N/A'),
+                          infoChip('Participant Order ID', currentOrder['participantOrderId']?.toString() ?? 'N/A'),
+                          infoChip('Side', side),
+                          infoChip('Symbol', currentOrder['symbol']?.toString() ?? 'N/A'),
+                          infoChip('Quantity', currentOrder['quantity']?.toString() ?? '0'),
+                          infoChip('Price', currentOrder['price']?.toString() ?? '0'),
+                          infoChip('Type', _cleanEnumPrefix(currentOrder['order_type']?.toString() ?? 'N/A')),
+                          infoChip('Status', status),
+                          infoChip('Fee Amount', currentOrder['fee_amount']?.toString().isEmpty == true ? 'N/A' : currentOrder['fee_amount']?.toString() ?? 'N/A'),
+                          infoChip('Security Listing IID', currentOrder['security_listing_iid']?.toString().isEmpty == true ? 'N/A' : currentOrder['security_listing_iid']?.toString() ?? 'N/A'),
+                          infoChip('Created', _formatOrderTimestamp(currentOrder['create_timestamp'])),
+                          infoChip('Expires', _formatOrderTimestamp(currentOrder['expire_timestamp'])),
+                        ],
+                      ),
+                      const SizedBox(height: 16),
+                      Divider(color: borderColor),
+                      const SizedBox(height: 8),
+                      // Event Logs section
+                      Text('Event Logs (${eventLogs.length})', style: TextStyle(fontSize: 14, fontWeight: FontWeight.w600, color: textColor)),
+                      const SizedBox(height: 8),
+                      if (eventLogs.isEmpty)
+                        Text('No event logs available.', style: TextStyle(color: subtextColor, fontSize: 12))
+                      else
+                        Table(
+                          border: TableBorder.all(color: borderColor, width: 0.5),
+                          columnWidths: const {
+                            0: FlexColumnWidth(2),
+                            1: FlexColumnWidth(2),
+                            2: FlexColumnWidth(1.5),
+                            3: FlexColumnWidth(3),
+                            4: FlexColumnWidth(3),
+                          },
+                          children: [
+                            TableRow(
+                              decoration: BoxDecoration(color: surfaceColor),
+                              children: [
+                                Padding(padding: const EdgeInsets.all(6), child: Text('Timestamp', style: TextStyle(fontWeight: FontWeight.w600, fontSize: 11, color: textColor))),
+                                Padding(padding: const EdgeInsets.all(6), child: Text('Type', style: TextStyle(fontWeight: FontWeight.w600, fontSize: 11, color: textColor))),
+                                Padding(padding: const EdgeInsets.all(6), child: Text('Step', style: TextStyle(fontWeight: FontWeight.w600, fontSize: 11, color: textColor))),
+                                Padding(padding: const EdgeInsets.all(6), child: Text('Message', style: TextStyle(fontWeight: FontWeight.w600, fontSize: 11, color: textColor))),
+                                Padding(padding: const EdgeInsets.all(6), child: Text('Details', style: TextStyle(fontWeight: FontWeight.w600, fontSize: 11, color: textColor))),
+                              ],
+                            ),
+                            ...eventLogs.map<TableRow>((log) {
+                              final logMap = log is Map<String, dynamic> ? log : <String, dynamic>{};
+                              final ts = _formatOrderTimestamp(logMap['timestamp'] ?? logMap['ts'] ?? logMap['createdAt']);
+                              final type = _cleanEnumPrefix((logMap['type'] ?? logMap['eventType'] ?? logMap['event_type'] ?? '').toString());
+                              final step = (logMap['stepName'] ?? logMap['step'] ?? logMap['sagaStep'] ?? logMap['saga_step'] ?? '').toString();
+                              final message = (logMap['message'] ?? logMap['msg'] ?? '').toString();
+                              final details = formatDetails(logMap['details'] ?? logMap['detail'] ?? logMap['error']);
+                              return TableRow(
+                                children: [
+                                  _buildCopyableCell(ts, copyToClipboard, textColor),
+                                  _buildCopyableCell(type, copyToClipboard, textColor),
+                                  _buildCopyableCell(step, copyToClipboard, textColor),
+                                  _buildCopyableCell(message, copyToClipboard, textColor),
+                                  _buildCopyableCell(details, copyToClipboard, textColor),
+                                ],
+                              );
+                            }),
+                          ],
+                        ),
+                    ],
+                  ),
+                ),
+              ),
+              actions: [
+                TextButton(
+                  onPressed: () => Navigator.of(dialogContext).pop(),
+                  child: Text('Close', style: TextStyle(color: isDark ? Colors.white70 : null)),
+                ),
+              ],
+            );
+          },
+        );
+      },
+    );
+  }
+
+  Widget _buildCopyableCell(String text, void Function(String) onCopy, Color textColor) {
+    return InkWell(
+      onTap: text.isNotEmpty ? () => onCopy(text) : null,
+      child: Padding(
+        padding: const EdgeInsets.all(6),
+        child: Text(text.isEmpty ? '-' : text, style: TextStyle(fontSize: 11, color: textColor)),
+      ),
+    );
+  }
+
+  Widget _buildOrderRow(Map<String, dynamic> order, bool isDarkTheme) {
     // Helper function to format side
     String formatSide(String side) {
       final s = side.toUpperCase();
@@ -4174,28 +4463,9 @@ class _TradingPageState extends State<TradingPage> {
       return side;
     }
 
-    // Helper function to get status
-    String getStatus(Map<String, dynamic> order) {
-      if (order['is_filled'] == true) return 'Filled';
-      if (order['is_cancelled'] == true) return 'Cancelled';
-      if (order['is_expired'] == true) return 'Expired';
-      return 'Active';
-    }
-
-    // Helper function to get status color
-    Color getStatusColor(String status) {
-      switch (status) {
-        case 'Filled': return Colors.green;
-        case 'Cancelled': return Colors.red;
-        case 'Expired': return Colors.orange;
-        case 'Active': return const Color(0xFF000080);
-        default: return isDarkTheme ? Colors.white : Colors.black;
-      }
-    }
-
     final side = formatSide(order['side'] ?? '');
-    final status = getStatus(order);
-    final statusColor = getStatusColor(status);
+    final status = _getOrderStatus(order);
+    final statusColor = _getStatusColor(status, isDarkTheme);
     final sideColor = side == 'BUY' ? UIConstants.colorAccept : UIConstants.colorReject;
     final quantity = _formatDecimal(order['quantity'] ?? '0');
     final price = order['price'] ?? '0';
@@ -4225,42 +4495,48 @@ class _TradingPageState extends State<TradingPage> {
           ),
           SizedBox(
             width: 140,
-            child: Text(formatTimestamp(order['create_timestamp']), style: TextStyle(color: isDarkTheme ? Colors.white : Colors.black, fontSize: 11), textAlign: TextAlign.center),
+            child: Text(_formatOrderTimestamp(order['create_timestamp']), style: TextStyle(color: isDarkTheme ? Colors.white : Colors.black, fontSize: 11), textAlign: TextAlign.center),
           ),
           SizedBox(
             width: 140,
-            child: Text(formatTimestamp(order['expire_timestamp']), style: TextStyle(color: isDarkTheme ? Colors.white : Colors.black, fontSize: 11), textAlign: TextAlign.center),
+            child: Text(_formatOrderTimestamp(order['expire_timestamp']), style: TextStyle(color: isDarkTheme ? Colors.white : Colors.black, fontSize: 11), textAlign: TextAlign.center),
           ),
           SizedBox(
             width: 140,
             child: Text(status, style: TextStyle(color: statusColor, fontSize: UIConstants.fontSizeSm, fontWeight: UIConstants.fontWeightNormal), textAlign: TextAlign.center),
           ),
-          Expanded(child: status == 'Active' ?
-            Row(
+          Expanded(child: Row(
+              mainAxisAlignment: MainAxisAlignment.center,
               mainAxisSize: MainAxisSize.min,
               children: [
-                Expanded(
-                  child: _HoverButton(
-                    text: 'Cancel',
+                if (!_isTerminalStatus(status)) ...[
+                  IconButton(
+                    icon: const Icon(Icons.cancel_outlined, size: 18),
                     color: Colors.red,
-                    onTap: () {
-                      _cancelOrder(order['participantOrderId']?.toString() ?? '');
-                    },
+                    tooltip: 'Cancel',
+                    padding: EdgeInsets.zero,
+                    constraints: const BoxConstraints(minWidth: 28, minHeight: 28),
+                    onPressed: () => _cancelOrder(order['participantOrderId']?.toString() ?? ''),
                   ),
-                ),
-                const SizedBox(width: 2),
-                Expanded(
-                  child: _HoverButton(
-                    text: 'Replace',
+                  IconButton(
+                    icon: const Icon(Icons.swap_horiz, size: 18),
                     color: Colors.blue,
-                    onTap: () {
-                      _replaceOrder(order['participantOrderId']?.toString() ?? '', order);
-                    },
+                    tooltip: 'Replace',
+                    padding: EdgeInsets.zero,
+                    constraints: const BoxConstraints(minWidth: 28, minHeight: 28),
+                    onPressed: () => _replaceOrder(order['participantOrderId']?.toString() ?? '', order),
                   ),
+                ],
+                IconButton(
+                  icon: const Icon(Icons.info_outline, size: 18),
+                  color: Colors.grey,
+                  tooltip: 'Details',
+                  padding: EdgeInsets.zero,
+                  constraints: const BoxConstraints(minWidth: 28, minHeight: 28),
+                  onPressed: () => _showOrderDetails(order),
                 ),
               ],
-            ) :
-            Text('-', style: TextStyle(color: isDarkTheme ? Colors.grey : Colors.grey[600], fontSize: 12))
+            ),
           ),
         ],
       ),
@@ -4448,7 +4724,7 @@ class _TradingPageState extends State<TradingPage> {
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
           const SizedBox(height: 2),
-          // History table header (without Action column)
+          // History table header
           Row(
             mainAxisAlignment: MainAxisAlignment.spaceBetween,
             children: [
@@ -4476,8 +4752,12 @@ class _TradingPageState extends State<TradingPage> {
                 width: 150,
                 child: Text('Expiration Time', style: TextStyle(color: Colors.grey[400], fontWeight: UIConstants.fontWeightMedium, fontSize: 13), textAlign: TextAlign.center),
               ),
-              Expanded(
+              SizedBox(
+                width: 140,
                 child: Text('Status', style: TextStyle(color: Colors.grey[400], fontWeight: UIConstants.fontWeightMedium, fontSize: 13), textAlign: TextAlign.center),
+              ),
+              Expanded(
+                child: Text('Action', style: TextStyle(color: Colors.grey[400], fontWeight: UIConstants.fontWeightMedium, fontSize: 13), textAlign: TextAlign.center),
               ),
             ],
           ),
@@ -4536,17 +4816,6 @@ class _TradingPageState extends State<TradingPage> {
   }
 
   Widget _buildOrderHistoryRow(Map<String, dynamic> order, bool isDarkTheme) {
-    // Helper function to format timestamps
-    String formatTimestamp(String? timestamp) {
-      if (timestamp == null) return 'N/A';
-      try {
-        final dt = DateTime.fromMillisecondsSinceEpoch(int.parse(timestamp) * 1000);
-        return '${dt.day}/${dt.month}/${dt.year.toString().substring(2)} ${dt.hour.toString().padLeft(2, '0')}:${dt.minute.toString().padLeft(2, '0')}';
-      } catch (e) {
-        return 'N/A';
-      }
-    }
-
     // Helper function to format side
     String formatSide(String side) {
       final s = side.toUpperCase();
@@ -4555,28 +4824,9 @@ class _TradingPageState extends State<TradingPage> {
       return side;
     }
 
-    // Helper function to get status
-    String getStatus(Map<String, dynamic> order) {
-      if (order['is_filled'] == true) return 'Filled';
-      if (order['is_cancelled'] == true) return 'Cancelled';
-      if (order['is_expired'] == true) return 'Expired';
-      return 'Active';
-    }
-
-    // Helper function to get status color
-    Color getStatusColor(String status) {
-      switch (status) {
-        case 'Filled': return Colors.green;
-        case 'Cancelled': return Colors.red;
-        case 'Expired': return Colors.orange;
-        case 'Active': return const Color(0xFF000080);
-        default: return isDarkTheme ? Colors.white : Colors.black;
-      }
-    }
-
     final side = formatSide(order['side'] ?? '');
-    final status = getStatus(order);
-    final statusColor = getStatusColor(status);
+    final status = _getOrderStatus(order);
+    final statusColor = _getStatusColor(status, isDarkTheme);
     final sideColor = side == 'BUY' ? UIConstants.colorAccept : UIConstants.colorReject;
     final quantity = _formatDecimal(order['quantity'] ?? '0');
     final price = order['price'] ?? '0';
@@ -4606,16 +4856,28 @@ class _TradingPageState extends State<TradingPage> {
           ),
           SizedBox(
             width: 150,
-            child: Text(formatTimestamp(order['create_timestamp']), style: TextStyle(color: isDarkTheme ? Colors.white : Colors.black, fontSize: 11), textAlign: TextAlign.center),
+            child: Text(_formatOrderTimestamp(order['create_timestamp']), style: TextStyle(color: isDarkTheme ? Colors.white : Colors.black, fontSize: 11), textAlign: TextAlign.center),
           ),
           SizedBox(
             width: 150,
-            child: Text(formatTimestamp(order['expire_timestamp']), style: TextStyle(color: isDarkTheme ? Colors.white : Colors.black, fontSize: 11), textAlign: TextAlign.center),
+            child: Text(_formatOrderTimestamp(order['expire_timestamp']), style: TextStyle(color: isDarkTheme ? Colors.white : Colors.black, fontSize: 11), textAlign: TextAlign.center),
           ),
-          Expanded(
+          SizedBox(
+            width: 140,
             child: Text(status, style: TextStyle(color: statusColor, fontSize: UIConstants.fontSizeSm, fontWeight: UIConstants.fontWeightNormal), textAlign: TextAlign.center),
           ),
-          // Note: No Action column for history
+          Expanded(
+            child: Center(
+              child: IconButton(
+                icon: const Icon(Icons.info_outline, size: 18),
+                color: Colors.grey,
+                tooltip: 'Details',
+                padding: EdgeInsets.zero,
+                constraints: const BoxConstraints(minWidth: 28, minHeight: 28),
+                onPressed: () => _showOrderDetails(order),
+              ),
+            ),
+          ),
         ],
       ),
     );

@@ -710,7 +710,8 @@ class _PortfolioPageState extends State<PortfolioPage> {
                   ? (currency.isNotEmpty ? '$ticker ($currency)' : ticker)
                   : securityIid;
               final holdingData = entry.value as Map<String, dynamic>? ?? {};
-              final divisibility = currency.isNotEmpty ? _defaultDivisibility(currency) : null;
+              // Securities use divisibility 0 (whole units, no decimals)
+              const divisibility = '0';
               final totalUnitsRaw = holdingData['totalUnits']?.toString()
                   ?? holdingData['total_units']?.toString() ?? '0';
               final availableUnitsRaw = _getAvailableFromHolding(holdingData);
