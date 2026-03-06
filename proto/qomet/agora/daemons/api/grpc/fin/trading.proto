@@ -76,6 +76,26 @@ message Order {
   string data = 34;                                                                        // OPTIONAL: Additional order data
   string data_encoding = 35;                                                               // OPTIONAL: Data encoding format
   string participant_data = 36;                                                            // OPTIONAL: Participant-specific data
+
+  // Order request fields (populated when source is order_requests)
+  string status = 37;                                                                      // OPTIONAL: Order request status (e.g., PENDING, VALIDATED, SUBMITTED)
+  string fee_amount = 38;                                                                  // OPTIONAL: Fee amount in order currency
+  string external_order_id = 39;                                                           // OPTIONAL: External tracking ID
+  string saga_instance_id = 40;                                                            // OPTIONAL: TRAX saga instance ID
+  string security_listing_iid = 41;                                                        // OPTIONAL: Security listing IID
+  string idempotency_key = 42;                                                             // OPTIONAL: Idempotency key for deduplication
+  repeated OrderRequestEventLog event_logs = 43;                                           // OPTIONAL: Saga step event logs (audit trail)
+}
+
+// OrderRequestEventLog represents a saga step event for investor order requests.
+message OrderRequestEventLog {
+  string id = 1;                                                                           // REQUIRED: Event ID (UUID)
+  string type = 2;                                                                         // REQUIRED: Event type enum string
+  string message = 3;                                                                      // REQUIRED: Human-readable message
+  string step_name = 4;                                                                    // OPTIONAL: Saga step template ID
+  string saga_instance_id = 5;                                                             // OPTIONAL: TRAX saga instance ID
+  string timestamp = 6;                                                                    // REQUIRED: ISO 8601 timestamp
+  map<string, string> details = 7;                                                         // OPTIONAL: Step-specific key-value details
 }
 
 message Trade {

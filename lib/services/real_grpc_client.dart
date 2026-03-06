@@ -1349,6 +1349,8 @@ class RealGrpcClient {
     String timeInForce = "0",
     DateTime? expireTime,
     required String participantOrderId,
+    String? currency,
+    String? feeAmount,
     String? metadata,
     String? auxData,
   }) async {
@@ -1379,6 +1381,8 @@ class RealGrpcClient {
         timeInForce: timeInForce,
         participantOrderIid: participantOrderId,
         expireTime: expireTime,
+        currency: currency,
+        feeAmount: feeAmount,
       );
       print('📝 createOrder result: success=${result['success']}');
       return result;

@@ -1367,6 +1367,8 @@ class GrpcurlHelper {
     String timeInForce = '0',
     required String participantOrderIid,
     DateTime? expireTime,
+    String? currency,
+    String? feeAmount,
     Map<String, String>? auxData,
   }) async {
     print('📝 Creating order: $side $quantity @ $price for $securityListingIid');
@@ -1401,6 +1403,12 @@ class GrpcurlHelper {
       requestBody['expire_dt'] = {
         'unix_time_secs': _toUnixTimestamp(expireTime),
       };
+    }
+    if (currency != null && currency.isNotEmpty) {
+      requestBody['currency'] = currency;
+    }
+    if (feeAmount != null && feeAmount.isNotEmpty) {
+      requestBody['fee_amount'] = feeAmount;
     }
     if (auxData != null) {
       requestBody['aux_data'] = auxData;

@@ -710,10 +710,14 @@ class _PortfolioPageState extends State<PortfolioPage> {
                   ? (currency.isNotEmpty ? '$ticker ($currency)' : ticker)
                   : securityIid;
               final holdingData = entry.value as Map<String, dynamic>? ?? {};
-              final totalUnits = holdingData['totalUnits']?.toString()
+              final divisibility = currency.isNotEmpty ? _defaultDivisibility(currency) : null;
+              final totalUnitsRaw = holdingData['totalUnits']?.toString()
                   ?? holdingData['total_units']?.toString() ?? '0';
-              final availableUnits = _getAvailableFromHolding(holdingData);
-              final lockedUnits = _getLockedFromHolding(holdingData);
+              final availableUnitsRaw = _getAvailableFromHolding(holdingData);
+              final lockedUnitsRaw = _getLockedFromHolding(holdingData);
+              final totalUnits = _formatAmountWithDivisibility(totalUnitsRaw, divisibility);
+              final availableUnits = _formatAmountWithDivisibility(availableUnitsRaw, divisibility);
+              final lockedUnits = _formatAmountWithDivisibility(lockedUnitsRaw, divisibility);
 
               return Container(
                 padding: const EdgeInsets.symmetric(vertical: 12, horizontal: 12),
@@ -945,15 +949,12 @@ class _PortfolioPageState extends State<PortfolioPage> {
       if (decimals <= 0) return rawAmount;
       final value = double.parse(rawAmount);
 
-      if (rawAmount.contains('.')) {
-        return value.toStringAsFixed(decimals);
-      } else {
-        double divisor = 1;
-        for (var i = 0; i < decimals; i++) {
-          divisor *= 10;
-        }
-        return (value / divisor).toStringAsFixed(decimals);
+      // Always divide raw amounts by 10^divisibility
+      double divisor = 1;
+      for (var i = 0; i < decimals; i++) {
+        divisor *= 10;
       }
+      return (value / divisor).toStringAsFixed(decimals);
     } catch (_) {
       return rawAmount;
     }

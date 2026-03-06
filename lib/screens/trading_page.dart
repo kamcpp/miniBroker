@@ -886,11 +886,14 @@ class _TradingPageState extends State<TradingPage> {
           }
         }
 
+        // Apply divisibility formatting (security holdings are typically whole units, divisibility 0)
+        final formattedBalance = _formatAmount(balance, '0');
+
         setState(() {
-          _availableBalance = balance;
+          _availableBalance = formattedBalance;
         });
 
-        print('✅ Updated available balance for $securityId: $balance (market: $marketId)');
+        print('✅ Updated available balance for $securityId: $formattedBalance (raw=$balance, market: $marketId)');
       } else {
         print('❌ Failed to fetch account market portfolio: ${portfolioResponse['output']}');
         setState(() {
@@ -942,6 +945,7 @@ class _TradingPageState extends State<TradingPage> {
   bool _isLoadingMoreTradeHistory = false;
   final TextEditingController _quantityController = TextEditingController();
   final TextEditingController _priceController = TextEditingController();
+  final TextEditingController _feeController = TextEditingController(text: '1.52');
   final TextEditingController _orderIdController = TextEditingController();
   final TextEditingController _reasonController = TextEditingController();
   final TextEditingController _replaceOrderIdController = TextEditingController();
@@ -4164,7 +4168,10 @@ class _TradingPageState extends State<TradingPage> {
 
     // Helper function to format side
     String formatSide(String side) {
-      return side.replaceAll('ORDER_SIDE__', '');
+      final s = side.toUpperCase();
+      if (s.contains('BUY')) return 'BUY';
+      if (s.contains('SELL')) return 'SELL';
+      return side;
     }
 
     // Helper function to get status
@@ -4190,6 +4197,9 @@ class _TradingPageState extends State<TradingPage> {
     final status = getStatus(order);
     final statusColor = getStatusColor(status);
     final sideColor = side == 'BUY' ? UIConstants.colorAccept : UIConstants.colorReject;
+    final quantity = _formatDecimal(order['quantity'] ?? '0');
+    final price = order['price'] ?? '0';
+    final priceDisplay = (price == '0' || price == '0.00') ? 'Market' : _formatDecimal(price);
 
     return Container(
       margin: const EdgeInsets.only(bottom: 8),
@@ -4207,11 +4217,11 @@ class _TradingPageState extends State<TradingPage> {
           ),
           SizedBox(
             width: 140,
-            child: Text(order['quantity'] ?? 'N/A', style: TextStyle(color: isDarkTheme ? Colors.white : Colors.black, fontSize: 12), textAlign: TextAlign.center),
+            child: Text(quantity, style: TextStyle(color: isDarkTheme ? Colors.white : Colors.black, fontSize: 12), textAlign: TextAlign.center),
           ),
           SizedBox(
             width: 140,
-            child: Text(order['price'] == '0.00' ? 'Market' : '${order['price'] ?? 'N/A'}', style: TextStyle(color: isDarkTheme ? Colors.white : Colors.black, fontSize: 12), textAlign: TextAlign.center),
+            child: Text(priceDisplay, style: TextStyle(color: isDarkTheme ? Colors.white : Colors.black, fontSize: 12), textAlign: TextAlign.center),
           ),
           SizedBox(
             width: 140,
@@ -4539,7 +4549,10 @@ class _TradingPageState extends State<TradingPage> {
 
     // Helper function to format side
     String formatSide(String side) {
-      return side.replaceAll('ORDER_SIDE__', '');
+      final s = side.toUpperCase();
+      if (s.contains('BUY')) return 'BUY';
+      if (s.contains('SELL')) return 'SELL';
+      return side;
     }
 
     // Helper function to get status
@@ -4565,6 +4578,9 @@ class _TradingPageState extends State<TradingPage> {
     final status = getStatus(order);
     final statusColor = getStatusColor(status);
     final sideColor = side == 'BUY' ? UIConstants.colorAccept : UIConstants.colorReject;
+    final quantity = _formatDecimal(order['quantity'] ?? '0');
+    final price = order['price'] ?? '0';
+    final priceDisplay = (price == '0' || price == '0.00') ? 'Market' : _formatDecimal(price);
 
     return Container(
       margin: const EdgeInsets.only(bottom: 8),
@@ -4582,11 +4598,11 @@ class _TradingPageState extends State<TradingPage> {
           ),
           SizedBox(
             width: 150,
-            child: Text(order['quantity'] ?? 'N/A', style: TextStyle(color: isDarkTheme ? Colors.white : Colors.black, fontSize: 12), textAlign: TextAlign.center),
+            child: Text(quantity, style: TextStyle(color: isDarkTheme ? Colors.white : Colors.black, fontSize: 12), textAlign: TextAlign.center),
           ),
           SizedBox(
             width: 150,
-            child: Text(order['price'] == '0.00' ? 'Market' : '${order['price'] ?? 'N/A'}', style: TextStyle(color: isDarkTheme ? Colors.white : Colors.black, fontSize: 12), textAlign: TextAlign.center),
+            child: Text(priceDisplay, style: TextStyle(color: isDarkTheme ? Colors.white : Colors.black, fontSize: 12), textAlign: TextAlign.center),
           ),
           SizedBox(
             width: 150,
@@ -5046,6 +5062,8 @@ class _TradingPageState extends State<TradingPage> {
         price: price,
         timeInForce: _timeInForce,
         participantOrderId: participantOrderId,
+        currency: currency,
+        feeAmount: _feeController.text.trim(),
       );
 
       // Hide loading indicator
@@ -5579,6 +5597,44 @@ class _TradingPageState extends State<TradingPage> {
               ],
             ),
           ],
+
+          const SizedBox(height: UIConstants.spacingSm),
+
+          // Fee Input
+          Row(
+            children: [
+              SizedBox(
+                width: 80,
+                child: Text(
+                  'Fee',
+                  style: TextStyle(
+                    fontSize: UIConstants.textFieldFontSize,
+                    color: isDarkTheme ? Colors.grey[400] : Colors.grey[600],
+                  ),
+                ),
+              ),
+              Expanded(
+                child: _HoverInputField(
+                  controller: _feeController,
+                  hintText: '1.52',
+                  isDarkTheme: isDarkTheme,
+                  suffixWidget: Container(
+                    padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 6),
+                    child: Text(
+                      _selectedCurrency['issueCurrency']?.isNotEmpty == true
+                          ? _selectedCurrency['issueCurrency']!
+                          : (_selectedCurrency['symbol'] ?? '\$'),
+                      style: TextStyle(
+                        color: isDarkTheme ? Colors.white : Colors.black,
+                        fontSize: UIConstants.textFieldFontSize,
+                        fontWeight: UIConstants.fontWeightNormal,
+                      ),
+                    ),
+                  ),
+                ),
+              ),
+            ],
+          ),
 
           // Show Order Summary only for Limit orders
           if (_orderType == 'Limit') ...[
