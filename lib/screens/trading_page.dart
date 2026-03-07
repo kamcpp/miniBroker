@@ -599,7 +599,7 @@ class _TradingPageState extends State<TradingPage> {
           if (security is Map<String, dynamic>) {
             // Extract fields from flat SecurityListing structure
             String symbol = security['symbol'] as String? ?? '';
-            String description = security['securityDesc'] as String? ?? symbol;
+            String description = symbol;
 
             // Fallback: try identifiers structure if flat fields are empty
             if (symbol.isEmpty) {
@@ -2274,7 +2274,7 @@ class _TradingPageState extends State<TradingPage> {
   }
   
   Future<void> _fetchOrderbookData(String symbol) async {
-    print('📊 Fetching orderbook data for symbol: $symbol');
+    print('📊 [ORDERBOOK] _fetchOrderbookData CALLED for symbol: "$symbol", _securities count: ${_securities.length}');
 
     // Reset pagination when fetching new symbol
     _currentSellOrdersPage = 1;
@@ -2294,7 +2294,7 @@ class _TradingPageState extends State<TradingPage> {
   }
   
   Future<void> _fetchSellOrders(String symbol, {int pageSize = 5, bool append = false}) async {
-    print('📊 Fetching sell orders for symbol: $symbol, pageSize: $pageSize');
+    print('📊 [ORDERBOOK] _fetchSellOrders CALLED for symbol: "$symbol", pageSize: $pageSize');
 
     // Find the security data for this symbol
     final security = _securities.firstWhere(
@@ -2342,7 +2342,7 @@ class _TradingPageState extends State<TradingPage> {
       // Call GetOrderbook gRPC function
       final result = await GrpcurlHelper.getOrderbook(
         securityIid: securityIid,
-        side: 'ORDER_SIDE__SELL',
+        side: 'ORDER_SIDE_ENUM_SELL',
         pageNumber: 1,  // Always page 1
         pageSize: pageSize,  // Increase page size instead
       );
@@ -2419,7 +2419,7 @@ class _TradingPageState extends State<TradingPage> {
   }
   
   Future<void> _fetchBuyOrders(String symbol, {int pageSize = 5, bool append = false}) async {
-    print('📊 Fetching buy orders for symbol: $symbol, pageSize: $pageSize');
+    print('📊 [ORDERBOOK] _fetchBuyOrders CALLED for symbol: "$symbol", pageSize: $pageSize');
 
     // Find the security data for this symbol
     final security = _securities.firstWhere(
@@ -2467,7 +2467,7 @@ class _TradingPageState extends State<TradingPage> {
       // Call GetOrderbook gRPC function
       final result = await GrpcurlHelper.getOrderbook(
         securityIid: securityIid,
-        side: 'ORDER_SIDE__BUY',
+        side: 'ORDER_SIDE_ENUM_BUY',
         pageNumber: 1,  // Always page 1
         pageSize: pageSize,  // Increase page size instead
       );

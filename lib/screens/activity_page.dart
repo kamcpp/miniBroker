@@ -3896,43 +3896,43 @@ class _ActivityPageState extends State<ActivityPage> {
                                     child: Text('All Types', style: TextStyle(color: isDarkTheme ? Colors.white : Colors.black))
                                   ),
                                   DropdownMenuItem<String?>(
-                                    value: 'TRANSACTION_TYPE_ENUM__DEPOSIT_CASH',
+                                    value: 'TRANSACTION_TYPE_ENUM_DEPOSIT_CASH',
                                     child: Text('Deposit Cash', style: TextStyle(color: isDarkTheme ? Colors.white : Colors.black))
                                   ),
                                   DropdownMenuItem<String?>(
-                                    value: 'TRANSACTION_TYPE_ENUM__DEPOSIT_ASSET',
+                                    value: 'TRANSACTION_TYPE_ENUM_DEPOSIT_ASSET',
                                     child: Text('Deposit Asset', style: TextStyle(color: isDarkTheme ? Colors.white : Colors.black))
                                   ),
                                   DropdownMenuItem<String?>(
-                                    value: 'TRANSACTION_TYPE_ENUM__WITHDRAW_CASH',
+                                    value: 'TRANSACTION_TYPE_ENUM_WITHDRAW_CASH',
                                     child: Text('Withdraw Cash', style: TextStyle(color: isDarkTheme ? Colors.white : Colors.black))
                                   ),
                                   DropdownMenuItem<String?>(
-                                    value: 'TRANSACTION_TYPE_ENUM__WITHDRAW_ASSET',
+                                    value: 'TRANSACTION_TYPE_ENUM_WITHDRAW_ASSET',
                                     child: Text('Withdraw Asset', style: TextStyle(color: isDarkTheme ? Colors.white : Colors.black))
                                   ),
                                   DropdownMenuItem<String?>(
-                                    value: 'TRANSACTION_TYPE_ENUM__TRADE_BUY',
+                                    value: 'TRANSACTION_TYPE_ENUM_TRADE_BUY',
                                     child: Text('Trade Buy', style: TextStyle(color: isDarkTheme ? Colors.white : Colors.black))
                                   ),
                                   DropdownMenuItem<String?>(
-                                    value: 'TRANSACTION_TYPE_ENUM__TRADE_SELL',
+                                    value: 'TRANSACTION_TYPE_ENUM_TRADE_SELL',
                                     child: Text('Trade Sell', style: TextStyle(color: isDarkTheme ? Colors.white : Colors.black))
                                   ),
                                   DropdownMenuItem<String?>(
-                                    value: 'TRANSACTION_TYPE_ENUM__FEE',
+                                    value: 'TRANSACTION_TYPE_ENUM_FEE',
                                     child: Text('Fee', style: TextStyle(color: isDarkTheme ? Colors.white : Colors.black))
                                   ),
                                   DropdownMenuItem<String?>(
-                                    value: 'TRANSACTION_TYPE_ENUM__SETTLEMENT',
+                                    value: 'TRANSACTION_TYPE_ENUM_SETTLEMENT',
                                     child: Text('Settlement', style: TextStyle(color: isDarkTheme ? Colors.white : Colors.black))
                                   ),
                                   DropdownMenuItem<String?>(
-                                    value: 'TRANSACTION_TYPE_ENUM__TRANSFER_IN',
+                                    value: 'TRANSACTION_TYPE_ENUM_TRANSFER_IN',
                                     child: Text('Transfer In', style: TextStyle(color: isDarkTheme ? Colors.white : Colors.black))
                                   ),
                                   DropdownMenuItem<String?>(
-                                    value: 'TRANSACTION_TYPE_ENUM__TRANSFER_OUT',
+                                    value: 'TRANSACTION_TYPE_ENUM_TRANSFER_OUT',
                                     child: Text('Transfer Out', style: TextStyle(color: isDarkTheme ? Colors.white : Colors.black))
                                   ),
                                 ],

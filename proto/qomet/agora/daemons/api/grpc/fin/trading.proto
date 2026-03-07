@@ -85,6 +85,7 @@ message Order {
   string security_listing_iid = 41;                                                        // OPTIONAL: Security listing IID
   string idempotency_key = 42;                                                             // OPTIONAL: Idempotency key for deduplication
   repeated OrderRequestEventLog event_logs = 43;                                           // OPTIONAL: Saga step event logs (audit trail)
+  string updated_at_timestamp = 44;                                                         // OPTIONAL: Last update timestamp
 }
 
 // OrderRequestEventLog represents a saga step event for investor order requests.
