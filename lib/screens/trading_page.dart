@@ -91,9 +91,10 @@ class _TradingPageState extends State<TradingPage> {
           final isBuy = tradeMap['isBuy'] ?? tradeMap['is_buy'] ?? false;
 
           // Parse price and quantity
-          final price = priceValue is String
+          final rawPrice = priceValue is String
               ? double.tryParse(priceValue) ?? 0.0
               : (priceValue is num ? priceValue.toDouble() : 0.0);
+          final price = rawPrice / 100.0;
           final quantity = quantityValue is String
               ? double.tryParse(quantityValue) ?? 0.0
               : (quantityValue is num ? quantityValue.toDouble() : 0.0);
@@ -132,8 +133,8 @@ class _TradingPageState extends State<TradingPage> {
           final priceColor = isBuy ? UIConstants.colorAccept : UIConstants.colorReject;
 
           return {
-            'price': price,
-            'quantity': quantity.toString(),
+            'price': price.toStringAsFixed(2),
+            'quantity': quantity.toInt().toString(),
             'time': time,
             'priceColor': priceColor,
           };
@@ -616,7 +617,7 @@ class _TradingPageState extends State<TradingPage> {
               description = displayNames['en'] as String? ?? symbol;
             }
 
-            final iid = security['iid']?.toString() ?? '';
+            final iid = security['securityListingIid']?.toString() ?? security['security_listing_iid']?.toString() ?? '';
             final issueCurrency = security['currency'] as String? ?? security['issueCurrency']?.toString() ?? '';
 
             // security_status is FIX Tag 965 — proto field name is security_status, JSON key is securityStatus
@@ -2364,18 +2365,18 @@ class _TradingPageState extends State<TradingPage> {
           final priceValue = orderMap['price'];
           final quantityValue = orderMap['quantity'];
 
-          // Parse price and quantity
-          final price = priceValue is String
+          // Parse price (raw integer with divisibility 2, e.g. 1012 = 10.12)
+          final rawPrice = priceValue is String
               ? double.tryParse(priceValue) ?? 0.0
               : (priceValue is num ? priceValue.toDouble() : 0.0);
+          final price = rawPrice / 100.0;
           final quantity = quantityValue is String
               ? double.tryParse(quantityValue) ?? 0.0
               : (quantityValue is num ? quantityValue.toDouble() : 0.0);
 
-          // Calculate total (price * quantity)
           final total = price * quantity;
 
-          print('[Orderbook-Sell] Mapping order: price=$price, quantity=$quantity, total=$total');
+          print('[Orderbook-Sell] Mapping order: rawPrice=$rawPrice, price=$price, quantity=$quantity, total=$total');
 
           return {
             'price': price,
@@ -2489,18 +2490,18 @@ class _TradingPageState extends State<TradingPage> {
           final priceValue = orderMap['price'];
           final quantityValue = orderMap['quantity'];
 
-          // Parse price and quantity
-          final price = priceValue is String
+          // Parse price (raw integer with divisibility 2, e.g. 1012 = 10.12)
+          final rawPrice = priceValue is String
               ? double.tryParse(priceValue) ?? 0.0
               : (priceValue is num ? priceValue.toDouble() : 0.0);
+          final price = rawPrice / 100.0;
           final quantity = quantityValue is String
               ? double.tryParse(quantityValue) ?? 0.0
               : (quantityValue is num ? quantityValue.toDouble() : 0.0);
 
-          // Calculate total (price * quantity)
           final total = price * quantity;
 
-          print('[Orderbook-Buy] Mapping order: price=$price, quantity=$quantity, total=$total');
+          print('[Orderbook-Buy] Mapping order: rawPrice=$rawPrice, price=$price, quantity=$quantity, total=$total');
 
           return {
             'price': price,
@@ -2673,19 +2674,7 @@ class _TradingPageState extends State<TradingPage> {
   }
   
   String _formatPrice(double price) {
-    // Format price to remove unnecessary trailing zeros
-    // If price is a whole number, show without decimal places
-    // Otherwise, show up to 4 decimal places but remove trailing zeros
-    if (price % 1 == 0) {
-      return price.toInt().toString();
-    } else {
-      String formatted = price.toStringAsFixed(4);
-      // Remove trailing zeros
-      formatted = formatted.replaceAll(RegExp(r'0*$'), '');
-      // Remove trailing decimal point if all decimal places were zeros
-      formatted = formatted.replaceAll(RegExp(r'\.$'), '');
-      return formatted;
-    }
+    return price.toStringAsFixed(2);
   }
   
   @override
@@ -3529,7 +3518,8 @@ class _TradingPageState extends State<TradingPage> {
         child: Row(
           crossAxisAlignment: CrossAxisAlignment.end,
           mainAxisAlignment: MainAxisAlignment.start, // Align tabs to the left
-          children: _activityTabNames.asMap().entries.map((entry) {
+          children: [
+            ..._activityTabNames.asMap().entries.map((entry) {
           final index = entry.key;
           final tabName = entry.value;
           final isActive = _activityTabIndex == index;
@@ -3577,6 +3567,33 @@ class _TradingPageState extends State<TradingPage> {
             ),
           );
         }).toList(),
+            const SizedBox(width: 4),
+            SizedBox(
+              height: 28,
+              width: 28,
+              child: IconButton(
+                padding: EdgeInsets.zero,
+                iconSize: 15,
+                splashRadius: 14,
+                tooltip: 'Refresh',
+                icon: Icon(
+                  Icons.refresh,
+                  color: isDarkTheme ? Colors.grey[400] : Colors.grey[600],
+                ),
+                onPressed: () {
+                  if (_selectedSymbol.isNotEmpty) {
+                    setState(() {
+                      _sellOrders = [];
+                      _buyOrders = [];
+                      _tradeHistory = [];
+                    });
+                    _fetchOrderbookData(_selectedSymbol);
+                    _resetAndFetchTradeHistory(_selectedSymbol);
+                  }
+                },
+              ),
+            ),
+          ],
         ),
       ),
     );
@@ -3966,7 +3983,7 @@ class _TradingPageState extends State<TradingPage> {
               ),
               Expanded(
                 child: Text(
-                  order['quantity'].toString(),
+                  (order['quantity'] as num).toInt().toString(),
                   style: TextStyle(
                     color: isDarkTheme ? Colors.white : Colors.black,
                     fontSize: UIConstants.fontSizeSm,
