@@ -1245,6 +1245,33 @@ class GrpcurlHelper {
   }) async {
     print('📊 Getting historical OHLC data for symbol: $symbol, period: $period');
 
+    // Calculate from_ts based on period
+    final now = DateTime.now();
+    DateTime fromDt;
+    switch (period) {
+      case '1m':
+      case '5m':
+      case '15m':
+        fromDt = now.subtract(const Duration(days: 1));
+        break;
+      case '1h':
+        fromDt = now.subtract(const Duration(days: 7));
+        break;
+      case '4h':
+        fromDt = now.subtract(const Duration(days: 30));
+        break;
+      case '1d':
+        fromDt = now.subtract(const Duration(days: 365));
+        break;
+      case '1w':
+        fromDt = now.subtract(const Duration(days: 730));
+        break;
+      default:
+        fromDt = now.subtract(const Duration(days: 30));
+    }
+    final fromTs = (fromDt.millisecondsSinceEpoch ~/ 1000).toString();
+    final toTs = (now.millisecondsSinceEpoch ~/ 1000).toString();
+
     return _executeGrpcCall(
       method: 'GetHistoricalOhlcData',
       endpoint: 'TradingService/GetHistoricalOhlcData',
@@ -1256,6 +1283,10 @@ class GrpcurlHelper {
         },
         'security_listing_iid_or_symbol_regexes': [symbol],
         'period': period,
+        'aux_data': {
+          'from_ts': fromTs,
+          'to_ts': toTs,
+        },
         'include_volume': true,
       },
     );

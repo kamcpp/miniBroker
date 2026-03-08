@@ -1,5 +1,5 @@
 import 'dart:async';
-import 'package:interactive_chart/interactive_chart.dart';
+import 'package:candlesticks/candlesticks.dart';
 import 'package:mini_broker/generated/prtagent/v1/trading.pbgrpc.dart' as trading_pb;
 import 'package:mini_broker/generated/common.pb.dart' as common_pb;
 
@@ -9,8 +9,8 @@ class ChartService {
 
   ChartService(this._tradingClient);
 
-  /// Convert proto OhlcData to CandleData for the interactive_chart package
-  CandleData _convertToCandle(trading_pb.OhlcData ohlcData) {
+  /// Convert proto OhlcData to Candle for the interactive_chart package
+  Candle _convertToCandle(trading_pb.OhlcData ohlcData) {
     // Parse timestamp from duration
     DateTime timestamp = DateTime.now();
     if (ohlcData.hasDuration()) {
@@ -31,18 +31,18 @@ class ChartService {
       }
     }
 
-    return CandleData(
-      timestamp: timestamp.millisecondsSinceEpoch,
-      open: double.tryParse(ohlcData.open) ?? 0.0,
-      high: double.tryParse(ohlcData.high) ?? 0.0,
-      low: double.tryParse(ohlcData.low) ?? 0.0,
-      close: double.tryParse(ohlcData.close) ?? 0.0,
+    return Candle(
+      date: timestamp,
+      open: (double.tryParse(ohlcData.open) ?? 0.0) / 100.0,
+      high: (double.tryParse(ohlcData.high) ?? 0.0) / 100.0,
+      low: (double.tryParse(ohlcData.low) ?? 0.0) / 100.0,
+      close: (double.tryParse(ohlcData.close) ?? 0.0) / 100.0,
       volume: double.tryParse(ohlcData.volume) ?? 0.0,
     );
   }
 
   /// Fetch historical OHLC data for a symbol
-  Future<List<CandleData>> getHistoricalOhlcData({
+  Future<List<Candle>> getHistoricalOhlcData({
     required String symbol,
     required String period, // "1m", "5m", "15m", "1h", "1d"
     DateTime? startDate,
@@ -93,13 +93,13 @@ class ChartService {
 
       print('✅ Received ${response.ohlcData.length} OHLC data points');
 
-      // Convert to CandleData objects
+      // Convert to Candle objects
       final candles = response.ohlcData
           .map((ohlcData) => _convertToCandle(ohlcData))
           .toList();
 
-      // Sort by timestamp (oldest first for interactive_chart package)
-      candles.sort((a, b) => a.timestamp.compareTo(b.timestamp));
+      // Sort newest first (candlesticks package expects index 0 = newest)
+      candles.sort((a, b) => b.date.compareTo(a.date));
 
       return candles;
     } catch (e) {
@@ -109,7 +109,7 @@ class ChartService {
   }
 
   /// Stream live OHLC data updates
-  Stream<CandleData> fetchLiveOhlcData({
+  Stream<Candle> fetchLiveOhlcData({
     required String symbol,
     required String period,
     int? updateIntervalMs,

@@ -7,7 +7,7 @@ import 'package:flutter/services.dart';
 import '../config/ui_constants.dart';
 import 'package:provider/provider.dart';
 import 'package:http/http.dart' as http;
-import 'package:interactive_chart/interactive_chart.dart';
+import 'package:candlesticks/candlesticks.dart';
 import '../services/auth_service.dart';
 import '../services/theme_service.dart';
 import '../services/real_grpc_client.dart';
@@ -975,15 +975,15 @@ class _TradingPageState extends State<TradingPage> {
   Timer? _securityRequestTimeout;
   
   // Panel width variables for resizable panels
-  double _leftPanelWidth = 357.0; // Increased by 40% (255 * 1.40 = 357)
-  double _rightPanelWidth = 357.0; // Increased by 40% (255 * 1.40 = 357)
+  double _leftPanelWidth = 249.0;
+  double _rightPanelWidth = 274.0;
   bool _isDraggingLeft = false;
   bool _isDraggingRight = false;
   
   // Panel height variables for resizable horizontal sections
   double _orderbookHeight = 150.0; // Default orderbook height
   bool _isDraggingHorizontal = false;
-  double _marketOverviewHeight = 200.0; // Increased to accommodate Market and Venue dropdowns
+  double _marketOverviewHeight = 110.0;
   bool _isDraggingMarketOverview = false; // State for market splitter
 
   // Bottom section width split (Orders vs Orderbook)
@@ -1017,7 +1017,7 @@ class _TradingPageState extends State<TradingPage> {
   bool _isLoadingMoreHistory = false;
 
   // Chart data variables using interactive_chart package
-  List<CandleData> _candles = [];
+  List<Candle> _candles = [];
   bool _isLoadingChart = false;
   String _chartError = '';
   String _selectedTimePeriod = '1h'; // Default period
@@ -2063,12 +2063,12 @@ class _TradingPageState extends State<TradingPage> {
       final result = await GrpcurlHelper.getHistoricalOhlcData(
         symbol: symbol,
         period: _selectedTimePeriod,
-        pageSize: 0,
+        pageSize: 500,
       );
 
       if (result['success'] == true && result['output'] != null) {
         final output = result['output'] as Map<String, dynamic>;
-        final ohlcDataList = output['ohlcDatas'] as List<dynamic>? ?? [];
+        final ohlcDataList = output['ohlcData'] as List<dynamic>? ?? [];
 
         print('━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━');
         print('📊 CHART DATA PROCESSING for $symbol:');
@@ -2076,7 +2076,7 @@ class _TradingPageState extends State<TradingPage> {
         print('━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━');
 
         // Convert to CandleData objects for interactive_chart package
-        final List<CandleData> candles = [];
+        final List<Candle> candles = [];
         for (var ohlcData in ohlcDataList) {
           try {
             final ohlcMap = ohlcData as Map<String, dynamic>;
@@ -2113,13 +2113,20 @@ class _TradingPageState extends State<TradingPage> {
               }
             }
 
-            final candle = CandleData(
-              timestamp: timestamp.millisecondsSinceEpoch,
-              open: double.tryParse(ohlcMap['open']?.toString() ?? '0') ?? 0.0,
-              high: double.tryParse(ohlcMap['high']?.toString() ?? '0') ?? 0.0,
-              low: double.tryParse(ohlcMap['low']?.toString() ?? '0') ?? 0.0,
-              close: double.tryParse(ohlcMap['close']?.toString() ?? '0') ?? 0.0,
-              volume: double.tryParse(ohlcMap['volume']?.toString() ?? '0') ?? 0.0,
+            // Apply price divisibility (raw integers, e.g. 1450 = 14.50)
+            final open = (double.tryParse(ohlcMap['open']?.toString() ?? '0') ?? 0.0) / 100.0;
+            final high = (double.tryParse(ohlcMap['high']?.toString() ?? '0') ?? 0.0) / 100.0;
+            final low = (double.tryParse(ohlcMap['low']?.toString() ?? '0') ?? 0.0) / 100.0;
+            final close = (double.tryParse(ohlcMap['close']?.toString() ?? '0') ?? 0.0) / 100.0;
+            final volume = double.tryParse(ohlcMap['volume']?.toString() ?? '0') ?? 0.0;
+
+            final candle = Candle(
+              date: timestamp,
+              open: open,
+              high: high,
+              low: low,
+              close: close,
+              volume: volume,
             );
 
             candles.add(candle);
@@ -2128,8 +2135,8 @@ class _TradingPageState extends State<TradingPage> {
           }
         }
 
-        // Sort by timestamp (oldest first for interactive_chart package)
-        candles.sort((a, b) => a.timestamp.compareTo(b.timestamp));
+        // Sort newest first (candlesticks package expects index 0 = newest)
+        candles.sort((a, b) => b.date.compareTo(a.date));
 
         print('━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━');
         print('📊 CHART CONVERSION RESULT:');
@@ -2139,11 +2146,11 @@ class _TradingPageState extends State<TradingPage> {
           print('⚠️  WARNING: NO CANDLES CONVERTED! Chart will show empty.');
         } else if (candles.length < 2) {
           print('⚠️  WARNING: Only ${candles.length} candle(s) available - need at least 2 for chart!');
-          print('   Sample candle: Open=${candles[0].open}, High=${candles[0].high}, Low=${candles[0].low}, Close=${candles[0].close}, Volume=${candles[0].volume}, Timestamp=${candles[0].timestamp}');
+          print('   Sample candle: Open=${candles[0].open}, High=${candles[0].high}, Low=${candles[0].low}, Close=${candles[0].close}, Volume=${candles[0].volume}, Timestamp=${candles[0].date}');
         } else {
           print('✅ Chart ready with ${candles.length} candles');
-          print('   First candle: Open=${candles[0].open}, High=${candles[0].high}, Low=${candles[0].low}, Close=${candles[0].close}, Timestamp=${candles[0].timestamp}');
-          print('   Last candle: Open=${candles.last.open}, High=${candles.last.high}, Low=${candles.last.low}, Close=${candles.last.close}, Timestamp=${candles.last.timestamp}');
+          print('   First candle: Open=${candles[0].open}, High=${candles[0].high}, Low=${candles[0].low}, Close=${candles[0].close}, Timestamp=${candles[0].date}');
+          print('   Last candle: Open=${candles.last.open}, High=${candles.last.high}, Low=${candles.last.low}, Close=${candles.last.close}, Timestamp=${candles.last.date}');
         }
         print('━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━');
 
@@ -2178,100 +2185,15 @@ class _TradingPageState extends State<TradingPage> {
     _liveOhlcSubscription = _subscribeToLiveOhlcData(symbol, period);
   }
 
-  /// Subscribe to FetchLiveOhlcData stream
+  /// Periodically reload chart data from server
   Timer? _subscribeToLiveOhlcData(String symbol, String period) {
-    // Use grpcurl to call FetchLiveOhlcData (streaming RPC)
-    // For now, we'll poll periodically as grpcurl streaming is complex
-    // Alternative: Use real gRPC client for streaming
-
-    // TODO: Implement proper gRPC streaming
-    // For MVP, we can poll GetHistoricalOhlcData periodically
-    return Timer.periodic(const Duration(seconds: 5), (timer) {
+    return Timer.periodic(const Duration(seconds: 30), (timer) {
       if (!mounted) {
         timer.cancel();
         return;
       }
-
-      // Refresh chart data every 5 seconds to get latest candle
-      _refreshLatestCandle(symbol);
+      _loadChartData(symbol);
     });
-  }
-
-  /// Refresh only the latest candle to avoid full reload
-  Future<void> _refreshLatestCandle(String symbol) async {
-    try {
-      final result = await GrpcurlHelper.getHistoricalOhlcData(
-        symbol: symbol,
-        period: _selectedTimePeriod,
-        pageSize: 1, // Only get the latest candle
-      );
-
-      if (result['success'] == true && result['output'] != null) {
-        final output = result['output'] as Map<String, dynamic>;
-        final ohlcDataList = output['ohlcDatas'] as List<dynamic>? ?? [];
-
-        if (ohlcDataList.isNotEmpty && _candles.isNotEmpty) {
-          final ohlcMap = ohlcDataList[0] as Map<String, dynamic>;
-
-          // Parse timestamp from duration
-          DateTime timestamp = DateTime.now();
-          if (ohlcMap.containsKey('duration')) {
-            final duration = ohlcMap['duration'] as Map<String, dynamic>?;
-            if (duration != null && duration.containsKey('startDt')) {
-              final startDt = duration['startDt'] as Map<String, dynamic>?;
-              if (startDt != null && startDt.containsKey('date')) {
-                final date = startDt['date'] as Map<String, dynamic>?;
-                if (date != null) {
-                  final year = date['year'] ?? 0;
-                  final month = date['month'] ?? 1;
-                  final day = date['day'] ?? 1;
-                  int hour = 0;
-                  int minute = 0;
-
-                  if (startDt.containsKey('time')) {
-                    final time = startDt['time'] as Map<String, dynamic>?;
-                    if (time != null && time.containsKey('hms')) {
-                      final hms = time['hms'] as Map<String, dynamic>?;
-                      if (hms != null) {
-                        hour = hms['hour'] ?? 0;
-                        minute = hms['minute'] ?? 0;
-                      }
-                    }
-                  }
-
-                  timestamp = DateTime(year, month, day, hour, minute);
-                }
-              }
-            }
-          }
-
-          final newCandle = CandleData(
-            timestamp: timestamp.millisecondsSinceEpoch,
-            open: double.tryParse(ohlcMap['open']?.toString() ?? '0') ?? 0.0,
-            high: double.tryParse(ohlcMap['high']?.toString() ?? '0') ?? 0.0,
-            low: double.tryParse(ohlcMap['low']?.toString() ?? '0') ?? 0.0,
-            close: double.tryParse(ohlcMap['close']?.toString() ?? '0') ?? 0.0,
-            volume: double.tryParse(ohlcMap['volume']?.toString() ?? '0') ?? 0.0,
-          );
-
-          setState(() {
-            // Check if this is an update to the last candle or a new candle
-            if (_candles.last.timestamp == newCandle.timestamp) {
-              // Update existing candle (same time period)
-              _candles[_candles.length - 1] = newCandle;
-              print('🔄 Updated latest candle: Close=${newCandle.close}');
-            } else if (newCandle.timestamp > _candles.last.timestamp) {
-              // Add new candle
-              _candles.add(newCandle);
-              print('➕ Added new candle: Close=${newCandle.close}');
-            }
-          });
-        }
-      }
-    } catch (e) {
-      print('⚠️ Error refreshing latest candle: $e');
-      // Don't show error to user for live updates
-    }
   }
   
   Future<void> _fetchOrderbookData(String symbol) async {
@@ -3017,191 +2939,104 @@ class _TradingPageState extends State<TradingPage> {
       ),
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
+        mainAxisSize: MainAxisSize.min,
         children: [
-          // Market Row - Label and Dropdown on same line
+          // Market Row
           Row(
             children: [
-              SizedBox(
-                width: 60,
-                child: Text(
-                  'Market',
-                  style: TextStyle(
-                    fontSize: UIConstants.textFieldFontSize,
-                    fontWeight: UIConstants.fontWeightNormal,
-                    color: isDarkTheme ? Colors.white : Colors.black,
-                  ),
-                ),
-              ),
+              SizedBox(width: 60, child: Text('Market', style: TextStyle(fontSize: UIConstants.textFieldFontSize, color: isDarkTheme ? Colors.white : Colors.black))),
               Expanded(
                 child: _HoverDropdownField(
                   isDarkTheme: isDarkTheme,
                   child: DropdownButtonHideUnderline(
                     child: DropdownButton<Map<String, String>>(
-                      value: _markets.isEmpty
-                          ? null
-                          : (_markets.any((market) => market['id'] == _selectedMarket['id'])
-                              ? _selectedMarket
-                              : _markets.isNotEmpty ? _markets.first : null),
+                      value: _markets.isEmpty ? null : (_markets.any((market) => market['id'] == _selectedMarket['id']) ? _selectedMarket : _markets.isNotEmpty ? _markets.first : null),
                       isExpanded: true,
+                      isDense: true,
                       onChanged: _markets.isEmpty ? null : (Map<String, String>? newValue) async {
                         if (newValue != null) {
                           setState(() {
                             _selectedMarket = newValue;
-                            // Clear venue dropdown items before fetching new venues
                             _venues = [{'id': '', 'display': 'All Venues'}];
                             _selectedVenue = _venues.first;
                           });
-                          // Load venues for the selected market
                           await _fetchVenues(newValue['id']!);
-                          // Load securities for the selected market
                           await _fetchMarketSecurities(newValue['id']!);
-                          // Update portfolio for sell orders if currently in sell mode
-                          // Use the newValue market ID to ensure we're using the correct market
-                          if (!_isBuySelected) {
-                            await _fetchAccountMarketPortfolioForMarket(newValue['id']!);
-                          }
+                          if (!_isBuySelected) { await _fetchAccountMarketPortfolioForMarket(newValue['id']!); }
                         }
                       },
                       dropdownColor: isDarkTheme ? const Color(0xFF1e1e1e) : Colors.white,
-                      style: TextStyle(
-                        color: isDarkTheme ? Colors.white : Colors.black,
-                        fontSize: UIConstants.textFieldFontSize,
-                      ),
+                      style: TextStyle(color: isDarkTheme ? Colors.white : Colors.black, fontSize: UIConstants.textFieldFontSize),
                       items: _markets.isEmpty
-                          ? [DropdownMenuItem<Map<String, String>>(
-                              value: {'id': '', 'description': '', 'display': ''},
-                              child: Text(_isLoadingMarkets ? 'Loading markets...' : 'No markets available'),
-                            )]
-                          : _markets.map<DropdownMenuItem<Map<String, String>>>((market) {
-                              return DropdownMenuItem<Map<String, String>>(
-                                value: market,
-                                child: Text(market['display'] ?? market['id']!),
-                              );
-                            }).toList(),
+                          ? [DropdownMenuItem<Map<String, String>>(value: {'id': '', 'description': '', 'display': ''}, child: Text(_isLoadingMarkets ? 'Loading markets...' : 'No markets available'))]
+                          : _markets.map<DropdownMenuItem<Map<String, String>>>((market) => DropdownMenuItem<Map<String, String>>(value: market, child: Text(market['display'] ?? market['id']!))).toList(),
                     ),
                   ),
                 ),
               ),
             ],
           ),
-
-          const SizedBox(height: 10), // Space between rows
-
-          // Venue Row - Label and Dropdown on same line
+          const SizedBox(height: 4),
+          // Venue Row
           Row(
             children: [
-              SizedBox(
-                width: 60,
-                child: Text(
-                  'Venue',
-                  style: TextStyle(
-                    fontSize: UIConstants.textFieldFontSize,
-                    fontWeight: UIConstants.fontWeightNormal,
-                    color: isDarkTheme ? Colors.white : Colors.black,
-                  ),
-                ),
-              ),
+              SizedBox(width: 60, child: Text('Venue', style: TextStyle(fontSize: UIConstants.textFieldFontSize, color: isDarkTheme ? Colors.white : Colors.black))),
               Expanded(
                 child: _HoverDropdownField(
                   isDarkTheme: isDarkTheme,
                   child: DropdownButtonHideUnderline(
                     child: DropdownButton<Map<String, String>>(
-                      value: _venues.isEmpty
-                          ? null
-                          : (_venues.any((venue) => venue['id'] == _selectedVenue['id'])
-                              ? _selectedVenue
-                              : _venues.isNotEmpty ? _venues.first : null),
+                      value: _venues.isEmpty ? null : (_venues.any((venue) => venue['id'] == _selectedVenue['id']) ? _selectedVenue : _venues.isNotEmpty ? _venues.first : null),
                       isExpanded: true,
+                      isDense: true,
                       onChanged: _venues.isEmpty ? null : (Map<String, String>? newValue) {
                         if (newValue != null) {
-                          setState(() {
-                            _selectedVenue = newValue;
-                          });
-                          // TODO: Filter securities by venue if needed
+                          setState(() { _selectedVenue = newValue; });
                           print('📍 Selected venue: ${newValue['display']} (${newValue['id']})');
                         }
                       },
                       dropdownColor: isDarkTheme ? const Color(0xFF1e1e1e) : Colors.white,
-                      style: TextStyle(
-                        color: isDarkTheme ? Colors.white : Colors.black,
-                        fontSize: UIConstants.textFieldFontSize,
-                      ),
+                      style: TextStyle(color: isDarkTheme ? Colors.white : Colors.black, fontSize: UIConstants.textFieldFontSize),
                       items: _venues.isEmpty
-                          ? [DropdownMenuItem<Map<String, String>>(
-                              value: {'id': '', 'display': 'All Venues'},
-                              child: Text(_isLoadingVenues ? 'Loading venues...' : 'All Venues'),
-                            )]
-                          : _venues.map<DropdownMenuItem<Map<String, String>>>((venue) {
-                              return DropdownMenuItem<Map<String, String>>(
-                                value: venue,
-                                child: Text(venue['display'] ?? 'All Venues'),
-                              );
-                            }).toList(),
+                          ? [DropdownMenuItem<Map<String, String>>(value: {'id': '', 'display': 'All Venues'}, child: Text(_isLoadingVenues ? 'Loading venues...' : 'All Venues'))]
+                          : _venues.map<DropdownMenuItem<Map<String, String>>>((venue) => DropdownMenuItem<Map<String, String>>(value: venue, child: Text(venue['display'] ?? 'All Venues'))).toList(),
                     ),
                   ),
                 ),
               ),
             ],
           ),
-
-          const SizedBox(height: 10), // Space between rows
-
-          // Security Row - Label and Dropdown on same line
+          const SizedBox(height: 4),
+          // Security Row
           Row(
             children: [
-              SizedBox(
-                width: 60,
-                child: Text(
-                  'Security',
-                  style: TextStyle(
-                    fontSize: UIConstants.textFieldFontSize,
-                    fontWeight: UIConstants.fontWeightNormal,
-                    color: isDarkTheme ? Colors.white : Colors.black,
-                  ),
-                ),
-              ),
+              SizedBox(width: 60, child: Text('Security', style: TextStyle(fontSize: UIConstants.textFieldFontSize, color: isDarkTheme ? Colors.white : Colors.black))),
               Expanded(
                 child: _HoverDropdownField(
                   isDarkTheme: isDarkTheme,
                   child: DropdownButtonHideUnderline(
                     child: DropdownButton<String>(
-                      value: _securities.isEmpty
-                          ? null
-                          : (_securities.any((s) => s['symbol'] == _selectedSymbol)
-                              ? _selectedSymbol
-                              : _securities.isNotEmpty ? _securities.first['symbol'] as String : null),
+                      value: _securities.isEmpty ? null : (_securities.any((s) => s['symbol'] == _selectedSymbol) ? _selectedSymbol : _securities.isNotEmpty ? _securities.first['symbol'] as String : null),
                       isExpanded: true,
+                      isDense: true,
                       onChanged: _securities.isEmpty ? null : (String? newValue) async {
                         if (newValue != null) {
-                          setState(() {
-                            _selectedSymbol = newValue;
-                          });
+                          setState(() { _selectedSymbol = newValue; });
                           await _updateCurrenciesForSecurity(newValue);
                           _loadChartData(newValue);
                           _resetAndFetchTradeHistory(newValue);
                           _fetchOrderbookData(newValue);
                           _calculateOrderFees();
-                          if (!_isBuySelected) {
-                            await _fetchAccountMarketPortfolioForMarket(_selectedMarket['id'] ?? '');
-                          }
+                          if (!_isBuySelected) { await _fetchAccountMarketPortfolioForMarket(_selectedMarket['id'] ?? ''); }
                         }
                       },
                       dropdownColor: isDarkTheme ? const Color(0xFF1e1e1e) : Colors.white,
-                      style: TextStyle(
-                        color: isDarkTheme ? Colors.white : Colors.black,
-                        fontSize: UIConstants.textFieldFontSize,
-                      ),
+                      style: TextStyle(color: isDarkTheme ? Colors.white : Colors.black, fontSize: UIConstants.textFieldFontSize),
                       items: _securities.isEmpty
-                          ? [DropdownMenuItem<String>(
-                              value: '',
-                              child: Text(_isLoadingMarketSecurities ? 'Loading securities...' : 'No securities available'),
-                            )]
+                          ? [DropdownMenuItem<String>(value: '', child: Text(_isLoadingMarketSecurities ? 'Loading securities...' : 'No securities available'))]
                           : _securities.map<DropdownMenuItem<String>>((security) {
                               final symbol = security['symbol'] as String;
-                              return DropdownMenuItem<String>(
-                                value: symbol,
-                                child: Text(symbol),
-                              );
+                              return DropdownMenuItem<String>(value: symbol, child: Text(symbol));
                             }).toList(),
                     ),
                   ),
@@ -3253,80 +3088,7 @@ class _TradingPageState extends State<TradingPage> {
       );
     }
 
-    if (_chartError.isNotEmpty) {
-      return Center(
-        child: Column(
-          mainAxisAlignment: MainAxisAlignment.center,
-          children: [
-            Icon(
-              Icons.error_outline,
-              size: 64,
-              color: isDarkTheme ? Colors.grey[500] : Colors.grey[400],
-            ),
-            const SizedBox(height: UIConstants.spacingMd),
-            Text(
-              'Chart Error',
-              style: TextStyle(
-                fontSize: UIConstants.fontSizeMd,
-                fontWeight: UIConstants.fontWeightNormal,
-                color: isDarkTheme ? Colors.grey[400] : Colors.grey[600],
-              ),
-            ),
-            const SizedBox(height: UIConstants.spacingSm),
-            Text(
-              _chartError,
-              style: TextStyle(
-                fontSize: UIConstants.textFieldFontSize,
-                color: isDarkTheme ? Colors.grey[500] : Colors.grey[500],
-              ),
-              textAlign: TextAlign.center,
-            ),
-            const SizedBox(height: UIConstants.spacingMd),
-            ElevatedButton(
-              onPressed: () => _loadChartData(_selectedSymbol),
-              child: const Text('Retry'),
-            ),
-          ],
-        ),
-      );
-    }
-
-    if (_candles.isEmpty) {
-      return Center(
-        child: Column(
-          mainAxisAlignment: MainAxisAlignment.center,
-          children: [
-            Icon(
-              Icons.show_chart,
-              size: 64,
-              color: isDarkTheme ? Colors.grey[500] : Colors.grey[400],
-            ),
-            const SizedBox(height: UIConstants.spacingMd),
-            Text(
-              '$_selectedSymbol Price Chart',
-              style: TextStyle(
-                fontSize: UIConstants.fontSizeMd,
-                fontWeight: UIConstants.fontWeightNormal,
-                color: isDarkTheme ? Colors.grey[400] : Colors.grey[600],
-              ),
-            ),
-            const SizedBox(height: UIConstants.spacingSm),
-            Text(
-              'No chart data available',
-              style: TextStyle(
-                fontSize: UIConstants.textFieldFontSize,
-                color: isDarkTheme ? Colors.grey[500] : Colors.grey[500],
-              ),
-            ),
-            const SizedBox(height: UIConstants.spacingMd),
-            ElevatedButton(
-              onPressed: () => _loadChartData(_selectedSymbol),
-              child: const Text('Load Chart'),
-            ),
-          ],
-        ),
-      );
-    }
+    // Errors and empty state are handled inline below — no early return
 
     // Display candlestick chart
     return Padding(
@@ -3338,16 +3100,33 @@ class _TradingPageState extends State<TradingPage> {
           Stack(
             alignment: Alignment.center,
             children: [
-              // Symbol at top-left
+              // Symbol at top-left with refresh button
               Align(
                 alignment: Alignment.centerLeft,
-                child: Text(
-                  _selectedSymbol,
-                  style: TextStyle(
-                    fontSize: UIConstants.fontSizeSm,
-                    fontWeight: UIConstants.fontWeightMedium,
-                    color: isDarkTheme ? Colors.white : Colors.black,
-                  ),
+                child: Row(
+                  mainAxisSize: MainAxisSize.min,
+                  children: [
+                    Text(
+                      _selectedSymbol,
+                      style: TextStyle(
+                        fontSize: UIConstants.fontSizeSm,
+                        fontWeight: UIConstants.fontWeightMedium,
+                        color: isDarkTheme ? Colors.white : Colors.black,
+                      ),
+                    ),
+                    const SizedBox(width: 4),
+                    SizedBox(
+                      width: 20,
+                      height: 20,
+                      child: IconButton(
+                        padding: EdgeInsets.zero,
+                        iconSize: 14,
+                        icon: Icon(Icons.refresh, color: isDarkTheme ? Colors.white54 : Colors.black45),
+                        onPressed: _isLoadingChart ? null : () => _loadChartData(_selectedSymbol),
+                        tooltip: 'Refresh chart',
+                      ),
+                    ),
+                  ],
                 ),
               ),
               // Last price at center
@@ -3364,7 +3143,7 @@ class _TradingPageState extends State<TradingPage> {
                         ),
                       ),
                       TextSpan(
-                        text: '\$${(_candles.last.close ?? 0).toStringAsFixed(2)}',
+                        text: '${_candles.first.close.toStringAsFixed(2)}',
                         style: TextStyle(
                           fontSize: UIConstants.fontSizeSm,
                           fontWeight: UIConstants.fontWeightMedium,
@@ -3387,40 +3166,67 @@ class _TradingPageState extends State<TradingPage> {
           const SizedBox(height: UIConstants.spacingMd),
           // Candlestick chart
           Expanded(
-            child: _isLoadingChart
-                ? const Center(child: CircularProgressIndicator())
-                : _chartError.isNotEmpty
-                    ? Center(
-                        child: Text(
-                          _chartError,
-                          style: const TextStyle(color: Colors.red),
-                        ),
-                      )
-                    : _candles.length < 2
+            child: Stack(
+              children: [
+                _isLoadingChart
+                    ? const Center(child: CircularProgressIndicator())
+                    : _candles.isEmpty
                         ? Center(
                             child: Text(
-                              'Insufficient data to display chart\n(${_candles.length} candles available, minimum 2 required)',
-                              textAlign: TextAlign.center,
-                              style: TextStyle(
-                                color: isDarkTheme ? Colors.white70 : Colors.black54,
-                              ),
+                              'No chart data available',
+                              style: TextStyle(color: isDarkTheme ? Colors.white70 : Colors.black54),
                             ),
                           )
-                        : InteractiveChart(
-                            candles: _candles,
-                            style: ChartStyle(
-                              priceGainColor: Colors.teal,
-                              priceLossColor: Colors.pink,
-                              volumeColor: Colors.teal.withOpacity(0.5),
-                              trendLineStyles: [],
-                              priceGridLineColor: isDarkTheme ? Colors.white10 : Colors.black12,
-                              priceLabelStyle: TextStyle(color: isDarkTheme ? Colors.white70 : Colors.black87, fontSize: 8),
-                              timeLabelStyle: TextStyle(color: isDarkTheme ? Colors.white70 : Colors.black87, fontSize: 8),
-                              selectionHighlightColor: Colors.blue.withOpacity(0.2),
-                              overlayBackgroundColor: isDarkTheme ? Colors.grey[850]! : Colors.white,
-                              overlayTextStyle: TextStyle(color: isDarkTheme ? Colors.white : Colors.black),
-                            ),
-                          ),
+                        : _candles.length < 32
+                            ? Center(
+                                child: Column(
+                                  mainAxisAlignment: MainAxisAlignment.center,
+                                  children: [
+                                    Text(
+                                      _candles.first.close.toStringAsFixed(2),
+                                      style: TextStyle(
+                                        fontSize: 28,
+                                        fontWeight: FontWeight.bold,
+                                        color: isDarkTheme ? Colors.white : Colors.black,
+                                      ),
+                                    ),
+                                    const SizedBox(height: 4),
+                                    Text(
+                                      '${_candles.length} candle${_candles.length == 1 ? '' : 's'} available',
+                                      style: TextStyle(color: isDarkTheme ? Colors.white54 : Colors.black45, fontSize: 12),
+                                    ),
+                                  ],
+                                ),
+                              )
+                            : Theme(
+                                data: isDarkTheme
+                                    ? ThemeData(brightness: Brightness.dark)
+                                    : ThemeData(brightness: Brightness.light),
+                                child: Candlesticks(
+                                  candles: _candles,
+                                  onLoadMoreCandles: () async {},
+                                ),
+                              ),
+                // Error overlay on top
+                if (_chartError.isNotEmpty)
+                  Positioned(
+                    top: 4,
+                    left: 8,
+                    right: 8,
+                    child: Container(
+                      padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
+                      decoration: BoxDecoration(
+                        color: Colors.red.withOpacity(0.85),
+                        borderRadius: BorderRadius.circular(4),
+                      ),
+                      child: Text(
+                        _chartError,
+                        style: const TextStyle(color: Colors.white, fontSize: 11),
+                      ),
+                    ),
+                  ),
+              ],
+            ),
           ),
           const SizedBox(height: UIConstants.spacingMd),
           // Time period buttons
@@ -6285,3 +6091,4 @@ class _HoverDropdownFieldState extends State<_HoverDropdownField> {
     );
   }
 }
+
