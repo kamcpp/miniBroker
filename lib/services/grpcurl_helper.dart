@@ -80,7 +80,7 @@ class GrpcurlHelper {
     buffer.writeln('║ Full command:');
     buffer.writeln('║   grpcurl ${args.map((a) => a.contains(' ') ? '"$a"' : a).join(' ')}');
     buffer.writeln('╚══════════════════════════════════════════════════════════════');
-    print(buffer.toString());
+    // print(buffer.toString()); // Commented out - too verbose
   }
 
   /// Log a grpcurl response with status and body
@@ -130,7 +130,7 @@ class GrpcurlHelper {
     }
 
     buffer.writeln('╚══════════════════════════════════════════════════════════════');
-    print(buffer.toString());
+    // print(buffer.toString()); // Commented out - too verbose
   }
 
 

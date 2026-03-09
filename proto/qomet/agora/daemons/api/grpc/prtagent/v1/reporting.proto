@@ -1,0 +1,205 @@
+syntax = "proto3";
+
+package tech.qomet.agora.api.grpc.prtagent.v1;
+
+import "common.proto";
+
+option go_package = "qomet.tech/agora/daemons/gen-pkg/tech/qomet/agora/api/grpc/prtagent/v1;agoraapigrpcprtagentv1";
+option java_package = "tech.qomet.agora.api.grpc.prtagent.v1";
+option java_outer_classname = "Reporting";
+option csharp_namespace  = "Tech.Qomet.Agora.Api.Grpc.PrtAgent.V1";
+
+service ReportingService {
+  // GetExecutionReports returns paginated execution reports for the authenticated participant.
+  rpc GetExecutionReports(GetExecutionReportsRequest) returns (GetExecutionReportsResponse);
+
+  // GetTradeReports returns paginated trade reports for the authenticated participant.
+  rpc GetTradeReports(GetTradeReportsRequest) returns (GetTradeReportsResponse);
+
+  // GetTreasuryActivities returns paginated treasury activities for the authenticated participant.
+  rpc GetTreasuryActivities(GetTreasuryActivitiesRequest) returns (GetTreasuryActivitiesResponse);
+}
+
+// ============================================================================
+// Execution Reports
+// ============================================================================
+
+message GetExecutionReportsRequest {
+  string proposed_execution_id = 1;                                     // OPTIONAL: Client-proposed execution ID for tracking
+  tech.qomet.agora.api.grpc.common.PaginationParams pagination = 2;    // REQUIRED: Pagination parameters
+
+  // Optional filters
+  string request_id = 3;                                                // OPTIONAL: Filter by request_id
+  string symbol = 4;                                                    // OPTIONAL: Filter by symbol (exact match)
+  string currency = 5;                                                  // OPTIONAL: Filter by currency (exact match)
+  string exec_type = 6;                                                 // OPTIONAL: Filter by exec_type (e.g. "0"=NEW, "F"=FILL)
+  string side = 7;                                                      // OPTIONAL: Filter by side (e.g. "1"=BUY, "2"=SELL)
+  string venue_iid = 8;                                                 // OPTIONAL: Filter by venue_iid (exact match)
+
+  // Time range filters (ISO8601/RFC3339)
+  string from_date = 10;                                                // OPTIONAL: Lower bound on created_at
+  string to_date = 11;                                                  // OPTIONAL: Upper bound on created_at
+
+  // Sorting
+  string sort_by = 12;                                                  // OPTIONAL: Field to sort by (default: "created_at")
+  string sort_direction = 13;                                           // OPTIONAL: "asc" or "desc" (default: "desc")
+
+  // Search
+  string search = 14;                                                   // OPTIONAL: ILIKE search across symbol, cl_ord_id, order_id, exec_id, text
+
+  map<string, string> aux_data = 105;                                   // OPTIONAL: Additional request data
+}
+
+message ExecutionReport {
+  string iid = 1;
+  string request_id = 2;
+  string venue_iid = 3;
+  string cl_ord_id = 4;
+  string order_id = 5;
+  string exec_id = 6;
+  string exec_type = 7;
+  string ord_status = 8;
+  string symbol = 9;
+  string side = 10;
+  string leaves_qty = 11;
+  string cum_qty = 12;
+  string avg_px = 13;
+  string price = 14;
+  string order_qty = 15;
+  string currency = 16;
+  string transact_time = 17;
+  string text = 18;
+  string created_at = 19;
+}
+
+message GetExecutionReportsResponse {
+  string ref_execution_id = 1;                                          // REQUIRED: Reference to the execution ID
+  tech.qomet.agora.api.grpc.common.PaginationInfo pagination_info = 2; // REQUIRED: Pagination information
+  repeated ExecutionReport execution_reports = 3;                       // REQUIRED: List of execution reports (can be empty)
+
+  map<string, string> metadata = 105;                                   // OPTIONAL: Response metadata
+}
+
+// ============================================================================
+// Trade Reports
+// ============================================================================
+
+message GetTradeReportsRequest {
+  string proposed_execution_id = 1;                                     // OPTIONAL: Client-proposed execution ID for tracking
+  tech.qomet.agora.api.grpc.common.PaginationParams pagination = 2;    // REQUIRED: Pagination parameters
+
+  // Optional filters
+  string symbol = 3;                                                    // OPTIONAL: Filter by symbol (exact match)
+  string currency = 4;                                                  // OPTIONAL: Filter by currency (exact match)
+  string side = 5;                                                      // OPTIONAL: Filter by side
+  string venue_iid = 6;                                                 // OPTIONAL: Filter by venue_iid (exact match)
+
+  // Time range filters (ISO8601/RFC3339)
+  string from_date = 10;                                                // OPTIONAL: Lower bound on created_at
+  string to_date = 11;                                                  // OPTIONAL: Upper bound on created_at
+
+  // Sorting
+  string sort_by = 12;                                                  // OPTIONAL: Field to sort by (default: "created_at")
+  string sort_direction = 13;                                           // OPTIONAL: "asc" or "desc" (default: "desc")
+
+  // Search
+  string search = 14;                                                   // OPTIONAL: ILIKE search across symbol, trade_report_id, exec_id, text
+
+  map<string, string> aux_data = 105;                                   // OPTIONAL: Additional request data
+}
+
+message TradeReport {
+  string iid = 1;
+  string venue_iid = 2;
+  string trade_report_id = 3;
+  string exec_id = 4;
+  string symbol = 5;
+  string currency = 6;
+  string side = 7;
+  string last_qty = 8;
+  string last_px = 9;
+  string transact_time = 10;
+  string text = 11;
+  string created_at = 12;
+}
+
+message GetTradeReportsResponse {
+  string ref_execution_id = 1;                                          // REQUIRED: Reference to the execution ID
+  tech.qomet.agora.api.grpc.common.PaginationInfo pagination_info = 2; // REQUIRED: Pagination information
+  repeated TradeReport trade_reports = 3;                               // REQUIRED: List of trade reports (can be empty)
+
+  map<string, string> metadata = 105;                                   // OPTIONAL: Response metadata
+}
+
+// ============================================================================
+// Treasury Activities
+// ============================================================================
+
+message GetTreasuryActivitiesRequest {
+  string proposed_execution_id = 1;                                     // OPTIONAL: Client-proposed execution ID for tracking
+  tech.qomet.agora.api.grpc.common.PaginationParams pagination = 2;    // REQUIRED: Pagination parameters
+
+  // Optional filters
+  string operation = 3;                                                 // OPTIONAL: Filter by operation name (e.g. "DEPOSIT_TO_VAULT")
+  string contract_addr = 4;                                             // OPTIONAL: Filter by contract address
+  string from_vault = 5;                                                // OPTIONAL: Filter by from_vault
+  string to_vault = 6;                                                  // OPTIONAL: Filter by to_vault
+  string from_account = 7;                                              // OPTIONAL: Filter by from_account
+  string to_account = 8;                                                // OPTIONAL: Filter by to_account
+  string sender_account = 9;                                            // OPTIONAL: Filter by sender_account
+  string deployment_iid = 10;                                           // OPTIONAL: Filter by deployment_iid
+  string legal_structure_iid = 11;                                      // OPTIONAL: Filter by legal_structure_iid
+
+  // Time range filters (ISO8601/RFC3339 or unix timestamp string)
+  string from_ts = 15;                                                  // OPTIONAL: Lower bound on timestamp
+  string to_ts = 16;                                                    // OPTIONAL: Upper bound on timestamp
+
+  // Sorting
+  string sort_by = 17;                                                  // OPTIONAL: Field to sort by (default: "created_at")
+  string sort_direction = 18;                                           // OPTIONAL: "asc" or "desc" (default: "desc")
+
+  // Search
+  string search = 19;                                                   // OPTIONAL: ILIKE search across sender_account, from_account, to_account, vaults, token_id, etc.
+
+  map<string, string> aux_data = 105;                                   // OPTIONAL: Additional request data
+}
+
+message TreasuryActivityReport {
+  string iid = 1;
+  string activity_id = 2;
+  string activity_hash = 3;
+  string idempotency_key = 4;
+  string timestamp = 5;
+  string ledger_id = 6;
+  string operation = 7;
+  string operation_name = 8;
+  string sender_account = 9;
+  string caller_account = 10;
+  string contract_addr = 11;
+  string contract_type = 12;
+  string from_account = 13;
+  string to_account = 14;
+  string from_vault = 15;
+  string to_vault = 16;
+  string from_reserve_id = 17;
+  string to_reserve_id = 18;
+  string from_stash = 19;
+  string to_stash = 20;
+  string token_id = 21;
+  string amount = 22;
+  string data = 23;
+  string deployment_iid = 24;
+  string mechanism_iid = 25;
+  string legal_structure_iid = 26;
+  string trezor_slot_address = 27;
+  string exec_runtime_name = 28;
+  string created_at = 29;
+}
+
+message GetTreasuryActivitiesResponse {
+  string ref_execution_id = 1;                                          // REQUIRED: Reference to the execution ID
+  tech.qomet.agora.api.grpc.common.PaginationInfo pagination_info = 2; // REQUIRED: Pagination information
+  repeated TreasuryActivityReport activities = 3;                       // REQUIRED: List of treasury activities (can be empty)
+
+  map<string, string> metadata = 105;                                   // OPTIONAL: Response metadata
+}

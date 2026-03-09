@@ -53,7 +53,7 @@ class ChartService {
       print('📊 Fetching historical OHLC data for $symbol, period: $period');
 
       final request = trading_pb.GetHistoricalOhlcDataRequest()
-        ..securityIidOrSymbolRegexes.add(symbol)
+        ..securityListingIidOrSymbolRegexes.add(symbol)
         ..period = period
         ..includeVolume = true;
 
@@ -119,7 +119,7 @@ class ChartService {
       print('📡 Starting live OHLC stream for $symbol, period: $period');
 
       final request = trading_pb.FetchLiveOhlcDataRequest()
-        ..securityIidOrSymbolRegexes.add(symbol);
+        ..securityListingIidOrSymbolRegexes.add(symbol);
 
       // Set fetch parameters
       final fetchParams = trading_pb.LiveOhlcDataFetchParams()
@@ -154,7 +154,7 @@ class ChartService {
   Future<double?> getLatestQuote(String symbol) async {
     try {
       final request = trading_pb.GetLatestQuoteRequest()
-        ..securityIidOrSymbolRegexes.add(symbol);
+        ..securityListingIidOrSymbolRegexes.add(symbol);
 
       final response = await _tradingClient.getLatestQuote(request);
 
@@ -175,7 +175,7 @@ class ChartService {
   }) async* {
     try {
       final request = trading_pb.FetchLiveQuoteRequest()
-        ..securityIidOrSymbolRegexes.add(symbol);
+        ..securityListingIidOrSymbolRegexes.add(symbol);
 
       if (updateIntervalMs != null) {
         final fetchParams = trading_pb.LiveQuoteFetchParams()

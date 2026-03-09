@@ -77,7 +77,7 @@ class _TradingPageState extends State<TradingPage> {
 
       if (result['success'] == true && result['output'] != null) {
         final output = result['output'] as Map<String, dynamic>;
-        print('[TradeHistory] gRPC response: $output');
+        // print('[TradeHistory] gRPC response: $output'); // Commented out - too verbose
 
         // Extract trades from the response
         final trades = output['trades'] as List<dynamic>? ?? [];
@@ -104,26 +104,19 @@ class _TradingPageState extends State<TradingPage> {
             if (timestampValue == null) return '';
             try {
               DateTime dt;
-              if (timestampValue is String) {
-                // Try parsing ISO format
-                dt = DateTime.parse(timestampValue);
-              } else if (timestampValue is int) {
+              if (timestampValue is int) {
                 dt = DateTime.fromMillisecondsSinceEpoch(timestampValue * 1000);
+              } else if (timestampValue is String) {
+                final asInt = int.tryParse(timestampValue);
+                if (asInt != null) {
+                  dt = DateTime.fromMillisecondsSinceEpoch(asInt * 1000);
+                } else {
+                  dt = DateTime.parse(timestampValue);
+                }
               } else {
                 return '';
               }
-              // Format: Aug 12 2025 13:48:27
-              final months = [
-                'Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun',
-                'Jul', 'Aug', 'Sep', 'Oct', 'Nov', 'Dec'
-              ];
-              final monthStr = months[dt.month - 1];
-              final dayStr = dt.day.toString().padLeft(2, '0');
-              final yearStr = dt.year.toString();
-              final hourStr = dt.hour.toString().padLeft(2, '0');
-              final minStr = dt.minute.toString().padLeft(2, '0');
-              final secStr = dt.second.toString().padLeft(2, '0');
-              return '$monthStr $dayStr $yearStr $hourStr:$minStr:$secStr';
+              return '${dt.month}/${dt.day}/${dt.year.toString().substring(2)} ${dt.hour.toString().padLeft(2, '0')}:${dt.minute.toString().padLeft(2, '0')}:${dt.second.toString().padLeft(2, '0')}';
             } catch (e) {
               print('[TradeHistory] Error parsing timestamp: $e');
               return '';
@@ -973,7 +966,10 @@ class _TradingPageState extends State<TradingPage> {
   StreamSubscription<bool>? _logonStatusSubscription;
   bool _hasRequestedSecurityDefinitions = false;
   Timer? _securityRequestTimeout;
-  
+  Timer? _orderbookRefreshTimer;
+  Timer? _ordersRefreshTimer;
+  Timer? _tradeHistoryRefreshTimer;
+
   // Panel width variables for resizable panels
   double _leftPanelWidth = 249.0;
   double _rightPanelWidth = 274.0;
@@ -983,7 +979,7 @@ class _TradingPageState extends State<TradingPage> {
   // Panel height variables for resizable horizontal sections
   double _orderbookHeight = 150.0; // Default orderbook height
   bool _isDraggingHorizontal = false;
-  double _marketOverviewHeight = 110.0;
+  double _marketOverviewHeight = 100.0;
   bool _isDraggingMarketOverview = false; // State for market splitter
 
   // Bottom section width split (Orders vs Orderbook)
@@ -1068,7 +1064,10 @@ class _TradingPageState extends State<TradingPage> {
       setState(() {});
       _calculateOrderFees();
     });
-    
+    _feeController.addListener(() {
+      setState(() {});
+    });
+
     // Fetch pairs from API immediately when page opens, independent of FIX connection
     // _fetchPairsFromAPI(); // Disabled - now using GetMarketSecurityList based on selected market
     
@@ -1087,6 +1086,9 @@ class _TradingPageState extends State<TradingPage> {
           _resetAndFetchTradeHistory(_selectedSymbol);
           _fetchOrderbookData(_selectedSymbol);
         }
+        _startOrderbookRefreshTimer();
+        _startOrdersRefreshTimer();
+        _startTradeHistoryRefreshTimer();
       });
 
     // Initialize sample data for demonstration
@@ -1318,7 +1320,7 @@ class _TradingPageState extends State<TradingPage> {
 
       if (result['success'] == true && result['output'] != null) {
         final output = result['output'];
-        print('📬 GetAccountOrders Response: $output');
+        // print('📬 GetAccountOrders Response: $output'); // Commented out - too verbose
 
         if (output['orders'] != null && output['orders'] is List) {
           final List<dynamic> ordersData = output['orders'];
@@ -2195,7 +2197,44 @@ class _TradingPageState extends State<TradingPage> {
       _loadChartData(symbol);
     });
   }
-  
+
+  void _startOrderbookRefreshTimer() {
+    _orderbookRefreshTimer?.cancel();
+    _orderbookRefreshTimer = Timer.periodic(const Duration(seconds: 30), (timer) {
+      if (!mounted) {
+        timer.cancel();
+        return;
+      }
+      if (_selectedSymbol.isNotEmpty) {
+        _fetchOrderbookData(_selectedSymbol);
+      }
+    });
+  }
+
+  void _startOrdersRefreshTimer() {
+    _ordersRefreshTimer?.cancel();
+    _ordersRefreshTimer = Timer.periodic(const Duration(seconds: 30), (timer) {
+      if (!mounted) {
+        timer.cancel();
+        return;
+      }
+      _fetchRealOrders();
+    });
+  }
+
+  void _startTradeHistoryRefreshTimer() {
+    _tradeHistoryRefreshTimer?.cancel();
+    _tradeHistoryRefreshTimer = Timer.periodic(const Duration(seconds: 30), (timer) {
+      if (!mounted) {
+        timer.cancel();
+        return;
+      }
+      if (_selectedSymbol.isNotEmpty) {
+        _fetchTradeHistoryForSecurity(_selectedSymbol, pageSize: _tradeHistoryPageSize);
+      }
+    });
+  }
+
   Future<void> _fetchOrderbookData(String symbol) async {
     print('📊 [ORDERBOOK] _fetchOrderbookData CALLED for symbol: "$symbol", _securities count: ${_securities.length}');
 
@@ -2606,6 +2645,9 @@ class _TradingPageState extends State<TradingPage> {
     _logonStatusSubscription?.cancel();
     _securityRequestTimeout?.cancel();
     _liveOhlcSubscription?.cancel();
+    _orderbookRefreshTimer?.cancel();
+    _ordersRefreshTimer?.cancel();
+    _tradeHistoryRefreshTimer?.cancel();
     _quantityController.dispose();
     _priceController.dispose();
     _orderIdController.dispose();
@@ -2673,7 +2715,7 @@ class _TradingPageState extends State<TradingPage> {
                               child: LayoutBuilder(
                                 builder: (context, constraints) {
                                   final maxMiddleHeight = constraints.maxHeight;
-                                  final minMarketOverviewHeight = 150.0;
+                                  final minMarketOverviewHeight = 100.0;
                                   final minChartHeight = 100.0;
                                   final maxMarketOverviewHeight = (maxMiddleHeight - minChartHeight).clamp(minMarketOverviewHeight, double.infinity);
 
@@ -2894,40 +2936,67 @@ class _TradingPageState extends State<TradingPage> {
     }
   }
 
+  // Parse fee value from the fee input controller
+  double _parseFee() {
+    return double.tryParse(_feeController.text.trim()) ?? 0.0;
+  }
+
   // Helper method to calculate order total
   double _calculateTotal() {
     final quantity = double.tryParse(_quantityController.text) ?? 0.0;
-    final price = _orderType == 'Market' ? 0.0 : (double.tryParse(_priceController.text) ?? 0.0);
+    final fee = _parseFee();
 
-    // Parse estimated fee (remove currency symbols and parse)
-    double estimatedFee = 0.0;
-    try {
-      String feeStr = _estimatedFee.replaceAll(RegExp(r'[^\d.]'), ''); // Remove non-numeric characters
-      estimatedFee = double.tryParse(feeStr) ?? 0.0;
-    } catch (e) {
-      estimatedFee = 0.0;
-    }
-
+    double subtotal;
     if (_orderType == 'Market') {
-      // For market orders, we don't show total (return 0)
-      return 0.0;
+      final currentPrice = _candles.isNotEmpty ? _candles.first.close : 0.0;
+      subtotal = quantity * currentPrice;
+    } else {
+      final price = double.tryParse(_priceController.text) ?? 0.0;
+      subtotal = quantity * price;
     }
-
-    final subtotal = quantity * price;
 
     if (_isBuySelected) {
-      // Buy limit order: (amount * price) + EST.fee
-      return subtotal + estimatedFee;
+      return subtotal + fee;
     } else {
-      // Sell limit order: (amount * price) - EST.fee
-      return subtotal - estimatedFee;
+      return subtotal - fee;
     }
+  }
+
+  /// Check if user has sufficient funds/holdings for the order
+  bool _canPlaceOrder() {
+    final quantity = double.tryParse(_quantityController.text) ?? 0.0;
+    final price = double.tryParse(_priceController.text) ?? 0.0;
+
+    // Disable if no amount entered
+    if (quantity <= 0) return false;
+
+    // Disable if limit order with no price
+    if (_orderType == 'Limit' && price <= 0) return false;
+
+    if (_isBuySelected) {
+      final buyingPower = double.tryParse(_buyingPower.replaceAll(',', '').replaceAll(RegExp(r'[^\d.]'), '')) ?? 0.0;
+      if (_orderType == 'Market') {
+        // Use current price (last candle close) to estimate market order cost
+        final currentPrice = _candles.isNotEmpty ? _candles.first.close : 0.0;
+        if (currentPrice > 0) {
+          final estimatedCost = quantity * currentPrice;
+          if (estimatedCost > buyingPower) return false;
+        }
+      } else {
+        final total = _calculateTotal();
+        if (total > buyingPower) return false;
+      }
+    } else {
+      final available = double.tryParse(_availableBalance.replaceAll(',', '').replaceAll(RegExp(r'[^\d.]'), '')) ?? 0.0;
+      if (quantity > available) return false;
+    }
+    return true;
   }
 
   Widget _buildSecuritySection(ThemeService themeService) {
     final isDarkTheme = themeService.isDarkTheme;
     return Container(
-      padding: UIConstants.paddingStandard,
+      padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
       decoration: BoxDecoration(
         color: isDarkTheme ? const Color(0xFF1e1e1e) : Colors.white,
         border: Border(
@@ -2944,7 +3013,7 @@ class _TradingPageState extends State<TradingPage> {
           // Market Row
           Row(
             children: [
-              SizedBox(width: 60, child: Text('Market', style: TextStyle(fontSize: UIConstants.textFieldFontSize, color: isDarkTheme ? Colors.white : Colors.black))),
+              SizedBox(width: 52, child: Text('Market', style: TextStyle(fontSize: 11, color: isDarkTheme ? Colors.white : Colors.black))),
               Expanded(
                 child: _HoverDropdownField(
                   isDarkTheme: isDarkTheme,
@@ -2966,7 +3035,7 @@ class _TradingPageState extends State<TradingPage> {
                         }
                       },
                       dropdownColor: isDarkTheme ? const Color(0xFF1e1e1e) : Colors.white,
-                      style: TextStyle(color: isDarkTheme ? Colors.white : Colors.black, fontSize: UIConstants.textFieldFontSize),
+                      style: TextStyle(color: isDarkTheme ? Colors.white : Colors.black, fontSize: 11),
                       items: _markets.isEmpty
                           ? [DropdownMenuItem<Map<String, String>>(value: {'id': '', 'description': '', 'display': ''}, child: Text(_isLoadingMarkets ? 'Loading markets...' : 'No markets available'))]
                           : _markets.map<DropdownMenuItem<Map<String, String>>>((market) => DropdownMenuItem<Map<String, String>>(value: market, child: Text(market['display'] ?? market['id']!))).toList(),
@@ -2976,11 +3045,11 @@ class _TradingPageState extends State<TradingPage> {
               ),
             ],
           ),
-          const SizedBox(height: 4),
+          const SizedBox(height: 2),
           // Venue Row
           Row(
             children: [
-              SizedBox(width: 60, child: Text('Venue', style: TextStyle(fontSize: UIConstants.textFieldFontSize, color: isDarkTheme ? Colors.white : Colors.black))),
+              SizedBox(width: 52, child: Text('Venue', style: TextStyle(fontSize: 11, color: isDarkTheme ? Colors.white : Colors.black))),
               Expanded(
                 child: _HoverDropdownField(
                   isDarkTheme: isDarkTheme,
@@ -2996,7 +3065,7 @@ class _TradingPageState extends State<TradingPage> {
                         }
                       },
                       dropdownColor: isDarkTheme ? const Color(0xFF1e1e1e) : Colors.white,
-                      style: TextStyle(color: isDarkTheme ? Colors.white : Colors.black, fontSize: UIConstants.textFieldFontSize),
+                      style: TextStyle(color: isDarkTheme ? Colors.white : Colors.black, fontSize: 11),
                       items: _venues.isEmpty
                           ? [DropdownMenuItem<Map<String, String>>(value: {'id': '', 'display': 'All Venues'}, child: Text(_isLoadingVenues ? 'Loading venues...' : 'All Venues'))]
                           : _venues.map<DropdownMenuItem<Map<String, String>>>((venue) => DropdownMenuItem<Map<String, String>>(value: venue, child: Text(venue['display'] ?? 'All Venues'))).toList(),
@@ -3006,11 +3075,11 @@ class _TradingPageState extends State<TradingPage> {
               ),
             ],
           ),
-          const SizedBox(height: 4),
+          const SizedBox(height: 2),
           // Security Row
           Row(
             children: [
-              SizedBox(width: 60, child: Text('Security', style: TextStyle(fontSize: UIConstants.textFieldFontSize, color: isDarkTheme ? Colors.white : Colors.black))),
+              SizedBox(width: 52, child: Text('Security', style: TextStyle(fontSize: 11, color: isDarkTheme ? Colors.white : Colors.black))),
               Expanded(
                 child: _HoverDropdownField(
                   isDarkTheme: isDarkTheme,
@@ -3031,7 +3100,7 @@ class _TradingPageState extends State<TradingPage> {
                         }
                       },
                       dropdownColor: isDarkTheme ? const Color(0xFF1e1e1e) : Colors.white,
-                      style: TextStyle(color: isDarkTheme ? Colors.white : Colors.black, fontSize: UIConstants.textFieldFontSize),
+                      style: TextStyle(color: isDarkTheme ? Colors.white : Colors.black, fontSize: 11),
                       items: _securities.isEmpty
                           ? [DropdownMenuItem<String>(value: '', child: Text(_isLoadingMarketSecurities ? 'Loading securities...' : 'No securities available'))]
                           : _securities.map<DropdownMenuItem<String>>((security) {
@@ -3919,13 +3988,16 @@ class _TradingPageState extends State<TradingPage> {
 
   Widget _buildOrdersTabHeaders(bool isDarkTheme) {
     return Container(
-      margin: const EdgeInsets.only(left: 8), // Add left margin to match table
-      child: SingleChildScrollView(
-        scrollDirection: Axis.horizontal,
-        child: Row(
-          crossAxisAlignment: CrossAxisAlignment.end,
-          mainAxisAlignment: MainAxisAlignment.start, // Align tabs to the left
-          children: _ordersTabNames.asMap().entries.map((entry) {
+      margin: const EdgeInsets.only(left: 8),
+      child: Row(
+        children: [
+          Expanded(
+            child: SingleChildScrollView(
+              scrollDirection: Axis.horizontal,
+              child: Row(
+                crossAxisAlignment: CrossAxisAlignment.end,
+                mainAxisAlignment: MainAxisAlignment.start,
+                children: _ordersTabNames.asMap().entries.map((entry) {
           final index = entry.key;
           final tabName = entry.value;
           final isActive = _ordersTabIndex == index;
@@ -3973,7 +4045,26 @@ class _TradingPageState extends State<TradingPage> {
             ),
           );
         }).toList(),
-        ),
+              ),
+            ),
+          ),
+          SizedBox(
+            height: 28,
+            width: 28,
+            child: IconButton(
+              padding: EdgeInsets.zero,
+              iconSize: 15,
+              splashRadius: 14,
+              tooltip: 'Refresh orders',
+              icon: Icon(
+                Icons.refresh,
+                color: isDarkTheme ? Colors.grey[400] : Colors.grey[600],
+              ),
+              onPressed: _isLoadingRealOrders ? null : _fetchRealOrders,
+            ),
+          ),
+          const SizedBox(width: 8),
+        ],
       ),
     );
   }
@@ -4077,9 +4168,9 @@ class _TradingPageState extends State<TradingPage> {
             final isDark = themeService.isDarkTheme;
             final textColor = isDark ? Colors.white : Colors.black;
             final subtextColor = isDark ? Colors.grey[400]! : Colors.grey[600]!;
-            final bgColor = isDark ? const Color(0xFF1E1E1E) : Colors.white;
-            final surfaceColor = isDark ? const Color(0xFF2A2A2A) : Colors.grey.shade50;
-            final borderColor = isDark ? Colors.grey[700]! : Colors.grey.shade300;
+            final bgColor = isDark ? const Color(0xFF1A1A2E) : Colors.white;
+            final surfaceColor = isDark ? const Color(0xFF16213E) : Colors.grey.shade50;
+            final borderColor = isDark ? const Color(0xFF0F3460) : Colors.grey.shade300;
 
             void copyToClipboard(String text) {
               Clipboard.setData(ClipboardData(text: text));
@@ -4121,6 +4212,10 @@ class _TradingPageState extends State<TradingPage> {
 
             return AlertDialog(
               backgroundColor: bgColor,
+              shape: RoundedRectangleBorder(
+                borderRadius: BorderRadius.circular(12),
+                side: BorderSide(color: borderColor, width: 1.5),
+              ),
               title: Row(
                 children: [
                   Expanded(child: Text('Order Details', style: TextStyle(fontSize: 18, color: textColor))),
@@ -4291,12 +4386,14 @@ class _TradingPageState extends State<TradingPage> {
     final statusColor = _getStatusColor(status, isDarkTheme);
     final sideColor = side == 'BUY' ? UIConstants.colorAccept : UIConstants.colorReject;
     final quantity = _formatDecimal(order['quantity'] ?? '0');
+    final remaining = _formatDecimal(order['remainingQuantity'] ?? order['remaining_quantity'] ?? order['quantity'] ?? '0');
+    final quantityDisplay = '$remaining / $quantity';
     final price = order['price'] ?? '0';
     final priceDisplay = (price == '0' || price == '0.00') ? 'Market' : _formatDecimal(price);
 
     return Container(
-      margin: const EdgeInsets.only(bottom: 8),
-      padding: const EdgeInsets.symmetric(vertical: 8, horizontal: 4),
+      margin: const EdgeInsets.only(bottom: 1),
+      padding: const EdgeInsets.symmetric(vertical: 3, horizontal: 4),
       child: Row(
         mainAxisAlignment: MainAxisAlignment.spaceBetween,
         children: [
@@ -4310,7 +4407,7 @@ class _TradingPageState extends State<TradingPage> {
           ),
           SizedBox(
             width: 140,
-            child: Text(quantity, style: TextStyle(color: isDarkTheme ? Colors.white : Colors.black, fontSize: 12), textAlign: TextAlign.center),
+            child: Text(quantityDisplay, style: TextStyle(color: isDarkTheme ? Colors.white : Colors.black, fontSize: 12), textAlign: TextAlign.center),
           ),
           SizedBox(
             width: 140,
@@ -4387,7 +4484,7 @@ class _TradingPageState extends State<TradingPage> {
               ),
               SizedBox(
                 width: 140,
-                child: Text('Quantity', style: TextStyle(color: Colors.grey[400], fontWeight: UIConstants.fontWeightMedium, fontSize: 13), textAlign: TextAlign.center),
+                child: Text('Qty (Rem/Tot)', style: TextStyle(color: Colors.grey[400], fontWeight: UIConstants.fontWeightMedium, fontSize: 13), textAlign: TextAlign.center),
               ),
               SizedBox(
                 width: 140,
@@ -4416,7 +4513,7 @@ class _TradingPageState extends State<TradingPage> {
             thickness: 0.7,
             height: 1,
           ),
-          const SizedBox(height: UIConstants.spacingSm),
+          const SizedBox(height: 2),
           Expanded(
             child: _buildOrdersContent(isDarkTheme),
           ),
@@ -4561,7 +4658,7 @@ class _TradingPageState extends State<TradingPage> {
               ),
               SizedBox(
                 width: 150,
-                child: Text('Quantity', style: TextStyle(color: Colors.grey[400], fontWeight: UIConstants.fontWeightMedium, fontSize: 13), textAlign: TextAlign.center),
+                child: Text('Qty (Rem/Tot)', style: TextStyle(color: Colors.grey[400], fontWeight: UIConstants.fontWeightMedium, fontSize: 13), textAlign: TextAlign.center),
               ),
               SizedBox(
                 width: 150,
@@ -4590,7 +4687,7 @@ class _TradingPageState extends State<TradingPage> {
             thickness: 0.7,
             height: 1,
           ),
-          const SizedBox(height: UIConstants.spacingSm),
+          const SizedBox(height: 2),
           Expanded(
             child: ListView(
               children: [
@@ -4652,12 +4749,14 @@ class _TradingPageState extends State<TradingPage> {
     final statusColor = _getStatusColor(status, isDarkTheme);
     final sideColor = side == 'BUY' ? UIConstants.colorAccept : UIConstants.colorReject;
     final quantity = _formatDecimal(order['quantity'] ?? '0');
+    final remaining = _formatDecimal(order['remainingQuantity'] ?? order['remaining_quantity'] ?? order['quantity'] ?? '0');
+    final quantityDisplay = '$remaining / $quantity';
     final price = order['price'] ?? '0';
     final priceDisplay = (price == '0' || price == '0.00') ? 'Market' : _formatDecimal(price);
 
     return Container(
-      margin: const EdgeInsets.only(bottom: 8),
-      padding: const EdgeInsets.symmetric(vertical: 8, horizontal: 4),
+      margin: const EdgeInsets.only(bottom: 1),
+      padding: const EdgeInsets.symmetric(vertical: 3, horizontal: 4),
       child: Row(
         mainAxisAlignment: MainAxisAlignment.spaceBetween,
         children: [
@@ -4671,7 +4770,7 @@ class _TradingPageState extends State<TradingPage> {
           ),
           SizedBox(
             width: 150,
-            child: Text(quantity, style: TextStyle(color: isDarkTheme ? Colors.white : Colors.black, fontSize: 12), textAlign: TextAlign.center),
+            child: Text(quantityDisplay, style: TextStyle(color: isDarkTheme ? Colors.white : Colors.black, fontSize: 12), textAlign: TextAlign.center),
           ),
           SizedBox(
             width: 150,
@@ -5322,7 +5421,7 @@ class _TradingPageState extends State<TradingPage> {
           Container(
             decoration: BoxDecoration(
               color: isDarkTheme ? const Color(0xFF2d2d2d) : Colors.white,
-              borderRadius: BorderRadius.circular(20),
+              borderRadius: BorderRadius.circular(6),
             ),
             child: Row(
               children: [
@@ -5721,17 +5820,26 @@ class _TradingPageState extends State<TradingPage> {
             ],
           ),
 
-          // Show Order Summary only for Limit orders
-          if (_orderType == 'Limit') ...[
-            const SizedBox(height: UIConstants.spacingSm), // Add space between amount field and est.fee total area
+          const SizedBox(height: UIConstants.spacingSm),
 
-            // Order Summary (no border)
-            Container(
+          // Order Summary
+          Builder(builder: (context) {
+            final quantity = double.tryParse(_quantityController.text) ?? 0.0;
+            final price = double.tryParse(_priceController.text) ?? 0.0;
+            final hasQuantity = quantity > 0;
+            final hasPrice = _orderType == 'Market'
+                ? (_candles.isNotEmpty && _candles.first.close > 0)
+                : price > 0;
+            final fee = _parseFee();
+            final hasFee = fee > 0 || _isLoadingFee;
+            final total = _calculateTotal();
+            final currencySymbol = _selectedCurrency['symbol'] ?? '';
+
+            return Container(
               padding: UIConstants.paddingStandard,
               decoration: BoxDecoration(
                 color: isDarkTheme ? const Color(0xFF3d3d3d) : Colors.grey[50],
                 borderRadius: BorderRadius.circular(UIConstants.borderRadiusMd),
-                // Removed border
               ),
               child: Column(
                 children: [
@@ -5745,24 +5853,15 @@ class _TradingPageState extends State<TradingPage> {
                           color: isDarkTheme ? Colors.grey[400] : Colors.grey[600],
                         ),
                       ),
-                      _isLoadingFee
-                          ? SizedBox(
-                              width: 16,
-                              height: 16,
-                              child: CircularProgressIndicator(
-                                strokeWidth: 2,
-                                valueColor: AlwaysStoppedAnimation<Color>(
-                                  isDarkTheme ? Colors.white : Colors.black,
-                                ),
-                              ),
-                            )
-                          : Text(
-                              _estimatedFee,
-                              style: TextStyle(
-                                fontSize: UIConstants.textFieldFontSize,
-                                color: isDarkTheme ? Colors.white : Colors.black,
-                              ),
-                            ),
+                      Text(
+                        (hasQuantity && hasPrice && fee > 0)
+                            ? '${fee.toStringAsFixed(2)} $currencySymbol'
+                            : '-',
+                        style: TextStyle(
+                          fontSize: UIConstants.textFieldFontSize,
+                          color: isDarkTheme ? Colors.white : Colors.black,
+                        ),
+                      ),
                     ],
                   ),
                   const SizedBox(height: UIConstants.spacingSm),
@@ -5770,7 +5869,7 @@ class _TradingPageState extends State<TradingPage> {
                     mainAxisAlignment: MainAxisAlignment.spaceBetween,
                     children: [
                       Text(
-                        'Total',
+                        _orderType == 'Market' ? 'Est. Total' : 'Total',
                         style: TextStyle(
                           fontSize: UIConstants.textFieldFontSize,
                           fontWeight: UIConstants.fontWeightMedium,
@@ -5778,7 +5877,7 @@ class _TradingPageState extends State<TradingPage> {
                         ),
                       ),
                       Text(
-                        '${_formatDecimal(_calculateTotal().toString())} \$',
+                        (hasQuantity && hasPrice) ? '${_formatDecimal(total.toStringAsFixed(2))} $currencySymbol' : '-',
                         style: TextStyle(
                           fontSize: UIConstants.textFieldFontSize,
                           fontWeight: UIConstants.fontWeightMedium,
@@ -5789,28 +5888,48 @@ class _TradingPageState extends State<TradingPage> {
                   ),
                 ],
               ),
-            ),
-          ],
+            );
+          }),
 
           const SizedBox(height: UIConstants.spacingMd),
 
           // Buy/Sell Order Button
-          SizedBox(
-            width: double.infinity,
-            child: ElevatedButton(
-              onPressed: _placeOrder,
-              style: UIConstants.buttonStyle(
-                _isBuySelected ? UIConstants.colorAccept : UIConstants.colorReject,
-              ),
-              child: Text(
-                '${_isBuySelected ? 'Buy' : 'Sell'} Order',
-                style: const TextStyle(
-                  fontSize: UIConstants.textFieldFontSize,
-                  fontWeight: UIConstants.fontWeightMedium,
+          Builder(builder: (context) {
+            final canPlace = _canPlaceOrder();
+            final quantity = double.tryParse(_quantityController.text) ?? 0.0;
+            final price = double.tryParse(_priceController.text) ?? 0.0;
+            final hasInput = quantity > 0 && (_orderType == 'Market' || price > 0);
+            final label = !hasInput
+                ? '${_isBuySelected ? 'Buy' : 'Sell'} Order'
+                : (!canPlace
+                    ? 'Insufficient ${_isBuySelected ? 'funds' : 'holdings'}'
+                    : '${_isBuySelected ? 'Buy' : 'Sell'} Order');
+            return SizedBox(
+              width: double.infinity,
+              child: ElevatedButton(
+                onPressed: canPlace ? _placeOrder : null,
+                style: ElevatedButton.styleFrom(
+                  backgroundColor: canPlace
+                      ? (_isBuySelected ? UIConstants.colorAccept : UIConstants.colorReject)
+                      : Colors.grey[700],
+                  foregroundColor: canPlace ? Colors.white : Colors.grey[400],
+                  disabledBackgroundColor: Colors.grey[700],
+                  disabledForegroundColor: Colors.grey[400],
+                  padding: const EdgeInsets.symmetric(vertical: 12),
+                  shape: RoundedRectangleBorder(
+                    borderRadius: BorderRadius.circular(UIConstants.borderRadiusMd),
+                  ),
+                ),
+                child: Text(
+                  label,
+                  style: const TextStyle(
+                    fontSize: UIConstants.textFieldFontSize,
+                    fontWeight: UIConstants.fontWeightMedium,
+                  ),
                 ),
               ),
-            ),
-          ),
+            );
+          }),
         ],
     );
   }
@@ -5902,7 +6021,7 @@ class _HoverTradeButtonState extends State<_HoverTradeButton> {
             color: widget.isSelected
                 ? widget.selectedColor
                 : Colors.transparent,
-            borderRadius: BorderRadius.circular(20),
+            borderRadius: BorderRadius.circular(6),
           ),
           child: Text(
             widget.text,
@@ -6076,8 +6195,8 @@ class _HoverDropdownFieldState extends State<_HoverDropdownField> {
       onEnter: (_) => setState(() => _isHovered = true),
       onExit: (_) => setState(() => _isHovered = false),
       child: Container(
-        height: UIConstants.buttonHeightStandard,
-        padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
+        height: 28,
+        padding: const EdgeInsets.symmetric(horizontal: 6, vertical: 2),
         decoration: BoxDecoration(
           color: backgroundColor,
           borderRadius: BorderRadius.circular(UIConstants.textFieldBorderRadius),

@@ -138,18 +138,13 @@ class AppHeader extends StatelessWidget {
 
   Widget _buildThemeToggle(ThemeService themeService, bool isDarkTheme) {
     return Tooltip(
-      message: isDarkTheme ? 'Switch to Light Mode' : 'Switch to Dark Mode',
+      message: 'Coming soon ...',
       child: IconButton(
         icon: Icon(
           isDarkTheme ? Icons.light_mode : Icons.dark_mode,
-          color: isDarkTheme ? Colors.white : UIConstants.colorCommand,
+          color: Colors.grey,
         ),
-        onPressed: () {
-          themeService.toggleTheme();
-          if (onThemeToggle != null) {
-            onThemeToggle!();
-          }
-        },
+        onPressed: null,
       ),
     );
   }
