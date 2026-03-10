@@ -105,10 +105,7 @@ class _UsersAdminPageState extends State<UsersAdminPage> {
         _loadUsers(); // Refresh the list
       } else {
         ScaffoldMessenger.of(context).showSnackBar(
-          const SnackBar(
-            content: Text('Failed to delete user'),
-            backgroundColor: Colors.red,
-          ),
+          UIConstants.errorSnackBar('Failed to delete user'),
         );
       }
     }
@@ -134,13 +131,13 @@ class _UsersAdminPageState extends State<UsersAdminPage> {
                   style: TextStyle(
                     fontSize: UIConstants.fontSizeLg,
                     fontWeight: UIConstants.fontWeightMedium,
-                    color: isDarkTheme ? Colors.white : Colors.black,
+                    color: UIConstants.textPrimary(isDarkTheme),
                   ),
                 ),
                 IconButton(
                   icon: Icon(
                     Icons.refresh,
-                    color: isDarkTheme ? Colors.white : Colors.black,
+                    color: UIConstants.textPrimary(isDarkTheme),
                   ),
                   onPressed: _loadUsers,
                   tooltip: 'Refresh',
@@ -161,7 +158,7 @@ class _UsersAdminPageState extends State<UsersAdminPage> {
                         Text(
                           _isSyncing ? 'Syncing with server...' : 'Loading users...',
                           style: TextStyle(
-                            color: isDarkTheme ? Colors.white : Colors.black,
+                            color: UIConstants.textPrimary(isDarkTheme),
                             fontSize: UIConstants.fontSizeBody,
                           ),
                         ),
@@ -173,7 +170,7 @@ class _UsersAdminPageState extends State<UsersAdminPage> {
                         child: Text(
                           'No users registered yet',
                           style: TextStyle(
-                            color: isDarkTheme ? Colors.white : Colors.black,
+                            color: UIConstants.textPrimary(isDarkTheme),
                             fontSize: UIConstants.fontSizeMd,
                           ),
                         ),

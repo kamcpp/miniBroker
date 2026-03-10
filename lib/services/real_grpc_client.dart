@@ -1453,6 +1453,63 @@ class RealGrpcClient {
     }
   }
 
+  /// Get execution reports via ReportingService.GetExecutionReports
+  Future<Map<String, dynamic>> getExecutionReports({
+    int pageNumber = 1,
+    int pageSize = 20,
+    String? requestId,
+    String? symbol,
+    String? currency,
+    String? execType,
+    String? side,
+    String? venueIid,
+    String? fromDate,
+    String? toDate,
+    String? sortBy,
+    String? sortDirection,
+    String? search,
+  }) async {
+    print('📋 getExecutionReports called: isConnected=$_isConnected');
+    if (!_isConnected) {
+      return {
+        'input': {},
+        'output': {'error': 'Not connected to server'},
+        'requestTime': _toUnixTimestamp(DateTime.now()).toString(),
+        'serverType': 'not-connected',
+        'success': false,
+      };
+    }
+
+    try {
+      final result = await GrpcurlHelper.getExecutionReports(
+        pageNumber: pageNumber,
+        pageSize: pageSize,
+        requestId: requestId,
+        symbol: symbol,
+        currency: currency,
+        execType: execType,
+        side: side,
+        venueIid: venueIid,
+        fromDate: fromDate,
+        toDate: toDate,
+        sortBy: sortBy,
+        sortDirection: sortDirection,
+        search: search,
+      );
+      print('📋 getExecutionReports result: success=${result['success']}');
+      return result;
+    } catch (e) {
+      print('❌ Critical error in getExecutionReports: $e');
+      return {
+        'input': {},
+        'output': {'error': 'Critical error: $e'},
+        'requestTime': _toUnixTimestamp(DateTime.now()).toString(),
+        'serverType': 'critical-error',
+        'success': false,
+      };
+    }
+  }
+
   /// Real GetVenueList call to VenueService.GetVenueList using grpcurl
   Future<Map<String, dynamic>> getVenueList({
     String? marketId,

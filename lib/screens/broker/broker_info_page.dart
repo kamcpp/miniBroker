@@ -305,7 +305,7 @@ class _BrokerInfoPageState extends State<BrokerInfoPage> {
   Widget build(BuildContext context) {
     final themeService = Provider.of<ThemeService>(context);
     final isDarkTheme = themeService.isDarkTheme;
-    final backgroundColor = isDarkTheme ? const Color(0xFF1e1e1e) : Colors.grey[50]!;
+    final backgroundColor = UIConstants.pageBackground(isDarkTheme);
 
     return BasePage(
       menuItems: MenuItemsHelper.buildMenuItems(context, 'broker_info'),
@@ -321,7 +321,7 @@ class _BrokerInfoPageState extends State<BrokerInfoPage> {
                 Text(
                   'Broker Info',
                   style: TextStyle(
-                    color: isDarkTheme ? Colors.white : Colors.black,
+                    color: UIConstants.textPrimary(isDarkTheme),
                     fontSize: UIConstants.fontSizeLg,
                     fontWeight: FontWeight.bold,
                   ),
@@ -362,9 +362,9 @@ class _BrokerInfoPageState extends State<BrokerInfoPage> {
   }
 
   Widget _buildParticipantInfoSection(bool isDarkTheme) {
-    final textColor = isDarkTheme ? Colors.white : Colors.black;
-    final labelColor = isDarkTheme ? Colors.grey[400]! : Colors.grey[600]!;
-    final cardColor = isDarkTheme ? UIConstants.colorDarkFill : Colors.grey[100]!;
+    final textColor = UIConstants.textPrimary(isDarkTheme);
+    final labelColor = UIConstants.textSecondary(isDarkTheme);
+    final cardColor = UIConstants.cardBackground(isDarkTheme);
 
     if (_isLoadingInfo) {
       return const Center(child: CircularProgressIndicator());
@@ -395,7 +395,7 @@ class _BrokerInfoPageState extends State<BrokerInfoPage> {
       decoration: BoxDecoration(
         color: cardColor,
         borderRadius: BorderRadius.circular(8),
-        border: Border.all(color: isDarkTheme ? Colors.white12 : Colors.grey[300]!),
+        border: Border.all(color: UIConstants.borderColor(isDarkTheme)),
       ),
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
@@ -577,9 +577,9 @@ class _BrokerInfoPageState extends State<BrokerInfoPage> {
   }
 
   Widget _buildHoldingsSection(bool isDarkTheme) {
-    final textColor = isDarkTheme ? Colors.white : Colors.black;
-    final labelColor = isDarkTheme ? Colors.grey[400]! : Colors.grey[600]!;
-    final headerColor = isDarkTheme ? Colors.grey[400] : Colors.grey[700];
+    final textColor = UIConstants.textPrimary(isDarkTheme);
+    final labelColor = UIConstants.textSecondary(isDarkTheme);
+    final headerColor = UIConstants.textSecondary(isDarkTheme);
     final headerStyle = TextStyle(color: headerColor, fontSize: 10, fontWeight: FontWeight.bold);
     final cellStyle = TextStyle(color: textColor, fontSize: UIConstants.fontSizeSm);
 
@@ -615,7 +615,7 @@ class _BrokerInfoPageState extends State<BrokerInfoPage> {
     final portfolioFields = Map<String, dynamic>.from(portfolio);
     portfolioFields.remove('holdings'); // shown as grid below
 
-    final cardColor = isDarkTheme ? UIConstants.colorDarkFill : Colors.grey[100]!;
+    final cardColor = UIConstants.cardBackground(isDarkTheme);
 
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
@@ -634,7 +634,7 @@ class _BrokerInfoPageState extends State<BrokerInfoPage> {
             decoration: BoxDecoration(
               color: cardColor,
               borderRadius: BorderRadius.circular(8),
-              border: Border.all(color: isDarkTheme ? Colors.white12 : Colors.grey[300]!),
+              border: Border.all(color: UIConstants.borderColor(isDarkTheme)),
             ),
             child: Column(
               crossAxisAlignment: CrossAxisAlignment.start,
@@ -656,7 +656,7 @@ class _BrokerInfoPageState extends State<BrokerInfoPage> {
             decoration: BoxDecoration(
               color: cardColor,
               borderRadius: BorderRadius.circular(8),
-              border: Border.all(color: isDarkTheme ? Colors.white12 : Colors.grey[300]!),
+              border: Border.all(color: UIConstants.borderColor(isDarkTheme)),
             ),
             child: Column(
               crossAxisAlignment: CrossAxisAlignment.start,
@@ -682,7 +682,7 @@ class _BrokerInfoPageState extends State<BrokerInfoPage> {
               dataRowMinHeight: 28,
               dataRowMaxHeight: 36,
               decoration: BoxDecoration(
-                border: Border.all(color: isDarkTheme ? Colors.white12 : Colors.grey[300]!),
+                border: Border.all(color: UIConstants.borderColor(isDarkTheme)),
                 borderRadius: BorderRadius.circular(4),
               ),
               columns: [
@@ -727,12 +727,12 @@ class _BrokerInfoPageState extends State<BrokerInfoPage> {
                 final locked = _formatAmount(lockedRaw, divisibility);
 
                 return DataRow(cells: [
-                  DataCell(_copyableCell(assetId, cellStyle)),
-                  DataCell(_copyableCell(displayCurrency.isNotEmpty ? displayCurrency : '-', cellStyle)),
-                  DataCell(_copyableCell(divisibility.isNotEmpty ? divisibility : '-', cellStyle)),
-                  DataCell(_copyableCell(totalUnits, cellStyle)),
-                  DataCell(_copyableCell(available, cellStyle)),
-                  DataCell(_copyableCell(locked, cellStyle)),
+                  DataCell(_copyableCell(assetId, cellStyle, isDarkTheme: isDarkTheme)),
+                  DataCell(_copyableCell(displayCurrency.isNotEmpty ? displayCurrency : '-', cellStyle, isDarkTheme: isDarkTheme)),
+                  DataCell(_copyableCell(divisibility.isNotEmpty ? divisibility : '-', cellStyle, isDarkTheme: isDarkTheme)),
+                  DataCell(_copyableCell(totalUnits, cellStyle, isDarkTheme: isDarkTheme)),
+                  DataCell(_copyableCell(available, cellStyle, isDarkTheme: isDarkTheme)),
+                  DataCell(_copyableCell(locked, cellStyle, isDarkTheme: isDarkTheme)),
                 ]);
               }).toList(),
             ),
@@ -741,7 +741,7 @@ class _BrokerInfoPageState extends State<BrokerInfoPage> {
     );
   }
 
-  Widget _copyableCell(String value, TextStyle style) {
+  Widget _copyableCell(String value, TextStyle style, {bool isDarkTheme = false}) {
     return InkWell(
       onTap: () => _copyToClipboard(value),
       child: Row(
@@ -749,7 +749,7 @@ class _BrokerInfoPageState extends State<BrokerInfoPage> {
         children: [
           Text(value, style: style),
           const SizedBox(width: 4),
-          Icon(Icons.copy, size: 10, color: Colors.grey[500]),
+          Icon(Icons.copy, size: 10, color: UIConstants.textHint(isDarkTheme)),
         ],
       ),
     );

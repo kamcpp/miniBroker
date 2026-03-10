@@ -80,7 +80,7 @@ class GrpcurlHelper {
     buffer.writeln('║ Full command:');
     buffer.writeln('║   grpcurl ${args.map((a) => a.contains(' ') ? '"$a"' : a).join(' ')}');
     buffer.writeln('╚══════════════════════════════════════════════════════════════');
-    // print(buffer.toString()); // Commented out - too verbose
+    print(buffer.toString());
   }
 
   /// Log a grpcurl response with status and body
@@ -130,7 +130,7 @@ class GrpcurlHelper {
     }
 
     buffer.writeln('╚══════════════════════════════════════════════════════════════');
-    // print(buffer.toString()); // Commented out - too verbose
+    print(buffer.toString());
   }
 
 
@@ -1502,6 +1502,73 @@ class GrpcurlHelper {
     return _executeGrpcCall(
       method: 'GetOrderExecutionReports',
       endpoint: 'TradingService/GetOrderExecutionReports',
+      requestBody: requestBody,
+    );
+  }
+
+  /// Get execution reports via ReportingService.GetExecutionReports
+  static Future<Map<String, dynamic>> getExecutionReports({
+    int pageNumber = 1,
+    int pageSize = 20,
+    String? requestId,
+    String? symbol,
+    String? currency,
+    String? execType,
+    String? side,
+    String? venueIid,
+    String? fromDate,
+    String? toDate,
+    String? sortBy,
+    String? sortDirection,
+    String? search,
+  }) async {
+    print('📋 Getting execution reports from ReportingService');
+
+    final requestBody = <String, dynamic>{
+      'proposed_execution_id': 'get_exec_reports_${DateTime.now().millisecondsSinceEpoch}',
+      'pagination': {
+        'page_nr': pageNumber,
+        'page_size': pageSize,
+      },
+    };
+
+    if (requestId != null && requestId.isNotEmpty) {
+      requestBody['request_id'] = requestId;
+    }
+    if (symbol != null && symbol.isNotEmpty) {
+      requestBody['symbol'] = symbol;
+    }
+    if (currency != null && currency.isNotEmpty) {
+      requestBody['currency'] = currency;
+    }
+    if (execType != null && execType.isNotEmpty) {
+      requestBody['exec_type'] = execType;
+    }
+    if (side != null && side.isNotEmpty) {
+      requestBody['side'] = side;
+    }
+    if (venueIid != null && venueIid.isNotEmpty) {
+      requestBody['venue_iid'] = venueIid;
+    }
+    if (fromDate != null && fromDate.isNotEmpty) {
+      requestBody['from_date'] = fromDate;
+    }
+    if (toDate != null && toDate.isNotEmpty) {
+      requestBody['to_date'] = toDate;
+    }
+    if (sortBy != null && sortBy.isNotEmpty) {
+      requestBody['sort_by'] = sortBy;
+    }
+    if (sortDirection != null && sortDirection.isNotEmpty) {
+      requestBody['sort_direction'] = sortDirection;
+    }
+    if (search != null && search.isNotEmpty) {
+      requestBody['search'] = search;
+    }
+
+    return _executeGrpcCall(
+      method: 'GetExecutionReports',
+      endpoint: 'ReportingService/GetExecutionReports',
       requestBody: requestBody,
     );
   }

@@ -16,7 +16,6 @@ import '../services/chart_service.dart';
 import '../utils/connectivity_checker.dart';
 import '../utils/menu_items_helper.dart';
 import '../widgets/base_page.dart';
-import 'execution_reports_page.dart';
 
 class TradingPage extends StatefulWidget {
   const TradingPage({super.key});
@@ -5025,20 +5024,6 @@ class _TradingPageState extends State<TradingPage> {
                   child: Text(
                     '$side order submitted!\nRequest ID: $requestId',
                   ),
-                ),
-                TextButton(
-                  onPressed: () {
-                    ScaffoldMessenger.of(context).hideCurrentSnackBar();
-                    Navigator.of(context).push(
-                      PageRouteBuilder(
-                        pageBuilder: (context, animation, secondaryAnimation) =>
-                            ExecutionReportsPage(initialRequestId: requestId),
-                        transitionDuration: Duration.zero,
-                        reverseTransitionDuration: Duration.zero,
-                      ),
-                    );
-                  },
-                  child: Text('View Reports', style: TextStyle(color: Colors.white, fontWeight: FontWeight.bold)),
                 ),
               ],
             ),

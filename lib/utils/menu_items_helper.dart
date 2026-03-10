@@ -4,8 +4,8 @@ import '../widgets/left_menu.dart';
 import '../screens/securities_page.dart';
 import '../screens/portfolio_page.dart';
 import '../screens/trading_page.dart';
-import '../screens/execution_reports_page.dart';
 import '../screens/broker/broker_info_page.dart';
+import '../screens/broker/execution_reports_page.dart';
 import '../screens/investor/investor_info_page.dart';
 import '../services/auth_service.dart';
 // import '../screens/activity_page.dart';  // Disabled
@@ -77,23 +77,6 @@ class MenuItemsHelper {
         ),
       if (role == UserRole.investor)
         MenuItem(
-          label: 'Exec Reports',
-          icon: Icons.receipt_long,
-          isSelected: currentPage == 'execution_reports',
-          onTap: () {
-            if (currentPage != 'execution_reports') {
-              Navigator.of(context).pushReplacement(
-                PageRouteBuilder(
-                  pageBuilder: (context, animation, secondaryAnimation) => const ExecutionReportsPage(),
-                  transitionDuration: Duration.zero,
-                  reverseTransitionDuration: Duration.zero,
-                ),
-              );
-            }
-          },
-        ),
-      if (role == UserRole.investor)
-        MenuItem(
           label: 'Investor Info',
           icon: Icons.person,
           isSelected: currentPage == 'investor_info',
@@ -110,6 +93,23 @@ class MenuItemsHelper {
           },
         ),
       // Broker-only pages
+      if (role == UserRole.broker)
+        MenuItem(
+          label: 'Exec Reports',
+          icon: Icons.receipt_long,
+          isSelected: currentPage == 'execution_reports',
+          onTap: () {
+            if (currentPage != 'execution_reports') {
+              Navigator.of(context).pushReplacement(
+                PageRouteBuilder(
+                  pageBuilder: (context, animation, secondaryAnimation) => const ExecutionReportsPage(),
+                  transitionDuration: Duration.zero,
+                  reverseTransitionDuration: Duration.zero,
+                ),
+              );
+            }
+          },
+        ),
       if (role == UserRole.broker)
         MenuItem(
           label: 'Broker Info',

@@ -127,18 +127,7 @@ class _SecuritiesPageState extends State<SecuritiesPage> {
   void _showErrorSnackBar(String message) {
     if (mounted) {
       ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(
-          content: Row(
-            children: [
-              const Icon(Icons.error_outline, color: Colors.white),
-              const SizedBox(width: UIConstants.spacingSm),
-              Expanded(child: Text(message)),
-            ],
-          ),
-          backgroundColor: Colors.red,
-          duration: const Duration(seconds: 5),
-          behavior: SnackBarBehavior.floating,
-        ),
+        UIConstants.errorSnackBar(message),
       );
     }
   }
@@ -200,7 +189,7 @@ class _SecuritiesPageState extends State<SecuritiesPage> {
                   Expanded(
                     child: Container(
                       decoration: BoxDecoration(
-                        color: isDarkTheme ? const Color(0xFF1e1e1e) : Colors.white,
+                        color: UIConstants.pageBackground(isDarkTheme),
                         borderRadius: BorderRadius.circular(UIConstants.textFieldBorderRadius),
                       ),
                       child: Column(
@@ -210,7 +199,7 @@ class _SecuritiesPageState extends State<SecuritiesPage> {
                           Container(
                             padding: UIConstants.paddingStandard,
                             decoration: BoxDecoration(
-                              color: isDarkTheme ? const Color(0xFF2d2d2d) : Colors.grey[50],
+                              color: UIConstants.tableHeaderBackground(isDarkTheme),
                               borderRadius: const BorderRadius.only(
                                 topLeft: Radius.circular(8),
                                 topRight: Radius.circular(8),
@@ -223,7 +212,7 @@ class _SecuritiesPageState extends State<SecuritiesPage> {
                                   style: TextStyle(
                                     fontSize: UIConstants.fontSizeMd,
                                     fontWeight: UIConstants.fontWeightMedium,
-                                    color: isDarkTheme ? Colors.white : Colors.black,
+                                    color: UIConstants.textPrimary(isDarkTheme),
                                   ),
                                 ),
                               ],
@@ -260,7 +249,7 @@ class _SecuritiesPageState extends State<SecuritiesPage> {
               'Loading securities...',
               style: TextStyle(
                 fontSize: UIConstants.fontSizeBody,
-                color: isDarkTheme ? Colors.grey[400] : Colors.grey[600],
+                color: UIConstants.textSecondary(isDarkTheme),
               ),
             ),
           ],
@@ -276,7 +265,7 @@ class _SecuritiesPageState extends State<SecuritiesPage> {
             Icon(
               Icons.inventory_2_outlined,
               size: 64,
-              color: isDarkTheme ? Colors.grey[600] : Colors.grey[400],
+              color: UIConstants.textHint(isDarkTheme),
             ),
             const SizedBox(height: UIConstants.spacingMd),
             Text(
@@ -284,7 +273,7 @@ class _SecuritiesPageState extends State<SecuritiesPage> {
               style: TextStyle(
                 fontSize: UIConstants.fontSizeMd,
                 fontWeight: UIConstants.fontWeightMedium,
-                color: isDarkTheme ? Colors.white : Colors.black,
+                color: UIConstants.textPrimary(isDarkTheme),
               ),
             ),
             const SizedBox(height: UIConstants.spacingSm),
@@ -292,7 +281,7 @@ class _SecuritiesPageState extends State<SecuritiesPage> {
               'Select a market to view securities',
               style: TextStyle(
                 fontSize: UIConstants.fontSizeBody,
-                color: isDarkTheme ? Colors.grey[400] : Colors.grey[600],
+                color: UIConstants.textSecondary(isDarkTheme),
               ),
             ),
           ],
@@ -323,7 +312,7 @@ class _SecuritiesPageState extends State<SecuritiesPage> {
                 style: TextStyle(
                   fontSize: UIConstants.fontSizeMd,
                   fontWeight: UIConstants.fontWeightMedium,
-                  color: isDarkTheme ? Colors.white : Colors.black,
+                  color: UIConstants.textPrimary(isDarkTheme),
                 ),
                 textAlign: TextAlign.center,
               ),
@@ -334,7 +323,7 @@ class _SecuritiesPageState extends State<SecuritiesPage> {
                   textAlign: TextAlign.center,
                   style: TextStyle(
                     fontSize: UIConstants.fontSizeBody,
-                    color: isDarkTheme ? Colors.grey[300] : Colors.grey[700],
+                    color: UIConstants.textSecondary(isDarkTheme),
                   ),
                 ),
               ],
@@ -390,7 +379,7 @@ class _SecuritiesPageState extends State<SecuritiesPage> {
             Icon(
               Icons.inbox,
               size: 64,
-              color: isDarkTheme ? Colors.grey[600] : Colors.grey[400],
+              color: UIConstants.textHint(isDarkTheme),
             ),
             const SizedBox(height: UIConstants.spacingMd),
             Text(
@@ -398,7 +387,7 @@ class _SecuritiesPageState extends State<SecuritiesPage> {
               style: TextStyle(
                 fontSize: UIConstants.fontSizeMd,
                 fontWeight: UIConstants.fontWeightMedium,
-                color: isDarkTheme ? Colors.white : Colors.black,
+                color: UIConstants.textPrimary(isDarkTheme),
               ),
             ),
           ],
@@ -409,19 +398,19 @@ class _SecuritiesPageState extends State<SecuritiesPage> {
     final headerStyle = TextStyle(
       fontSize: UIConstants.fontSizeSm,
       fontWeight: UIConstants.fontWeightBold,
-      color: isDarkTheme ? Colors.grey[300] : Colors.grey[700],
+      color: UIConstants.textSecondary(isDarkTheme),
     );
     final cellStyle = TextStyle(
       fontSize: UIConstants.fontSizeBody,
-      color: isDarkTheme ? Colors.grey[300] : Colors.grey[800],
+      color: UIConstants.textPrimary(isDarkTheme),
     );
     final symbolStyle = TextStyle(
       fontSize: UIConstants.fontSizeBody,
       fontWeight: UIConstants.fontWeightMedium,
-      color: isDarkTheme ? Colors.white : Colors.black,
+      color: UIConstants.textPrimary(isDarkTheme),
     );
 
-    final borderColor = isDarkTheme ? Colors.grey[700]! : Colors.grey[300]!;
+    final borderColor = UIConstants.borderColor(isDarkTheme);
 
     return SingleChildScrollView(
       child: Table(
@@ -445,7 +434,7 @@ class _SecuritiesPageState extends State<SecuritiesPage> {
           // Header row
           TableRow(
             decoration: BoxDecoration(
-              color: isDarkTheme ? const Color(0xFF2d2d2d) : Colors.grey[100],
+              color: UIConstants.cardBackground(isDarkTheme),
             ),
             children: [
               _headerCell('Symbol', headerStyle),
@@ -496,8 +485,8 @@ class _SecuritiesPageState extends State<SecuritiesPage> {
     final statusLabel = _formatSecurityStatus(rawStatus.toString());
 
     final rowColor = index.isEven
-        ? (isDarkTheme ? const Color(0xFF1e1e1e) : Colors.white)
-        : (isDarkTheme ? const Color(0xFF262626) : Colors.grey[50]!);
+        ? UIConstants.tableRowEven(isDarkTheme)
+        : UIConstants.tableRowOdd(isDarkTheme);
 
     return TableRow(
       decoration: BoxDecoration(color: rowColor),

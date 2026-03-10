@@ -210,7 +210,7 @@ class _ExecutionReportsPageState extends State<ExecutionReportsPage> {
     final themeService = Provider.of<ThemeService>(context);
     final isDarkTheme = themeService.isDarkTheme;
 
-    final backgroundColor = isDarkTheme ? const Color(0xFF1e1e1e) : Colors.grey[50]!;
+    final backgroundColor = UIConstants.pageBackground(isDarkTheme);
 
     return BasePage(
       menuItems: MenuItemsHelper.buildMenuItems(context, 'execution_reports'),
@@ -247,7 +247,7 @@ class _ExecutionReportsPageState extends State<ExecutionReportsPage> {
                               child: Text(
                                 'Enter a request ID and click Fetch to view execution reports.',
                                 style: TextStyle(
-                                  color: isDarkTheme ? Colors.grey[400] : Colors.grey[600],
+                                  color: UIConstants.textSecondary(isDarkTheme),
                                   fontSize: UIConstants.fontSizeSm,
                                 ),
                               ),
@@ -266,7 +266,7 @@ class _ExecutionReportsPageState extends State<ExecutionReportsPage> {
         Text(
           'Execution Reports',
           style: TextStyle(
-            color: isDarkTheme ? Colors.white : Colors.black,
+            color: UIConstants.textPrimary(isDarkTheme),
             fontSize: UIConstants.fontSizeLg,
             fontWeight: FontWeight.bold,
           ),
@@ -278,13 +278,13 @@ class _ExecutionReportsPageState extends State<ExecutionReportsPage> {
             child: TextField(
               controller: _requestIdController,
               style: TextStyle(
-                color: isDarkTheme ? Colors.white : Colors.black,
+                color: UIConstants.textPrimary(isDarkTheme),
                 fontSize: UIConstants.fontSizeSm,
               ),
               decoration: InputDecoration(
                 hintText: 'Enter request ID...',
                 hintStyle: TextStyle(
-                  color: isDarkTheme ? Colors.grey[600] : Colors.grey[400],
+                  color: UIConstants.textHint(isDarkTheme),
                   fontSize: UIConstants.fontSizeSm,
                 ),
                 border: OutlineInputBorder(
@@ -294,7 +294,7 @@ class _ExecutionReportsPageState extends State<ExecutionReportsPage> {
                 isDense: true,
                 suffixIcon: _requestIdController.text.isNotEmpty
                     ? IconButton(
-                        icon: Icon(Icons.clear, size: 16, color: isDarkTheme ? Colors.grey[400] : Colors.grey),
+                        icon: Icon(Icons.clear, size: 16, color: UIConstants.textSecondary(isDarkTheme)),
                         onPressed: () {
                           _requestIdController.clear();
                           setState(() {});
@@ -323,11 +323,11 @@ class _ExecutionReportsPageState extends State<ExecutionReportsPage> {
 
   Widget _buildFiltersRow(bool isDarkTheme) {
     final textStyle = TextStyle(
-      color: isDarkTheme ? Colors.white : Colors.black,
+      color: UIConstants.textPrimary(isDarkTheme),
       fontSize: UIConstants.fontSizeSm,
     );
     final hintStyle = TextStyle(
-      color: isDarkTheme ? Colors.grey[600] : Colors.grey[400],
+      color: UIConstants.textHint(isDarkTheme),
       fontSize: UIConstants.fontSizeSm,
     );
     final inputDecoration = InputDecoration(
@@ -374,7 +374,7 @@ class _ExecutionReportsPageState extends State<ExecutionReportsPage> {
             isExpanded: true,
             decoration: inputDecoration.copyWith(hintText: 'Exec Type', hintStyle: hintStyle),
             style: textStyle,
-            dropdownColor: isDarkTheme ? UIConstants.colorDarkFill : Colors.white,
+            dropdownColor: UIConstants.dropdownBackground(isDarkTheme),
             items: _execTypeOptions.entries
                 .map((e) => DropdownMenuItem(
                       value: e.key.isEmpty ? null : e.key,
@@ -400,7 +400,7 @@ class _ExecutionReportsPageState extends State<ExecutionReportsPage> {
             isExpanded: true,
             decoration: inputDecoration.copyWith(hintText: 'Sort By', hintStyle: hintStyle),
             style: textStyle,
-            dropdownColor: isDarkTheme ? UIConstants.colorDarkFill : Colors.white,
+            dropdownColor: UIConstants.dropdownBackground(isDarkTheme),
             items: _sortByOptions.entries
                 .map((e) => DropdownMenuItem(
                       value: e.key.isEmpty ? null : e.key,
@@ -423,7 +423,7 @@ class _ExecutionReportsPageState extends State<ExecutionReportsPage> {
             icon: Icon(
               _sortDirection == 'asc' ? Icons.arrow_upward : Icons.arrow_downward,
               size: 16,
-              color: isDarkTheme ? Colors.white : Colors.black,
+              color: UIConstants.textPrimary(isDarkTheme),
             ),
             onPressed: () {
               setState(() {
@@ -470,7 +470,7 @@ class _ExecutionReportsPageState extends State<ExecutionReportsPage> {
           Text(
             '$_totalExecutionReports reports, $_totalBusinessRejects rejects',
             style: TextStyle(
-              color: isDarkTheme ? Colors.grey[400] : Colors.grey[600],
+              color: UIConstants.textSecondary(isDarkTheme),
               fontSize: UIConstants.fontSizeSm,
             ),
           ),
@@ -508,9 +508,9 @@ class _ExecutionReportsPageState extends State<ExecutionReportsPage> {
 
   Widget _buildSentOrderCard(bool isDarkTheme) {
     final order = _sentOrder!;
-    final cardColor = isDarkTheme ? UIConstants.colorDarkFill : Colors.grey[100];
-    final textColor = isDarkTheme ? Colors.white : Colors.black;
-    final labelColor = isDarkTheme ? Colors.grey[400] : Colors.grey[600];
+    final cardColor = UIConstants.cardBackground(isDarkTheme);
+    final textColor = UIConstants.textPrimary(isDarkTheme);
+    final labelColor = UIConstants.textSecondary(isDarkTheme);
 
     return Container(
       width: double.infinity,
@@ -519,7 +519,7 @@ class _ExecutionReportsPageState extends State<ExecutionReportsPage> {
         color: cardColor,
         borderRadius: BorderRadius.circular(8),
         border: Border.all(
-          color: isDarkTheme ? Colors.white12 : Colors.grey[300]!,
+          color: UIConstants.borderColor(isDarkTheme),
         ),
       ),
       child: Column(
@@ -538,7 +538,7 @@ class _ExecutionReportsPageState extends State<ExecutionReportsPage> {
             spacing: UIConstants.spacingXl,
             runSpacing: UIConstants.spacingXs,
             children: [
-              _orderField('Request ID', order['requestId'] ?? order['request_id'] ?? '-', labelColor!, textColor),
+              _orderField('Request ID', order['requestId'] ?? order['request_id'] ?? '-', labelColor, textColor),
               _orderField('Symbol', order['symbol'] ?? '-', labelColor, textColor),
               _orderField('Side', order['side'] ?? '-', labelColor, textColor),
               _orderField('Type', order['orderType'] ?? order['order_type'] ?? '-', labelColor, textColor),
@@ -566,8 +566,8 @@ class _ExecutionReportsPageState extends State<ExecutionReportsPage> {
   }
 
   Widget _buildExecutionReportsTable(bool isDarkTheme) {
-    final headerColor = isDarkTheme ? Colors.grey[400] : Colors.grey[700];
-    final cellColor = isDarkTheme ? Colors.white : Colors.black;
+    final headerColor = UIConstants.textSecondary(isDarkTheme);
+    final cellColor = UIConstants.textPrimary(isDarkTheme);
     final headerStyle = TextStyle(color: headerColor, fontSize: 10, fontWeight: FontWeight.bold);
     final cellStyle = TextStyle(color: cellColor, fontSize: UIConstants.fontSizeSm);
 
@@ -579,7 +579,7 @@ class _ExecutionReportsPageState extends State<ExecutionReportsPage> {
         dataRowMinHeight: 28,
         dataRowMaxHeight: 36,
         decoration: BoxDecoration(
-          border: Border.all(color: isDarkTheme ? Colors.white12 : Colors.grey[300]!),
+          border: Border.all(color: UIConstants.borderColor(isDarkTheme)),
           borderRadius: BorderRadius.circular(4),
         ),
         columns: [
@@ -658,7 +658,7 @@ class _ExecutionReportsPageState extends State<ExecutionReportsPage> {
         bgColor = Colors.red;
         break;
       default:
-        bgColor = isDarkTheme ? Colors.grey[700]! : Colors.grey[400]!;
+        bgColor = UIConstants.textHint(isDarkTheme);
     }
 
     return Container(
@@ -699,7 +699,7 @@ class _ExecutionReportsPageState extends State<ExecutionReportsPage> {
         color = Colors.red;
         break;
       default:
-        color = isDarkTheme ? Colors.grey[400]! : Colors.grey[600]!;
+        color = UIConstants.textSecondary(isDarkTheme);
     }
 
     return Text(
@@ -709,8 +709,8 @@ class _ExecutionReportsPageState extends State<ExecutionReportsPage> {
   }
 
   Widget _buildBusinessRejectsTable(bool isDarkTheme) {
-    final headerColor = isDarkTheme ? Colors.grey[400] : Colors.grey[700];
-    final cellColor = isDarkTheme ? Colors.white : Colors.black;
+    final headerColor = UIConstants.textSecondary(isDarkTheme);
+    final cellColor = UIConstants.textPrimary(isDarkTheme);
     final headerStyle = TextStyle(color: headerColor, fontSize: 10, fontWeight: FontWeight.bold);
     final cellStyle = TextStyle(color: cellColor, fontSize: UIConstants.fontSizeSm);
 
@@ -763,7 +763,7 @@ class _ExecutionReportsPageState extends State<ExecutionReportsPage> {
   }
 
   Widget _buildPaginationControls(bool isDarkTheme) {
-    final textColor = isDarkTheme ? Colors.white : Colors.black;
+    final textColor = UIConstants.textPrimary(isDarkTheme);
 
     return Row(
       mainAxisAlignment: MainAxisAlignment.center,
@@ -805,7 +805,7 @@ class _ExecutionReportsPageState extends State<ExecutionReportsPage> {
               isDense: true,
             ),
             style: TextStyle(color: textColor, fontSize: UIConstants.fontSizeSm),
-            dropdownColor: isDarkTheme ? UIConstants.colorDarkFill : Colors.white,
+            dropdownColor: UIConstants.dropdownBackground(isDarkTheme),
             items: [10, 20, 50, 100]
                 .map((size) => DropdownMenuItem(
                       value: size,
@@ -825,7 +825,7 @@ class _ExecutionReportsPageState extends State<ExecutionReportsPage> {
         ),
         Text(
           ' / page',
-          style: TextStyle(color: isDarkTheme ? Colors.grey[400] : Colors.grey[600], fontSize: UIConstants.fontSizeSm),
+          style: TextStyle(color: UIConstants.textSecondary(isDarkTheme), fontSize: UIConstants.fontSizeSm),
         ),
       ],
     );

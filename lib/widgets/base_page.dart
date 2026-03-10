@@ -54,7 +54,7 @@ class _BasePageState extends State<BasePage> {
           ),
         ),
         child: Container(
-          color: (_isDarkTheme ? UIConstants.colorCommand : Colors.white).withOpacity(0.95),
+          color: UIConstants.colorCommand.withOpacity(UIConstants.appOverlayOpacity),
           child: Column(
             children: [
               // Header Section

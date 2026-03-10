@@ -98,7 +98,7 @@ class _InvestorInfoPageState extends State<InvestorInfoPage> {
   Widget build(BuildContext context) {
     final themeService = Provider.of<ThemeService>(context);
     final isDarkTheme = themeService.isDarkTheme;
-    final backgroundColor = isDarkTheme ? const Color(0xFF1e1e1e) : Colors.grey[50]!;
+    final backgroundColor = UIConstants.pageBackground(isDarkTheme);
 
     return BasePage(
       menuItems: MenuItemsHelper.buildMenuItems(context, 'investor_info'),
@@ -114,7 +114,7 @@ class _InvestorInfoPageState extends State<InvestorInfoPage> {
                 Text(
                   'Investor Info',
                   style: TextStyle(
-                    color: isDarkTheme ? Colors.white : Colors.black,
+                    color: UIConstants.textPrimary(isDarkTheme),
                     fontSize: UIConstants.fontSizeLg,
                     fontWeight: FontWeight.bold,
                   ),
@@ -146,9 +146,9 @@ class _InvestorInfoPageState extends State<InvestorInfoPage> {
   }
 
   Widget _buildInvestorInfoSection(bool isDarkTheme) {
-    final textColor = isDarkTheme ? Colors.white : Colors.black;
-    final labelColor = isDarkTheme ? Colors.grey[400]! : Colors.grey[600]!;
-    final cardColor = isDarkTheme ? UIConstants.colorDarkFill : Colors.grey[100]!;
+    final textColor = UIConstants.textPrimary(isDarkTheme);
+    final labelColor = UIConstants.textSecondary(isDarkTheme);
+    final cardColor = UIConstants.cardBackground(isDarkTheme);
 
     if (_isLoading) {
       return const Center(child: CircularProgressIndicator());
@@ -193,7 +193,7 @@ class _InvestorInfoPageState extends State<InvestorInfoPage> {
           decoration: BoxDecoration(
             color: cardColor,
             borderRadius: BorderRadius.circular(8),
-            border: Border.all(color: isDarkTheme ? Colors.white12 : Colors.grey[300]!),
+            border: Border.all(color: UIConstants.borderColor(isDarkTheme)),
           ),
           child: Column(
             crossAxisAlignment: CrossAxisAlignment.start,
@@ -227,7 +227,7 @@ class _InvestorInfoPageState extends State<InvestorInfoPage> {
             decoration: BoxDecoration(
               color: cardColor,
               borderRadius: BorderRadius.circular(8),
-              border: Border.all(color: isDarkTheme ? Colors.white12 : Colors.grey[300]!),
+              border: Border.all(color: UIConstants.borderColor(isDarkTheme)),
             ),
             child: Column(
               crossAxisAlignment: CrossAxisAlignment.start,

@@ -94,10 +94,10 @@ class _LeftMenuState extends State<LeftMenu> with SingleTickerProviderStateMixin
         return Container(
           width: _widthAnimation.value,
           decoration: BoxDecoration(
-            color: widget.isDarkTheme ? const Color(0xFF0f0c3d) : const Color(0xFFF5F5F5),
+            color: UIConstants.menuBackground(widget.isDarkTheme),
             border: Border(
               right: BorderSide(
-                color: widget.isDarkTheme ? Colors.white24 : Colors.black12,
+                color: UIConstants.borderColor(widget.isDarkTheme),
                 width: 1,
               ),
             ),
@@ -133,7 +133,7 @@ class _LeftMenuState extends State<LeftMenu> with SingleTickerProviderStateMixin
           children: [
             Icon(
               _isExpanded ? Icons.chevron_left : Icons.chevron_right,
-              color: widget.isDarkTheme ? Colors.white : UIConstants.colorCommand,
+              color: UIConstants.textPrimary(widget.isDarkTheme),
             ),
           ],
         ),
@@ -143,8 +143,8 @@ class _LeftMenuState extends State<LeftMenu> with SingleTickerProviderStateMixin
 
   Widget _buildMenuItem(MenuItem item) {
     final isSelected = item.isSelected;
-    final color = widget.isDarkTheme ? Colors.white : UIConstants.colorCommand;
-    final selectedColor = widget.isDarkTheme ? Colors.blue.shade300 : Colors.blue.shade700;
+    final color = UIConstants.textPrimary(widget.isDarkTheme);
+    final selectedColor = UIConstants.menuSelectedColor(widget.isDarkTheme);
 
     return Tooltip(
       message: _isExpanded ? '' : item.label,
@@ -161,7 +161,7 @@ class _LeftMenuState extends State<LeftMenu> with SingleTickerProviderStateMixin
           ),
           decoration: BoxDecoration(
             color: isSelected
-                ? (widget.isDarkTheme ? Colors.blue.shade900.withOpacity(0.3) : Colors.blue.shade50)
+                ? UIConstants.menuSelectedBackground(widget.isDarkTheme)
                 : Colors.transparent,
             borderRadius: BorderRadius.circular(UIConstants.borderRadiusSm),
           ),

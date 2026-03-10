@@ -26,10 +26,10 @@ class AppHeader extends StatelessWidget {
     return Container(
       padding: UIConstants.paddingStandard,
       decoration: BoxDecoration(
-        color: isDarkTheme ? UIConstants.colorCommand : Colors.white,
+        color: UIConstants.headerBackground(isDarkTheme),
         border: Border(
           bottom: BorderSide(
-            color: isDarkTheme ? Colors.white24 : Colors.black12,
+            color: UIConstants.borderColor(isDarkTheme),
             width: 1,
           ),
         ),
@@ -86,7 +86,7 @@ class AppHeader extends StatelessWidget {
           style: TextStyle(
             fontSize: UIConstants.fontSizeLg,
             fontWeight: UIConstants.fontWeightMedium,
-            color: isDarkTheme ? Colors.white : UIConstants.colorCommand,
+            color: UIConstants.textPrimary(isDarkTheme),
           ),
         ),
       ],
@@ -110,21 +110,21 @@ class AppHeader extends StatelessWidget {
             vertical: UIConstants.paddingSm,
           ),
           decoration: BoxDecoration(
-            color: isDarkTheme ? Colors.white.withOpacity(0.1) : Colors.black.withOpacity(0.05),
+            color: UIConstants.menuSelectedBackground(isDarkTheme),
             borderRadius: BorderRadius.circular(UIConstants.borderRadiusSm),
           ),
           child: Row(
             children: [
               Icon(
                 Icons.account_circle,
-                color: isDarkTheme ? Colors.white : UIConstants.colorCommand,
+                color: UIConstants.textPrimary(isDarkTheme),
                 size: 20,
               ),
               const SizedBox(width: UIConstants.spacingSm),
               Text(
                 authService.username,
                 style: TextStyle(
-                  color: isDarkTheme ? Colors.white : UIConstants.colorCommand,
+                  color: UIConstants.textPrimary(isDarkTheme),
                   fontSize: UIConstants.fontSizeBody,
                   fontWeight: UIConstants.fontWeightMedium,
                 ),
@@ -142,7 +142,7 @@ class AppHeader extends StatelessWidget {
       child: IconButton(
         icon: Icon(
           isDarkTheme ? Icons.light_mode : Icons.dark_mode,
-          color: Colors.grey,
+          color: UIConstants.textHint(isDarkTheme),
         ),
         onPressed: null,
       ),
@@ -157,16 +157,19 @@ class AppHeader extends StatelessWidget {
           final shouldLogout = await showDialog<bool>(
             context: context,
             builder: (context) => AlertDialog(
-              title: const Text('Confirm Logout'),
-              content: const Text('Are you sure you want to logout?'),
+              backgroundColor: UIConstants.dialogBackground(isDarkTheme),
+              shape: UIConstants.dialogShape(isDarkTheme),
+              title: Text('Confirm Logout', style: TextStyle(color: UIConstants.textPrimary(isDarkTheme))),
+              content: Text('Are you sure you want to logout?', style: TextStyle(color: UIConstants.textSecondary(isDarkTheme))),
               actions: [
                 TextButton(
                   onPressed: () => Navigator.pop(context, false),
+                  style: UIConstants.cancelTextButtonStyle(isDarkTheme),
                   child: const Text('Cancel'),
                 ),
                 ElevatedButton(
                   onPressed: () => Navigator.pop(context, true),
-                  style: UIConstants.buttonStyle(UIConstants.colorReject),
+                  style: UIConstants.dangerButtonStyle(),
                   child: const Text('Logout'),
                 ),
               ],

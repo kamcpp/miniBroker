@@ -383,6 +383,201 @@ class UIConstants {
   }
 
   // ============================================================================
+  // IN-APP PAGES - Post-login styling (glass-like, consistent with pre-login)
+  // ============================================================================
+
+  // --- Background & Overlay ---
+  /// App background overlay opacity — lower = more background visible
+  static const double appOverlayOpacity = 0.88;
+
+  // --- Page & content area colors ---
+  /// Page content area background
+  static Color pageBackground(bool isDark) =>
+      isDark ? const Color(0xFF1e1e1e).withOpacity(0.82) : Colors.grey.shade50.withOpacity(0.82);
+
+  /// Card/container background within pages
+  static Color cardBackground(bool isDark) =>
+      isDark ? colorDarkFill : Colors.grey.shade100;
+
+  /// Table header / section header background
+  static Color tableHeaderBackground(bool isDark) =>
+      isDark ? colorDarkFill : Colors.grey.shade50;
+
+  /// Alternating row colors for tables
+  static Color tableRowEven(bool isDark) =>
+      isDark ? const Color(0xFF1e1e1e) : Colors.white;
+  static Color tableRowOdd(bool isDark) =>
+      isDark ? const Color(0xFF262626) : Colors.grey.shade50;
+
+  /// Command color variant visible on dark backgrounds
+  static Color commandColor(bool isDark) =>
+      isDark ? const Color(0xFF6b9eff) : colorCommand;
+
+  /// Dropdown menu background
+  static Color dropdownBackground(bool isDark) =>
+      isDark ? const Color(0xFF1e1e1e) : Colors.white;
+
+  /// Dropdown container / filter bar background
+  static Color filterBarBackground(bool isDark) =>
+      isDark ? const Color(0xFF2a2a2a) : Colors.grey.shade100;
+
+  /// Visible border (stronger than borderColor, for tables/cards)
+  static Color visibleBorderColor(bool isDark) =>
+      isDark ? Colors.grey.shade700 : Colors.grey.shade300;
+
+  /// Tab panel / selected tab background
+  static Color tabPanelBackground(bool isDark) =>
+      isDark ? Colors.grey.shade800 : Colors.grey.shade200;
+
+  // --- Surface colors (semi-transparent, glass-like) ---
+  /// Header background
+  static Color headerBackground(bool isDark) =>
+      isDark ? colorCommand : Colors.white;
+
+  /// Sidebar / left menu background
+  static Color menuBackground(bool isDark) =>
+      isDark ? const Color(0xFF0f0c3d).withOpacity(0.7) : const Color(0xFFF5F5F5).withOpacity(0.7);
+
+  /// Menu selected item highlight
+  static Color menuSelectedBackground(bool isDark) =>
+      isDark ? Colors.white.withOpacity(0.08) : Colors.blue.shade50;
+
+  /// Menu selected item text/icon
+  static Color menuSelectedColor(bool isDark) =>
+      isDark ? Colors.blue.shade300 : Colors.blue.shade700;
+
+  /// Border color for panels, headers, menus
+  static Color borderColor(bool isDark) =>
+      isDark ? Colors.white24 : Colors.black12;
+
+  // --- Text colors ---
+  static Color textPrimary(bool isDark) =>
+      isDark ? Colors.white : Colors.black;
+
+  static Color textSecondary(bool isDark) =>
+      isDark ? Colors.grey.shade400 : Colors.grey.shade600;
+
+  static Color textHint(bool isDark) =>
+      isDark ? Colors.grey.shade500 : Colors.grey.shade400;
+
+  // --- Dialog styling (glass-like) ---
+  /// Dialog background — semi-transparent dark, matching the app tone
+  static Color dialogBackground(bool isDark) =>
+      isDark ? const Color(0xFF1A1A2E) : Colors.white;
+
+  /// Dialog surface — for inner sections, cards inside dialogs
+  static Color dialogSurface(bool isDark) =>
+      isDark ? const Color(0xFF16213E) : Colors.grey.shade50;
+
+  /// Dialog border
+  static Color dialogBorder(bool isDark) =>
+      isDark ? const Color(0xFF0F3460) : Colors.grey.shade300;
+
+  /// Dialog decoration (consistent shape, border, background)
+  static ShapeBorder dialogShape(bool isDark) => RoundedRectangleBorder(
+        borderRadius: BorderRadius.circular(borderRadiusLg),
+        side: BorderSide(color: dialogBorder(isDark), width: 1),
+      );
+
+  // --- In-app input fields ---
+  static Color inputFillColor(bool isDark) =>
+      isDark ? Colors.white.withOpacity(0.08) : Colors.grey.shade100;
+
+  static Color inputBorderColor(bool isDark) =>
+      isDark ? Colors.white24 : Colors.grey.shade300;
+
+  static InputDecoration appInputDecoration({
+    required bool isDark,
+    required String hintText,
+    IconData? prefixIcon,
+    Widget? suffixIcon,
+    String? suffixText,
+    String? errorText,
+  }) {
+    return InputDecoration(
+      hintText: hintText,
+      hintStyle: TextStyle(color: textHint(isDark), fontSize: textFieldFontSize),
+      filled: true,
+      fillColor: inputFillColor(isDark),
+      contentPadding: textFieldContentPadding,
+      isDense: true,
+      border: OutlineInputBorder(
+        borderRadius: BorderRadius.circular(textFieldBorderRadius),
+        borderSide: BorderSide(color: inputBorderColor(isDark)),
+      ),
+      enabledBorder: OutlineInputBorder(
+        borderRadius: BorderRadius.circular(textFieldBorderRadius),
+        borderSide: BorderSide(color: inputBorderColor(isDark)),
+      ),
+      focusedBorder: OutlineInputBorder(
+        borderRadius: BorderRadius.circular(textFieldBorderRadius),
+        borderSide: BorderSide(color: colorPrimary, width: 1.5),
+      ),
+      prefixIcon: prefixIcon != null
+          ? Icon(prefixIcon, color: textSecondary(isDark), size: textFieldIconSize)
+          : null,
+      suffixIcon: suffixIcon,
+      suffixText: suffixText,
+      suffixStyle: TextStyle(color: textPrimary(isDark)),
+      errorText: errorText,
+    );
+  }
+
+  // --- Buttons ---
+  /// Primary action button (accept/confirm/submit)
+  static ButtonStyle acceptButtonStyle() => buttonStyle(colorAccept);
+
+  /// Danger/destructive button (cancel order, logout, delete)
+  static ButtonStyle dangerButtonStyle() => buttonStyle(colorReject);
+
+  /// Neutral command button (login, save, apply)
+  static ButtonStyle commandButtonStyle() => buttonStyle(colorCommand);
+
+  /// Cancel / dismiss text button style
+  static ButtonStyle cancelTextButtonStyle(bool isDark) => TextButton.styleFrom(
+        foregroundColor: textSecondary(isDark),
+      );
+
+  /// Confirm text button style
+  static ButtonStyle confirmTextButtonStyle() => TextButton.styleFrom(
+        foregroundColor: colorPrimary,
+      );
+
+  // --- SnackBars ---
+  static SnackBar successSnackBar(String message, {Duration? duration}) => SnackBar(
+        content: Text(message),
+        backgroundColor: colorAccept,
+        duration: duration ?? const Duration(seconds: 3),
+      );
+
+  static SnackBar errorSnackBar(String message, {Duration? duration}) => SnackBar(
+        content: Text(message),
+        backgroundColor: colorReject,
+        duration: duration ?? const Duration(seconds: 5),
+      );
+
+  static SnackBar warningSnackBar(String message, {Duration? duration}) => SnackBar(
+        content: Text(message),
+        backgroundColor: colorWarning,
+        duration: duration ?? const Duration(seconds: 4),
+      );
+
+  static SnackBar loadingSnackBar(String message) => SnackBar(
+        content: Row(
+          children: [
+            const SizedBox(
+              width: 20,
+              height: 20,
+              child: CircularProgressIndicator(color: Colors.white, strokeWidth: 2),
+            ),
+            const SizedBox(width: spacingMd),
+            Text(message),
+          ],
+        ),
+        duration: const Duration(seconds: 30),
+      );
+
+  // ============================================================================
   // HELPER METHODS
   // ============================================================================
 

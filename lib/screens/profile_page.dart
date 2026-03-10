@@ -59,7 +59,7 @@ class _ProfilePageState extends State<ProfilePage> {
     return Theme(
       data: isDarkTheme ? ThemeData.dark() : ThemeData.light(),
       child: Scaffold(
-        backgroundColor: isDarkTheme ? const Color(0xFF1A1A1A) : Colors.grey[100],
+        backgroundColor: UIConstants.pageBackground(isDarkTheme),
         appBar: AppBar(
           title: const Text('Profile'),
           backgroundColor: UIConstants.colorCommand,
@@ -86,7 +86,7 @@ class _ProfilePageState extends State<ProfilePage> {
                         style: TextStyle(
                           fontSize: UIConstants.fontSizeLg,
                           fontWeight: UIConstants.fontWeightMedium,
-                          color: isDarkTheme ? Colors.white : Colors.black,
+                          color: UIConstants.textPrimary(isDarkTheme),
                         ),
                       ),
 
@@ -142,10 +142,10 @@ class _ProfilePageState extends State<ProfilePage> {
     return Container(
       padding: UIConstants.paddingStandard,
       decoration: BoxDecoration(
-        color: isDarkTheme ? const Color(0xFF2A2A2A) : Colors.white,
+        color: UIConstants.cardBackground(isDarkTheme),
         borderRadius: BorderRadius.circular(UIConstants.borderRadiusMd),
         border: Border.all(
-          color: isDarkTheme ? Colors.grey[700]! : Colors.grey[300]!,
+          color: UIConstants.borderColor(isDarkTheme),
           width: 1,
         ),
       ),
@@ -160,7 +160,7 @@ class _ProfilePageState extends State<ProfilePage> {
                 style: TextStyle(
                   fontSize: UIConstants.textFieldFontSize,
                   fontWeight: UIConstants.fontWeightNormal,
-                  color: isDarkTheme ? Colors.grey[400] : Colors.grey[600],
+                  color: UIConstants.textSecondary(isDarkTheme),
                 ),
               ),
               if (canEdit && !isEditing)
@@ -169,7 +169,7 @@ class _ProfilePageState extends State<ProfilePage> {
                   child: Text(
                     'Edit',
                     style: TextStyle(
-                      color: isDarkTheme ? Colors.lightBlue : UIConstants.colorCommand,
+                      color: UIConstants.commandColor(isDarkTheme),
                       fontSize: UIConstants.textFieldFontSize,
                       fontWeight: UIConstants.fontWeightNormal,
                     ),
@@ -185,7 +185,7 @@ class _ProfilePageState extends State<ProfilePage> {
               controller: controller,
               style: TextStyle(
                 fontSize: UIConstants.textFieldFontSize,
-                color: isDarkTheme ? Colors.white : Colors.black,
+                color: UIConstants.textPrimary(isDarkTheme),
               ),
               decoration: InputDecoration(
                 border: OutlineInputBorder(
@@ -223,7 +223,7 @@ class _ProfilePageState extends State<ProfilePage> {
               value,
               style: TextStyle(
                 fontSize: UIConstants.textFieldFontSize,
-                color: isDarkTheme ? Colors.white : Colors.black,
+                color: UIConstants.textPrimary(isDarkTheme),
               ),
             ),
           ],
@@ -236,10 +236,10 @@ class _ProfilePageState extends State<ProfilePage> {
     return Container(
       padding: UIConstants.paddingStandard,
       decoration: BoxDecoration(
-        color: isDarkTheme ? const Color(0xFF2A2A2A) : Colors.white,
+        color: UIConstants.cardBackground(isDarkTheme),
         borderRadius: BorderRadius.circular(UIConstants.borderRadiusMd),
         border: Border.all(
-          color: isDarkTheme ? Colors.grey[700]! : Colors.grey[300]!,
+          color: UIConstants.borderColor(isDarkTheme),
           width: 1,
         ),
       ),
@@ -254,7 +254,7 @@ class _ProfilePageState extends State<ProfilePage> {
                 style: TextStyle(
                   fontSize: UIConstants.textFieldFontSize,
                   fontWeight: UIConstants.fontWeightNormal,
-                  color: isDarkTheme ? Colors.grey[400] : Colors.grey[600],
+                  color: UIConstants.textSecondary(isDarkTheme),
                 ),
               ),
               if (!_isEditingPassword)
@@ -263,7 +263,7 @@ class _ProfilePageState extends State<ProfilePage> {
                   child: Text(
                     'Edit',
                     style: TextStyle(
-                      color: isDarkTheme ? Colors.lightBlue : UIConstants.colorCommand,
+                      color: UIConstants.commandColor(isDarkTheme),
                       fontSize: UIConstants.textFieldFontSize,
                       fontWeight: UIConstants.fontWeightNormal,
                     ),
@@ -280,7 +280,7 @@ class _ProfilePageState extends State<ProfilePage> {
               obscureText: !_isPasswordVisible,
               style: TextStyle(
                 fontSize: UIConstants.textFieldFontSize,
-                color: isDarkTheme ? Colors.white : Colors.black,
+                color: UIConstants.textPrimary(isDarkTheme),
               ),
               decoration: InputDecoration(
                 labelText: 'New Password',
@@ -313,7 +313,7 @@ class _ProfilePageState extends State<ProfilePage> {
               obscureText: !_isPasswordVisible,
               style: TextStyle(
                 fontSize: UIConstants.textFieldFontSize,
-                color: isDarkTheme ? Colors.white : Colors.black,
+                color: UIConstants.textPrimary(isDarkTheme),
               ),
               decoration: InputDecoration(
                 labelText: 'Confirm Password',
@@ -358,7 +358,7 @@ class _ProfilePageState extends State<ProfilePage> {
               '••••••••••',
               style: TextStyle(
                 fontSize: UIConstants.textFieldFontSize,
-                color: isDarkTheme ? Colors.white : Colors.black,
+                color: UIConstants.textPrimary(isDarkTheme),
                 letterSpacing: 2,
               ),
             ),
@@ -387,10 +387,7 @@ class _ProfilePageState extends State<ProfilePage> {
       final exists = await _databaseHelper.isUsernameExists(newUsername);
       if (exists) {
         ScaffoldMessenger.of(context).showSnackBar(
-          const SnackBar(
-            content: Text('Username already exists'),
-            backgroundColor: Colors.red,
-          ),
+          UIConstants.errorSnackBar('Username already exists'),
         );
         return;
       }
@@ -399,26 +396,17 @@ class _ProfilePageState extends State<ProfilePage> {
       final success = await authService.updateUsername(newUsername);
       if (success) {
         ScaffoldMessenger.of(context).showSnackBar(
-          const SnackBar(
-            content: Text('Username updated successfully'),
-            backgroundColor: Colors.green,
-          ),
+          UIConstants.successSnackBar('Username updated successfully'),
         );
         setState(() => _isEditingUsername = false);
       } else {
         ScaffoldMessenger.of(context).showSnackBar(
-          const SnackBar(
-            content: Text('Failed to update username'),
-            backgroundColor: Colors.red,
-          ),
+          UIConstants.errorSnackBar('Failed to update username'),
         );
       }
     } catch (e) {
       ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(
-          content: Text('Error updating username: $e'),
-          backgroundColor: Colors.red,
-        ),
+        UIConstants.errorSnackBar('Error updating username: $e'),
       );
     } finally {
       setState(() => _isLoading = false);
@@ -438,10 +426,7 @@ class _ProfilePageState extends State<ProfilePage> {
       final success = await authService.updatePassword(newPassword);
       if (success) {
         ScaffoldMessenger.of(context).showSnackBar(
-          const SnackBar(
-            content: Text('Password updated successfully'),
-            backgroundColor: Colors.green,
-          ),
+          UIConstants.successSnackBar('Password updated successfully'),
         );
         setState(() {
           _isEditingPassword = false;
@@ -450,18 +435,12 @@ class _ProfilePageState extends State<ProfilePage> {
         });
       } else {
         ScaffoldMessenger.of(context).showSnackBar(
-          const SnackBar(
-            content: Text('Failed to update password'),
-            backgroundColor: Colors.red,
-          ),
+          UIConstants.errorSnackBar('Failed to update password'),
         );
       }
     } catch (e) {
       ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(
-          content: Text('Error updating password: $e'),
-          backgroundColor: Colors.red,
-        ),
+        UIConstants.errorSnackBar('Error updating password: $e'),
       );
     } finally {
       setState(() => _isLoading = false);

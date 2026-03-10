@@ -377,7 +377,7 @@ class _PortfolioPageState extends State<PortfolioPage> {
                     decoration: InputDecoration(
                       labelText: 'Cash Token',
                       labelStyle: TextStyle(
-                        color: isDarkTheme ? Colors.grey[400] : Colors.grey[600],
+                        color: UIConstants.textSecondary(isDarkTheme),
                         fontSize: UIConstants.fontSizeSm,
                       ),
                       border: OutlineInputBorder(
@@ -386,11 +386,11 @@ class _PortfolioPageState extends State<PortfolioPage> {
                       contentPadding: UIConstants.textFieldContentPadding,
                       isDense: true,
                       filled: true,
-                      fillColor: isDarkTheme ? UIConstants.colorDarkFill : Colors.white,
+                      fillColor: UIConstants.inputFillColor(isDarkTheme),
                     ),
-                    dropdownColor: isDarkTheme ? UIConstants.colorDarkFill : Colors.white,
+                    dropdownColor: UIConstants.dropdownBackground(isDarkTheme),
                     style: TextStyle(
-                      color: isDarkTheme ? Colors.white : Colors.black,
+                      color: UIConstants.textPrimary(isDarkTheme),
                       fontSize: UIConstants.fontSizeBody,
                     ),
                     items: _getAvailableCashTokens().map((code) {
@@ -435,7 +435,7 @@ class _PortfolioPageState extends State<PortfolioPage> {
                 IconButton(
                   icon: Icon(
                     Icons.refresh,
-                    color: isDarkTheme ? Colors.white70 : Colors.black54,
+                    color: UIConstants.textSecondary(isDarkTheme),
                   ),
                   onPressed: _refreshData,
                   tooltip: 'Refresh holdings',
@@ -487,10 +487,10 @@ class _PortfolioPageState extends State<PortfolioPage> {
   }) {
     return Container(
       decoration: BoxDecoration(
-        color: isDarkTheme ? const Color(0xFF1e1e1e) : Colors.white,
+        color: UIConstants.pageBackground(isDarkTheme),
         borderRadius: BorderRadius.circular(UIConstants.textFieldBorderRadius),
         border: Border.all(
-          color: isDarkTheme ? Colors.grey[800]! : Colors.grey[300]!,
+          color: UIConstants.visibleBorderColor(isDarkTheme),
           width: 1,
         ),
       ),
@@ -501,7 +501,7 @@ class _PortfolioPageState extends State<PortfolioPage> {
           Container(
             padding: UIConstants.paddingStandard,
             decoration: BoxDecoration(
-              color: isDarkTheme ? UIConstants.colorDarkFill : Colors.grey[50],
+              color: UIConstants.tableHeaderBackground(isDarkTheme),
               borderRadius: const BorderRadius.only(
                 topLeft: Radius.circular(8),
                 topRight: Radius.circular(8),
@@ -512,7 +512,7 @@ class _PortfolioPageState extends State<PortfolioPage> {
                 Icon(
                   icon,
                   size: 20,
-                  color: isDarkTheme ? Colors.white70 : Colors.black54,
+                  color: UIConstants.textSecondary(isDarkTheme),
                 ),
                 const SizedBox(width: 8),
                 Text(
@@ -520,7 +520,7 @@ class _PortfolioPageState extends State<PortfolioPage> {
                   style: TextStyle(
                     fontSize: UIConstants.fontSizeMd,
                     fontWeight: UIConstants.fontWeightMedium,
-                    color: isDarkTheme ? Colors.white : Colors.black,
+                    color: UIConstants.textPrimary(isDarkTheme),
                   ),
                 ),
               ],
@@ -561,7 +561,7 @@ class _PortfolioPageState extends State<PortfolioPage> {
             'Loading...',
             style: TextStyle(
               fontSize: UIConstants.fontSizeBody,
-              color: isDarkTheme ? Colors.grey[400] : Colors.grey[600],
+              color: UIConstants.textSecondary(isDarkTheme),
             ),
           ),
         ],
@@ -577,7 +577,7 @@ class _PortfolioPageState extends State<PortfolioPage> {
           Icon(
             Icons.person_outline,
             size: 48,
-            color: isDarkTheme ? Colors.grey[600] : Colors.grey[400],
+            color: UIConstants.textHint(isDarkTheme),
           ),
           const SizedBox(height: 12),
           Text(
@@ -585,7 +585,7 @@ class _PortfolioPageState extends State<PortfolioPage> {
             style: TextStyle(
               fontSize: UIConstants.fontSizeBody,
               fontWeight: UIConstants.fontWeightMedium,
-              color: isDarkTheme ? Colors.white : Colors.black,
+              color: UIConstants.textPrimary(isDarkTheme),
             ),
           ),
           const SizedBox(height: 4),
@@ -593,7 +593,7 @@ class _PortfolioPageState extends State<PortfolioPage> {
             'Please sign up to create an investor profile',
             style: TextStyle(
               fontSize: UIConstants.fontSizeSm,
-              color: isDarkTheme ? Colors.grey[400] : Colors.grey[600],
+              color: UIConstants.textSecondary(isDarkTheme),
             ),
           ),
         ],
@@ -609,14 +609,14 @@ class _PortfolioPageState extends State<PortfolioPage> {
           Icon(
             Icons.inbox_outlined,
             size: 48,
-            color: isDarkTheme ? Colors.grey[600] : Colors.grey[400],
+            color: UIConstants.textHint(isDarkTheme),
           ),
           const SizedBox(height: 12),
           Text(
             message,
             style: TextStyle(
               fontSize: UIConstants.fontSizeBody,
-              color: isDarkTheme ? Colors.grey[400] : Colors.grey[600],
+              color: UIConstants.textSecondary(isDarkTheme),
             ),
           ),
         ],
@@ -640,7 +640,7 @@ class _PortfolioPageState extends State<PortfolioPage> {
             style: TextStyle(
               fontSize: UIConstants.fontSizeBody,
               fontWeight: UIConstants.fontWeightMedium,
-              color: isDarkTheme ? Colors.white : Colors.black,
+              color: UIConstants.textPrimary(isDarkTheme),
             ),
           ),
           const SizedBox(height: 4),
@@ -679,7 +679,7 @@ class _PortfolioPageState extends State<PortfolioPage> {
         Container(
           padding: const EdgeInsets.symmetric(vertical: 8, horizontal: 12),
           decoration: BoxDecoration(
-            color: isDarkTheme ? UIConstants.colorDarkFill : Colors.grey[100],
+            color: UIConstants.cardBackground(isDarkTheme),
             borderRadius: BorderRadius.circular(4),
           ),
           child: Row(
@@ -698,7 +698,7 @@ class _PortfolioPageState extends State<PortfolioPage> {
             itemCount: holdingsList.length,
             separatorBuilder: (context, index) => Divider(
               height: 1,
-              color: isDarkTheme ? Colors.grey[800] : Colors.grey[200],
+              color: UIConstants.visibleBorderColor(isDarkTheme),
             ),
             itemBuilder: (context, index) {
               final entry = holdingsList[index];
@@ -733,7 +733,7 @@ class _PortfolioPageState extends State<PortfolioPage> {
                           style: TextStyle(
                             fontSize: UIConstants.fontSizeBody,
                             fontWeight: UIConstants.fontWeightMedium,
-                            color: isDarkTheme ? Colors.white : Colors.black,
+                            color: UIConstants.textPrimary(isDarkTheme),
                           ),
                           overflow: TextOverflow.ellipsis,
                         ),
@@ -773,7 +773,7 @@ class _PortfolioPageState extends State<PortfolioPage> {
         Container(
           padding: const EdgeInsets.symmetric(vertical: 8, horizontal: 12),
           decoration: BoxDecoration(
-            color: isDarkTheme ? UIConstants.colorDarkFill : Colors.grey[100],
+            color: UIConstants.cardBackground(isDarkTheme),
             borderRadius: BorderRadius.circular(4),
           ),
           child: Row(
@@ -793,7 +793,7 @@ class _PortfolioPageState extends State<PortfolioPage> {
             itemCount: holdingsList.length,
             separatorBuilder: (context, index) => Divider(
               height: 1,
-              color: isDarkTheme ? Colors.grey[800] : Colors.grey[200],
+              color: UIConstants.visibleBorderColor(isDarkTheme),
             ),
             itemBuilder: (context, index) {
               final entry = holdingsList[index];
@@ -826,7 +826,7 @@ class _PortfolioPageState extends State<PortfolioPage> {
                         style: TextStyle(
                           fontSize: UIConstants.fontSizeBody,
                           fontWeight: UIConstants.fontWeightMedium,
-                          color: isDarkTheme ? Colors.white : Colors.black,
+                          color: UIConstants.textPrimary(isDarkTheme),
                         ),
                         overflow: TextOverflow.ellipsis,
                       ),
@@ -854,7 +854,7 @@ class _PortfolioPageState extends State<PortfolioPage> {
         style: TextStyle(
           fontSize: UIConstants.fontSizeSm,
           fontWeight: UIConstants.fontWeightMedium,
-          color: isDarkTheme ? Colors.grey[400] : Colors.grey[600],
+          color: UIConstants.textSecondary(isDarkTheme),
         ),
       ),
     );
@@ -869,7 +869,7 @@ class _PortfolioPageState extends State<PortfolioPage> {
         style: TextStyle(
           fontSize: UIConstants.fontSizeBody,
           fontWeight: FontWeight.w500,
-          color: color ?? (isDarkTheme ? Colors.white : Colors.black87),
+          color: color ?? UIConstants.textPrimary(isDarkTheme),
         ),
       ),
     );
@@ -1073,14 +1073,12 @@ class _PortfolioPageState extends State<PortfolioPage> {
         return StatefulBuilder(
           builder: (context, setDialogState) {
             return AlertDialog(
-              backgroundColor: isDarkTheme ? const Color(0xFF2A2A2A) : Colors.white,
-              shape: RoundedRectangleBorder(
-                borderRadius: BorderRadius.circular(UIConstants.borderRadiusLg),
-              ),
+              backgroundColor: UIConstants.dialogBackground(isDarkTheme),
+              shape: UIConstants.dialogShape(isDarkTheme),
               title: Text(
                 'Deposit $currencyCode',
                 style: TextStyle(
-                  color: isDarkTheme ? Colors.white : Colors.black,
+                  color: UIConstants.textPrimary(isDarkTheme),
                   fontWeight: UIConstants.fontWeightMedium,
                 ),
               ),
@@ -1094,14 +1092,14 @@ class _PortfolioPageState extends State<PortfolioPage> {
                     Center(
                       child: Text(
                         'Depositing...',
-                        style: TextStyle(color: isDarkTheme ? Colors.grey[400] : Colors.grey[600]),
+                        style: TextStyle(color: UIConstants.textSecondary(isDarkTheme)),
                       ),
                     ),
                   ] else ...[
                     Text(
                       'Enter amount to deposit:',
                       style: TextStyle(
-                        color: isDarkTheme ? Colors.grey[400] : Colors.grey[600],
+                        color: UIConstants.textSecondary(isDarkTheme),
                       ),
                     ),
                     const SizedBox(height: 10),
@@ -1118,21 +1116,21 @@ class _PortfolioPageState extends State<PortfolioPage> {
                       decoration: InputDecoration(
                         hintText: hintText,
                         hintStyle: TextStyle(
-                          color: isDarkTheme ? Colors.grey[500] : Colors.grey[400],
+                          color: UIConstants.textHint(isDarkTheme),
                         ),
                         suffixText: currencyCode,
                         suffixStyle: TextStyle(
-                          color: isDarkTheme ? Colors.white : Colors.black,
+                          color: UIConstants.textPrimary(isDarkTheme),
                         ),
                         errorText: errorText,
                         border: OutlineInputBorder(
                           borderRadius: BorderRadius.circular(UIConstants.textFieldBorderRadius),
                         ),
                         filled: true,
-                        fillColor: isDarkTheme ? const Color(0xFF505050) : Colors.grey[200],
+                        fillColor: UIConstants.inputFillColor(isDarkTheme),
                       ),
                       style: TextStyle(
-                        color: isDarkTheme ? Colors.white : Colors.black,
+                        color: UIConstants.textPrimary(isDarkTheme),
                       ),
                     ),
                   ],
@@ -1141,12 +1139,8 @@ class _PortfolioPageState extends State<PortfolioPage> {
               actions: isLoading ? null : [
                 TextButton(
                   onPressed: () => Navigator.of(dialogContext).pop(),
-                  child: Text(
-                    'Cancel',
-                    style: TextStyle(
-                      color: isDarkTheme ? Colors.grey[400] : Colors.grey[600],
-                    ),
-                  ),
+                  style: UIConstants.cancelTextButtonStyle(isDarkTheme),
+                  child: const Text('Cancel'),
                 ),
                 ElevatedButton(
                   onPressed: () async {
@@ -1188,10 +1182,7 @@ class _PortfolioPageState extends State<PortfolioPage> {
 
                       if (response['success'] == true) {
                         pageScaffoldMessenger.showSnackBar(
-                          SnackBar(
-                            content: Text('Successfully deposited $amount $currencyCode'),
-                            backgroundColor: Colors.green,
-                          ),
+                          UIConstants.successSnackBar('Successfully deposited $amount $currencyCode'),
                         );
                         _fetchCashHoldings();
                       } else {
@@ -1199,18 +1190,18 @@ class _PortfolioPageState extends State<PortfolioPage> {
                             response['output']?['message'] ??
                             'Failed to deposit cash';
                         pageScaffoldMessenger.showSnackBar(
-                          SnackBar(content: Text('Deposit failed: $errorMessage'), backgroundColor: Colors.red, duration: const Duration(seconds: 5)),
+                          UIConstants.errorSnackBar('Deposit failed: $errorMessage'),
                         );
                       }
                     } catch (e) {
                       if (!mounted) return;
                       Navigator.of(dialogContext).pop();
                       pageScaffoldMessenger.showSnackBar(
-                        SnackBar(content: Text('Error: ${e.toString()}'), backgroundColor: Colors.red),
+                        UIConstants.errorSnackBar('Error: ${e.toString()}'),
                       );
                     }
                   },
-                  style: UIConstants.buttonStyle(UIConstants.colorAccept),
+                  style: UIConstants.acceptButtonStyle(),
                   child: const Text('Deposit', style: TextStyle(color: Colors.white)),
                 ),
               ],
@@ -1241,14 +1232,12 @@ class _PortfolioPageState extends State<PortfolioPage> {
         return StatefulBuilder(
           builder: (context, setDialogState) {
             return AlertDialog(
-              backgroundColor: isDarkTheme ? const Color(0xFF2A2A2A) : Colors.white,
-              shape: RoundedRectangleBorder(
-                borderRadius: BorderRadius.circular(UIConstants.borderRadiusLg),
-              ),
+              backgroundColor: UIConstants.dialogBackground(isDarkTheme),
+              shape: UIConstants.dialogShape(isDarkTheme),
               title: Text(
                 'Withdraw $currencyCode',
                 style: TextStyle(
-                  color: isDarkTheme ? Colors.white : Colors.black,
+                  color: UIConstants.textPrimary(isDarkTheme),
                   fontWeight: UIConstants.fontWeightMedium,
                 ),
               ),
@@ -1262,14 +1251,14 @@ class _PortfolioPageState extends State<PortfolioPage> {
                     Center(
                       child: Text(
                         'Withdrawing...',
-                        style: TextStyle(color: isDarkTheme ? Colors.grey[400] : Colors.grey[600]),
+                        style: TextStyle(color: UIConstants.textSecondary(isDarkTheme)),
                       ),
                     ),
                   ] else ...[
                     Text(
                       'Enter amount to withdraw:',
                       style: TextStyle(
-                        color: isDarkTheme ? Colors.grey[400] : Colors.grey[600],
+                        color: UIConstants.textSecondary(isDarkTheme),
                       ),
                     ),
                     const SizedBox(height: 10),
@@ -1286,28 +1275,28 @@ class _PortfolioPageState extends State<PortfolioPage> {
                       decoration: InputDecoration(
                         hintText: hintText,
                         hintStyle: TextStyle(
-                          color: isDarkTheme ? Colors.grey[500] : Colors.grey[400],
+                          color: UIConstants.textHint(isDarkTheme),
                         ),
                         suffixText: currencyCode,
                         suffixStyle: TextStyle(
-                          color: isDarkTheme ? Colors.white : Colors.black,
+                          color: UIConstants.textPrimary(isDarkTheme),
                         ),
                         errorText: errorText,
                         border: OutlineInputBorder(
                           borderRadius: BorderRadius.circular(UIConstants.textFieldBorderRadius),
                         ),
                         filled: true,
-                        fillColor: isDarkTheme ? const Color(0xFF505050) : Colors.grey[200],
+                        fillColor: UIConstants.inputFillColor(isDarkTheme),
                       ),
                       style: TextStyle(
-                        color: isDarkTheme ? Colors.white : Colors.black,
+                        color: UIConstants.textPrimary(isDarkTheme),
                       ),
                     ),
                     const SizedBox(height: 10),
                     Text(
                       'Available: $formattedAvailable ${_getCurrencySymbol(currencyCode)}',
                       style: TextStyle(
-                        color: isDarkTheme ? Colors.grey[400] : Colors.grey[600],
+                        color: UIConstants.textSecondary(isDarkTheme),
                         fontSize: UIConstants.fontSizeSm,
                       ),
                     ),
@@ -1317,12 +1306,8 @@ class _PortfolioPageState extends State<PortfolioPage> {
               actions: isLoading ? null : [
                 TextButton(
                   onPressed: () => Navigator.of(dialogContext).pop(),
-                  child: Text(
-                    'Cancel',
-                    style: TextStyle(
-                      color: isDarkTheme ? Colors.grey[400] : Colors.grey[600],
-                    ),
-                  ),
+                  style: UIConstants.cancelTextButtonStyle(isDarkTheme),
+                  child: const Text('Cancel'),
                 ),
                 ElevatedButton(
                   onPressed: () async {
@@ -1371,10 +1356,7 @@ class _PortfolioPageState extends State<PortfolioPage> {
 
                       if (response['success'] == true) {
                         pageScaffoldMessenger.showSnackBar(
-                          SnackBar(
-                            content: Text('Successfully withdrew $amount $currencyCode'),
-                            backgroundColor: Colors.green,
-                          ),
+                          UIConstants.successSnackBar('Successfully withdrew $amount $currencyCode'),
                         );
                         _fetchCashHoldings();
                       } else {
@@ -1382,18 +1364,18 @@ class _PortfolioPageState extends State<PortfolioPage> {
                             response['output']?['message'] ??
                             'Failed to withdraw cash';
                         pageScaffoldMessenger.showSnackBar(
-                          SnackBar(content: Text('Withdrawal failed: $errorMessage'), backgroundColor: Colors.red, duration: const Duration(seconds: 5)),
+                          UIConstants.errorSnackBar('Withdrawal failed: $errorMessage'),
                         );
                       }
                     } catch (e) {
                       if (!mounted) return;
                       Navigator.of(dialogContext).pop();
                       pageScaffoldMessenger.showSnackBar(
-                        SnackBar(content: Text('Error: ${e.toString()}'), backgroundColor: Colors.red),
+                        UIConstants.errorSnackBar('Error: ${e.toString()}'),
                       );
                     }
                   },
-                  style: UIConstants.buttonStyle(UIConstants.colorReject),
+                  style: UIConstants.dangerButtonStyle(),
                   child: const Text('Withdraw', style: TextStyle(color: Colors.white)),
                 ),
               ],

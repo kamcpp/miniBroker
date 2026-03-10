@@ -186,17 +186,15 @@ class _CreateBrokerConfigDialogState extends State<CreateBrokerConfigDialog> {
     final themeService = Provider.of<ThemeService>(context);
     final isDarkTheme = themeService.isDarkTheme;
 
-    final backgroundColor = isDarkTheme ? const Color(0xFF2A2A2A) : Colors.white;
-    final surfaceColor = isDarkTheme ? const Color(0xFF1e1e1e) : Colors.grey[100]!;
-    final textColor = isDarkTheme ? Colors.white : Colors.black;
-    final hintColor = isDarkTheme ? Colors.grey[400] : Colors.grey[600];
-    final primaryColor = isDarkTheme ? const Color(0xFF6b9eff) : UIConstants.colorCommand;
+    final backgroundColor = UIConstants.dialogBackground(isDarkTheme);
+    final surfaceColor = UIConstants.dialogSurface(isDarkTheme);
+    final textColor = UIConstants.textPrimary(isDarkTheme);
+    final hintColor = UIConstants.textSecondary(isDarkTheme);
+    final primaryColor = UIConstants.commandColor(isDarkTheme);
 
     return Dialog(
       backgroundColor: backgroundColor,
-      shape: RoundedRectangleBorder(
-        borderRadius: BorderRadius.circular(UIConstants.borderRadiusLg),
-      ),
+      shape: UIConstants.dialogShape(isDarkTheme) as RoundedRectangleBorder,
       child: Container(
         width: 600,
         constraints: const BoxConstraints(maxHeight: 700),
@@ -500,12 +498,7 @@ class _CreateBrokerConfigDialogState extends State<CreateBrokerConfigDialog> {
                     onPressed: _isCreating
                         ? null
                         : () => Navigator.of(context).pop(),
-                    style: TextButton.styleFrom(
-                      foregroundColor: hintColor,
-                      shape: RoundedRectangleBorder(
-                        borderRadius: BorderRadius.circular(UIConstants.borderRadiusSm),
-                      ),
-                    ),
+                    style: UIConstants.cancelTextButtonStyle(isDarkTheme),
                     child: const Text('Cancel'),
                   ),
                   const SizedBox(width: UIConstants.spacingSm),
