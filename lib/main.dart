@@ -2,7 +2,7 @@ import 'dart:async';
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 import 'screens/securities_page.dart';
-import 'screens/login_page.dart';
+import 'screens/role_selection_page.dart';
 import 'services/auth_service.dart';
 import 'services/theme_service.dart';
 import 'services/real_grpc_client.dart';
@@ -118,6 +118,7 @@ class _AppInitializerState extends State<AppInitializer> with SingleTickerProvid
         final result = await showDialog<String>(
           context: context,
           barrierDismissible: false,
+          barrierColor: Colors.transparent,
           builder: (context) => const ConfigFinderDialog(),
         );
 
@@ -264,7 +265,7 @@ class _AppInitializerState extends State<AppInitializer> with SingleTickerProvid
                 color: UIConstants.colorCommand, // Match login page background
                 child: FadeTransition(
                   opacity: _fadeAnimation,
-                  child: const LoginPage(),
+                  child: const RoleSelectionPage(),
                 ),
               );
             }

@@ -2,12 +2,12 @@ import 'dart:convert';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:provider/provider.dart';
-import '../services/theme_service.dart';
-import '../services/auth_service.dart';
-import '../services/grpcurl_helper.dart';
-import '../utils/menu_items_helper.dart';
-import '../config/ui_constants.dart';
-import '../widgets/base_page.dart';
+import '../../services/theme_service.dart';
+import '../../services/auth_service.dart';
+import '../../services/grpcurl_helper.dart';
+import '../../utils/menu_items_helper.dart';
+import '../../config/ui_constants.dart';
+import '../../widgets/base_page.dart';
 
 class InvestorInfoPage extends StatefulWidget {
   const InvestorInfoPage({super.key});

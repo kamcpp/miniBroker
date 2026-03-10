@@ -224,6 +224,165 @@ class UIConstants {
   static const double dividerThickness = 0.5;
 
   // ============================================================================
+  // PRE-LOGIN PAGES - Shared styling for config, role selection, login pages
+  // ============================================================================
+
+  /// Background overlay opacity on chart-background.jpg
+  static const double preLoginOverlayOpacity = 0.9;
+
+  /// Glass card background opacity
+  static const double glassCardOpacity = 0.1;
+
+  /// Glass card border color and width
+  static const Color glassCardBorderColor = Colors.white;
+  static const double glassCardBorderWidth = 0.4;
+
+  /// Backdrop blur sigma for glass cards
+  static const double glassBlurSigma = 2.0;
+
+  /// Chip background opacity (broker name chip, etc.)
+  static const double chipBackgroundOpacity = 0.15;
+
+  /// Chip border opacity
+  static const double chipBorderOpacity = 0.3;
+
+  /// Chip border radius
+  static const double chipBorderRadius = 20.0;
+
+  /// Icon button background opacity (settings, back buttons)
+  static const double iconButtonBackgroundOpacity = 0.1;
+
+  /// Text field fill opacity on pre-login pages
+  static const double textFieldFillOpacity = 0.9;
+
+  /// Full-width login button height
+  static const double loginButtonHeight = 50.0;
+
+  /// Pre-login card glass decoration
+  static BoxDecoration glassCardDecoration() {
+    return BoxDecoration(
+      color: Colors.white.withOpacity(glassCardOpacity),
+      borderRadius: BorderRadius.circular(borderRadiusLg),
+      border: Border.all(
+        color: glassCardBorderColor,
+        width: glassCardBorderWidth,
+      ),
+      boxShadow: [
+        BoxShadow(
+          color: Colors.white.withOpacity(0.1),
+          blurRadius: 5,
+          offset: const Offset(0, 0),
+          spreadRadius: 3,
+        ),
+        BoxShadow(
+          color: Colors.black.withOpacity(0.05),
+          blurRadius: 8,
+          offset: const Offset(0, 3),
+        ),
+      ],
+    );
+  }
+
+  /// Pre-login background (chart image + overlay)
+  static Widget preLoginBackground() {
+    return Stack(
+      children: [
+        Container(
+          decoration: const BoxDecoration(
+            image: DecorationImage(
+              image: AssetImage('assets/chart-background.jpg'),
+              fit: BoxFit.cover,
+            ),
+          ),
+        ),
+        Container(
+          color: colorCommand.withOpacity(preLoginOverlayOpacity),
+        ),
+      ],
+    );
+  }
+
+  /// Broker name chip widget
+  static Widget brokerNameChip(String brokerName) {
+    return Container(
+      padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
+      decoration: BoxDecoration(
+        color: Colors.white.withOpacity(chipBackgroundOpacity),
+        borderRadius: BorderRadius.circular(chipBorderRadius),
+        border: Border.all(
+          color: Colors.white.withOpacity(chipBorderOpacity),
+          width: 1,
+        ),
+      ),
+      child: Row(
+        mainAxisSize: MainAxisSize.min,
+        children: [
+          const Icon(Icons.business, color: Colors.white70, size: 16),
+          const SizedBox(width: 6),
+          Text(
+            brokerName,
+            style: const TextStyle(
+              color: Colors.white,
+              fontSize: 13,
+              fontWeight: FontWeight.w500,
+            ),
+          ),
+        ],
+      ),
+    );
+  }
+
+  /// Pre-login icon button style (back, settings)
+  static ButtonStyle preLoginIconButtonStyle() {
+    return IconButton.styleFrom(
+      backgroundColor: Colors.white.withOpacity(iconButtonBackgroundOpacity),
+      padding: const EdgeInsets.all(12),
+    );
+  }
+
+  /// Pre-login primary button style (login, etc.)
+  static ButtonStyle preLoginButtonStyle() {
+    return ElevatedButton.styleFrom(
+      backgroundColor: colorCommand,
+      foregroundColor: Colors.white,
+      shape: RoundedRectangleBorder(
+        borderRadius: BorderRadius.circular(textFieldBorderRadius),
+      ),
+      elevation: 0,
+    );
+  }
+
+  /// Pre-login text field decoration
+  static InputDecoration preLoginInputDecoration({
+    required String hintText,
+    required IconData prefixIcon,
+    Widget? suffixIcon,
+  }) {
+    return InputDecoration(
+      hintText: hintText,
+      hintStyle: const TextStyle(color: Colors.grey, fontSize: textFieldFontSize),
+      filled: true,
+      fillColor: Colors.white.withOpacity(textFieldFillOpacity),
+      contentPadding: textFieldPadding,
+      isDense: true,
+      border: OutlineInputBorder(
+        borderRadius: BorderRadius.circular(textFieldBorderRadius),
+        borderSide: const BorderSide(color: Colors.white),
+      ),
+      enabledBorder: OutlineInputBorder(
+        borderRadius: BorderRadius.circular(textFieldBorderRadius),
+        borderSide: const BorderSide(color: Colors.white),
+      ),
+      focusedBorder: OutlineInputBorder(
+        borderRadius: BorderRadius.circular(textFieldBorderRadius),
+        borderSide: const BorderSide(color: colorCommand, width: 2),
+      ),
+      prefixIcon: Icon(prefixIcon, color: Colors.grey, size: textFieldIconSize),
+      suffixIcon: suffixIcon,
+    );
+  }
+
+  // ============================================================================
   // HELPER METHODS
   // ============================================================================
 

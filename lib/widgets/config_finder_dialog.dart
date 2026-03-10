@@ -388,32 +388,15 @@ class _ConfigFinderDialogState extends State<ConfigFinderDialog> {
       child: ClipRRect(
         borderRadius: BorderRadius.circular(UIConstants.borderRadiusLg),
         child: BackdropFilter(
-          filter: ImageFilter.blur(sigmaX: 2, sigmaY: 2),
+          filter: ImageFilter.blur(
+            sigmaX: UIConstants.glassBlurSigma,
+            sigmaY: UIConstants.glassBlurSigma,
+          ),
           child: Container(
             width: 650,
             height: 500,
             padding: UIConstants.paddingComfortable,
-            decoration: BoxDecoration(
-              color: Colors.white.withOpacity(0.1),
-              borderRadius: BorderRadius.circular(UIConstants.borderRadiusLg),
-              border: Border.all(
-                color: Colors.white,
-                width: 0.4,
-              ),
-              boxShadow: [
-                BoxShadow(
-                  color: Colors.white.withOpacity(0.1),
-                  blurRadius: 5,
-                  offset: const Offset(0, 0),
-                  spreadRadius: 3,
-                ),
-                BoxShadow(
-                  color: Colors.black.withOpacity(0.05),
-                  blurRadius: 8,
-                  offset: const Offset(0, 3),
-                ),
-              ],
-            ),
+            decoration: UIConstants.glassCardDecoration(),
             child: Column(
             mainAxisSize: MainAxisSize.max,
             crossAxisAlignment: CrossAxisAlignment.start,

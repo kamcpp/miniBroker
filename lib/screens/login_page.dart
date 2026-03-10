@@ -27,6 +27,9 @@ class _LoginPageState extends State<LoginPage> with TickerProviderStateMixin {
   bool _isSignupPasswordVisible = false;
   bool _isConfirmPasswordVisible = false;
   bool _isLoading = false;
+  final _passwordFocusNode = FocusNode();
+  final _signupPasswordFocusNode = FocusNode();
+  final _confirmPasswordFocusNode = FocusNode();
   late AnimationController _flipController;
   late Animation<double> _flipAnimation;
   bool _showSignup = false;
@@ -61,6 +64,9 @@ class _LoginPageState extends State<LoginPage> with TickerProviderStateMixin {
     _signupUserController.dispose();
     _signupPasswordController.dispose();
     _confirmPasswordController.dispose();
+    _passwordFocusNode.dispose();
+    _signupPasswordFocusNode.dispose();
+    _confirmPasswordFocusNode.dispose();
     super.dispose();
   }
 
@@ -166,8 +172,7 @@ class _LoginPageState extends State<LoginPage> with TickerProviderStateMixin {
 
       if (success) {
         if (mounted) {
-          // The Consumer<AuthService> in the main app will automatically detect the state change
-          // and rebuild to show the home page - no navigation needed
+          Navigator.of(context).popUntil((route) => route.isFirst);
         }
       } else {
         if (mounted) {
@@ -212,18 +217,17 @@ class _LoginPageState extends State<LoginPage> with TickerProviderStateMixin {
     return Scaffold(
       body: Stack(
         children: [
-          // Background image
-          Container(
-            decoration: const BoxDecoration(
-              image: DecorationImage(
-                image: AssetImage('assets/chart-background.jpg'),
-                fit: BoxFit.cover,
-              ),
+          UIConstants.preLoginBackground(),
+          // Back button in top-left
+          Positioned(
+            top: 20,
+            left: 20,
+            child: IconButton(
+              onPressed: () => Navigator.pop(context),
+              icon: const Icon(Icons.arrow_back, color: Colors.white, size: 28),
+              tooltip: 'Back',
+              style: UIConstants.preLoginIconButtonStyle(),
             ),
-          ),
-          // Semi-transparent overlay for fading
-          Container(
-            color: UIConstants.colorCommand.withOpacity(0.9), // 90% fade with dark blue
           ),
           // Selected broker name and settings button in top-right corner
           Positioned(
@@ -232,48 +236,14 @@ class _LoginPageState extends State<LoginPage> with TickerProviderStateMixin {
             child: Row(
               mainAxisSize: MainAxisSize.min,
               children: [
-                // Broker name chip
                 if (AppConfig.selectedBrokerName != null)
-                  Container(
-                    padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
-                    decoration: BoxDecoration(
-                      color: Colors.white.withOpacity(0.15),
-                      borderRadius: BorderRadius.circular(20),
-                      border: Border.all(
-                        color: Colors.white.withOpacity(0.3),
-                        width: 1,
-                      ),
-                    ),
-                    child: Row(
-                      mainAxisSize: MainAxisSize.min,
-                      children: [
-                        const Icon(
-                          Icons.business,
-                          color: Colors.white70,
-                          size: 16,
-                        ),
-                        const SizedBox(width: 6),
-                        Text(
-                          AppConfig.selectedBrokerName!,
-                          style: const TextStyle(
-                            color: Colors.white,
-                            fontSize: 13,
-                            fontWeight: FontWeight.w500,
-                          ),
-                        ),
-                      ],
-                    ),
-                  ),
+                  UIConstants.brokerNameChip(AppConfig.selectedBrokerName!),
                 const SizedBox(width: 8),
-                // Settings button
                 IconButton(
                   onPressed: _goBackToConfigSelection,
                   icon: const Icon(Icons.settings, color: Colors.white, size: 28),
                   tooltip: 'Change Configuration',
-                  style: IconButton.styleFrom(
-                    backgroundColor: Colors.white.withOpacity(0.1),
-                    padding: const EdgeInsets.all(12),
-                  ),
+                  style: UIConstants.preLoginIconButtonStyle(),
                 ),
               ],
             ),
@@ -293,31 +263,14 @@ class _LoginPageState extends State<LoginPage> with TickerProviderStateMixin {
                 child: ClipRRect(
                   borderRadius: BorderRadius.circular(UIConstants.borderRadiusLg),
                   child: BackdropFilter(
-                    filter: ImageFilter.blur(sigmaX: 2, sigmaY: 2),
+                    filter: ImageFilter.blur(
+                      sigmaX: UIConstants.glassBlurSigma,
+                      sigmaY: UIConstants.glassBlurSigma,
+                    ),
                     child: Container(
                       width: 360,
                       padding: const EdgeInsets.all(32.0),
-                      decoration: BoxDecoration(
-                        color: Colors.white.withOpacity(0.1),
-                        borderRadius: BorderRadius.circular(UIConstants.borderRadiusLg),
-                        border: Border.all(
-                          color: Colors.white,
-                          width: 0.4,
-                        ),
-                        boxShadow: [
-                          BoxShadow(
-                            color: Colors.white.withOpacity(0.1),
-                            blurRadius: 5,
-                            offset: const Offset(0, 0),
-                            spreadRadius: 3,
-                          ),
-                          BoxShadow(
-                            color: Colors.black.withOpacity(0.05),
-                            blurRadius: 8,
-                            offset: const Offset(0, 3),
-                          ),
-                        ],
-                      ),
+                      decoration: UIConstants.glassCardDecoration(),
                       child: _showSignup
                           ? Transform(
                               alignment: Alignment.center,
@@ -366,27 +319,12 @@ class _LoginPageState extends State<LoginPage> with TickerProviderStateMixin {
                     TextFormField(
                       controller: _userController,
                       keyboardType: TextInputType.text,
+                      textInputAction: TextInputAction.next,
+                      onFieldSubmitted: (_) => _passwordFocusNode.requestFocus(),
                       style: const TextStyle(color: Colors.black, fontSize: UIConstants.textFieldFontSize),
-                      decoration: InputDecoration(
+                      decoration: UIConstants.preLoginInputDecoration(
                         hintText: 'Enter your username',
-                        hintStyle: const TextStyle(color: Colors.grey, fontSize: UIConstants.textFieldFontSize),
-                        filled: true,
-                        fillColor: Colors.white.withOpacity(0.9),
-                        contentPadding: UIConstants.textFieldPadding,
-                        isDense: true,
-                        border: OutlineInputBorder(
-                          borderRadius: BorderRadius.circular(UIConstants.textFieldBorderRadius),
-                          borderSide: const BorderSide(color: Colors.white),
-                        ),
-                        enabledBorder: OutlineInputBorder(
-                          borderRadius: BorderRadius.circular(UIConstants.textFieldBorderRadius),
-                          borderSide: const BorderSide(color: Colors.white),
-                        ),
-                        focusedBorder: OutlineInputBorder(
-                          borderRadius: BorderRadius.circular(UIConstants.textFieldBorderRadius),
-                          borderSide: const BorderSide(color: UIConstants.colorCommand, width: 2),
-                        ),
-                        prefixIcon: const Icon(Icons.person, color: Colors.grey, size: UIConstants.textFieldIconSize),
+                        prefixIcon: Icons.person,
                       ),
                       validator: (value) {
                         if (value == null || value.isEmpty) {
@@ -403,14 +341,12 @@ class _LoginPageState extends State<LoginPage> with TickerProviderStateMixin {
                     // Password Field
                     TextFormField(
                       controller: _passwordController,
+                      focusNode: _passwordFocusNode,
                       obscureText: !_isPasswordVisible,
                       style: const TextStyle(color: Colors.black, fontSize: UIConstants.textFieldFontSize),
-                      decoration: InputDecoration(
+                      decoration: UIConstants.preLoginInputDecoration(
                         hintText: 'Enter your password',
-                        hintStyle: const TextStyle(color: Colors.grey, fontSize: UIConstants.textFieldFontSize),
-                        filled: true,
-                        fillColor: Colors.white.withOpacity(0.9),
-                        prefixIcon: const Icon(Icons.lock, color: Colors.grey, size: UIConstants.textFieldIconSize),
+                        prefixIcon: Icons.lock,
                         suffixIcon: IconButton(
                           focusNode: FocusNode(skipTraversal: true),
                           icon: Icon(
@@ -423,20 +359,6 @@ class _LoginPageState extends State<LoginPage> with TickerProviderStateMixin {
                               _isPasswordVisible = !_isPasswordVisible;
                             });
                           },
-                        ),
-                        contentPadding: UIConstants.textFieldPadding,
-                        isDense: true,
-                        border: OutlineInputBorder(
-                          borderRadius: BorderRadius.circular(UIConstants.textFieldBorderRadius),
-                          borderSide: const BorderSide(color: Colors.white),
-                        ),
-                        enabledBorder: OutlineInputBorder(
-                          borderRadius: BorderRadius.circular(UIConstants.textFieldBorderRadius),
-                          borderSide: const BorderSide(color: Colors.white),
-                        ),
-                        focusedBorder: OutlineInputBorder(
-                          borderRadius: BorderRadius.circular(UIConstants.textFieldBorderRadius),
-                          borderSide: const BorderSide(color: UIConstants.colorCommand, width: 2),
                         ),
                       ),
                       textInputAction: TextInputAction.go,
@@ -482,17 +404,10 @@ class _LoginPageState extends State<LoginPage> with TickerProviderStateMixin {
                     // Login Button
                     SizedBox(
                       width: double.infinity,
-                      height: 50,
+                      height: UIConstants.loginButtonHeight,
                       child: ElevatedButton(
                         onPressed: _isLoading ? null : _handleLogin,
-                        style: ElevatedButton.styleFrom(
-                          backgroundColor: UIConstants.colorCommand,
-                          foregroundColor: Colors.white,
-                          shape: RoundedRectangleBorder(
-                            borderRadius: BorderRadius.circular(UIConstants.textFieldBorderRadius),
-                          ),
-                          elevation: 0,
-                        ),
+                        style: UIConstants.preLoginButtonStyle(),
                         child: _isLoading
                             ? const SizedBox(
                                 height: 20,
@@ -563,27 +478,12 @@ class _LoginPageState extends State<LoginPage> with TickerProviderStateMixin {
           TextFormField(
             controller: _signupUserController,
             keyboardType: TextInputType.text,
+            textInputAction: TextInputAction.next,
+            onFieldSubmitted: (_) => _signupPasswordFocusNode.requestFocus(),
             style: const TextStyle(color: Colors.black, fontSize: UIConstants.textFieldFontSize),
-            decoration: InputDecoration(
+            decoration: UIConstants.preLoginInputDecoration(
               hintText: 'Enter your username',
-              hintStyle: const TextStyle(color: Colors.grey, fontSize: UIConstants.textFieldFontSize),
-              filled: true,
-              fillColor: Colors.white.withOpacity(0.9),
-              prefixIcon: const Icon(Icons.person, color: Colors.grey, size: UIConstants.textFieldIconSize),
-              border: OutlineInputBorder(
-                borderRadius: BorderRadius.circular(UIConstants.textFieldBorderRadius),
-                borderSide: const BorderSide(color: Colors.white),
-              ),
-              enabledBorder: OutlineInputBorder(
-                borderRadius: BorderRadius.circular(UIConstants.textFieldBorderRadius),
-                borderSide: const BorderSide(color: Colors.white),
-              ),
-              focusedBorder: OutlineInputBorder(
-                borderRadius: BorderRadius.circular(UIConstants.textFieldBorderRadius),
-                borderSide: const BorderSide(color: UIConstants.colorCommand, width: 2),
-              ),
-              contentPadding: UIConstants.textFieldPadding,
-                        isDense: true,
+              prefixIcon: Icons.person,
             ),
             validator: (value) {
               if (value == null || value.trim().isEmpty) {
@@ -600,14 +500,14 @@ class _LoginPageState extends State<LoginPage> with TickerProviderStateMixin {
           // Password Field
           TextFormField(
             controller: _signupPasswordController,
+            focusNode: _signupPasswordFocusNode,
             obscureText: !_isSignupPasswordVisible,
+            textInputAction: TextInputAction.next,
+            onFieldSubmitted: (_) => _confirmPasswordFocusNode.requestFocus(),
             style: const TextStyle(color: Colors.black, fontSize: UIConstants.textFieldFontSize),
-            decoration: InputDecoration(
+            decoration: UIConstants.preLoginInputDecoration(
               hintText: 'Create a password',
-              hintStyle: const TextStyle(color: Colors.grey, fontSize: UIConstants.textFieldFontSize),
-              filled: true,
-              fillColor: Colors.white.withOpacity(0.9),
-              prefixIcon: const Icon(Icons.lock, color: Colors.grey, size: UIConstants.textFieldIconSize),
+              prefixIcon: Icons.lock,
               suffixIcon: IconButton(
                 focusNode: FocusNode(skipTraversal: true),
                 icon: Icon(
@@ -620,20 +520,6 @@ class _LoginPageState extends State<LoginPage> with TickerProviderStateMixin {
                   });
                 },
               ),
-              border: OutlineInputBorder(
-                borderRadius: BorderRadius.circular(UIConstants.textFieldBorderRadius),
-                borderSide: const BorderSide(color: Colors.white),
-              ),
-              enabledBorder: OutlineInputBorder(
-                borderRadius: BorderRadius.circular(UIConstants.textFieldBorderRadius),
-                borderSide: const BorderSide(color: Colors.white),
-              ),
-              focusedBorder: OutlineInputBorder(
-                borderRadius: BorderRadius.circular(UIConstants.textFieldBorderRadius),
-                borderSide: const BorderSide(color: UIConstants.colorCommand, width: 2),
-              ),
-              contentPadding: UIConstants.textFieldPadding,
-                        isDense: true,
             ),
             validator: (value) {
               if (value == null || value.isEmpty) {
@@ -650,14 +536,14 @@ class _LoginPageState extends State<LoginPage> with TickerProviderStateMixin {
           // Confirm Password Field
           TextFormField(
             controller: _confirmPasswordController,
+            focusNode: _confirmPasswordFocusNode,
             obscureText: !_isConfirmPasswordVisible,
+            textInputAction: TextInputAction.go,
+            onFieldSubmitted: (_) => _isLoading ? null : _handleSignup(),
             style: const TextStyle(color: Colors.black, fontSize: UIConstants.textFieldFontSize),
-            decoration: InputDecoration(
+            decoration: UIConstants.preLoginInputDecoration(
               hintText: 'Confirm your password',
-              hintStyle: const TextStyle(color: Colors.grey, fontSize: UIConstants.textFieldFontSize),
-              filled: true,
-              fillColor: Colors.white.withOpacity(0.9),
-              prefixIcon: const Icon(Icons.lock_outline, color: Colors.grey, size: UIConstants.textFieldIconSize),
+              prefixIcon: Icons.lock_outline,
               suffixIcon: IconButton(
                 focusNode: FocusNode(skipTraversal: true),
                 icon: Icon(
@@ -670,20 +556,6 @@ class _LoginPageState extends State<LoginPage> with TickerProviderStateMixin {
                   });
                 },
               ),
-              border: OutlineInputBorder(
-                borderRadius: BorderRadius.circular(UIConstants.textFieldBorderRadius),
-                borderSide: const BorderSide(color: Colors.white),
-              ),
-              enabledBorder: OutlineInputBorder(
-                borderRadius: BorderRadius.circular(UIConstants.textFieldBorderRadius),
-                borderSide: const BorderSide(color: Colors.white),
-              ),
-              focusedBorder: OutlineInputBorder(
-                borderRadius: BorderRadius.circular(UIConstants.textFieldBorderRadius),
-                borderSide: const BorderSide(color: UIConstants.colorCommand, width: 2),
-              ),
-              contentPadding: UIConstants.textFieldPadding,
-                        isDense: true,
             ),
             validator: (value) {
               if (value == null || value.isEmpty) {
@@ -700,17 +572,10 @@ class _LoginPageState extends State<LoginPage> with TickerProviderStateMixin {
           // Signup Button
           SizedBox(
             width: double.infinity,
-            height: 50,
+            height: UIConstants.loginButtonHeight,
             child: ElevatedButton(
               onPressed: _isLoading ? null : _handleSignup,
-              style: ElevatedButton.styleFrom(
-                backgroundColor: UIConstants.colorCommand,
-                foregroundColor: Colors.white,
-                shape: RoundedRectangleBorder(
-                  borderRadius: BorderRadius.circular(UIConstants.textFieldBorderRadius),
-                ),
-                elevation: 0,
-              ),
+              style: UIConstants.preLoginButtonStyle(),
               child: _isLoading
                   ? const SizedBox(
                       height: 20,

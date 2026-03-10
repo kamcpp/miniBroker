@@ -4,6 +4,9 @@ import 'database_helper.dart';
 import 'real_grpc_client.dart';
 import '../config/app_config.dart';
 
+/// User role - broker or investor
+enum UserRole { broker, investor }
+
 /// Result of a signup operation containing both local and server status
 class SignupResult {
   final bool localSuccess;
@@ -45,11 +48,15 @@ class AuthService extends ChangeNotifier {
 
   bool _isLoggedIn = false;
   String _username = '';
+  UserRole? _userRole;
   bool _hasBeenInitialized = false;
   final DatabaseHelper _databaseHelper = DatabaseHelper();
-  
+
   bool get isLoggedIn => _isLoggedIn;
   String get username => _username;
+  UserRole? get userRole => _userRole;
+  bool get isBroker => _userRole == UserRole.broker;
+  bool get isInvestor => _userRole == UserRole.investor;
 
   Future<void> init() async {
     // Set the broker name for the database
@@ -68,6 +75,7 @@ class AuthService extends ChangeNotifier {
 
     _isLoggedIn = false;
     _username = '';
+    _userRole = null;
 
     notifyListeners();
   }
@@ -80,7 +88,25 @@ class AuthService extends ChangeNotifier {
     
     _isLoggedIn = false;
     _username = '';
+    _userRole = null;
     notifyListeners();
+  }
+
+  /// Broker login with hardcoded credentials
+  Future<bool> brokerLogin(String user, String password) async {
+    if (user == 'admin' && password == 'brokeradmin') {
+      _isLoggedIn = true;
+      _username = user;
+      _userRole = UserRole.broker;
+
+      final prefs = await SharedPreferences.getInstance();
+      await prefs.setBool('isLoggedIn', true);
+      await prefs.setString('username', user);
+
+      notifyListeners();
+      return true;
+    }
+    return false;
   }
 
   Future<bool> login(String user, String password) async {
@@ -101,6 +127,7 @@ class AuthService extends ChangeNotifier {
         
         _isLoggedIn = true;
         _username = userData['username'];
+        _userRole = UserRole.investor;
         notifyListeners();
         
         // Automatically connect to staging and send logon
@@ -209,6 +236,7 @@ class AuthService extends ChangeNotifier {
     
     _isLoggedIn = false;
     _username = '';
+    _userRole = null;
     notifyListeners();
   }
 
