@@ -16,6 +16,7 @@ import '../services/chart_service.dart';
 import '../utils/connectivity_checker.dart';
 import '../utils/menu_items_helper.dart';
 import '../widgets/base_page.dart';
+import '../services/page_state_service.dart';
 
 class TradingPage extends StatefulWidget {
   const TradingPage({super.key});
@@ -1042,10 +1043,62 @@ class _TradingPageState extends State<TradingPage> {
   int _totalBuyOrdersPages = 1;
 
 
+  static const _pageId = 'trading';
+
+  void _savePageState() {
+    PageStateService.instance.save(_pageId, {
+      'selectedSymbol': _selectedSymbol,
+      'selectedMarket': _selectedMarket,
+      'selectedVenue': _selectedVenue,
+      'selectedCurrency': _selectedCurrency,
+      'orderbookMode': _orderbookMode,
+      'isBuySelected': _isBuySelected,
+      'orderType': _orderType,
+      'timeInForce': _timeInForce,
+      'expiryPeriod': _expiryPeriod,
+      'selectedTimePeriod': _selectedTimePeriod,
+      'activityTabIndex': _activityTabIndex,
+      'ordersTabIndex': _ordersTabIndex,
+      'quantity': _quantityController.text,
+      'price': _priceController.text,
+    });
+  }
+
+  void _restorePageState() {
+    final state = PageStateService.instance.get(_pageId);
+    if (state != null) {
+      _selectedSymbol = state['selectedSymbol'] ?? '';
+      if (state['selectedMarket'] is Map) {
+        _selectedMarket = Map<String, String>.from(state['selectedMarket']);
+      }
+      if (state['selectedVenue'] is Map) {
+        _selectedVenue = Map<String, String>.from(state['selectedVenue']);
+      }
+      if (state['selectedCurrency'] is Map) {
+        _selectedCurrency = Map<String, String>.from(state['selectedCurrency']);
+      }
+      _orderbookMode = state['orderbookMode'] ?? 'ORDERBOOK_MODE_ENUM_L2_AGGREGATED_PRICE_LEVELS';
+      _isBuySelected = state['isBuySelected'] ?? true;
+      _orderType = state['orderType'] ?? 'Limit';
+      _timeInForce = state['timeInForce'] ?? 'DAY';
+      _expiryPeriod = state['expiryPeriod'] ?? '1 Month';
+      _selectedTimePeriod = state['selectedTimePeriod'] ?? '1h';
+      _activityTabIndex = state['activityTabIndex'] ?? 0;
+      _ordersTabIndex = state['ordersTabIndex'] ?? 0;
+      if (state['quantity'] != null && (state['quantity'] as String).isNotEmpty) {
+        _quantityController.text = state['quantity'];
+      }
+      if (state['price'] != null && (state['price'] as String).isNotEmpty) {
+        _priceController.text = state['price'];
+      }
+    }
+  }
+
   @override
   void initState() {
     super.initState();
-    
+    _restorePageState();
+
     // Check server connectivity when page opens
     WidgetsBinding.instance.addPostFrameCallback((_) {
       ConnectivityChecker.checkAndShowErrorIfNeeded(context, 'Trading');
@@ -2634,6 +2687,7 @@ class _TradingPageState extends State<TradingPage> {
   
   @override
   void dispose() {
+    _savePageState();
     _messageSubscription?.cancel();
     _connectionStatusSubscription?.cancel();
     _logonStatusSubscription?.cancel();

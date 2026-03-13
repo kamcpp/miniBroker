@@ -17,6 +17,7 @@ import '../../config/ui_constants.dart';
 import '../../widgets/base_page.dart';
 import '../../generated/prtagent/v1/reporting.pbgrpc.dart';
 import '../../generated/common.pb.dart' as common_pb;
+import '../../services/page_state_service.dart';
 
 class TradeReportsPage extends StatefulWidget {
   const TradeReportsPage({super.key});
@@ -68,9 +69,37 @@ class _TradeReportsPageState extends State<TradeReportsPage> {
     'last_qty': 'Last Qty',
   };
 
+  static const _pageId = 'trade_reports';
+
+  void _saveState() {
+    PageStateService.instance.save(_pageId, {
+      'search': _searchController.text,
+      'symbol': _symbolController.text,
+      'currency': _currencyController.text,
+      'sideFilter': _sideFilter,
+      'sortBy': _sortBy,
+      'currentPage': _currentPage,
+      'pageSize': _pageSize,
+    });
+  }
+
+  void _restoreState() {
+    final state = PageStateService.instance.get(_pageId);
+    if (state != null) {
+      _searchController.text = state['search'] ?? '';
+      _symbolController.text = state['symbol'] ?? '';
+      _currencyController.text = state['currency'] ?? '';
+      _sideFilter = state['sideFilter'];
+      _sortBy = state['sortBy'] ?? 'created_at';
+      _currentPage = state['currentPage'] ?? 1;
+      _pageSize = state['pageSize'] ?? 20;
+    }
+  }
+
   @override
   void initState() {
     super.initState();
+    _restoreState();
     WidgetsBinding.instance.addPostFrameCallback((_) {
       _fetchReports();
     });
@@ -78,6 +107,7 @@ class _TradeReportsPageState extends State<TradeReportsPage> {
 
   @override
   void dispose() {
+    _saveState();
     _searchController.dispose();
     _symbolController.dispose();
     _currencyController.dispose();

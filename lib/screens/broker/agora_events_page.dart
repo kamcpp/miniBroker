@@ -17,6 +17,7 @@ import '../../config/ui_constants.dart';
 import '../../widgets/base_page.dart';
 import '../../generated/prtagent/v1/reporting.pbgrpc.dart';
 import '../../generated/common.pb.dart' as common_pb;
+import '../../services/page_state_service.dart';
 
 class AgoraEventsPage extends StatefulWidget {
   const AgoraEventsPage({super.key});
@@ -52,9 +53,35 @@ class _AgoraEventsPageState extends State<AgoraEventsPage> {
   final _tradeIdController = TextEditingController();
   final _deploymentIidController = TextEditingController();
 
+  static const _pageId = 'agora_events';
+
+  void _saveState() {
+    PageStateService.instance.save(_pageId, {
+      'eventType': _eventTypeController.text,
+      'orderId': _orderIdController.text,
+      'tradeId': _tradeIdController.text,
+      'deploymentIid': _deploymentIidController.text,
+      'currentPage': _currentPage,
+      'pageSize': _pageSize,
+    });
+  }
+
+  void _restoreState() {
+    final state = PageStateService.instance.get(_pageId);
+    if (state != null) {
+      _eventTypeController.text = state['eventType'] ?? '';
+      _orderIdController.text = state['orderId'] ?? '';
+      _tradeIdController.text = state['tradeId'] ?? '';
+      _deploymentIidController.text = state['deploymentIid'] ?? '';
+      _currentPage = state['currentPage'] ?? 1;
+      _pageSize = state['pageSize'] ?? 20;
+    }
+  }
+
   @override
   void initState() {
     super.initState();
+    _restoreState();
     WidgetsBinding.instance.addPostFrameCallback((_) {
       _fetchEvents();
     });
@@ -62,6 +89,7 @@ class _AgoraEventsPageState extends State<AgoraEventsPage> {
 
   @override
   void dispose() {
+    _saveState();
     _eventTypeController.dispose();
     _orderIdController.dispose();
     _tradeIdController.dispose();
@@ -891,7 +919,7 @@ class _AgoraEventsPageState extends State<AgoraEventsPage> {
     final display = typeName.isNotEmpty && typeName != '-' ? typeName : numericValue;
     final color = _eventTypeColor(display);
     final child = ConstrainedBox(
-      constraints: const BoxConstraints(maxWidth: _defaultMaxCellWidth),
+      constraints: const BoxConstraints(maxWidth: 168),
       child: Container(
         padding: const EdgeInsets.symmetric(horizontal: 6, vertical: 2),
         decoration: BoxDecoration(

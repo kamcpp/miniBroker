@@ -10,6 +10,7 @@ import '../screens/broker/investors_page.dart';
 import '../screens/broker/trade_reports_page.dart';
 import '../screens/broker/treasury_activities_page.dart';
 import '../screens/broker/agora_events_page.dart';
+import '../screens/broker/security_orderbooks_page.dart';
 import '../screens/investor/investor_info_page.dart';
 import '../services/auth_service.dart';
 // import '../screens/activity_page.dart';  // Disabled
@@ -44,6 +45,24 @@ class MenuItemsHelper {
           }
         },
       ),
+      // Sec. Orderbooks - right after Securities, broker only
+      if (role == UserRole.broker)
+        MenuItem(
+          label: 'Sec. Orderbooks',
+          icon: Icons.menu_book,
+          isSelected: currentPage == 'security_orderbooks',
+          onTap: () {
+            if (currentPage != 'security_orderbooks') {
+              Navigator.of(context).pushReplacement(
+                PageRouteBuilder(
+                  pageBuilder: (context, animation, secondaryAnimation) => const SecurityOrderbooksPage(),
+                  transitionDuration: Duration.zero,
+                  reverseTransitionDuration: Duration.zero,
+                ),
+              );
+            }
+          },
+        ),
       // Investor-only pages
       if (role == UserRole.investor)
         MenuItem(

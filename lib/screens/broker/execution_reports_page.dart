@@ -17,6 +17,7 @@ import '../../config/ui_constants.dart';
 import '../../widgets/base_page.dart';
 import '../../generated/prtagent/v1/reporting.pbgrpc.dart';
 import '../../generated/common.pb.dart' as common_pb;
+import '../../services/page_state_service.dart';
 
 class ExecutionReportsPage extends StatefulWidget {
   const ExecutionReportsPage({super.key});
@@ -26,6 +27,8 @@ class ExecutionReportsPage extends StatefulWidget {
 }
 
 class _ExecutionReportsPageState extends State<ExecutionReportsPage> {
+  static const double _commandButtonHeight = UIConstants.buttonHeightStandard * 0.7;
+
   // Scroll controllers
   final _verticalScrollController = ScrollController();
   final _horizontalScrollController = ScrollController();
@@ -90,9 +93,43 @@ class _ExecutionReportsPageState extends State<ExecutionReportsPage> {
     'order_qty': 'Quantity',
   };
 
+  static const _pageId = 'execution_reports';
+
+  void _saveState() {
+    PageStateService.instance.save(_pageId, {
+      'search': _searchController.text,
+      'requestId': _requestIdController.text,
+      'symbol': _symbolController.text,
+      'currency': _currencyController.text,
+      'execTypeFilter': _execTypeFilter,
+      'sideFilter': _sideFilter,
+      'sortBy': _sortBy,
+      'sortDirection': _sortDirection,
+      'currentPage': _currentPage,
+      'pageSize': _pageSize,
+    });
+  }
+
+  void _restoreState() {
+    final state = PageStateService.instance.get(_pageId);
+    if (state != null) {
+      _searchController.text = state['search'] ?? '';
+      _requestIdController.text = state['requestId'] ?? '';
+      _symbolController.text = state['symbol'] ?? '';
+      _currencyController.text = state['currency'] ?? '';
+      _execTypeFilter = state['execTypeFilter'];
+      _sideFilter = state['sideFilter'];
+      _sortBy = state['sortBy'] ?? 'created_at';
+      _sortDirection = state['sortDirection'] ?? 'desc';
+      _currentPage = state['currentPage'] ?? 1;
+      _pageSize = state['pageSize'] ?? 20;
+    }
+  }
+
   @override
   void initState() {
     super.initState();
+    _restoreState();
     WidgetsBinding.instance.addPostFrameCallback((_) {
       _fetchReports();
     });
@@ -100,6 +137,7 @@ class _ExecutionReportsPageState extends State<ExecutionReportsPage> {
 
   @override
   void dispose() {
+    _saveState();
     _searchController.dispose();
     _requestIdController.dispose();
     _symbolController.dispose();
@@ -623,10 +661,12 @@ class _ExecutionReportsPageState extends State<ExecutionReportsPage> {
                                 ),
                               ),
                               SizedBox(
-                                height: UIConstants.buttonHeightStandard,
+                                height: _commandButtonHeight,
                                 child: ElevatedButton(
                                   onPressed: _fetchReports,
-                                  style: UIConstants.buttonStyle(UIConstants.commandColor(isDarkTheme)),
+                                  style: UIConstants.buttonStyle(UIConstants.commandColor(isDarkTheme)).copyWith(
+                                    minimumSize: WidgetStatePropertyAll(Size(0, _commandButtonHeight)),
+                                  ),
                                   child: Text('Retry', style: TextStyle(fontSize: UIConstants.fontSizeSm)),
                                 ),
                               ),
@@ -665,17 +705,19 @@ class _ExecutionReportsPageState extends State<ExecutionReportsPage> {
             ),
           ),
         SizedBox(
-          height: UIConstants.buttonHeightStandard,
+          height: _commandButtonHeight,
           child: ElevatedButton.icon(
             onPressed: _isLoading ? null : _fetchReports,
             icon: const Icon(Icons.refresh, size: 16),
             label: Text('Refresh', style: TextStyle(fontSize: UIConstants.fontSizeSm)),
-            style: UIConstants.buttonStyle(UIConstants.commandColor(isDarkTheme)),
+            style: UIConstants.buttonStyle(UIConstants.commandColor(isDarkTheme)).copyWith(
+              minimumSize: WidgetStatePropertyAll(Size(0, _commandButtonHeight)),
+            ),
           ),
         ),
         const SizedBox(width: 8),
         SizedBox(
-          height: UIConstants.buttonHeightStandard,
+          height: _commandButtonHeight,
           child: PopupMenuButton<String>(
             onSelected: _reports.isEmpty ? null : (format) => _exportReports(format),
             enabled: _reports.isNotEmpty,
@@ -779,7 +821,7 @@ class _ExecutionReportsPageState extends State<ExecutionReportsPage> {
             ),
           ],
         ),
-        SizedBox(height: UIConstants.spacingSm),
+        const SizedBox(height: 2),
         // Line 2: Combo boxes + buttons
         Row(
           children: [
@@ -844,7 +886,7 @@ class _ExecutionReportsPageState extends State<ExecutionReportsPage> {
             ),
             SizedBox(width: UIConstants.spacingXs),
             SizedBox(
-              height: UIConstants.buttonHeightStandard,
+              height: _commandButtonHeight,
               child: IconButton(
                 onPressed: () {
                   setState(() {
@@ -868,10 +910,12 @@ class _ExecutionReportsPageState extends State<ExecutionReportsPage> {
             ),
             SizedBox(width: UIConstants.spacingSm),
             SizedBox(
-              height: UIConstants.buttonHeightStandard,
+              height: _commandButtonHeight,
               child: ElevatedButton(
                 onPressed: _applyFilters,
-                style: UIConstants.buttonStyle(UIConstants.commandColor(isDarkTheme)),
+                style: UIConstants.buttonStyle(UIConstants.commandColor(isDarkTheme)).copyWith(
+                  minimumSize: WidgetStatePropertyAll(Size(0, _commandButtonHeight)),
+                ),
                 child: Text('Apply', style: TextStyle(fontSize: UIConstants.fontSizeSm)),
               ),
             ),

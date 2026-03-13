@@ -16,6 +16,7 @@ import '../../services/user_sync_service.dart';
 import '../../utils/menu_items_helper.dart';
 import '../../config/ui_constants.dart';
 import '../../widgets/base_page.dart';
+import '../../services/page_state_service.dart';
 
 class InvestorsPage extends StatefulWidget {
   const InvestorsPage({super.key});
@@ -69,9 +70,35 @@ class _InvestorsPageState extends State<InvestorsPage> {
     'last_login': 'Last Login',
   };
 
+  static const _pageId = 'investors';
+
+  void _saveState() {
+    PageStateService.instance.save(_pageId, {
+      'search': _searchController.text,
+      'serverStatusFilter': _serverStatusFilter,
+      'sortBy': _sortBy,
+      'sortDirection': _sortDirection,
+      'currentPage': _currentPage,
+      'pageSize': _pageSize,
+    });
+  }
+
+  void _restoreState() {
+    final state = PageStateService.instance.get(_pageId);
+    if (state != null) {
+      _searchController.text = state['search'] ?? '';
+      _serverStatusFilter = state['serverStatusFilter'];
+      _sortBy = state['sortBy'] ?? 'username';
+      _sortDirection = state['sortDirection'] ?? 'asc';
+      _currentPage = state['currentPage'] ?? 1;
+      _pageSize = state['pageSize'] ?? 20;
+    }
+  }
+
   @override
   void initState() {
     super.initState();
+    _restoreState();
     WidgetsBinding.instance.addPostFrameCallback((_) {
       _fetchUsers();
     });
@@ -79,6 +106,7 @@ class _InvestorsPageState extends State<InvestorsPage> {
 
   @override
   void dispose() {
+    _saveState();
     _searchController.dispose();
     _verticalScrollController.dispose();
     _horizontalScrollController.dispose();

@@ -14,6 +14,26 @@ import 'widgets/config_finder_dialog.dart';
 import 'services/event_subscription_service.dart';
 
 void main() {
+  // Replace the red error screen with a subtle dark error widget
+  ErrorWidget.builder = (FlutterErrorDetails details) {
+    print('❌ CRITICAL: Widget error: ${details.exception}');
+    print('❌ CRITICAL: Flutter stack trace: ${details.stack}');
+    return Container(
+      padding: const EdgeInsets.all(8),
+      color: const Color(0xFF1A1A2E),
+      child: const Center(
+        child: Icon(Icons.warning_amber_rounded, color: Colors.orange, size: 24),
+      ),
+    );
+  };
+
+  // Set Flutter-specific error handler
+  FlutterError.onError = (FlutterErrorDetails details) {
+    print('❌ CRITICAL: Flutter framework error: ${details.exception}');
+    print('❌ CRITICAL: Flutter stack trace: ${details.stack}');
+    // Don't crash - just log
+  };
+
   // Add comprehensive error handling to catch ALL unhandled exceptions
   runZonedGuarded(() {
     runApp(const MyApp());
@@ -22,13 +42,6 @@ void main() {
     print('❌ CRITICAL: Stack trace: $stack');
     // Don't rethrow - just log and continue
   });
-  
-  // Also set Flutter-specific error handler
-  FlutterError.onError = (FlutterErrorDetails details) {
-    print('❌ CRITICAL: Flutter framework error: ${details.exception}');
-    print('❌ CRITICAL: Flutter stack trace: ${details.stack}');
-    // Don't crash - just log
-  };
 }
 
 class MyApp extends StatelessWidget {

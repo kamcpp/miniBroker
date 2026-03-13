@@ -17,6 +17,7 @@ import '../../config/ui_constants.dart';
 import '../../widgets/base_page.dart';
 import '../../generated/prtagent/v1/reporting.pbgrpc.dart';
 import '../../generated/common.pb.dart' as common_pb;
+import '../../services/page_state_service.dart';
 
 class TreasuryActivitiesPage extends StatefulWidget {
   const TreasuryActivitiesPage({super.key});
@@ -63,9 +64,39 @@ class _TreasuryActivitiesPageState extends State<TreasuryActivitiesPage> {
     'timestamp': 'Timestamp',
   };
 
+  static const _pageId = 'treasury_activities';
+
+  void _saveState() {
+    PageStateService.instance.save(_pageId, {
+      'search': _searchController.text,
+      'operation': _operationController.text,
+      'contractAddr': _contractAddrController.text,
+      'senderAccount': _senderAccountController.text,
+      'sortBy': _sortBy,
+      'sortDirection': _sortDirection,
+      'currentPage': _currentPage,
+      'pageSize': _pageSize,
+    });
+  }
+
+  void _restoreState() {
+    final state = PageStateService.instance.get(_pageId);
+    if (state != null) {
+      _searchController.text = state['search'] ?? '';
+      _operationController.text = state['operation'] ?? '';
+      _contractAddrController.text = state['contractAddr'] ?? '';
+      _senderAccountController.text = state['senderAccount'] ?? '';
+      _sortBy = state['sortBy'] ?? 'created_at';
+      _sortDirection = state['sortDirection'] ?? 'desc';
+      _currentPage = state['currentPage'] ?? 1;
+      _pageSize = state['pageSize'] ?? 20;
+    }
+  }
+
   @override
   void initState() {
     super.initState();
+    _restoreState();
     WidgetsBinding.instance.addPostFrameCallback((_) {
       _fetchActivities();
     });
@@ -73,6 +104,7 @@ class _TreasuryActivitiesPageState extends State<TreasuryActivitiesPage> {
 
   @override
   void dispose() {
+    _saveState();
     _searchController.dispose();
     _operationController.dispose();
     _contractAddrController.dispose();
