@@ -2274,7 +2274,7 @@ class _TradingPageState extends State<TradingPage> {
               ? double.tryParse(quantityValue) ?? 0.0
               : (quantityValue is num ? quantityValue.toDouble() : 0.0);
 
-          final total = price * quantity;
+          final total = _roundToCurrencyPrecision(price * quantity);
 
           print('[Orderbook-Sell] Mapping order: rawPrice=$rawPrice, price=$price, quantity=$quantity, total=$total');
 
@@ -2411,7 +2411,7 @@ class _TradingPageState extends State<TradingPage> {
               ? double.tryParse(quantityValue) ?? 0.0
               : (quantityValue is num ? quantityValue.toDouble() : 0.0);
 
-          final total = price * quantity;
+          final total = _roundToCurrencyPrecision(price * quantity);
 
           print('[Orderbook-Buy] Mapping order: rawPrice=$rawPrice, price=$price, quantity=$quantity, total=$total');
 
@@ -2602,8 +2602,29 @@ class _TradingPageState extends State<TradingPage> {
     return 0.0;
   }
   
+  /// Get the number of decimal places for the current currency based on divisibility.
+  int _getCurrencyDecimals() {
+    final currency = _selectedCurrency['issueCurrency'] ?? _selectedCurrency['code'] ?? '';
+    final div = _defaultDivisibility(currency);
+    return int.tryParse(div) ?? 2;
+  }
+
+  /// Round a value to the currency's divisibility precision.
+  double _roundToCurrencyPrecision(double value) {
+    final decimals = _getCurrencyDecimals();
+    final factor = _pow10(decimals);
+    return (value * factor).roundToDouble() / factor;
+  }
+
+  static double _pow10(int n) {
+    double result = 1;
+    for (var i = 0; i < n; i++) result *= 10;
+    return result;
+  }
+
   String _formatPrice(double price) {
-    return price.toStringAsFixed(2);
+    final decimals = _getCurrencyDecimals();
+    return _roundToCurrencyPrecision(price).toStringAsFixed(decimals);
   }
   
   @override
@@ -2923,11 +2944,8 @@ class _TradingPageState extends State<TradingPage> {
       subtotal = quantity * price;
     }
 
-    if (_isBuySelected) {
-      return subtotal + fee;
-    } else {
-      return subtotal - fee;
-    }
+    final total = _isBuySelected ? subtotal + fee : subtotal - fee;
+    return _roundToCurrencyPrecision(total);
   }
 
   /// Check if user has sufficient funds/holdings for the order
@@ -5176,8 +5194,10 @@ class _TradingPageState extends State<TradingPage> {
       // Determine order side
       final side = _isBuySelected ? 'BUY' : 'SELL';
 
-      // Set price (0 for market orders)
-      final price = _orderType == 'Market' ? '0' : _priceController.text;
+      // Set price (0 for market orders), rounded to currency precision
+      final decimals = _getCurrencyDecimals();
+      final rawPrice = _orderType == 'Market' ? '0' : _priceController.text;
+      final price = rawPrice == '0' ? '0' : _roundToCurrencyPrecision(double.tryParse(rawPrice) ?? 0.0).toStringAsFixed(decimals);
 
       print('📝 Order details: side=$side, type=${_orderType.toUpperCase()}, quantity=${_quantityController.text.trim()}, price=$price');
 
@@ -5228,7 +5248,7 @@ class _TradingPageState extends State<TradingPage> {
         timeInForce: _timeInForce,
         participantOrderId: participantOrderId,
         currency: currency,
-        feeAmount: _feeController.text.trim(),
+        feeAmount: _roundToCurrencyPrecision(double.tryParse(_feeController.text.trim()) ?? 0.0).toStringAsFixed(decimals),
         expireTime: expireTime,
       );
 
@@ -5844,7 +5864,7 @@ class _TradingPageState extends State<TradingPage> {
                       ),
                       Text(
                         (hasQuantity && hasPrice && fee > 0)
-                            ? '${fee.toStringAsFixed(2)} $currencySymbol'
+                            ? '${_roundToCurrencyPrecision(fee).toStringAsFixed(_getCurrencyDecimals())} $currencySymbol'
                             : '-',
                         style: TextStyle(
                           fontSize: UIConstants.textFieldFontSize,
@@ -5866,7 +5886,7 @@ class _TradingPageState extends State<TradingPage> {
                         ),
                       ),
                       Text(
-                        (hasQuantity && hasPrice) ? '${_formatDecimal(total.toStringAsFixed(2))} $currencySymbol' : '-',
+                        (hasQuantity && hasPrice) ? '${_formatDecimal(_roundToCurrencyPrecision(total).toStringAsFixed(_getCurrencyDecimals()))} $currencySymbol' : '-',
                         style: TextStyle(
                           fontSize: UIConstants.textFieldFontSize,
                           fontWeight: UIConstants.fontWeightMedium,
