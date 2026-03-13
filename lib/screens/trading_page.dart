@@ -1344,6 +1344,7 @@ class _TradingPageState extends State<TradingPage> {
               'price': order['price'] ?? '0',
               'create_timestamp': createTs,
               'expire_timestamp': _extractExpireTimestamp(order),
+              'expire_ts_unit': 'ms',
               'is_filled': order['isFilled'] ?? order['is_filled'] ?? false,
               'is_cancelled': order['isCancelled'] ?? order['is_cancelled'] ?? false,
               'is_expired': order['isExpired'] ?? order['is_expired'] ?? false,
@@ -2278,10 +2279,11 @@ class _TradingPageState extends State<TradingPage> {
 
           print('[Orderbook-Sell] Mapping order: rawPrice=$rawPrice, price=$price, quantity=$quantity, total=$total');
 
-          // L3: check expire_ts against now
+          // L3: check expire_ts against now (orderbook sends seconds)
           final expireTs = orderMap['expireTimestamp'] ?? orderMap['expire_timestamp'] ?? orderMap['expireTs'] ?? orderMap['expire_ts'] ?? '';
-          final expireMillis = int.tryParse(expireTs.toString()) ?? 0;
-          final hasExpiry = expireMillis > 0;
+          final expireNum = int.tryParse(expireTs.toString()) ?? 0;
+          final hasExpiry = expireNum > 0;
+          final expireMillis = expireNum * 1000; // orderbook uses seconds
           final isExpired = hasExpiry && DateTime.fromMillisecondsSinceEpoch(expireMillis).isBefore(DateTime.now());
 
           // L2: parse data JSON for has_expired_orders / earliest_expiry
@@ -2304,6 +2306,7 @@ class _TradingPageState extends State<TradingPage> {
             'total': total,
             'is_expired': isExpired || l2Expired,
             'expire_timestamp': earliestExpiry.isNotEmpty ? earliestExpiry : expireTs.toString(),
+            'expire_ts_unit': 's',
           };
         }).toList();
 
@@ -2415,10 +2418,11 @@ class _TradingPageState extends State<TradingPage> {
 
           print('[Orderbook-Buy] Mapping order: rawPrice=$rawPrice, price=$price, quantity=$quantity, total=$total');
 
-          // L3: check expire_ts against now
+          // L3: check expire_ts against now (orderbook sends seconds)
           final expireTs = orderMap['expireTimestamp'] ?? orderMap['expire_timestamp'] ?? orderMap['expireTs'] ?? orderMap['expire_ts'] ?? '';
-          final expireMillis = int.tryParse(expireTs.toString()) ?? 0;
-          final hasExpiry = expireMillis > 0;
+          final expireNum = int.tryParse(expireTs.toString()) ?? 0;
+          final hasExpiry = expireNum > 0;
+          final expireMillis = expireNum * 1000; // orderbook uses seconds
           final isExpired = hasExpiry && DateTime.fromMillisecondsSinceEpoch(expireMillis).isBefore(DateTime.now());
 
           // L2: parse data JSON for has_expired_orders / earliest_expiry
@@ -2441,6 +2445,7 @@ class _TradingPageState extends State<TradingPage> {
             'total': total,
             'is_expired': isExpired || l2Expired,
             'expire_timestamp': earliestExpiry.isNotEmpty ? earliestExpiry : expireTs.toString(),
+            'expire_ts_unit': 's',
           };
         }).toList();
 
@@ -4108,58 +4113,40 @@ class _TradingPageState extends State<TradingPage> {
     return '';
   }
 
-  String _formatOrderTimestamp(dynamic timestamp) {
-    if (timestamp == null) return '-';
-    final str = timestamp.toString();
-    if (str.isEmpty || str == '0') return '-';
-    try {
-      // Try ISO 8601 first (e.g., 2026-03-06T00:02:13Z)
-      final dt = DateTime.parse(str);
-      return '${dt.day}/${dt.month}/${dt.year.toString().substring(2)} ${dt.hour.toString().padLeft(2, '0')}:${dt.minute.toString().padLeft(2, '0')}';
-    } catch (_) {}
-    try {
-      final millis = int.parse(str);
-      if (millis == 0) return '-';
-      final dt = DateTime.fromMillisecondsSinceEpoch(millis);
-      return '${dt.day}/${dt.month}/${dt.year.toString().substring(2)} ${dt.hour.toString().padLeft(2, '0')}:${dt.minute.toString().padLeft(2, '0')}';
-    } catch (_) {}
-    return str;
+  String _fmtDt(DateTime dt) {
+    final yy = (dt.year % 100).toString().padLeft(2, '0');
+    return '${dt.day}/${dt.month}/$yy ${dt.hour.toString().padLeft(2, '0')}:${dt.minute.toString().padLeft(2, '0')}';
   }
 
-  /// Check if an expire timestamp has passed
-  bool _isExpiredTimestamp(dynamic timestamp) {
-    if (timestamp == null) return false;
-    final str = timestamp.toString();
-    if (str.isEmpty) return false;
-    try {
-      final dt = DateTime.parse(str);
-      return dt.isBefore(DateTime.now());
-    } catch (_) {}
-    try {
-      final millis = int.parse(str);
-      if (millis == 0) return false;
-      final dt = DateTime.fromMillisecondsSinceEpoch(millis);
-      return dt.isBefore(DateTime.now());
-    } catch (_) {}
-    return false;
+  /// Format a timestamp for display.
+  /// [unit]: 'ms' = value is milliseconds, 's' = value is seconds.
+  String _formatOrderTimestamp(dynamic timestamp, {String unit = 'ms'}) {
+    final dt = _parseTimestamp(timestamp, unit: unit);
+    if (dt == null) return '-';
+    return _fmtDt(dt);
   }
 
-  /// Calculate how long ago a timestamp expired
-  String _expiredDurationText(dynamic timestamp) {
-    if (timestamp == null) return 'Expired';
-    final str = timestamp.toString();
-    DateTime? dt;
-    try {
-      dt = DateTime.parse(str);
-    } catch (_) {}
-    if (dt == null) {
-      try {
-        final millis = int.parse(str);
-        if (millis > 0) {
-          dt = DateTime.fromMillisecondsSinceEpoch(millis);
-        }
-      } catch (_) {}
+  /// Parse a numeric timestamp to DateTime.
+  /// [unit]: 'ms' = value is milliseconds, 's' = value is seconds.
+  DateTime? _parseTimestamp(dynamic timestamp, {String unit = 'ms'}) {
+    if (timestamp == null) return null;
+    final str = timestamp.toString().trim();
+    if (str.isEmpty || str == '0') return null;
+    final n = int.tryParse(str);
+    if (n != null && n > 0) {
+      final millis = unit == 's' ? n * 1000 : n;
+      return DateTime.fromMillisecondsSinceEpoch(millis);
     }
+    return DateTime.tryParse(str);
+  }
+
+  bool _isExpiredTimestamp(dynamic timestamp, {String unit = 'ms'}) {
+    final dt = _parseTimestamp(timestamp, unit: unit);
+    return dt != null && dt.isBefore(DateTime.now());
+  }
+
+  String _expiredDurationText(dynamic timestamp, {String unit = 'ms'}) {
+    final dt = _parseTimestamp(timestamp, unit: unit);
     if (dt == null) return 'Expired';
     final diff = DateTime.now().difference(dt);
     if (diff.inDays > 0) return 'Expired ${diff.inDays}d ${diff.inHours % 24}h ago';
@@ -4168,31 +4155,24 @@ class _TradingPageState extends State<TradingPage> {
     return 'Expired ${diff.inSeconds}s ago';
   }
 
-  /// Build tooltip for expired orderbook entry
   String _orderbookExpiredTooltip(Map<String, dynamic> order) {
-    final expireTs = order['expire_timestamp']?.toString() ?? '';
-    if (expireTs.isEmpty || expireTs == '0') return 'Expired';
-    final millis = int.tryParse(expireTs);
-    if (millis == null || millis == 0) return 'Expired';
-    final expireDt = DateTime.fromMillisecondsSinceEpoch(millis);
-    final diff = DateTime.now().difference(expireDt);
-    if (diff.inDays > 0) return 'Expired ${diff.inDays}d ${diff.inHours % 24}h ago';
-    if (diff.inHours > 0) return 'Expired ${diff.inHours}h ${diff.inMinutes % 60}m ago';
-    if (diff.inMinutes > 0) return 'Expired ${diff.inMinutes}m ago';
-    return 'Expired ${diff.inSeconds}s ago';
+    final unit = order['expire_ts_unit'] ?? 'ms';
+    return _expiredDurationText(order['expire_timestamp'], unit: unit);
   }
 
   /// Build expire timestamp cell with alarm icon if expired
-  Widget _buildExpireTimestampCell(dynamic timestamp, bool isDarkTheme) {
-    final formatted = _formatOrderTimestamp(timestamp);
-    final isExpired = _isExpiredTimestamp(timestamp);
-    return Row(
+  Widget _buildExpireTimestampCell(dynamic timestamp, bool isDarkTheme, {String unit = 'ms'}) {
+    final formatted = _formatOrderTimestamp(timestamp, unit: unit);
+    final isExpired = _isExpiredTimestamp(timestamp, unit: unit);
+    return InkWell(
+      onTap: () => _copyCell(formatted),
+      child: Row(
       mainAxisAlignment: MainAxisAlignment.center,
       mainAxisSize: MainAxisSize.min,
       children: [
         if (isExpired)
           Tooltip(
-            message: _expiredDurationText(timestamp),
+            message: _expiredDurationText(timestamp, unit: unit),
             child: Icon(Icons.warning_amber, size: 13, color: Colors.orange),
           ),
         if (isExpired) const SizedBox(width: 3),
@@ -4208,6 +4188,7 @@ class _TradingPageState extends State<TradingPage> {
           ),
         ),
       ],
+      ),
     );
   }
 
@@ -4426,6 +4407,92 @@ class _TradingPageState extends State<TradingPage> {
     );
   }
 
+  void _copyCell(String value) {
+    if (value.isEmpty || value == '-' || value == 'N/A') return;
+    Clipboard.setData(ClipboardData(text: value));
+    if (mounted) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(
+          content: Text('Copied: $value', style: const TextStyle(fontSize: 12)),
+          duration: const Duration(seconds: 1),
+          behavior: SnackBarBehavior.floating,
+          width: 250,
+        ),
+      );
+    }
+  }
+
+  void _copyOrderJson(Map<String, dynamic> order) {
+    final raw = order['_raw'];
+    final data = raw ?? order;
+    final jsonStr = const JsonEncoder.withIndent('  ').convert(data);
+    Clipboard.setData(ClipboardData(text: jsonStr));
+    if (mounted) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(
+          content: const Text('Order JSON copied', style: TextStyle(fontSize: 12)),
+          duration: const Duration(seconds: 1),
+          behavior: SnackBarBehavior.floating,
+          width: 250,
+        ),
+      );
+    }
+  }
+
+  void _copyOrderCsv(Map<String, dynamic> order) {
+    String formatSide(String side) {
+      final s = side.toUpperCase();
+      if (s.contains('BUY')) return 'BUY';
+      if (s.contains('SELL')) return 'SELL';
+      return side;
+    }
+    final side = formatSide(order['side'] ?? '');
+    final symbol = order['symbol'] ?? 'N/A';
+    final quantity = _formatDecimal(order['quantity'] ?? '0');
+    final remaining = _formatDecimal(order['remainingQuantity'] ?? order['remaining_quantity'] ?? order['quantity'] ?? '0');
+    final price = order['price'] ?? '0';
+    final priceDisplay = (price == '0' || price == '0.00') ? 'Market' : _formatDecimal(price);
+    final unit = order['expire_ts_unit'] ?? 'ms';
+    final created = _formatOrderTimestamp(order['create_timestamp']);
+    final expires = _formatOrderTimestamp(order['expire_timestamp'], unit: unit);
+    final status = _getOrderStatus(order);
+    final csv = '$side,$symbol,$remaining/$quantity,$priceDisplay,$created,$expires,$status';
+    Clipboard.setData(ClipboardData(text: csv));
+    if (mounted) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(
+          content: const Text('CSV line copied', style: TextStyle(fontSize: 12)),
+          duration: const Duration(seconds: 1),
+          behavior: SnackBarBehavior.floating,
+          width: 250,
+        ),
+      );
+    }
+  }
+
+  Widget _copyableOrderCell(String value, bool isDarkTheme, {Color? color, double width = 140, double fontSize = 12, FontWeight? fontWeight, TextAlign textAlign = TextAlign.center}) {
+    return SizedBox(
+      width: width,
+      child: InkWell(
+        onTap: () => _copyCell(value),
+        child: Tooltip(
+          message: value,
+          waitDuration: const Duration(milliseconds: 500),
+          child: Text(
+            value,
+            style: TextStyle(
+              color: color ?? UIConstants.textPrimary(isDarkTheme),
+              fontSize: fontSize,
+              fontWeight: fontWeight,
+            ),
+            textAlign: textAlign,
+            overflow: TextOverflow.ellipsis,
+          ),
+        ),
+      ),
+    );
+  }
+
   Widget _buildOrderRow(Map<String, dynamic> order, bool isDarkTheme) {
     // Helper function to format side
     String formatSide(String side) {
@@ -4451,34 +4518,16 @@ class _TradingPageState extends State<TradingPage> {
       child: Row(
         mainAxisAlignment: MainAxisAlignment.spaceBetween,
         children: [
-          SizedBox(
-            width: 75,
-            child: Text(side, style: TextStyle(color: sideColor, fontSize: UIConstants.fontSizeSm, fontWeight: UIConstants.fontWeightMedium), textAlign: TextAlign.left),
-          ),
-          SizedBox(
-            width: 140,
-            child: Text(order['symbol'] ?? 'N/A', style: TextStyle(color: UIConstants.textPrimary(isDarkTheme), fontSize: 12), textAlign: TextAlign.center),
-          ),
+          _copyableOrderCell(side, isDarkTheme, width: 75, color: sideColor, fontWeight: UIConstants.fontWeightMedium, fontSize: UIConstants.fontSizeSm, textAlign: TextAlign.left),
+          _copyableOrderCell(order['symbol'] ?? 'N/A', isDarkTheme),
+          _copyableOrderCell(quantityDisplay, isDarkTheme),
+          _copyableOrderCell(priceDisplay, isDarkTheme),
+          _copyableOrderCell(_formatOrderTimestamp(order['create_timestamp']), isDarkTheme, fontSize: 11),
           SizedBox(
             width: 140,
-            child: Text(quantityDisplay, style: TextStyle(color: UIConstants.textPrimary(isDarkTheme), fontSize: 12), textAlign: TextAlign.center),
+            child: _buildExpireTimestampCell(order['expire_timestamp'], isDarkTheme, unit: order['expire_ts_unit'] ?? 'ms'),
           ),
-          SizedBox(
-            width: 140,
-            child: Text(priceDisplay, style: TextStyle(color: UIConstants.textPrimary(isDarkTheme), fontSize: 12), textAlign: TextAlign.center),
-          ),
-          SizedBox(
-            width: 140,
-            child: Text(_formatOrderTimestamp(order['create_timestamp']), style: TextStyle(color: UIConstants.textPrimary(isDarkTheme), fontSize: 11), textAlign: TextAlign.center),
-          ),
-          SizedBox(
-            width: 140,
-            child: _buildExpireTimestampCell(order['expire_timestamp'], isDarkTheme),
-          ),
-          SizedBox(
-            width: 140,
-            child: Text(status, style: TextStyle(color: statusColor, fontSize: UIConstants.fontSizeSm, fontWeight: UIConstants.fontWeightNormal), textAlign: TextAlign.center),
-          ),
+          _copyableOrderCell(status, isDarkTheme, color: statusColor, fontSize: UIConstants.fontSizeSm),
           Expanded(child: Row(
               mainAxisAlignment: MainAxisAlignment.center,
               mainAxisSize: MainAxisSize.min,
@@ -4501,6 +4550,22 @@ class _TradingPageState extends State<TradingPage> {
                     onPressed: () => _replaceOrder(order['participantOrderId']?.toString() ?? '', order),
                   ),
                 ],
+                IconButton(
+                  icon: const Icon(Icons.copy, size: 16),
+                  color: Colors.grey,
+                  tooltip: 'Copy CSV line',
+                  padding: EdgeInsets.zero,
+                  constraints: const BoxConstraints(minWidth: 28, minHeight: 28),
+                  onPressed: () => _copyOrderCsv(order),
+                ),
+                IconButton(
+                  icon: const Icon(Icons.data_object, size: 16),
+                  color: Colors.grey,
+                  tooltip: 'Copy JSON',
+                  padding: EdgeInsets.zero,
+                  constraints: const BoxConstraints(minWidth: 28, minHeight: 28),
+                  onPressed: () => _copyOrderJson(order),
+                ),
                 IconButton(
                   icon: const Icon(Icons.info_outline, size: 18),
                   color: Colors.grey,
@@ -4804,44 +4869,46 @@ class _TradingPageState extends State<TradingPage> {
       child: Row(
         mainAxisAlignment: MainAxisAlignment.spaceBetween,
         children: [
-          SizedBox(
-            width: 75,
-            child: Text(side, style: TextStyle(color: sideColor, fontSize: UIConstants.fontSizeSm, fontWeight: UIConstants.fontWeightMedium), textAlign: TextAlign.left),
-          ),
-          SizedBox(
-            width: 150,
-            child: Text(order['symbol'] ?? 'N/A', style: TextStyle(color: UIConstants.textPrimary(isDarkTheme), fontSize: 12), textAlign: TextAlign.center),
-          ),
+          _copyableOrderCell(side, isDarkTheme, width: 75, color: sideColor, fontWeight: UIConstants.fontWeightMedium, fontSize: UIConstants.fontSizeSm, textAlign: TextAlign.left),
+          _copyableOrderCell(order['symbol'] ?? 'N/A', isDarkTheme, width: 150),
+          _copyableOrderCell(quantityDisplay, isDarkTheme, width: 150),
+          _copyableOrderCell(priceDisplay, isDarkTheme, width: 150),
+          _copyableOrderCell(_formatOrderTimestamp(order['create_timestamp']), isDarkTheme, width: 150, fontSize: 11),
           SizedBox(
             width: 150,
-            child: Text(quantityDisplay, style: TextStyle(color: UIConstants.textPrimary(isDarkTheme), fontSize: 12), textAlign: TextAlign.center),
+            child: _buildExpireTimestampCell(order['expire_timestamp'], isDarkTheme, unit: order['expire_ts_unit'] ?? 'ms'),
           ),
-          SizedBox(
-            width: 150,
-            child: Text(priceDisplay, style: TextStyle(color: UIConstants.textPrimary(isDarkTheme), fontSize: 12), textAlign: TextAlign.center),
-          ),
-          SizedBox(
-            width: 150,
-            child: Text(_formatOrderTimestamp(order['create_timestamp']), style: TextStyle(color: UIConstants.textPrimary(isDarkTheme), fontSize: 11), textAlign: TextAlign.center),
-          ),
-          SizedBox(
-            width: 150,
-            child: _buildExpireTimestampCell(order['expire_timestamp'], isDarkTheme),
-          ),
-          SizedBox(
-            width: 140,
-            child: Text(status, style: TextStyle(color: statusColor, fontSize: UIConstants.fontSizeSm, fontWeight: UIConstants.fontWeightNormal), textAlign: TextAlign.center),
-          ),
+          _copyableOrderCell(status, isDarkTheme, color: statusColor, fontSize: UIConstants.fontSizeSm),
           Expanded(
-            child: Center(
-              child: IconButton(
-                icon: const Icon(Icons.info_outline, size: 18),
-                color: Colors.grey,
-                tooltip: 'Details',
-                padding: EdgeInsets.zero,
-                constraints: const BoxConstraints(minWidth: 28, minHeight: 28),
-                onPressed: () => _showOrderDetails(order),
-              ),
+            child: Row(
+              mainAxisAlignment: MainAxisAlignment.center,
+              mainAxisSize: MainAxisSize.min,
+              children: [
+                IconButton(
+                  icon: const Icon(Icons.copy, size: 16),
+                  color: Colors.grey,
+                  tooltip: 'Copy CSV line',
+                  padding: EdgeInsets.zero,
+                  constraints: const BoxConstraints(minWidth: 28, minHeight: 28),
+                  onPressed: () => _copyOrderCsv(order),
+                ),
+                IconButton(
+                  icon: const Icon(Icons.data_object, size: 16),
+                  color: Colors.grey,
+                  tooltip: 'Copy JSON',
+                  padding: EdgeInsets.zero,
+                  constraints: const BoxConstraints(minWidth: 28, minHeight: 28),
+                  onPressed: () => _copyOrderJson(order),
+                ),
+                IconButton(
+                  icon: const Icon(Icons.info_outline, size: 18),
+                  color: Colors.grey,
+                  tooltip: 'Details',
+                  padding: EdgeInsets.zero,
+                  constraints: const BoxConstraints(minWidth: 28, minHeight: 28),
+                  onPressed: () => _showOrderDetails(order),
+                ),
+              ],
             ),
           ),
         ],
