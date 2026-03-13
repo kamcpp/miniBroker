@@ -1,3 +1,4 @@
+import 'dart:io';
 import 'package:flutter/material.dart';
 import '../config/ui_constants.dart';
 
@@ -116,6 +117,8 @@ class _LeftMenuState extends State<LeftMenu> with SingleTickerProviderStateMixin
                   children: widget.menuItems.map(_buildMenuItem).toList(),
                 ),
               ),
+
+              const SizedBox(height: UIConstants.paddingSm),
             ],
           ),
         );
@@ -136,6 +139,63 @@ class _LeftMenuState extends State<LeftMenu> with SingleTickerProviderStateMixin
               color: UIConstants.textPrimary(widget.isDarkTheme),
             ),
           ],
+        ),
+      ),
+    );
+  }
+
+  void _launchNewInstance() {
+    final executable = Platform.resolvedExecutable;
+    Process.start(executable, [], mode: ProcessStartMode.detached);
+  }
+
+  Widget _buildNewInstanceButton() {
+    final color = UIConstants.textPrimary(widget.isDarkTheme);
+
+    return Tooltip(
+      message: _isExpanded ? '' : 'New Instance',
+      child: InkWell(
+        onTap: _launchNewInstance,
+        child: Container(
+          margin: const EdgeInsets.symmetric(
+            horizontal: UIConstants.paddingSm,
+            vertical: 2,
+          ),
+          padding: const EdgeInsets.symmetric(
+            horizontal: UIConstants.paddingMd,
+            vertical: UIConstants.paddingMd,
+          ),
+          decoration: BoxDecoration(
+            border: Border(
+              top: BorderSide(
+                color: UIConstants.borderColor(widget.isDarkTheme),
+                width: 1,
+              ),
+            ),
+          ),
+          child: Row(
+            children: [
+              Icon(
+                Icons.open_in_new,
+                color: color,
+                size: 22,
+              ),
+              if (_isExpanded) ...[
+                const SizedBox(width: UIConstants.spacingMd),
+                Expanded(
+                  child: Text(
+                    'New Instance',
+                    style: TextStyle(
+                      color: color,
+                      fontSize: UIConstants.fontSizeBody,
+                      fontWeight: UIConstants.fontWeightNormal,
+                    ),
+                    overflow: TextOverflow.ellipsis,
+                  ),
+                ),
+              ],
+            ],
+          ),
         ),
       ),
     );

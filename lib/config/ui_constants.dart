@@ -158,13 +158,13 @@ class UIConstants {
   // ============================================================================
 
   /// Button height - compact (34px)
-  static const double buttonHeightCompact = 34.0;
+  static const double buttonHeightCompact = 36.0;
 
   /// Button height - standard (38px)
-  static const double buttonHeightStandard = 38.0;
+  static const double buttonHeightStandard = 40.0;
 
   /// Input field height - compact (32px)
-  static const double inputHeightCompact = 32.0;
+  static const double inputHeightCompact = 40.0;
 
   /// Icon size - small (14px)
   static const double iconSizeSm = 14.0;
@@ -209,7 +209,7 @@ class UIConstants {
 
   /// Large radius for dialogs, major containers (4px)
   static const double borderRadiusLg = 4.0;
-
+ 
   // ============================================================================
   // LIST/TABLE SETTINGS - Dense data display
   // ============================================================================

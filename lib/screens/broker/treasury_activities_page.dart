@@ -18,20 +18,20 @@ import '../../widgets/base_page.dart';
 import '../../generated/prtagent/v1/reporting.pbgrpc.dart';
 import '../../generated/common.pb.dart' as common_pb;
 
-class ExecutionReportsPage extends StatefulWidget {
-  const ExecutionReportsPage({super.key});
+class TreasuryActivitiesPage extends StatefulWidget {
+  const TreasuryActivitiesPage({super.key});
 
   @override
-  State<ExecutionReportsPage> createState() => _ExecutionReportsPageState();
+  State<TreasuryActivitiesPage> createState() => _TreasuryActivitiesPageState();
 }
 
-class _ExecutionReportsPageState extends State<ExecutionReportsPage> {
+class _TreasuryActivitiesPageState extends State<TreasuryActivitiesPage> {
   // Scroll controllers
   final _verticalScrollController = ScrollController();
   final _horizontalScrollController = ScrollController();
 
   // Data
-  List<Map<String, dynamic>> _reports = [];
+  List<Map<String, dynamic>> _activities = [];
   int _totalCount = 0;
 
   // Loading state
@@ -41,7 +41,6 @@ class _ExecutionReportsPageState extends State<ExecutionReportsPage> {
   // Selection
   int? _selectedRowIndex;
 
-
   // Pagination
   int _currentPage = 1;
   int _pageSize = 20;
@@ -49,67 +48,41 @@ class _ExecutionReportsPageState extends State<ExecutionReportsPage> {
 
   // Filters
   final _searchController = TextEditingController();
-  final _requestIdController = TextEditingController();
-  final _symbolController = TextEditingController();
-  final _currencyController = TextEditingController();
-  String? _execTypeFilter;
-  String? _sideFilter;
+  final _operationController = TextEditingController();
+  final _contractAddrController = TextEditingController();
+  final _senderAccountController = TextEditingController();
   String? _sortBy = 'created_at';
   String _sortDirection = 'desc';
-
-  static const _execTypeOptions = <String, String>{
-    '': 'All Types',
-    '0': 'New',
-    '1': 'Partial Fill',
-    '2': 'Fill',
-    '3': 'Done for Day',
-    '4': 'Canceled',
-    '5': 'Replaced',
-    '6': 'Pending Cancel',
-    '8': 'Rejected',
-    'A': 'Pending New',
-    'C': 'Expired',
-    'E': 'Pending Replace',
-    'F': 'Trade',
-  };
-
-  static const _sideOptions = <String, String>{
-    '': 'All Sides',
-    '1': 'Buy',
-    '2': 'Sell',
-  };
 
   static const _sortByOptions = <String, String>{
     '': 'Default',
     'created_at': 'Created At',
-    'symbol': 'Symbol',
-    'side': 'Side',
-    'exec_type': 'Exec Type',
-    'ord_status': 'Status',
-    'price': 'Price',
-    'order_qty': 'Quantity',
+    'operation': 'Operation',
+    'amount': 'Amount',
+    'token_id': 'Token ID',
+    'timestamp': 'Timestamp',
   };
 
   @override
   void initState() {
     super.initState();
     WidgetsBinding.instance.addPostFrameCallback((_) {
-      _fetchReports();
+      _fetchActivities();
     });
   }
 
   @override
   void dispose() {
     _searchController.dispose();
-    _requestIdController.dispose();
-    _symbolController.dispose();
-    _currencyController.dispose();
+    _operationController.dispose();
+    _contractAddrController.dispose();
+    _senderAccountController.dispose();
     _verticalScrollController.dispose();
     _horizontalScrollController.dispose();
     super.dispose();
   }
 
-  Future<void> _fetchReports() async {
+  Future<void> _fetchActivities() async {
     setState(() {
       _isLoading = true;
       _errorMessage = null;
@@ -140,8 +113,8 @@ class _ExecutionReportsPageState extends State<ExecutionReportsPage> {
       final client = ReportingServiceClient(channel);
 
       // Build request
-      final request = GetExecutionReportsRequest(
-        proposedExecutionId: 'get_exec_reports_${DateTime.now().millisecondsSinceEpoch}',
+      final request = GetTreasuryActivitiesRequest(
+        proposedExecutionId: 'get_treasury_activities_${DateTime.now().millisecondsSinceEpoch}',
         pagination: common_pb.PaginationParams(
           pageNr: _currentPage,
           pageSize: _pageSize,
@@ -150,72 +123,80 @@ class _ExecutionReportsPageState extends State<ExecutionReportsPage> {
       );
 
       // Apply optional filters
-      final requestId = _requestIdController.text.trim();
-      if (requestId.isNotEmpty) request.requestId = requestId;
-      final symbol = _symbolController.text.trim();
-      if (symbol.isNotEmpty) request.symbol = symbol;
-      final currency = _currencyController.text.trim();
-      if (currency.isNotEmpty) request.currency = currency;
-      if (_execTypeFilter != null && _execTypeFilter!.isNotEmpty) request.execType = _execTypeFilter!;
-      if (_sideFilter != null && _sideFilter!.isNotEmpty) request.side = _sideFilter!;
+      final operation = _operationController.text.trim();
+      if (operation.isNotEmpty) request.operation = operation;
+      final contractAddr = _contractAddrController.text.trim();
+      if (contractAddr.isNotEmpty) request.contractAddr = contractAddr;
+      final senderAccount = _senderAccountController.text.trim();
+      if (senderAccount.isNotEmpty) request.senderAccount = senderAccount;
       if (_sortBy != null && _sortBy!.isNotEmpty) request.sortBy = _sortBy!;
       final search = _searchController.text.trim();
       if (search.isNotEmpty) request.search = search;
 
-      print('📋 [ExecReports] Calling GetExecutionReports sortBy=${request.sortBy}, sortDirection=${request.sortDirection}');
-      final response = await client.getExecutionReports(request, options: callOptions);
-      print('📋 [ExecReports] Raw response: ${response.toString()}');
+      print('📋 [TreasuryActivities] Calling ReportingService.GetTreasuryActivities via native gRPC');
+      final response = await client.getTreasuryActivities(request, options: callOptions);
+      print('📋 [TreasuryActivities] Raw response: ${response.toString()}');
 
       if (!mounted) return;
 
-      final reports = response.executionReports;
+      final activities = response.activities;
       final totalCount = response.paginationInfo.totalCount.toInt();
-      final totalPages = totalCount > 0 ? (totalCount / _pageSize).ceil().clamp(1, 999999) : (reports.length == _pageSize ? _currentPage + 1 : _currentPage);
+      final totalPages = totalCount > 0 ? (totalCount / _pageSize).ceil().clamp(1, 999999) : (activities.length == _pageSize ? _currentPage + 1 : _currentPage);
 
-      print('📋 [ExecReports] Got ${reports.length} reports, totalCount=$totalCount, totalPages=$totalPages');
-      if (reports.isNotEmpty) {
-        print('📋 [ExecReports] First report: ${reports.first.toString()}');
+      print('📋 [TreasuryActivities] Got ${activities.length} activities, totalCount=$totalCount, totalPages=$totalPages');
+      if (activities.isNotEmpty) {
+        print('📋 [TreasuryActivities] First activity: ${activities.first.toString()}');
       }
 
       // Convert protobuf objects to maps for the UI
-      final reportMaps = reports.map((r) => <String, dynamic>{
+      final activityMaps = activities.map((r) => <String, dynamic>{
         'iid': r.iid,
-        'requestId': r.requestId,
-        'venueIid': r.venueIid,
-        'clOrdId': r.clOrdId,
-        'orderId': r.orderId,
-        'execId': r.execId,
-        'execType': r.execType,
-        'ordStatus': r.ordStatus,
-        'symbol': r.symbol,
-        'side': r.side,
-        'leavesQty': r.leavesQty,
-        'cumQty': r.cumQty,
-        'avgPx': r.avgPx,
-        'price': r.price,
-        'orderQty': r.orderQty,
-        'currency': r.currency,
-        'transactTime': r.transactTime,
-        'text': r.text,
+        'activityId': r.activityId,
+        'activityHash': r.activityHash,
+        'idempotencyKey': r.idempotencyKey,
+        'timestamp': r.timestamp,
+        'ledgerId': r.ledgerId,
+        'operation': r.operation,
+        'operationName': r.operationName,
+        'senderAccount': r.senderAccount,
+        'callerAccount': r.callerAccount,
+        'contractAddr': r.contractAddr,
+        'contractType': r.contractType,
+        'fromAccount': r.fromAccount,
+        'toAccount': r.toAccount,
+        'fromVault': r.fromVault,
+        'toVault': r.toVault,
+        'fromReserveId': r.fromReserveId,
+        'toReserveId': r.toReserveId,
+        'fromStash': r.fromStash,
+        'toStash': r.toStash,
+        'tokenId': r.tokenId,
+        'amount': r.amount,
+        'data': r.data,
+        'deploymentIid': r.deploymentIid,
+        'mechanismIid': r.mechanismIid,
+        'legalStructureIid': r.legalStructureIid,
+        'trezorSlotAddress': r.trezorSlotAddress,
+        'execRuntimeName': r.execRuntimeName,
         'createdAt': r.createdAt,
       }).toList();
 
       setState(() {
-        _reports = reportMaps;
-        _totalCount = totalCount > 0 ? totalCount : reports.length;
+        _activities = activityMaps;
+        _totalCount = totalCount > 0 ? totalCount : activities.length;
         _totalPages = totalPages;
         _isLoading = false;
       });
     } on GrpcError catch (e) {
       if (!mounted) return;
-      print('❌ [ExecReports] gRPC error: code=${e.code}, message=${e.message}');
+      print('❌ [TreasuryActivities] gRPC error: code=${e.code}, message=${e.message}');
       setState(() {
         _errorMessage = 'gRPC error ${e.code}: ${e.message}';
         _isLoading = false;
       });
     } catch (e) {
       if (!mounted) return;
-      print('❌ [ExecReports] Error: $e');
+      print('❌ [TreasuryActivities] Error: $e');
       setState(() {
         _errorMessage = 'Error: $e';
         _isLoading = false;
@@ -230,47 +211,51 @@ class _ExecutionReportsPageState extends State<ExecutionReportsPage> {
     setState(() {
       _currentPage = page;
     });
-    _fetchReports();
+    _fetchActivities();
   }
 
   void _applyFilters() {
     setState(() {
       _currentPage = 1;
     });
-    _fetchReports();
+    _fetchActivities();
   }
 
   void _resetFilters() {
     setState(() {
       _searchController.clear();
-      _requestIdController.clear();
-      _symbolController.clear();
-      _currencyController.clear();
-      _execTypeFilter = null;
-      _sideFilter = null;
+      _operationController.clear();
+      _contractAddrController.clear();
+      _senderAccountController.clear();
       _sortBy = 'created_at';
       _sortDirection = 'desc';
       _currentPage = 1;
     });
-    _fetchReports();
+    _fetchActivities();
   }
 
-  // Column definitions for export
+  // Column definitions for export (all 29 fields)
   static const _exportColumns = [
-    'execId', 'requestId', 'execType', 'ordStatus', 'symbol', 'side',
-    'price', 'orderQty', 'cumQty', 'leavesQty', 'avgPx', 'currency',
-    'clOrdId', 'orderId', 'venueIid', 'transactTime', 'createdAt', 'text',
+    'iid', 'activityId', 'activityHash', 'idempotencyKey', 'timestamp',
+    'ledgerId', 'operation', 'operationName', 'senderAccount', 'callerAccount',
+    'contractAddr', 'contractType', 'fromAccount', 'toAccount', 'fromVault',
+    'toVault', 'fromReserveId', 'toReserveId', 'fromStash', 'toStash',
+    'tokenId', 'amount', 'data', 'deploymentIid', 'mechanismIid',
+    'legalStructureIid', 'trezorSlotAddress', 'execRuntimeName', 'createdAt',
   ];
 
   static const _exportHeaders = [
-    'Exec ID', 'Request ID', 'Type', 'Status', 'Symbol', 'Side',
-    'Price', 'Ord Qty', 'Cum Qty', 'Leaves', 'Avg Px', 'Currency',
-    'Cl Ord ID', 'Order ID', 'Venue', 'Time', 'Created At', 'Text',
+    'IID', 'Activity ID', 'Activity Hash', 'Idempotency Key', 'Timestamp',
+    'Ledger ID', 'Operation', 'Operation Name', 'Sender Account', 'Caller Account',
+    'Contract Addr', 'Contract Type', 'From Account', 'To Account', 'From Vault',
+    'To Vault', 'From Reserve ID', 'To Reserve ID', 'From Stash', 'To Stash',
+    'Token ID', 'Amount', 'Data', 'Deployment IID', 'Mechanism IID',
+    'Legal Structure IID', 'Trezor Slot Address', 'Exec Runtime Name', 'Created At',
   ];
 
-  /// Fetch ALL reports matching current filters (no pagination limit) for export.
-  Future<List<Map<String, dynamic>>> _fetchAllReportsForExport() async {
-    final allReports = <Map<String, dynamic>>[];
+  /// Fetch ALL activities matching current filters (no pagination limit) for export.
+  Future<List<Map<String, dynamic>>> _fetchAllActivitiesForExport() async {
+    final allActivities = <Map<String, dynamic>>[];
     int page = 1;
     const batchSize = 500;
 
@@ -297,7 +282,7 @@ class _ExecutionReportsPageState extends State<ExecutionReportsPage> {
       final client = ReportingServiceClient(channel);
 
       while (true) {
-        final request = GetExecutionReportsRequest(
+        final request = GetTreasuryActivitiesRequest(
           proposedExecutionId: 'export_${DateTime.now().millisecondsSinceEpoch}',
           pagination: common_pb.PaginationParams(
             pageNr: page,
@@ -307,64 +292,72 @@ class _ExecutionReportsPageState extends State<ExecutionReportsPage> {
         );
 
         // Apply same filters as the current view
-        final requestId = _requestIdController.text.trim();
-        if (requestId.isNotEmpty) request.requestId = requestId;
-        final symbol = _symbolController.text.trim();
-        if (symbol.isNotEmpty) request.symbol = symbol;
-        final currency = _currencyController.text.trim();
-        if (currency.isNotEmpty) request.currency = currency;
-        if (_execTypeFilter != null && _execTypeFilter!.isNotEmpty) request.execType = _execTypeFilter!;
-        if (_sideFilter != null && _sideFilter!.isNotEmpty) request.side = _sideFilter!;
+        final operation = _operationController.text.trim();
+        if (operation.isNotEmpty) request.operation = operation;
+        final contractAddr = _contractAddrController.text.trim();
+        if (contractAddr.isNotEmpty) request.contractAddr = contractAddr;
+        final senderAccount = _senderAccountController.text.trim();
+        if (senderAccount.isNotEmpty) request.senderAccount = senderAccount;
         if (_sortBy != null && _sortBy!.isNotEmpty) request.sortBy = _sortBy!;
         final search = _searchController.text.trim();
         if (search.isNotEmpty) request.search = search;
 
-        final response = await client.getExecutionReports(request, options: callOptions);
-        final reports = response.executionReports;
+        final response = await client.getTreasuryActivities(request, options: callOptions);
+        final activities = response.activities;
 
-        for (final r in reports) {
-          allReports.add(<String, dynamic>{
+        for (final r in activities) {
+          allActivities.add(<String, dynamic>{
             'iid': r.iid,
-            'requestId': r.requestId,
-            'venueIid': r.venueIid,
-            'clOrdId': r.clOrdId,
-            'orderId': r.orderId,
-            'execId': r.execId,
-            'execType': r.execType,
-            'ordStatus': r.ordStatus,
-            'symbol': r.symbol,
-            'side': r.side,
-            'leavesQty': r.leavesQty,
-            'cumQty': r.cumQty,
-            'avgPx': r.avgPx,
-            'price': r.price,
-            'orderQty': r.orderQty,
-            'currency': r.currency,
-            'transactTime': r.transactTime,
-            'text': r.text,
+            'activityId': r.activityId,
+            'activityHash': r.activityHash,
+            'idempotencyKey': r.idempotencyKey,
+            'timestamp': r.timestamp,
+            'ledgerId': r.ledgerId,
+            'operation': r.operation,
+            'operationName': r.operationName,
+            'senderAccount': r.senderAccount,
+            'callerAccount': r.callerAccount,
+            'contractAddr': r.contractAddr,
+            'contractType': r.contractType,
+            'fromAccount': r.fromAccount,
+            'toAccount': r.toAccount,
+            'fromVault': r.fromVault,
+            'toVault': r.toVault,
+            'fromReserveId': r.fromReserveId,
+            'toReserveId': r.toReserveId,
+            'fromStash': r.fromStash,
+            'toStash': r.toStash,
+            'tokenId': r.tokenId,
+            'amount': r.amount,
+            'data': r.data,
+            'deploymentIid': r.deploymentIid,
+            'mechanismIid': r.mechanismIid,
+            'legalStructureIid': r.legalStructureIid,
+            'trezorSlotAddress': r.trezorSlotAddress,
+            'execRuntimeName': r.execRuntimeName,
             'createdAt': r.createdAt,
           });
         }
 
         // Stop if we got fewer than requested (last page) or no results
-        if (reports.length < batchSize) break;
+        if (activities.length < batchSize) break;
         page++;
       }
     } finally {
       await channel?.shutdown();
     }
 
-    return allReports;
+    return allActivities;
   }
 
-  Future<void> _exportReports(String format) async {
-    if (_reports.isEmpty) return;
+  Future<void> _exportActivities(String format) async {
+    if (_activities.isEmpty) return;
 
     try {
       // Show loading indicator
       setState(() => _isLoading = true);
 
-      final exportData = await _fetchAllReportsForExport();
+      final exportData = await _fetchAllActivitiesForExport();
 
       if (!mounted) return;
       setState(() => _isLoading = false);
@@ -372,14 +365,14 @@ class _ExecutionReportsPageState extends State<ExecutionReportsPage> {
       if (exportData.isEmpty) {
         if (mounted) {
           ScaffoldMessenger.of(context).showSnackBar(
-            const SnackBar(content: Text('No reports to export')),
+            const SnackBar(content: Text('No activities to export')),
           );
         }
         return;
       }
 
       final timestamp = DateTime.now().toIso8601String().replaceAll(':', '-').split('.').first;
-      final defaultName = 'exec_reports_$timestamp';
+      final defaultName = 'treasury_activities_$timestamp';
 
       switch (format) {
         case 'csv':
@@ -410,15 +403,15 @@ class _ExecutionReportsPageState extends State<ExecutionReportsPage> {
 
   List<List<String>> _buildExportRows(List<Map<String, dynamic>> data) {
     final rows = <List<String>>[_exportHeaders];
-    for (final report in data) {
-      rows.add(_exportColumns.map((col) => _str(report, col)).toList());
+    for (final activity in data) {
+      rows.add(_exportColumns.map((col) => _str(activity, col)).toList());
     }
     return rows;
   }
 
   Future<String?> _pickSaveLocation(String defaultName, String extension) async {
     final result = await FilePicker.platform.saveFile(
-      dialogTitle: 'Export Execution Reports',
+      dialogTitle: 'Export Treasury Activities',
       fileName: '$defaultName.$extension',
     );
     return result;
@@ -437,10 +430,10 @@ class _ExecutionReportsPageState extends State<ExecutionReportsPage> {
     final path = await _pickSaveLocation(defaultName, 'json');
     if (path == null) return;
 
-    final jsonList = data.map((report) {
+    final jsonList = data.map((activity) {
       final map = <String, String>{};
       for (int i = 0; i < _exportColumns.length; i++) {
-        map[_exportHeaders[i]] = _str(report, _exportColumns[i]);
+        map[_exportHeaders[i]] = _str(activity, _exportColumns[i]);
       }
       return map;
     }).toList();
@@ -455,7 +448,7 @@ class _ExecutionReportsPageState extends State<ExecutionReportsPage> {
     if (path == null) return;
 
     final excel = xl.Excel.createExcel();
-    final sheet = excel['Execution Reports'];
+    final sheet = excel['Treasury Activities'];
 
     // Remove default Sheet1
     excel.delete('Sheet1');
@@ -492,7 +485,7 @@ class _ExecutionReportsPageState extends State<ExecutionReportsPage> {
         pageFormat: PdfPageFormat.a3.landscape,
         margin: const pw.EdgeInsets.all(20),
         header: (context) => pw.Text(
-          'Execution Reports - Exported ${DateTime.now().toIso8601String().split('T').first} (${data.length} records)',
+          'Treasury Activities - Exported ${DateTime.now().toIso8601String().split('T').first} (${data.length} records)',
           style: pw.TextStyle(fontSize: 12, fontWeight: pw.FontWeight.bold),
         ),
         build: (context) => [
@@ -517,26 +510,39 @@ class _ExecutionReportsPageState extends State<ExecutionReportsPage> {
     if (path == null) return;
 
     final buffer = StringBuffer();
-    final soh = '|'; // Use | as delimiter for readability (SOH in real FIX)
+    final soh = '|'; // Use | as delimiter for readability
 
-    for (final report in data) {
+    for (final activity in data) {
       final fields = <String>[
-        '35=8', // MsgType = Execution Report
-        '17=${_str(report, 'execId')}',
-        '11=${_str(report, 'clOrdId')}',
-        '37=${_str(report, 'orderId')}',
-        '150=${_str(report, 'execType')}',
-        '39=${_str(report, 'ordStatus')}',
-        '55=${_str(report, 'symbol')}',
-        '54=${_str(report, 'side')}',
-        '44=${_str(report, 'price')}',
-        '38=${_str(report, 'orderQty')}',
-        '14=${_str(report, 'cumQty')}',
-        '151=${_str(report, 'leavesQty')}',
-        '6=${_str(report, 'avgPx')}',
-        '15=${_str(report, 'currency')}',
-        '60=${_str(report, 'transactTime')}',
-        '58=${_str(report, 'text')}',
+        'iid=${_str(activity, 'iid')}',
+        'activityId=${_str(activity, 'activityId')}',
+        'activityHash=${_str(activity, 'activityHash')}',
+        'idempotencyKey=${_str(activity, 'idempotencyKey')}',
+        'timestamp=${_str(activity, 'timestamp')}',
+        'ledgerId=${_str(activity, 'ledgerId')}',
+        'operation=${_str(activity, 'operation')}',
+        'operationName=${_str(activity, 'operationName')}',
+        'senderAccount=${_str(activity, 'senderAccount')}',
+        'callerAccount=${_str(activity, 'callerAccount')}',
+        'contractAddr=${_str(activity, 'contractAddr')}',
+        'contractType=${_str(activity, 'contractType')}',
+        'fromAccount=${_str(activity, 'fromAccount')}',
+        'toAccount=${_str(activity, 'toAccount')}',
+        'fromVault=${_str(activity, 'fromVault')}',
+        'toVault=${_str(activity, 'toVault')}',
+        'fromReserveId=${_str(activity, 'fromReserveId')}',
+        'toReserveId=${_str(activity, 'toReserveId')}',
+        'fromStash=${_str(activity, 'fromStash')}',
+        'toStash=${_str(activity, 'toStash')}',
+        'tokenId=${_str(activity, 'tokenId')}',
+        'amount=${_str(activity, 'amount')}',
+        'data=${_str(activity, 'data')}',
+        'deploymentIid=${_str(activity, 'deploymentIid')}',
+        'mechanismIid=${_str(activity, 'mechanismIid')}',
+        'legalStructureIid=${_str(activity, 'legalStructureIid')}',
+        'trezorSlotAddress=${_str(activity, 'trezorSlotAddress')}',
+        'execRuntimeName=${_str(activity, 'execRuntimeName')}',
+        'createdAt=${_str(activity, 'createdAt')}',
       ];
       buffer.writeln(fields.join(soh));
     }
@@ -549,7 +555,7 @@ class _ExecutionReportsPageState extends State<ExecutionReportsPage> {
     if (!mounted) return;
     ScaffoldMessenger.of(context).showSnackBar(
       SnackBar(
-        content: Text('Exported $count reports to: $path', style: const TextStyle(fontSize: 12)),
+        content: Text('Exported $count activities to: $path', style: const TextStyle(fontSize: 12)),
         duration: const Duration(seconds: 3),
         behavior: SnackBarBehavior.floating,
         action: SnackBarAction(
@@ -585,7 +591,7 @@ class _ExecutionReportsPageState extends State<ExecutionReportsPage> {
     final backgroundColor = UIConstants.pageBackground(isDarkTheme);
 
     return BasePage(
-      menuItems: MenuItemsHelper.buildMenuItems(context, 'execution_reports'),
+      menuItems: MenuItemsHelper.buildMenuItems(context, 'treasury_activities'),
       content: Container(
         color: backgroundColor,
         padding: UIConstants.paddingComfortable,
@@ -625,7 +631,7 @@ class _ExecutionReportsPageState extends State<ExecutionReportsPage> {
                               SizedBox(
                                 height: UIConstants.buttonHeightStandard,
                                 child: ElevatedButton(
-                                  onPressed: _fetchReports,
+                                  onPressed: _fetchActivities,
                                   style: UIConstants.buttonStyle(UIConstants.commandColor(isDarkTheme)),
                                   child: Text('Retry', style: TextStyle(fontSize: UIConstants.fontSizeSm)),
                                 ),
@@ -645,7 +651,7 @@ class _ExecutionReportsPageState extends State<ExecutionReportsPage> {
     return Row(
       children: [
         Text(
-          'Execution Reports',
+          'Treasury Activities',
           style: TextStyle(
             color: UIConstants.textPrimary(isDarkTheme),
             fontSize: UIConstants.fontSizeLg,
@@ -667,7 +673,7 @@ class _ExecutionReportsPageState extends State<ExecutionReportsPage> {
         SizedBox(
           height: UIConstants.buttonHeightStandard,
           child: ElevatedButton.icon(
-            onPressed: _isLoading ? null : _fetchReports,
+            onPressed: _isLoading ? null : _fetchActivities,
             icon: const Icon(Icons.refresh, size: 16),
             label: Text('Refresh', style: TextStyle(fontSize: UIConstants.fontSizeSm)),
             style: UIConstants.buttonStyle(UIConstants.commandColor(isDarkTheme)),
@@ -677,8 +683,8 @@ class _ExecutionReportsPageState extends State<ExecutionReportsPage> {
         SizedBox(
           height: UIConstants.buttonHeightStandard,
           child: PopupMenuButton<String>(
-            onSelected: _reports.isEmpty ? null : (format) => _exportReports(format),
-            enabled: _reports.isNotEmpty,
+            onSelected: _activities.isEmpty ? null : (format) => _exportActivities(format),
+            enabled: _activities.isNotEmpty,
             tooltip: 'Export',
             offset: const Offset(0, 36),
             itemBuilder: (context) => [
@@ -686,7 +692,7 @@ class _ExecutionReportsPageState extends State<ExecutionReportsPage> {
               const PopupMenuItem(value: 'json', child: Text('Export as JSON')),
               const PopupMenuItem(value: 'excel', child: Text('Export as Excel')),
               const PopupMenuItem(value: 'pdf', child: Text('Export as PDF')),
-              const PopupMenuItem(value: 'fix', child: Text('Export as FIX (tag=value)')),
+              const PopupMenuItem(value: 'fix', child: Text('Export as FIX (key=value)')),
             ],
             child: Container(
               padding: const EdgeInsets.symmetric(horizontal: 12),
@@ -752,29 +758,29 @@ class _ExecutionReportsPageState extends State<ExecutionReportsPage> {
               width: 130,
               height: UIConstants.buttonHeightStandard,
               child: TextField(
-                controller: _requestIdController,
+                controller: _operationController,
                 style: textStyle,
-                decoration: inputDecoration.copyWith(hintText: 'Request ID', hintStyle: hintStyle),
+                decoration: inputDecoration.copyWith(hintText: 'Operation', hintStyle: hintStyle),
               ),
             ),
             SizedBox(width: UIConstants.spacingSm),
             SizedBox(
-              width: 100,
+              width: 130,
               height: UIConstants.buttonHeightStandard,
               child: TextField(
-                controller: _symbolController,
+                controller: _contractAddrController,
                 style: textStyle,
-                decoration: inputDecoration.copyWith(hintText: 'Symbol', hintStyle: hintStyle),
+                decoration: inputDecoration.copyWith(hintText: 'Contract Addr', hintStyle: hintStyle),
               ),
             ),
             SizedBox(width: UIConstants.spacingSm),
             SizedBox(
-              width: 90,
+              width: 130,
               height: UIConstants.buttonHeightStandard,
               child: TextField(
-                controller: _currencyController,
+                controller: _senderAccountController,
                 style: textStyle,
-                decoration: inputDecoration.copyWith(hintText: 'Currency', hintStyle: hintStyle),
+                decoration: inputDecoration.copyWith(hintText: 'Sender Account', hintStyle: hintStyle),
               ),
             ),
           ],
@@ -783,46 +789,6 @@ class _ExecutionReportsPageState extends State<ExecutionReportsPage> {
         // Line 2: Combo boxes + buttons
         Row(
           children: [
-            SizedBox(
-              width: 150,
-              height: UIConstants.buttonHeightStandard,
-              child: DropdownButtonFormField<String>(
-                value: _execTypeFilter,
-                isDense: true,
-                isExpanded: true,
-                decoration: inputDecoration.copyWith(hintText: 'Exec Type', hintStyle: hintStyle),
-                style: textStyle,
-                dropdownColor: UIConstants.dropdownBackground(isDarkTheme),
-                items: _execTypeOptions.entries
-                    .map((e) => DropdownMenuItem(
-                          value: e.key.isEmpty ? null : e.key,
-                          child: Text(e.value, style: textStyle),
-                        ))
-                    .toList(),
-                onChanged: (value) => setState(() => _execTypeFilter = value),
-              ),
-            ),
-            SizedBox(width: UIConstants.spacingSm),
-            SizedBox(
-              width: 130,
-              height: UIConstants.buttonHeightStandard,
-              child: DropdownButtonFormField<String>(
-                value: _sideFilter,
-                isDense: true,
-                isExpanded: true,
-                decoration: inputDecoration.copyWith(hintText: 'Side', hintStyle: hintStyle),
-                style: textStyle,
-                dropdownColor: UIConstants.dropdownBackground(isDarkTheme),
-                items: _sideOptions.entries
-                    .map((e) => DropdownMenuItem(
-                          value: e.key.isEmpty ? null : e.key,
-                          child: Text(e.value, style: textStyle),
-                        ))
-                    .toList(),
-                onChanged: (value) => setState(() => _sideFilter = value),
-              ),
-            ),
-            SizedBox(width: UIConstants.spacingSm),
             SizedBox(
               width: 150,
               height: UIConstants.buttonHeightStandard,
@@ -842,28 +808,19 @@ class _ExecutionReportsPageState extends State<ExecutionReportsPage> {
                 onChanged: (value) => setState(() => _sortBy = value),
               ),
             ),
-            SizedBox(width: UIConstants.spacingXs),
+            SizedBox(width: UIConstants.spacingSm),
             SizedBox(
               height: UIConstants.buttonHeightStandard,
               child: IconButton(
-                onPressed: () {
-                  setState(() {
-                    _sortDirection = _sortDirection == 'desc' ? 'asc' : 'desc';
-                  });
-                },
                 icon: Icon(
-                  _sortDirection == 'desc' ? Icons.arrow_downward : Icons.arrow_upward,
+                  _sortDirection == 'asc' ? Icons.arrow_upward : Icons.arrow_downward,
                   size: 16,
                   color: UIConstants.textPrimary(isDarkTheme),
                 ),
-                tooltip: _sortDirection == 'desc' ? 'Descending (click for Ascending)' : 'Ascending (click for Descending)',
-                style: IconButton.styleFrom(
-                  backgroundColor: UIConstants.tableHeaderBackground(isDarkTheme),
-                  shape: RoundedRectangleBorder(
-                    borderRadius: BorderRadius.circular(UIConstants.textFieldBorderRadius),
-                    side: BorderSide(color: UIConstants.borderColor(isDarkTheme)),
-                  ),
-                ),
+                onPressed: () => setState(() => _sortDirection = _sortDirection == 'asc' ? 'desc' : 'asc'),
+                tooltip: _sortDirection == 'asc' ? 'Ascending' : 'Descending',
+                padding: EdgeInsets.zero,
+                constraints: const BoxConstraints(minWidth: 32, minHeight: 32),
               ),
             ),
             SizedBox(width: UIConstants.spacingSm),
@@ -890,10 +847,10 @@ class _ExecutionReportsPageState extends State<ExecutionReportsPage> {
   }
 
   Widget _buildContent(bool isDarkTheme) {
-    if (_reports.isEmpty) {
+    if (_activities.isEmpty) {
       return Center(
         child: Text(
-          'No execution reports found.',
+          'No treasury activities found.',
           style: TextStyle(
             color: UIConstants.textSecondary(isDarkTheme),
             fontSize: UIConstants.fontSizeSm,
@@ -929,7 +886,7 @@ class _ExecutionReportsPageState extends State<ExecutionReportsPage> {
                         scrollDirection: Axis.horizontal,
                         child: ConstrainedBox(
                           constraints: BoxConstraints(minWidth: constraints.maxWidth),
-                          child: _buildReportsTable(isDarkTheme),
+                          child: _buildActivitiesTable(isDarkTheme),
                         ),
                       );
                     },
@@ -945,7 +902,7 @@ class _ExecutionReportsPageState extends State<ExecutionReportsPage> {
     );
   }
 
-  Widget _buildReportsTable(bool isDarkTheme) {
+  Widget _buildActivitiesTable(bool isDarkTheme) {
     final headerColor = UIConstants.textSecondary(isDarkTheme);
     final headerStyle = TextStyle(color: headerColor, fontSize: 10, fontWeight: FontWeight.bold);
 
@@ -961,31 +918,38 @@ class _ExecutionReportsPageState extends State<ExecutionReportsPage> {
         borderRadius: BorderRadius.circular(4),
       ),
       columns: [
-        DataColumn(label: Text('Exec ID', style: headerStyle)),
-        DataColumn(label: Text('Request ID', style: headerStyle)),
-        DataColumn(label: Text('Type', style: headerStyle)),
-        DataColumn(label: Text('Status', style: headerStyle)),
-        DataColumn(label: Text('Symbol', style: headerStyle)),
-        DataColumn(label: Text('Side', style: headerStyle)),
-        DataColumn(label: Text('Price', style: headerStyle)),
-        DataColumn(label: Text('Ord Qty', style: headerStyle)),
-        DataColumn(label: Text('Cum Qty', style: headerStyle)),
-        DataColumn(label: Text('Leaves', style: headerStyle)),
-        DataColumn(label: Text('Avg Px', style: headerStyle)),
-        DataColumn(label: Text('Currency', style: headerStyle)),
-        DataColumn(label: Text('Cl Ord ID', style: headerStyle)),
-        DataColumn(label: Text('Order ID', style: headerStyle)),
-        DataColumn(label: Text('Venue', style: headerStyle)),
-        DataColumn(label: Text('Time', style: headerStyle)),
+        DataColumn(label: Text('#', style: headerStyle)),
+        DataColumn(label: Text('Activity ID', style: headerStyle)),
+        DataColumn(label: Text('Operation', style: headerStyle)),
+        DataColumn(label: Text('Amount', style: headerStyle)),
+        DataColumn(label: Text('Sender Account', style: headerStyle)),
+        DataColumn(label: Text('From Account', style: headerStyle)),
+        DataColumn(label: Text('To Account', style: headerStyle)),
+        DataColumn(label: Text('From Vault', style: headerStyle)),
+        DataColumn(label: Text('To Vault', style: headerStyle)),
+        DataColumn(label: Text('From Stash', style: headerStyle)),
+        DataColumn(label: Text('To Stash', style: headerStyle)),
+        DataColumn(label: Text('Contract Addr', style: headerStyle)),
+        DataColumn(label: Text('Contract Type', style: headerStyle)),
+        DataColumn(label: Text('Timestamp', style: headerStyle)),
         DataColumn(label: Text('Created At', style: headerStyle)),
-        DataColumn(label: Text('Text', style: headerStyle)),
+        DataColumn(label: Text('Data', style: headerStyle)),
       ],
-      rows: _reports.asMap().entries.map((entry) {
+      rows: _activities.asMap().entries.map((entry) {
         final idx = entry.key;
-        final report = entry.value;
-        final execType = _str(report, 'execType', 'exec_type');
-        final ordStatus = _str(report, 'ordStatus', 'ord_status');
-        final side = _str(report, 'side');
+        final activity = entry.value;
+        final opName = _str(activity, 'operationName').toUpperCase();
+
+        // Operation-aware N/A logic
+        final isTransferVault = opName.contains('TRANSFER_VAULT') || opName.contains('TRANSFERVAULT');
+        final isDeposit = opName.contains('DEPOSIT');
+
+        final fromAccount = isTransferVault ? 'N/A' : _str(activity, 'fromAccount');
+        final toAccount = isTransferVault ? 'N/A' : _str(activity, 'toAccount');
+        final fromVault = isDeposit ? 'N/A' : _str(activity, 'fromVault');
+        final fromStash = isDeposit ? 'N/A' : _str(activity, 'fromStash');
+        final toStash = isDeposit ? 'N/A' : _str(activity, 'toStash');
+
         return DataRow(
           selected: _selectedRowIndex == idx,
           onSelectChanged: (_) {
@@ -995,34 +959,48 @@ class _ExecutionReportsPageState extends State<ExecutionReportsPage> {
             idx % 2 == 0 ? UIConstants.tableRowEven(isDarkTheme) : UIConstants.tableRowOdd(isDarkTheme),
           ),
           cells: [
-          _copyableCell(_str(report, 'execId', 'exec_id'), isDarkTheme),
-          _copyableCell(_str(report, 'requestId', 'request_id'), isDarkTheme),
-          _badgeCell(execType, _execTypeBadge(execType, isDarkTheme)),
-          _badgeCell(ordStatus, _ordStatusBadge(ordStatus, isDarkTheme)),
-          _copyableCell(_str(report, 'symbol'), isDarkTheme),
-          _sideCell(side, isDarkTheme),
-          _priceCell(_str(report, 'price'), isDarkTheme),
-          _qtyCell(_str(report, 'orderQty', 'order_qty'), isDarkTheme),
-          _qtyCell(_str(report, 'cumQty', 'cum_qty'), isDarkTheme),
-          _qtyCell(_str(report, 'leavesQty', 'leaves_qty'), isDarkTheme),
-          _priceCell(_str(report, 'avgPx', 'avg_px'), isDarkTheme),
-          _copyableCell(_str(report, 'currency'), isDarkTheme),
-          _copyableCell(_str(report, 'clOrdId', 'cl_ord_id'), isDarkTheme),
-          _copyableCell(_str(report, 'orderId', 'order_id'), isDarkTheme),
-          _copyableCell(_str(report, 'venueIid', 'venue_iid'), isDarkTheme),
-          _copyableCell(_str(report, 'transactTime', 'transact_time'), isDarkTheme, noTruncate: true),
-          _copyableCell(_str(report, 'createdAt', 'created_at'), isDarkTheme, noTruncate: true),
-          _copyableTextCell(_str(report, 'text'), isDarkTheme),
+          _hashCell(_str(activity, 'activityHash'), isDarkTheme),
+          _copyableCell(_str(activity, 'activityId'), isDarkTheme),
+          _operationBadgeCell(_str(activity, 'operation'), _str(activity, 'operationName'), isDarkTheme),
+          _amountCell(_str(activity, 'amount'), isDarkTheme),
+          _copyableCell(_str(activity, 'senderAccount'), isDarkTheme),
+          _copyableCell(fromAccount, isDarkTheme),
+          _copyableCell(toAccount, isDarkTheme),
+          _copyableCell(fromVault, isDarkTheme),
+          _copyableCell(_str(activity, 'toVault'), isDarkTheme),
+          _copyableCell(fromStash, isDarkTheme),
+          _copyableCell(toStash, isDarkTheme),
+          _copyableCell(_str(activity, 'contractAddr'), isDarkTheme),
+          _copyableCell(_str(activity, 'contractType'), isDarkTheme),
+          _copyableCell(_str(activity, 'timestamp'), isDarkTheme, noTruncate: true),
+          _copyableCell(_str(activity, 'createdAt'), isDarkTheme, noTruncate: true),
+          _copyableTextCell(_str(activity, 'data'), isDarkTheme),
         ]);
       }).toList(),
     );
   }
 
-  /// Extract string value from report map, trying camelCase then snake_case keys
+  /// Extract string value from activity map
   String _str(Map<String, dynamic> map, String key1, [String? key2]) {
     final val = map[key1] ?? (key2 != null ? map[key2] : null);
     if (val == null) return '-';
     return val.toString().isEmpty ? '-' : val.toString();
+  }
+
+  /// Format amount with divisibility (default 2 for most currencies)
+  String _formatAmount(String rawAmount, [int decimals = 2]) {
+    if (rawAmount == '-' || rawAmount.isEmpty) return rawAmount;
+    try {
+      final value = double.parse(rawAmount);
+      if (decimals <= 0) return rawAmount;
+      double divisor = 1;
+      for (var i = 0; i < decimals; i++) {
+        divisor *= 10;
+      }
+      return (value / divisor).toStringAsFixed(decimals);
+    } catch (_) {
+      return rawAmount;
+    }
   }
 
   /// Max column width for cell content
@@ -1034,9 +1012,11 @@ class _ExecutionReportsPageState extends State<ExecutionReportsPage> {
   /// Eth addresses (0x + 40 hex chars) get special short form: 0x1234...abcd
   String _truncate(String value, [int maxLen = _truncateThreshold]) {
     if (value == '-') return value;
+    // Eth address: 0x followed by 40 hex chars = 42 total
     if (value.startsWith('0x') && value.length == 42) {
       return '${value.substring(0, 6)}...${value.substring(value.length - 4)}';
     }
+    // General long hex/addresses starting with 0x
     if (value.startsWith('0x') && value.length > 14) {
       return '${value.substring(0, 6)}...${value.substring(value.length - 4)}';
     }
@@ -1077,21 +1057,66 @@ class _ExecutionReportsPageState extends State<ExecutionReportsPage> {
     return _copyableCell(value, isDarkTheme, maxWidth: _wideMaxCellWidth);
   }
 
-  DataCell _sideCell(String side, bool isDarkTheme) {
-    final isBuy = side == '1' || side.toUpperCase() == 'BUY';
-    final displaySide = side == '1' ? 'BUY' : side == '2' ? 'SELL' : side;
+  /// Hash icon cell - shows # icon, copies full hash on click
+  DataCell _hashCell(String hash, bool isDarkTheme) {
+    if (hash == '-') return _copyableCell(hash, isDarkTheme);
     return DataCell(
       Tooltip(
-        message: displaySide,
+        message: hash,
         waitDuration: const Duration(milliseconds: 300),
         child: InkWell(
-          onTap: () => _copyToClipboard(displaySide),
-          child: Text(
-            displaySide,
-            style: TextStyle(
-              color: isBuy ? UIConstants.colorAccept : Colors.red,
-              fontSize: UIConstants.fontSizeSm,
-              fontWeight: FontWeight.w600,
+          onTap: () => _copyToClipboard(hash),
+          child: Icon(
+            Icons.tag,
+            size: 16,
+            color: UIConstants.commandColor(isDarkTheme),
+          ),
+        ),
+      ),
+    );
+  }
+
+  /// Operation badge with color coding
+  DataCell _operationBadgeCell(String operation, String operationName, bool isDarkTheme) {
+    final display = operationName != '-' ? operationName : operation;
+    final fullValue = operationName != '-' ? '$operationName ($operation)' : operation;
+    final op = operationName.toUpperCase();
+
+    Color bgColor;
+    if (op.contains('DEPOSIT') || op.contains('MINT')) {
+      bgColor = UIConstants.colorAccept;
+    } else if (op.contains('WITHDRAW') || op.contains('BURN') || op.contains('REDEEM')) {
+      bgColor = Colors.red;
+    } else if (op.contains('TRANSFER') || op.contains('MOVE')) {
+      bgColor = Colors.blue;
+    } else if (op.contains('SETTLE') || op.contains('DELIVERY')) {
+      bgColor = Colors.teal;
+    } else if (op.contains('LOCK') || op.contains('FREEZE')) {
+      bgColor = Colors.orange;
+    } else if (op.contains('UNLOCK') || op.contains('UNFREEZE')) {
+      bgColor = Colors.cyan;
+    } else if (op.contains('CREATE') || op.contains('ISSUE')) {
+      bgColor = Colors.purple;
+    } else {
+      bgColor = UIConstants.textHint(isDarkTheme);
+    }
+
+    return DataCell(
+      Tooltip(
+        message: fullValue,
+        waitDuration: const Duration(milliseconds: 300),
+        child: InkWell(
+          onTap: () => _copyToClipboard(fullValue),
+          child: Container(
+            padding: const EdgeInsets.symmetric(horizontal: 6, vertical: 2),
+            decoration: BoxDecoration(
+              color: bgColor.withValues(alpha: 0.2),
+              borderRadius: BorderRadius.circular(4),
+              border: Border.all(color: bgColor, width: 0.5),
+            ),
+            child: Text(
+              display,
+              style: TextStyle(color: bgColor, fontSize: 10, fontWeight: FontWeight.w600),
             ),
           ),
         ),
@@ -1099,141 +1124,17 @@ class _ExecutionReportsPageState extends State<ExecutionReportsPage> {
     );
   }
 
-  /// Price cell with amber color — show raw value as received
-  DataCell _priceCell(String value, bool isDarkTheme) {
-    if (value == '-') return _copyableCell(value, isDarkTheme);
-    return _copyableCell(value, isDarkTheme, textColor: Colors.amber.shade300);
-  }
-
-  /// Quantity cell — show raw value as received
-  DataCell _qtyCell(String value, bool isDarkTheme) {
-    return _copyableCell(value, isDarkTheme);
-  }
-
-  DataCell _badgeCell(String value, Widget badge) {
-    return DataCell(
-      Tooltip(
-        message: value,
-        waitDuration: const Duration(milliseconds: 300),
-        child: InkWell(
-          onTap: () => _copyToClipboard(value),
-          child: badge,
-        ),
-      ),
-    );
-  }
-
-  Widget _execTypeBadge(String execType, bool isDarkTheme) {
-    final label = _execTypeOptions[execType] ?? execType;
-    Color bgColor;
-    switch (execType) {
-      case '0':
-        bgColor = Colors.blue;
-        break;
-      case '1':
-        bgColor = Colors.orange;
-        break;
-      case '2':
-      case 'F':
-        bgColor = UIConstants.colorAccept;
-        break;
-      case '4':
-        bgColor = Colors.deepOrange.shade400;
-        break;
-      case '8':
-        bgColor = Colors.red;
-        break;
-      case 'C':
-        bgColor = Colors.amber.shade700;
-        break;
-      case 'A':
-      case 'E':
-        bgColor = Colors.cyan;
-        break;
-      default:
-        bgColor = UIConstants.textHint(isDarkTheme);
+  /// Amount cell with color (green for positive, red for negative)
+  DataCell _amountCell(String rawAmount, bool isDarkTheme) {
+    final formatted = _formatAmount(rawAmount);
+    if (formatted == '-') return _copyableCell(formatted, isDarkTheme);
+    try {
+      final value = double.parse(rawAmount);
+      final color = value >= 0 ? UIConstants.colorAccept : Colors.red;
+      return _copyableCell(formatted, isDarkTheme, textColor: color);
+    } catch (_) {
+      return _copyableCell(formatted, isDarkTheme);
     }
-
-    return Container(
-      padding: const EdgeInsets.symmetric(horizontal: 6, vertical: 2),
-      decoration: BoxDecoration(
-        color: bgColor.withValues(alpha: 0.2),
-        borderRadius: BorderRadius.circular(4),
-        border: Border.all(color: bgColor, width: 0.5),
-      ),
-      child: Text(
-        label,
-        style: TextStyle(color: bgColor, fontSize: 10, fontWeight: FontWeight.w600),
-      ),
-    );
-  }
-
-  static const _ordStatusLabels = <String, String>{
-    '0': 'New',
-    '1': 'Partially Filled',
-    '2': 'Filled',
-    '3': 'Done for Day',
-    '4': 'Canceled',
-    '5': 'Replaced',
-    '6': 'Pending Cancel',
-    '7': 'Stopped',
-    '8': 'Rejected',
-    '9': 'Suspended',
-    'A': 'Pending New',
-    'B': 'Calculated',
-    'C': 'Expired',
-    'D': 'Accepted for Bidding',
-    'E': 'Pending Replace',
-  };
-
-  Widget _ordStatusBadge(String status, bool isDarkTheme) {
-    final label = _ordStatusLabels[status] ?? _ordStatusLabels[status.toUpperCase()] ?? status;
-    Color color;
-    switch (status.toUpperCase()) {
-      case 'NEW':
-      case '0':
-        color = Colors.blue;
-        break;
-      case 'PARTIALLY_FILLED':
-      case '1':
-        color = Colors.orange;
-        break;
-      case 'FILLED':
-      case '2':
-        color = UIConstants.colorAccept;
-        break;
-      case 'CANCELED':
-      case '4':
-        color = Colors.deepOrange.shade400;
-        break;
-      case 'REJECTED':
-      case '8':
-        color = Colors.red;
-        break;
-      case 'EXPIRED':
-      case 'C':
-        color = Colors.amber.shade700;
-        break;
-      case 'PENDING_NEW':
-      case 'PENDING_CANCEL':
-      case 'PENDING_REPLACE':
-      case 'A':
-      case '6':
-      case 'E':
-        color = Colors.cyan;
-        break;
-      case 'REPLACED':
-      case '5':
-        color = Colors.teal;
-        break;
-      default:
-        color = UIConstants.textSecondary(isDarkTheme);
-    }
-
-    return Text(
-      label,
-      style: TextStyle(color: color, fontSize: UIConstants.fontSizeSm, fontWeight: FontWeight.w600),
-    );
   }
 
   Widget _buildPaginationControls(bool isDarkTheme) {
@@ -1291,7 +1192,7 @@ class _ExecutionReportsPageState extends State<ExecutionReportsPage> {
                   _pageSize = value;
                   _currentPage = 1;
                 });
-                _fetchReports();
+                _fetchActivities();
               }
             },
           ),

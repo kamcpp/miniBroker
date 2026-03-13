@@ -246,6 +246,7 @@ enum OrderbookModeEnum {
   ORDERBOOK_MODE_ENUM_L2_AGGREGATED_PRICE_LEVELS = 2;                  // Level 2: aggregated quantity at each price level
   ORDERBOOK_MODE_ENUM_L3_INDIVIDUAL_ORDERS = 3;                        // Level 3: full order-by-order book
   ORDERBOOK_MODE_ENUM_CUMULATIVE_DEPTH = 4;                            // Cumulative depth chart (bids/asks with running totals)
+  ORDERBOOK_MODE_ENUM_ACTUAL = 5;                                      // Actual on-chain orderbook (direct LASER query, bypasses cache)
 }
 
 message GetOrderbookRequest {

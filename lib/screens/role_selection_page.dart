@@ -1,3 +1,4 @@
+import 'dart:io';
 import 'package:flutter/material.dart';
 import 'dart:ui';
 import '../config/app_config.dart';
@@ -37,6 +38,13 @@ class RoleSelectionPage extends StatelessWidget {
                   onPressed: () => _goBackToConfigSelection(context),
                   icon: const Icon(Icons.settings, color: Colors.white, size: 28),
                   tooltip: 'Change Configuration',
+                  style: UIConstants.preLoginIconButtonStyle(),
+                ),
+                const SizedBox(width: 8),
+                IconButton(
+                  onPressed: () => Process.run('open', ['-n', '-a', Platform.resolvedExecutable]),
+                  icon: const Icon(Icons.open_in_new, color: Colors.white, size: 28),
+                  tooltip: 'New Instance',
                   style: UIConstants.preLoginIconButtonStyle(),
                 ),
               ],

@@ -18,6 +18,9 @@ service ReportingService {
 
   // GetTreasuryActivities returns paginated treasury activities for the authenticated participant.
   rpc GetTreasuryActivities(GetTreasuryActivitiesRequest) returns (GetTreasuryActivitiesResponse);
+
+  // GetAgoraEvents returns paginated raw on-chain AgoraEngine events for the authenticated participant.
+  rpc GetAgoraEvents(GetAgoraEventsRequest) returns (GetAgoraEventsResponse);
 }
 
 // ============================================================================
@@ -200,6 +203,59 @@ message GetTreasuryActivitiesResponse {
   string ref_execution_id = 1;                                          // REQUIRED: Reference to the execution ID
   tech.qomet.agora.api.grpc.common.PaginationInfo pagination_info = 2; // REQUIRED: Pagination information
   repeated TreasuryActivityReport activities = 3;                       // REQUIRED: List of treasury activities (can be empty)
+
+  map<string, string> metadata = 105;                                   // OPTIONAL: Response metadata
+}
+
+// ============================================================================
+// Agora Events (raw on-chain AgoraEngine EventStore events)
+// ============================================================================
+
+message GetAgoraEventsRequest {
+  string proposed_execution_id = 1;                                     // OPTIONAL: Client-proposed execution ID for tracking
+  tech.qomet.agora.api.grpc.common.PaginationParams pagination = 2;    // REQUIRED: Pagination parameters
+
+  // Optional filters
+  string event_type = 3;                                                // OPTIONAL: Filter by event_type (numeric, e.g. "11"=ORDER_FILL)
+  string order_id = 4;                                                  // OPTIONAL: Filter by order_id
+  string trade_id = 5;                                                  // OPTIONAL: Filter by trade_id
+  string deployment_iid = 6;                                            // OPTIONAL: Filter by deployment_iid
+
+  // Time range filters
+  string from_ts = 10;                                                  // OPTIONAL: Lower bound on timestamp
+  string to_ts = 11;                                                    // OPTIONAL: Upper bound on timestamp
+
+  // Sorting
+  string sort_direction = 13;                                           // OPTIONAL: "asc" or "desc" (default: "desc")
+
+  map<string, string> aux_data = 105;                                   // OPTIONAL: Additional request data
+}
+
+message AgoraEvent {
+  string iid = 1;
+  string event_hash = 2;
+  string event_id = 3;
+  string timestamp = 4;
+  string pair_id = 5;
+  int32  event_type = 6;
+  string event_type_name = 7;
+  string order_id = 8;
+  string other_order_id = 9;
+  string trade_id = 10;
+  string quantity = 11;
+  string error_code = 12;
+  string reason = 13;
+  string quote_balance = 14;
+  string data = 15;
+  string engine_addr = 16;
+  string deployment_iid = 17;
+  string created_at = 18;
+}
+
+message GetAgoraEventsResponse {
+  string ref_execution_id = 1;                                          // REQUIRED: Reference to the execution ID
+  tech.qomet.agora.api.grpc.common.PaginationInfo pagination_info = 2; // REQUIRED: Pagination information
+  repeated AgoraEvent agora_events = 3;                                 // REQUIRED: List of agora events (can be empty)
 
   map<string, string> metadata = 105;                                   // OPTIONAL: Response metadata
 }

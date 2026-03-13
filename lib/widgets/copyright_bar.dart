@@ -25,7 +25,7 @@ class CopyrightBar extends StatelessWidget {
       ),
       child: Center(
         child: Text(
-          '© 2025 VeroPulse GmbH',
+          '© 2026 VeroPulse GmbH',
           style: TextStyle(
             fontSize: 11,
             color: Colors.white.withOpacity(0.7),

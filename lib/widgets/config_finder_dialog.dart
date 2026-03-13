@@ -1,7 +1,7 @@
+import 'dart:io';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:provider/provider.dart';
-import 'dart:io';
 import 'dart:ui';
 import '../config/ui_constants.dart';
 import 'package:path/path.dart' as path;
@@ -11,6 +11,7 @@ import '../utils/broker_config_helper.dart';
 import 'create_broker_config_dialog.dart';
 import 'edit_broker_config_dialog.dart';
 import 'duplicate_config_dialog.dart';
+import 'copyright_bar.dart';
 
 /// Config Finder Dialog - main entry point for config management
 class ConfigFinderDialog extends StatefulWidget {
@@ -382,10 +383,33 @@ class _ConfigFinderDialogState extends State<ConfigFinderDialog> {
 
     return Dialog(
       backgroundColor: Colors.transparent,
-      shape: RoundedRectangleBorder(
-        borderRadius: BorderRadius.circular(UIConstants.borderRadiusLg),
-      ),
-      child: ClipRRect(
+      insetPadding: EdgeInsets.zero,
+      child: SizedBox.expand(
+        child: Stack(
+      children: [
+        // New Instance button in top-right
+        Positioned(
+          top: 20,
+          right: 20,
+          child: IconButton(
+            onPressed: () => Process.run('open', ['-n', '-a', Platform.resolvedExecutable]),
+            icon: const Icon(Icons.open_in_new, color: Colors.white, size: 28),
+            tooltip: 'New Instance',
+            style: UIConstants.preLoginIconButtonStyle(),
+          ),
+        ),
+        // Copyright bar at bottom
+        const Positioned(
+          bottom: 0,
+          left: 0,
+          right: 0,
+          child: CopyrightBar(isDarkTheme: true),
+        ),
+        // Centered dialog card
+        Center(
+          child: Material(
+            color: Colors.transparent,
+            child: ClipRRect(
         borderRadius: BorderRadius.circular(UIConstants.borderRadiusLg),
         child: BackdropFilter(
           filter: ImageFilter.blur(
@@ -772,6 +796,11 @@ class _ConfigFinderDialogState extends State<ConfigFinderDialog> {
           ),
         ),
       ),
+            ),
+          ),
+        ),
+      ],
+    ),
       ),
     );
   }

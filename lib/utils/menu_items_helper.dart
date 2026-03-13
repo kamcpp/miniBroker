@@ -6,6 +6,10 @@ import '../screens/portfolio_page.dart';
 import '../screens/trading_page.dart';
 import '../screens/broker/broker_info_page.dart';
 import '../screens/broker/execution_reports_page.dart';
+import '../screens/broker/investors_page.dart';
+import '../screens/broker/trade_reports_page.dart';
+import '../screens/broker/treasury_activities_page.dart';
+import '../screens/broker/agora_events_page.dart';
 import '../screens/investor/investor_info_page.dart';
 import '../services/auth_service.dart';
 // import '../screens/activity_page.dart';  // Disabled
@@ -103,6 +107,74 @@ class MenuItemsHelper {
               Navigator.of(context).pushReplacement(
                 PageRouteBuilder(
                   pageBuilder: (context, animation, secondaryAnimation) => const ExecutionReportsPage(),
+                  transitionDuration: Duration.zero,
+                  reverseTransitionDuration: Duration.zero,
+                ),
+              );
+            }
+          },
+        ),
+      if (role == UserRole.broker)
+        MenuItem(
+          label: 'Trade Reports',
+          icon: Icons.swap_horiz,
+          isSelected: currentPage == 'trade_reports',
+          onTap: () {
+            if (currentPage != 'trade_reports') {
+              Navigator.of(context).pushReplacement(
+                PageRouteBuilder(
+                  pageBuilder: (context, animation, secondaryAnimation) => const TradeReportsPage(),
+                  transitionDuration: Duration.zero,
+                  reverseTransitionDuration: Duration.zero,
+                ),
+              );
+            }
+          },
+        ),
+      if (role == UserRole.broker)
+        MenuItem(
+          label: 'Treasury',
+          icon: Icons.account_balance,
+          isSelected: currentPage == 'treasury_activities',
+          onTap: () {
+            if (currentPage != 'treasury_activities') {
+              Navigator.of(context).pushReplacement(
+                PageRouteBuilder(
+                  pageBuilder: (context, animation, secondaryAnimation) => const TreasuryActivitiesPage(),
+                  transitionDuration: Duration.zero,
+                  reverseTransitionDuration: Duration.zero,
+                ),
+              );
+            }
+          },
+        ),
+      if (role == UserRole.broker)
+        MenuItem(
+          label: 'Agora Events',
+          icon: Icons.bolt,
+          isSelected: currentPage == 'agora_events',
+          onTap: () {
+            if (currentPage != 'agora_events') {
+              Navigator.of(context).pushReplacement(
+                PageRouteBuilder(
+                  pageBuilder: (context, animation, secondaryAnimation) => const AgoraEventsPage(),
+                  transitionDuration: Duration.zero,
+                  reverseTransitionDuration: Duration.zero,
+                ),
+              );
+            }
+          },
+        ),
+      if (role == UserRole.broker)
+        MenuItem(
+          label: 'Investors',
+          icon: Icons.people,
+          isSelected: currentPage == 'investors',
+          onTap: () {
+            if (currentPage != 'investors') {
+              Navigator.of(context).pushReplacement(
+                PageRouteBuilder(
+                  pageBuilder: (context, animation, secondaryAnimation) => const InvestorsPage(),
                   transitionDuration: Duration.zero,
                   reverseTransitionDuration: Duration.zero,
                 ),

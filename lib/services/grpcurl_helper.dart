@@ -1299,8 +1299,9 @@ class GrpcurlHelper {
     String? side,
     int pageNumber = 1,
     int pageSize = 10,
+    String? mode,
   }) async {
-    print('📋 Getting orderbook for security: $securityIid, side: $side');
+    print('📋 Getting orderbook for security: $securityIid, side: $side, mode: $mode');
 
     final requestBody = <String, dynamic>{
       'proposed_execution_id': 'get_orderbook_${DateTime.now().millisecondsSinceEpoch}',
@@ -1315,6 +1316,10 @@ class GrpcurlHelper {
       requestBody['orderbook_query_filter'] = {
         'side': side,
       };
+    }
+
+    if (mode != null && mode.isNotEmpty) {
+      requestBody['mode'] = mode;
     }
 
     return _executeGrpcCall(
@@ -1371,7 +1376,11 @@ class GrpcurlHelper {
     }
     if (newExpireTime != null) {
       requestBody['new_expire_time'] = {
-        'unix_time_secs': _toUnixTimestamp(newExpireTime),
+        'hmss': {
+          'hour': newExpireTime.hour,
+          'minute': newExpireTime.minute,
+          'second': newExpireTime.second,
+        },
       };
     }
     if (reason != null) {
@@ -1430,11 +1439,11 @@ class GrpcurlHelper {
       'participant_order_iid': participantOrderIid,
     };
 
-    if (expireTime != null) {
-      requestBody['expire_dt'] = {
-        'unix_time_secs': _toUnixTimestamp(expireTime),
-      };
-    }
+    requestBody['expire_dt'] = {
+      'utc_unix_epoch_ts_millis': expireTime != null
+          ? expireTime.millisecondsSinceEpoch.toString()
+          : '0',
+    };
     if (currency != null && currency.isNotEmpty) {
       requestBody['currency'] = currency;
     }

@@ -11,6 +11,7 @@ import 'config/ui_constants.dart';
 import 'utils/broker_config_helper.dart';
 import 'utils/config_rc_manager.dart';
 import 'widgets/config_finder_dialog.dart';
+import 'services/event_subscription_service.dart';
 
 void main() {
   // Add comprehensive error handling to catch ALL unhandled exceptions
@@ -41,6 +42,7 @@ class MyApp extends StatelessWidget {
         ChangeNotifierProvider(create: (_) => ThemeService()),
       ],
       child: MaterialApp(
+        scaffoldMessengerKey: eventSubscriptionService.scaffoldMessengerKey,
         title: 'miniBroker-v1.0.0',
         debugShowCheckedModeBanner: false,
         theme: ThemeData(
@@ -363,6 +365,9 @@ class _AppInitializerState extends State<AppInitializer> with SingleTickerProvid
         useSecure: useSecure,
       );
       print('✅ Real gRPC client connected to $host:$port');
+
+      // Start event subscription
+      eventSubscriptionService.subscribe();
     } catch (e) {
       print('⚠️ Failed to connect to real gRPC server: $e');
       // Continue with app initialization even if gRPC connection fails

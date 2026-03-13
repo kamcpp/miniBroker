@@ -18,14 +18,14 @@ import '../../widgets/base_page.dart';
 import '../../generated/prtagent/v1/reporting.pbgrpc.dart';
 import '../../generated/common.pb.dart' as common_pb;
 
-class ExecutionReportsPage extends StatefulWidget {
-  const ExecutionReportsPage({super.key});
+class TradeReportsPage extends StatefulWidget {
+  const TradeReportsPage({super.key});
 
   @override
-  State<ExecutionReportsPage> createState() => _ExecutionReportsPageState();
+  State<TradeReportsPage> createState() => _TradeReportsPageState();
 }
 
-class _ExecutionReportsPageState extends State<ExecutionReportsPage> {
+class _TradeReportsPageState extends State<TradeReportsPage> {
   // Scroll controllers
   final _verticalScrollController = ScrollController();
   final _horizontalScrollController = ScrollController();
@@ -41,7 +41,6 @@ class _ExecutionReportsPageState extends State<ExecutionReportsPage> {
   // Selection
   int? _selectedRowIndex;
 
-
   // Pagination
   int _currentPage = 1;
   int _pageSize = 20;
@@ -49,29 +48,10 @@ class _ExecutionReportsPageState extends State<ExecutionReportsPage> {
 
   // Filters
   final _searchController = TextEditingController();
-  final _requestIdController = TextEditingController();
   final _symbolController = TextEditingController();
   final _currencyController = TextEditingController();
-  String? _execTypeFilter;
   String? _sideFilter;
   String? _sortBy = 'created_at';
-  String _sortDirection = 'desc';
-
-  static const _execTypeOptions = <String, String>{
-    '': 'All Types',
-    '0': 'New',
-    '1': 'Partial Fill',
-    '2': 'Fill',
-    '3': 'Done for Day',
-    '4': 'Canceled',
-    '5': 'Replaced',
-    '6': 'Pending Cancel',
-    '8': 'Rejected',
-    'A': 'Pending New',
-    'C': 'Expired',
-    'E': 'Pending Replace',
-    'F': 'Trade',
-  };
 
   static const _sideOptions = <String, String>{
     '': 'All Sides',
@@ -84,10 +64,8 @@ class _ExecutionReportsPageState extends State<ExecutionReportsPage> {
     'created_at': 'Created At',
     'symbol': 'Symbol',
     'side': 'Side',
-    'exec_type': 'Exec Type',
-    'ord_status': 'Status',
-    'price': 'Price',
-    'order_qty': 'Quantity',
+    'last_px': 'Last Px',
+    'last_qty': 'Last Qty',
   };
 
   @override
@@ -101,7 +79,6 @@ class _ExecutionReportsPageState extends State<ExecutionReportsPage> {
   @override
   void dispose() {
     _searchController.dispose();
-    _requestIdController.dispose();
     _symbolController.dispose();
     _currencyController.dispose();
     _verticalScrollController.dispose();
@@ -140,61 +117,51 @@ class _ExecutionReportsPageState extends State<ExecutionReportsPage> {
       final client = ReportingServiceClient(channel);
 
       // Build request
-      final request = GetExecutionReportsRequest(
-        proposedExecutionId: 'get_exec_reports_${DateTime.now().millisecondsSinceEpoch}',
+      final request = GetTradeReportsRequest(
+        proposedExecutionId: 'get_trade_reports_${DateTime.now().millisecondsSinceEpoch}',
         pagination: common_pb.PaginationParams(
           pageNr: _currentPage,
           pageSize: _pageSize,
         ),
-        sortDirection: _sortDirection,
+        sortDirection: 'desc',
       );
 
       // Apply optional filters
-      final requestId = _requestIdController.text.trim();
-      if (requestId.isNotEmpty) request.requestId = requestId;
       final symbol = _symbolController.text.trim();
       if (symbol.isNotEmpty) request.symbol = symbol;
       final currency = _currencyController.text.trim();
       if (currency.isNotEmpty) request.currency = currency;
-      if (_execTypeFilter != null && _execTypeFilter!.isNotEmpty) request.execType = _execTypeFilter!;
       if (_sideFilter != null && _sideFilter!.isNotEmpty) request.side = _sideFilter!;
       if (_sortBy != null && _sortBy!.isNotEmpty) request.sortBy = _sortBy!;
       final search = _searchController.text.trim();
       if (search.isNotEmpty) request.search = search;
 
-      print('📋 [ExecReports] Calling GetExecutionReports sortBy=${request.sortBy}, sortDirection=${request.sortDirection}');
-      final response = await client.getExecutionReports(request, options: callOptions);
-      print('📋 [ExecReports] Raw response: ${response.toString()}');
+      print('📋 [TradeReports] Calling GetTradeReports sortBy=${request.sortBy}, sortDirection=${request.sortDirection}');
+      final response = await client.getTradeReports(request, options: callOptions);
+      print('📋 [TradeReports] Raw response: ${response.toString()}');
 
       if (!mounted) return;
 
-      final reports = response.executionReports;
+      final reports = response.tradeReports;
       final totalCount = response.paginationInfo.totalCount.toInt();
       final totalPages = totalCount > 0 ? (totalCount / _pageSize).ceil().clamp(1, 999999) : (reports.length == _pageSize ? _currentPage + 1 : _currentPage);
 
-      print('📋 [ExecReports] Got ${reports.length} reports, totalCount=$totalCount, totalPages=$totalPages');
+      print('📋 [TradeReports] Got ${reports.length} reports, totalCount=$totalCount, totalPages=$totalPages');
       if (reports.isNotEmpty) {
-        print('📋 [ExecReports] First report: ${reports.first.toString()}');
+        print('📋 [TradeReports] First report: ${reports.first.toString()}');
       }
 
       // Convert protobuf objects to maps for the UI
       final reportMaps = reports.map((r) => <String, dynamic>{
         'iid': r.iid,
-        'requestId': r.requestId,
         'venueIid': r.venueIid,
-        'clOrdId': r.clOrdId,
-        'orderId': r.orderId,
+        'tradeReportId': r.tradeReportId,
         'execId': r.execId,
-        'execType': r.execType,
-        'ordStatus': r.ordStatus,
         'symbol': r.symbol,
-        'side': r.side,
-        'leavesQty': r.leavesQty,
-        'cumQty': r.cumQty,
-        'avgPx': r.avgPx,
-        'price': r.price,
-        'orderQty': r.orderQty,
         'currency': r.currency,
+        'side': r.side,
+        'lastQty': r.lastQty,
+        'lastPx': r.lastPx,
         'transactTime': r.transactTime,
         'text': r.text,
         'createdAt': r.createdAt,
@@ -208,14 +175,14 @@ class _ExecutionReportsPageState extends State<ExecutionReportsPage> {
       });
     } on GrpcError catch (e) {
       if (!mounted) return;
-      print('❌ [ExecReports] gRPC error: code=${e.code}, message=${e.message}');
+      print('❌ [TradeReports] gRPC error: code=${e.code}, message=${e.message}');
       setState(() {
         _errorMessage = 'gRPC error ${e.code}: ${e.message}';
         _isLoading = false;
       });
     } catch (e) {
       if (!mounted) return;
-      print('❌ [ExecReports] Error: $e');
+      print('❌ [TradeReports] Error: $e');
       setState(() {
         _errorMessage = 'Error: $e';
         _isLoading = false;
@@ -243,13 +210,10 @@ class _ExecutionReportsPageState extends State<ExecutionReportsPage> {
   void _resetFilters() {
     setState(() {
       _searchController.clear();
-      _requestIdController.clear();
       _symbolController.clear();
       _currencyController.clear();
-      _execTypeFilter = null;
       _sideFilter = null;
       _sortBy = 'created_at';
-      _sortDirection = 'desc';
       _currentPage = 1;
     });
     _fetchReports();
@@ -257,15 +221,13 @@ class _ExecutionReportsPageState extends State<ExecutionReportsPage> {
 
   // Column definitions for export
   static const _exportColumns = [
-    'execId', 'requestId', 'execType', 'ordStatus', 'symbol', 'side',
-    'price', 'orderQty', 'cumQty', 'leavesQty', 'avgPx', 'currency',
-    'clOrdId', 'orderId', 'venueIid', 'transactTime', 'createdAt', 'text',
+    'tradeReportId', 'execId', 'symbol', 'side', 'lastQty', 'lastPx',
+    'currency', 'venueIid', 'transactTime', 'createdAt', 'text',
   ];
 
   static const _exportHeaders = [
-    'Exec ID', 'Request ID', 'Type', 'Status', 'Symbol', 'Side',
-    'Price', 'Ord Qty', 'Cum Qty', 'Leaves', 'Avg Px', 'Currency',
-    'Cl Ord ID', 'Order ID', 'Venue', 'Time', 'Created At', 'Text',
+    'Trade Report ID', 'Exec ID', 'Symbol', 'Side', 'Last Qty', 'Last Px',
+    'Currency', 'Venue', 'Time', 'Created At', 'Text',
   ];
 
   /// Fetch ALL reports matching current filters (no pagination limit) for export.
@@ -297,49 +259,39 @@ class _ExecutionReportsPageState extends State<ExecutionReportsPage> {
       final client = ReportingServiceClient(channel);
 
       while (true) {
-        final request = GetExecutionReportsRequest(
+        final request = GetTradeReportsRequest(
           proposedExecutionId: 'export_${DateTime.now().millisecondsSinceEpoch}',
           pagination: common_pb.PaginationParams(
             pageNr: page,
             pageSize: batchSize,
           ),
-          sortDirection: _sortDirection,
+          sortDirection: 'desc',
         );
 
         // Apply same filters as the current view
-        final requestId = _requestIdController.text.trim();
-        if (requestId.isNotEmpty) request.requestId = requestId;
         final symbol = _symbolController.text.trim();
         if (symbol.isNotEmpty) request.symbol = symbol;
         final currency = _currencyController.text.trim();
         if (currency.isNotEmpty) request.currency = currency;
-        if (_execTypeFilter != null && _execTypeFilter!.isNotEmpty) request.execType = _execTypeFilter!;
         if (_sideFilter != null && _sideFilter!.isNotEmpty) request.side = _sideFilter!;
         if (_sortBy != null && _sortBy!.isNotEmpty) request.sortBy = _sortBy!;
         final search = _searchController.text.trim();
         if (search.isNotEmpty) request.search = search;
 
-        final response = await client.getExecutionReports(request, options: callOptions);
-        final reports = response.executionReports;
+        final response = await client.getTradeReports(request, options: callOptions);
+        final reports = response.tradeReports;
 
         for (final r in reports) {
           allReports.add(<String, dynamic>{
             'iid': r.iid,
-            'requestId': r.requestId,
             'venueIid': r.venueIid,
-            'clOrdId': r.clOrdId,
-            'orderId': r.orderId,
+            'tradeReportId': r.tradeReportId,
             'execId': r.execId,
-            'execType': r.execType,
-            'ordStatus': r.ordStatus,
             'symbol': r.symbol,
-            'side': r.side,
-            'leavesQty': r.leavesQty,
-            'cumQty': r.cumQty,
-            'avgPx': r.avgPx,
-            'price': r.price,
-            'orderQty': r.orderQty,
             'currency': r.currency,
+            'side': r.side,
+            'lastQty': r.lastQty,
+            'lastPx': r.lastPx,
             'transactTime': r.transactTime,
             'text': r.text,
             'createdAt': r.createdAt,
@@ -379,7 +331,7 @@ class _ExecutionReportsPageState extends State<ExecutionReportsPage> {
       }
 
       final timestamp = DateTime.now().toIso8601String().replaceAll(':', '-').split('.').first;
-      final defaultName = 'exec_reports_$timestamp';
+      final defaultName = 'trade_reports_$timestamp';
 
       switch (format) {
         case 'csv':
@@ -418,7 +370,7 @@ class _ExecutionReportsPageState extends State<ExecutionReportsPage> {
 
   Future<String?> _pickSaveLocation(String defaultName, String extension) async {
     final result = await FilePicker.platform.saveFile(
-      dialogTitle: 'Export Execution Reports',
+      dialogTitle: 'Export Trade Reports',
       fileName: '$defaultName.$extension',
     );
     return result;
@@ -455,7 +407,7 @@ class _ExecutionReportsPageState extends State<ExecutionReportsPage> {
     if (path == null) return;
 
     final excel = xl.Excel.createExcel();
-    final sheet = excel['Execution Reports'];
+    final sheet = excel['Trade Reports'];
 
     // Remove default Sheet1
     excel.delete('Sheet1');
@@ -492,7 +444,7 @@ class _ExecutionReportsPageState extends State<ExecutionReportsPage> {
         pageFormat: PdfPageFormat.a3.landscape,
         margin: const pw.EdgeInsets.all(20),
         header: (context) => pw.Text(
-          'Execution Reports - Exported ${DateTime.now().toIso8601String().split('T').first} (${data.length} records)',
+          'Trade Reports - Exported ${DateTime.now().toIso8601String().split('T').first} (${data.length} records)',
           style: pw.TextStyle(fontSize: 12, fontWeight: pw.FontWeight.bold),
         ),
         build: (context) => [
@@ -521,19 +473,13 @@ class _ExecutionReportsPageState extends State<ExecutionReportsPage> {
 
     for (final report in data) {
       final fields = <String>[
-        '35=8', // MsgType = Execution Report
+        '35=AE', // MsgType = Trade Report
+        '571=${_str(report, 'tradeReportId')}',
         '17=${_str(report, 'execId')}',
-        '11=${_str(report, 'clOrdId')}',
-        '37=${_str(report, 'orderId')}',
-        '150=${_str(report, 'execType')}',
-        '39=${_str(report, 'ordStatus')}',
         '55=${_str(report, 'symbol')}',
         '54=${_str(report, 'side')}',
-        '44=${_str(report, 'price')}',
-        '38=${_str(report, 'orderQty')}',
-        '14=${_str(report, 'cumQty')}',
-        '151=${_str(report, 'leavesQty')}',
-        '6=${_str(report, 'avgPx')}',
+        '32=${_str(report, 'lastQty')}',
+        '31=${_str(report, 'lastPx')}',
         '15=${_str(report, 'currency')}',
         '60=${_str(report, 'transactTime')}',
         '58=${_str(report, 'text')}',
@@ -585,7 +531,7 @@ class _ExecutionReportsPageState extends State<ExecutionReportsPage> {
     final backgroundColor = UIConstants.pageBackground(isDarkTheme);
 
     return BasePage(
-      menuItems: MenuItemsHelper.buildMenuItems(context, 'execution_reports'),
+      menuItems: MenuItemsHelper.buildMenuItems(context, 'trade_reports'),
       content: Container(
         color: backgroundColor,
         padding: UIConstants.paddingComfortable,
@@ -645,7 +591,7 @@ class _ExecutionReportsPageState extends State<ExecutionReportsPage> {
     return Row(
       children: [
         Text(
-          'Execution Reports',
+          'Trade Reports',
           style: TextStyle(
             color: UIConstants.textPrimary(isDarkTheme),
             fontSize: UIConstants.fontSizeLg,
@@ -749,16 +695,6 @@ class _ExecutionReportsPageState extends State<ExecutionReportsPage> {
             ),
             SizedBox(width: UIConstants.spacingSm),
             SizedBox(
-              width: 130,
-              height: UIConstants.buttonHeightStandard,
-              child: TextField(
-                controller: _requestIdController,
-                style: textStyle,
-                decoration: inputDecoration.copyWith(hintText: 'Request ID', hintStyle: hintStyle),
-              ),
-            ),
-            SizedBox(width: UIConstants.spacingSm),
-            SizedBox(
               width: 100,
               height: UIConstants.buttonHeightStandard,
               child: TextField(
@@ -783,26 +719,6 @@ class _ExecutionReportsPageState extends State<ExecutionReportsPage> {
         // Line 2: Combo boxes + buttons
         Row(
           children: [
-            SizedBox(
-              width: 150,
-              height: UIConstants.buttonHeightStandard,
-              child: DropdownButtonFormField<String>(
-                value: _execTypeFilter,
-                isDense: true,
-                isExpanded: true,
-                decoration: inputDecoration.copyWith(hintText: 'Exec Type', hintStyle: hintStyle),
-                style: textStyle,
-                dropdownColor: UIConstants.dropdownBackground(isDarkTheme),
-                items: _execTypeOptions.entries
-                    .map((e) => DropdownMenuItem(
-                          value: e.key.isEmpty ? null : e.key,
-                          child: Text(e.value, style: textStyle),
-                        ))
-                    .toList(),
-                onChanged: (value) => setState(() => _execTypeFilter = value),
-              ),
-            ),
-            SizedBox(width: UIConstants.spacingSm),
             SizedBox(
               width: 130,
               height: UIConstants.buttonHeightStandard,
@@ -842,30 +758,6 @@ class _ExecutionReportsPageState extends State<ExecutionReportsPage> {
                 onChanged: (value) => setState(() => _sortBy = value),
               ),
             ),
-            SizedBox(width: UIConstants.spacingXs),
-            SizedBox(
-              height: UIConstants.buttonHeightStandard,
-              child: IconButton(
-                onPressed: () {
-                  setState(() {
-                    _sortDirection = _sortDirection == 'desc' ? 'asc' : 'desc';
-                  });
-                },
-                icon: Icon(
-                  _sortDirection == 'desc' ? Icons.arrow_downward : Icons.arrow_upward,
-                  size: 16,
-                  color: UIConstants.textPrimary(isDarkTheme),
-                ),
-                tooltip: _sortDirection == 'desc' ? 'Descending (click for Ascending)' : 'Ascending (click for Descending)',
-                style: IconButton.styleFrom(
-                  backgroundColor: UIConstants.tableHeaderBackground(isDarkTheme),
-                  shape: RoundedRectangleBorder(
-                    borderRadius: BorderRadius.circular(UIConstants.textFieldBorderRadius),
-                    side: BorderSide(color: UIConstants.borderColor(isDarkTheme)),
-                  ),
-                ),
-              ),
-            ),
             SizedBox(width: UIConstants.spacingSm),
             SizedBox(
               height: UIConstants.buttonHeightStandard,
@@ -893,7 +785,7 @@ class _ExecutionReportsPageState extends State<ExecutionReportsPage> {
     if (_reports.isEmpty) {
       return Center(
         child: Text(
-          'No execution reports found.',
+          'No trade reports found.',
           style: TextStyle(
             color: UIConstants.textSecondary(isDarkTheme),
             fontSize: UIConstants.fontSizeSm,
@@ -961,20 +853,13 @@ class _ExecutionReportsPageState extends State<ExecutionReportsPage> {
         borderRadius: BorderRadius.circular(4),
       ),
       columns: [
+        DataColumn(label: Text('Trade Report ID', style: headerStyle)),
         DataColumn(label: Text('Exec ID', style: headerStyle)),
-        DataColumn(label: Text('Request ID', style: headerStyle)),
-        DataColumn(label: Text('Type', style: headerStyle)),
-        DataColumn(label: Text('Status', style: headerStyle)),
         DataColumn(label: Text('Symbol', style: headerStyle)),
         DataColumn(label: Text('Side', style: headerStyle)),
-        DataColumn(label: Text('Price', style: headerStyle)),
-        DataColumn(label: Text('Ord Qty', style: headerStyle)),
-        DataColumn(label: Text('Cum Qty', style: headerStyle)),
-        DataColumn(label: Text('Leaves', style: headerStyle)),
-        DataColumn(label: Text('Avg Px', style: headerStyle)),
+        DataColumn(label: Text('Last Qty', style: headerStyle)),
+        DataColumn(label: Text('Last Px', style: headerStyle)),
         DataColumn(label: Text('Currency', style: headerStyle)),
-        DataColumn(label: Text('Cl Ord ID', style: headerStyle)),
-        DataColumn(label: Text('Order ID', style: headerStyle)),
         DataColumn(label: Text('Venue', style: headerStyle)),
         DataColumn(label: Text('Time', style: headerStyle)),
         DataColumn(label: Text('Created At', style: headerStyle)),
@@ -983,8 +868,6 @@ class _ExecutionReportsPageState extends State<ExecutionReportsPage> {
       rows: _reports.asMap().entries.map((entry) {
         final idx = entry.key;
         final report = entry.value;
-        final execType = _str(report, 'execType', 'exec_type');
-        final ordStatus = _str(report, 'ordStatus', 'ord_status');
         final side = _str(report, 'side');
         return DataRow(
           selected: _selectedRowIndex == idx,
@@ -995,23 +878,16 @@ class _ExecutionReportsPageState extends State<ExecutionReportsPage> {
             idx % 2 == 0 ? UIConstants.tableRowEven(isDarkTheme) : UIConstants.tableRowOdd(isDarkTheme),
           ),
           cells: [
-          _copyableCell(_str(report, 'execId', 'exec_id'), isDarkTheme),
-          _copyableCell(_str(report, 'requestId', 'request_id'), isDarkTheme),
-          _badgeCell(execType, _execTypeBadge(execType, isDarkTheme)),
-          _badgeCell(ordStatus, _ordStatusBadge(ordStatus, isDarkTheme)),
+          _copyableCell(_str(report, 'tradeReportId'), isDarkTheme),
+          _copyableCell(_str(report, 'execId'), isDarkTheme),
           _copyableCell(_str(report, 'symbol'), isDarkTheme),
           _sideCell(side, isDarkTheme),
-          _priceCell(_str(report, 'price'), isDarkTheme),
-          _qtyCell(_str(report, 'orderQty', 'order_qty'), isDarkTheme),
-          _qtyCell(_str(report, 'cumQty', 'cum_qty'), isDarkTheme),
-          _qtyCell(_str(report, 'leavesQty', 'leaves_qty'), isDarkTheme),
-          _priceCell(_str(report, 'avgPx', 'avg_px'), isDarkTheme),
+          _qtyCell(_str(report, 'lastQty'), isDarkTheme),
+          _priceCell(_str(report, 'lastPx'), isDarkTheme),
           _copyableCell(_str(report, 'currency'), isDarkTheme),
-          _copyableCell(_str(report, 'clOrdId', 'cl_ord_id'), isDarkTheme),
-          _copyableCell(_str(report, 'orderId', 'order_id'), isDarkTheme),
-          _copyableCell(_str(report, 'venueIid', 'venue_iid'), isDarkTheme),
-          _copyableCell(_str(report, 'transactTime', 'transact_time'), isDarkTheme, noTruncate: true),
-          _copyableCell(_str(report, 'createdAt', 'created_at'), isDarkTheme, noTruncate: true),
+          _copyableCell(_str(report, 'venueIid'), isDarkTheme),
+          _copyableCell(_str(report, 'transactTime'), isDarkTheme, noTruncate: true),
+          _copyableCell(_str(report, 'createdAt'), isDarkTheme, noTruncate: true),
           _copyableTextCell(_str(report, 'text'), isDarkTheme),
         ]);
       }).toList(),
@@ -1108,132 +984,6 @@ class _ExecutionReportsPageState extends State<ExecutionReportsPage> {
   /// Quantity cell — show raw value as received
   DataCell _qtyCell(String value, bool isDarkTheme) {
     return _copyableCell(value, isDarkTheme);
-  }
-
-  DataCell _badgeCell(String value, Widget badge) {
-    return DataCell(
-      Tooltip(
-        message: value,
-        waitDuration: const Duration(milliseconds: 300),
-        child: InkWell(
-          onTap: () => _copyToClipboard(value),
-          child: badge,
-        ),
-      ),
-    );
-  }
-
-  Widget _execTypeBadge(String execType, bool isDarkTheme) {
-    final label = _execTypeOptions[execType] ?? execType;
-    Color bgColor;
-    switch (execType) {
-      case '0':
-        bgColor = Colors.blue;
-        break;
-      case '1':
-        bgColor = Colors.orange;
-        break;
-      case '2':
-      case 'F':
-        bgColor = UIConstants.colorAccept;
-        break;
-      case '4':
-        bgColor = Colors.deepOrange.shade400;
-        break;
-      case '8':
-        bgColor = Colors.red;
-        break;
-      case 'C':
-        bgColor = Colors.amber.shade700;
-        break;
-      case 'A':
-      case 'E':
-        bgColor = Colors.cyan;
-        break;
-      default:
-        bgColor = UIConstants.textHint(isDarkTheme);
-    }
-
-    return Container(
-      padding: const EdgeInsets.symmetric(horizontal: 6, vertical: 2),
-      decoration: BoxDecoration(
-        color: bgColor.withValues(alpha: 0.2),
-        borderRadius: BorderRadius.circular(4),
-        border: Border.all(color: bgColor, width: 0.5),
-      ),
-      child: Text(
-        label,
-        style: TextStyle(color: bgColor, fontSize: 10, fontWeight: FontWeight.w600),
-      ),
-    );
-  }
-
-  static const _ordStatusLabels = <String, String>{
-    '0': 'New',
-    '1': 'Partially Filled',
-    '2': 'Filled',
-    '3': 'Done for Day',
-    '4': 'Canceled',
-    '5': 'Replaced',
-    '6': 'Pending Cancel',
-    '7': 'Stopped',
-    '8': 'Rejected',
-    '9': 'Suspended',
-    'A': 'Pending New',
-    'B': 'Calculated',
-    'C': 'Expired',
-    'D': 'Accepted for Bidding',
-    'E': 'Pending Replace',
-  };
-
-  Widget _ordStatusBadge(String status, bool isDarkTheme) {
-    final label = _ordStatusLabels[status] ?? _ordStatusLabels[status.toUpperCase()] ?? status;
-    Color color;
-    switch (status.toUpperCase()) {
-      case 'NEW':
-      case '0':
-        color = Colors.blue;
-        break;
-      case 'PARTIALLY_FILLED':
-      case '1':
-        color = Colors.orange;
-        break;
-      case 'FILLED':
-      case '2':
-        color = UIConstants.colorAccept;
-        break;
-      case 'CANCELED':
-      case '4':
-        color = Colors.deepOrange.shade400;
-        break;
-      case 'REJECTED':
-      case '8':
-        color = Colors.red;
-        break;
-      case 'EXPIRED':
-      case 'C':
-        color = Colors.amber.shade700;
-        break;
-      case 'PENDING_NEW':
-      case 'PENDING_CANCEL':
-      case 'PENDING_REPLACE':
-      case 'A':
-      case '6':
-      case 'E':
-        color = Colors.cyan;
-        break;
-      case 'REPLACED':
-      case '5':
-        color = Colors.teal;
-        break;
-      default:
-        color = UIConstants.textSecondary(isDarkTheme);
-    }
-
-    return Text(
-      label,
-      style: TextStyle(color: color, fontSize: UIConstants.fontSizeSm, fontWeight: FontWeight.w600),
-    );
   }
 
   Widget _buildPaginationControls(bool isDarkTheme) {

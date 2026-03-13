@@ -968,8 +968,8 @@ class _TradingPageState extends State<TradingPage> {
   Timer? _tradeHistoryRefreshTimer;
 
   // Panel width variables for resizable panels
-  double _leftPanelWidth = 249.0;
-  double _rightPanelWidth = 274.0;
+  double _leftPanelWidth = 329.0;
+  double _rightPanelWidth = 329.0;
   bool _isDraggingLeft = false;
   bool _isDraggingRight = false;
   
@@ -1018,6 +1018,16 @@ class _TradingPageState extends State<TradingPage> {
   Timer? _liveOhlcSubscription;
   int _chartRebuildKey = 0; // Key to force chart rebuild
   
+  // Orderbook mode
+  String _orderbookMode = 'ORDERBOOK_MODE_ENUM_L2_AGGREGATED_PRICE_LEVELS';
+  static const _orderbookModeOptions = <String, String>{
+    'ORDERBOOK_MODE_ENUM_L1_BEST_BID_ASK': 'L1 Best Bid/Ask',
+    'ORDERBOOK_MODE_ENUM_L2_AGGREGATED_PRICE_LEVELS': 'L2 Aggregated',
+    'ORDERBOOK_MODE_ENUM_L3_INDIVIDUAL_ORDERS': 'L3 Individual Orders',
+    'ORDERBOOK_MODE_ENUM_CUMULATIVE_DEPTH': 'Cumulative Depth',
+    'ORDERBOOK_MODE_ENUM_ACTUAL': 'Actual',
+  };
+
   // Orderbook data variables
   List<Map<String, dynamic>> _sellOrders = [];
   List<Map<String, dynamic>> _buyOrders = [];
@@ -1317,6 +1327,8 @@ class _TradingPageState extends State<TradingPage> {
 
           // Process all orders first
           final allProcessedOrders = ordersData.map<Map<String, dynamic>>((order) {
+            print('📋 [Orders] RAW ORDER KEYS: ${(order as Map).keys.toList()}');
+            print('📋 [Orders] expireTimestamp=${order['expireTimestamp']}, expire_timestamp=${order['expire_timestamp']}, expireAtDt=${order['expireAtDt']}, expire_at_dt=${order['expire_at_dt']}');
             // Extract creation timestamp: prefer explicit field, fall back to first event log
             final eventLogs = order['eventLogs'] ?? order['event_logs'] ?? [];
             String? createTs = order['createTimestamp'] ?? order['createdAtDt']?['ts'] ?? order['create_timestamp'];
@@ -1331,7 +1343,7 @@ class _TradingPageState extends State<TradingPage> {
               'quantity': order['quantity'] ?? '0',
               'price': order['price'] ?? '0',
               'create_timestamp': createTs,
-              'expire_timestamp': order['expireTimestamp'] ?? order['expireAtDt']?['ts'] ?? order['expire_timestamp'],
+              'expire_timestamp': _extractExpireTimestamp(order),
               'is_filled': order['isFilled'] ?? order['is_filled'] ?? false,
               'is_cancelled': order['isCancelled'] ?? order['is_cancelled'] ?? false,
               'is_expired': order['isExpired'] ?? order['is_expired'] ?? false,
@@ -2232,6 +2244,7 @@ class _TradingPageState extends State<TradingPage> {
         side: 'ORDER_SIDE_ENUM_SELL',
         pageNumber: pageNumber,
         pageSize: _orderbookPageSize,
+        mode: _orderbookMode,
       );
 
       List<Map<String, dynamic>> sellOrders = [];
@@ -2248,6 +2261,7 @@ class _TradingPageState extends State<TradingPage> {
 
         sellOrders = orders.map<Map<String, dynamic>>((order) {
           final orderMap = order as Map<String, dynamic>;
+          print('[Orderbook-Sell] RAW ORDER KEYS: ${orderMap.keys.toList()}, data=${orderMap['data']}');
           final priceValue = orderMap['price'];
           final quantityValue = orderMap['quantity'];
 
@@ -2264,10 +2278,32 @@ class _TradingPageState extends State<TradingPage> {
 
           print('[Orderbook-Sell] Mapping order: rawPrice=$rawPrice, price=$price, quantity=$quantity, total=$total');
 
+          // L3: check expire_ts against now
+          final expireTs = orderMap['expireTimestamp'] ?? orderMap['expire_timestamp'] ?? orderMap['expireTs'] ?? orderMap['expire_ts'] ?? '';
+          final expireMillis = int.tryParse(expireTs.toString()) ?? 0;
+          final hasExpiry = expireMillis > 0;
+          final isExpired = hasExpiry && DateTime.fromMillisecondsSinceEpoch(expireMillis).isBefore(DateTime.now());
+
+          // L2: parse data JSON for has_expired_orders / earliest_expiry
+          final dataStr = (orderMap['data'] ?? '').toString();
+          bool l2Expired = false;
+          String earliestExpiry = '';
+          if (dataStr.isNotEmpty) {
+            try {
+              final dataJson = json.decode(dataStr) as Map<String, dynamic>;
+              if (dataJson['has_expired_orders'] == true) l2Expired = true;
+              if (dataJson['earliest_expiry'] != null) {
+                earliestExpiry = dataJson['earliest_expiry'].toString();
+              }
+            } catch (_) {}
+          }
+
           return {
             'price': price,
             'quantity': quantity,
             'total': total,
+            'is_expired': isExpired || l2Expired,
+            'expire_timestamp': earliestExpiry.isNotEmpty ? earliestExpiry : expireTs.toString(),
           };
         }).toList();
 
@@ -2345,6 +2381,7 @@ class _TradingPageState extends State<TradingPage> {
         side: 'ORDER_SIDE_ENUM_BUY',
         pageNumber: pageNumber,
         pageSize: _orderbookPageSize,
+        mode: _orderbookMode,
       );
 
       List<Map<String, dynamic>> buyOrders = [];
@@ -2361,6 +2398,7 @@ class _TradingPageState extends State<TradingPage> {
 
         buyOrders = orders.map<Map<String, dynamic>>((order) {
           final orderMap = order as Map<String, dynamic>;
+          print('[Orderbook-Buy] RAW ORDER KEYS: ${orderMap.keys.toList()}, data=${orderMap['data']}');
           final priceValue = orderMap['price'];
           final quantityValue = orderMap['quantity'];
 
@@ -2377,10 +2415,32 @@ class _TradingPageState extends State<TradingPage> {
 
           print('[Orderbook-Buy] Mapping order: rawPrice=$rawPrice, price=$price, quantity=$quantity, total=$total');
 
+          // L3: check expire_ts against now
+          final expireTs = orderMap['expireTimestamp'] ?? orderMap['expire_timestamp'] ?? orderMap['expireTs'] ?? orderMap['expire_ts'] ?? '';
+          final expireMillis = int.tryParse(expireTs.toString()) ?? 0;
+          final hasExpiry = expireMillis > 0;
+          final isExpired = hasExpiry && DateTime.fromMillisecondsSinceEpoch(expireMillis).isBefore(DateTime.now());
+
+          // L2: parse data JSON for has_expired_orders / earliest_expiry
+          final dataStr = (orderMap['data'] ?? '').toString();
+          bool l2Expired = false;
+          String earliestExpiry = '';
+          if (dataStr.isNotEmpty) {
+            try {
+              final dataJson = json.decode(dataStr) as Map<String, dynamic>;
+              if (dataJson['has_expired_orders'] == true) l2Expired = true;
+              if (dataJson['earliest_expiry'] != null) {
+                earliestExpiry = dataJson['earliest_expiry'].toString();
+              }
+            } catch (_) {}
+          }
+
           return {
             'price': price,
             'quantity': quantity,
             'total': total,
+            'is_expired': isExpired || l2Expired,
+            'expire_timestamp': earliestExpiry.isNotEmpty ? earliestExpiry : expireTs.toString(),
           };
         }).toList();
 
@@ -3558,7 +3618,50 @@ class _TradingPageState extends State<TradingPage> {
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
-          const SizedBox(height: UIConstants.spacingMd),
+          // Orderbook mode selector
+          SizedBox(
+            height: 28,
+            child: DropdownButtonFormField<String>(
+              value: _orderbookMode,
+              isDense: true,
+              isExpanded: true,
+              decoration: InputDecoration(
+                border: OutlineInputBorder(
+                  borderRadius: BorderRadius.circular(UIConstants.textFieldBorderRadius),
+                  borderSide: BorderSide(color: Colors.grey[600]!),
+                ),
+                contentPadding: const EdgeInsets.symmetric(horizontal: 8, vertical: 0),
+                isDense: true,
+              ),
+              style: TextStyle(
+                color: UIConstants.textPrimary(isDarkTheme),
+                fontSize: UIConstants.fontSizeSm,
+              ),
+              dropdownColor: UIConstants.dropdownBackground(isDarkTheme),
+              items: _orderbookModeOptions.entries
+                  .map((e) => DropdownMenuItem(
+                        value: e.key,
+                        child: Text(e.value, style: TextStyle(
+                          color: UIConstants.textPrimary(isDarkTheme),
+                          fontSize: UIConstants.fontSizeSm,
+                        )),
+                      ))
+                  .toList(),
+              onChanged: (value) {
+                if (value != null && value != _orderbookMode) {
+                  setState(() {
+                    _orderbookMode = value;
+                    _currentSellOrdersPage = 1;
+                    _currentBuyOrdersPage = 1;
+                  });
+                  if (_selectedSymbol.isNotEmpty) {
+                    _fetchOrderbookData(_selectedSymbol);
+                  }
+                }
+              },
+            ),
+          ),
+          const SizedBox(height: UIConstants.spacingSm),
           Expanded(
             child: Column(
               children: [
@@ -3731,10 +3834,19 @@ class _TradingPageState extends State<TradingPage> {
         final order = orders[index];
         final color = side == 'sell' ? UIConstants.colorReject : UIConstants.colorAccept;
 
+        final isExpired = order['is_expired'] == true;
+        print('📊 [Orderbook] $side order[$index]: is_expired=$isExpired, expire_timestamp=${order['expire_timestamp']}, raw_order=$order');
+
         return Container(
           padding: const EdgeInsets.symmetric(vertical: 2, horizontal: 4),
           child: Row(
             children: [
+              if (isExpired)
+                Tooltip(
+                  message: _orderbookExpiredTooltip(order),
+                  child: Icon(Icons.warning_amber, size: 12, color: Colors.orange),
+                ),
+              if (isExpired) const SizedBox(width: 2),
               Expanded(
                 child: Text(
                   _formatPrice(order['price']),
@@ -3957,21 +4069,128 @@ class _TradingPageState extends State<TradingPage> {
   }
 
   /// Format a timestamp that could be ISO 8601 string, unix seconds, or null
+  /// Extract expire timestamp from various possible field names/formats
+  String _extractExpireTimestamp(Map<dynamic, dynamic> order) {
+    // Try direct fields
+    final candidates = [
+      order['expireTimestamp'],
+      order['expire_timestamp'],
+      order['expireTs'],
+      order['expire_ts'],
+    ];
+    for (final v in candidates) {
+      if (v != null && v.toString().isNotEmpty && v.toString() != '0') return v.toString();
+    }
+    // Try nested DateTime message
+    final expireAtDt = order['expireAtDt'] ?? order['expire_at_dt'];
+    if (expireAtDt is Map) {
+      final ts = expireAtDt['utcUnixEpochTsMillis'] ?? expireAtDt['utc_unix_epoch_ts_millis'] ?? expireAtDt['ts'];
+      if (ts != null && ts.toString().isNotEmpty && ts.toString() != '0') return ts.toString();
+    }
+    return '';
+  }
+
   String _formatOrderTimestamp(dynamic timestamp) {
-    if (timestamp == null) return 'N/A';
+    if (timestamp == null) return '-';
     final str = timestamp.toString();
-    if (str.isEmpty) return 'N/A';
+    if (str.isEmpty || str == '0') return '-';
     try {
       // Try ISO 8601 first (e.g., 2026-03-06T00:02:13Z)
       final dt = DateTime.parse(str);
       return '${dt.day}/${dt.month}/${dt.year.toString().substring(2)} ${dt.hour.toString().padLeft(2, '0')}:${dt.minute.toString().padLeft(2, '0')}';
     } catch (_) {}
     try {
-      // Try unix seconds
-      final dt = DateTime.fromMillisecondsSinceEpoch(int.parse(str) * 1000);
+      final millis = int.parse(str);
+      if (millis == 0) return '-';
+      final dt = DateTime.fromMillisecondsSinceEpoch(millis);
       return '${dt.day}/${dt.month}/${dt.year.toString().substring(2)} ${dt.hour.toString().padLeft(2, '0')}:${dt.minute.toString().padLeft(2, '0')}';
     } catch (_) {}
     return str;
+  }
+
+  /// Check if an expire timestamp has passed
+  bool _isExpiredTimestamp(dynamic timestamp) {
+    if (timestamp == null) return false;
+    final str = timestamp.toString();
+    if (str.isEmpty) return false;
+    try {
+      final dt = DateTime.parse(str);
+      return dt.isBefore(DateTime.now());
+    } catch (_) {}
+    try {
+      final millis = int.parse(str);
+      if (millis == 0) return false;
+      final dt = DateTime.fromMillisecondsSinceEpoch(millis);
+      return dt.isBefore(DateTime.now());
+    } catch (_) {}
+    return false;
+  }
+
+  /// Calculate how long ago a timestamp expired
+  String _expiredDurationText(dynamic timestamp) {
+    if (timestamp == null) return 'Expired';
+    final str = timestamp.toString();
+    DateTime? dt;
+    try {
+      dt = DateTime.parse(str);
+    } catch (_) {}
+    if (dt == null) {
+      try {
+        final millis = int.parse(str);
+        if (millis > 0) {
+          dt = DateTime.fromMillisecondsSinceEpoch(millis);
+        }
+      } catch (_) {}
+    }
+    if (dt == null) return 'Expired';
+    final diff = DateTime.now().difference(dt);
+    if (diff.inDays > 0) return 'Expired ${diff.inDays}d ${diff.inHours % 24}h ago';
+    if (diff.inHours > 0) return 'Expired ${diff.inHours}h ${diff.inMinutes % 60}m ago';
+    if (diff.inMinutes > 0) return 'Expired ${diff.inMinutes}m ago';
+    return 'Expired ${diff.inSeconds}s ago';
+  }
+
+  /// Build tooltip for expired orderbook entry
+  String _orderbookExpiredTooltip(Map<String, dynamic> order) {
+    final expireTs = order['expire_timestamp']?.toString() ?? '';
+    if (expireTs.isEmpty || expireTs == '0') return 'Expired';
+    final millis = int.tryParse(expireTs);
+    if (millis == null || millis == 0) return 'Expired';
+    final expireDt = DateTime.fromMillisecondsSinceEpoch(millis);
+    final diff = DateTime.now().difference(expireDt);
+    if (diff.inDays > 0) return 'Expired ${diff.inDays}d ${diff.inHours % 24}h ago';
+    if (diff.inHours > 0) return 'Expired ${diff.inHours}h ${diff.inMinutes % 60}m ago';
+    if (diff.inMinutes > 0) return 'Expired ${diff.inMinutes}m ago';
+    return 'Expired ${diff.inSeconds}s ago';
+  }
+
+  /// Build expire timestamp cell with alarm icon if expired
+  Widget _buildExpireTimestampCell(dynamic timestamp, bool isDarkTheme) {
+    final formatted = _formatOrderTimestamp(timestamp);
+    final isExpired = _isExpiredTimestamp(timestamp);
+    return Row(
+      mainAxisAlignment: MainAxisAlignment.center,
+      mainAxisSize: MainAxisSize.min,
+      children: [
+        if (isExpired)
+          Tooltip(
+            message: _expiredDurationText(timestamp),
+            child: Icon(Icons.warning_amber, size: 13, color: Colors.orange),
+          ),
+        if (isExpired) const SizedBox(width: 3),
+        Flexible(
+          child: Text(
+            formatted,
+            style: TextStyle(
+              color: isExpired ? Colors.orange : UIConstants.textPrimary(isDarkTheme),
+              fontSize: 11,
+            ),
+            textAlign: TextAlign.center,
+            overflow: TextOverflow.ellipsis,
+          ),
+        ),
+      ],
+    );
   }
 
   /// Show order details dialog with info section, event logs, and refresh
@@ -4236,7 +4455,7 @@ class _TradingPageState extends State<TradingPage> {
           ),
           SizedBox(
             width: 140,
-            child: Text(_formatOrderTimestamp(order['expire_timestamp']), style: TextStyle(color: UIConstants.textPrimary(isDarkTheme), fontSize: 11), textAlign: TextAlign.center),
+            child: _buildExpireTimestampCell(order['expire_timestamp'], isDarkTheme),
           ),
           SizedBox(
             width: 140,
@@ -4589,7 +4808,7 @@ class _TradingPageState extends State<TradingPage> {
           ),
           SizedBox(
             width: 150,
-            child: Text(_formatOrderTimestamp(order['expire_timestamp']), style: TextStyle(color: UIConstants.textPrimary(isDarkTheme), fontSize: 11), textAlign: TextAlign.center),
+            child: _buildExpireTimestampCell(order['expire_timestamp'], isDarkTheme),
           ),
           SizedBox(
             width: 140,
@@ -4984,6 +5203,19 @@ class _TradingPageState extends State<TradingPage> {
         ),
       );
 
+      // Calculate expiry timestamp from selected period
+      final DateTime? expireTime = _expiryPeriod == 'No Expiry'
+          ? null
+          : DateTime.now().add(switch (_expiryPeriod) {
+              '5 Minutes' => const Duration(minutes: 5),
+              '1 Day' => const Duration(days: 1),
+              '3 Days' => const Duration(days: 3),
+              '1 Week' => const Duration(days: 7),
+              '2 Weeks' => const Duration(days: 14),
+              '1 Month' => const Duration(days: 30),
+              _ => const Duration(days: 30),
+            });
+
       // Call CreateOrder API
       final result = await realGrpcClient.createOrder(
         accountId: _cachedAccountId!,
@@ -4997,6 +5229,7 @@ class _TradingPageState extends State<TradingPage> {
         participantOrderId: participantOrderId,
         currency: currency,
         feeAmount: _feeController.text.trim(),
+        expireTime: expireTime,
       );
 
       // Hide loading indicator
@@ -5486,7 +5719,7 @@ class _TradingPageState extends State<TradingPage> {
                             color: UIConstants.textPrimary(isDarkTheme),
                             fontSize: UIConstants.textFieldFontSize,
                           ),
-                          items: ['1 Day', '3 Days', '1 Week', '2 Weeks', '1 Month']
+                          items: ['5 Minutes', '1 Day', '3 Days', '1 Week', '2 Weeks', '1 Month', 'No Expiry']
                               .map<DropdownMenuItem<String>>((String value) {
                             return DropdownMenuItem<String>(
                               value: value,
@@ -5502,6 +5735,39 @@ class _TradingPageState extends State<TradingPage> {
                   ),
                 ),
               ],
+            ),
+            // Show calculated expiration time
+            Padding(
+              padding: const EdgeInsets.only(left: 80, top: 4),
+              child: Builder(
+                builder: (_) {
+                  if (_expiryPeriod == 'No Expiry') {
+                    return Text(
+                      'No expiration',
+                      style: TextStyle(
+                        fontSize: 10,
+                        color: UIConstants.textHint(isDarkTheme),
+                      ),
+                    );
+                  }
+                  final expiry = DateTime.now().add(switch (_expiryPeriod) {
+                    '5 Minutes' => const Duration(minutes: 5),
+                    '1 Day' => const Duration(days: 1),
+                    '3 Days' => const Duration(days: 3),
+                    '1 Week' => const Duration(days: 7),
+                    '2 Weeks' => const Duration(days: 14),
+                    '1 Month' => const Duration(days: 30),
+                    _ => const Duration(days: 30),
+                  });
+                  return Text(
+                    '${expiry.day.toString().padLeft(2, '0')}/${expiry.month.toString().padLeft(2, '0')}/${expiry.year} ${expiry.hour.toString().padLeft(2, '0')}:${expiry.minute.toString().padLeft(2, '0')}',
+                    style: TextStyle(
+                      fontSize: 10,
+                      color: UIConstants.textHint(isDarkTheme),
+                    ),
+                  );
+                },
+              ),
             ),
           ],
 

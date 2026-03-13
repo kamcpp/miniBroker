@@ -1,3 +1,4 @@
+import 'dart:io';
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 import '../services/auth_service.dart';
@@ -52,6 +53,17 @@ class AppHeader extends StatelessWidget {
               _buildThemeToggle(themeService, isDarkTheme),
 
               const SizedBox(width: UIConstants.spacingMd),
+
+              // New Instance
+              Tooltip(
+                message: 'New Instance',
+                child: IconButton(
+                  onPressed: () => Process.run('open', ['-n', '-a', Platform.resolvedExecutable]),
+                  icon: Icon(Icons.open_in_new, color: UIConstants.textPrimary(isDarkTheme), size: 20),
+                ),
+              ),
+
+              const SizedBox(width: UIConstants.spacingSm),
 
               // Logout Button
               _buildLogoutButton(context, authService, isDarkTheme),
