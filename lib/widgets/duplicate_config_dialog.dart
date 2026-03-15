@@ -1,10 +1,11 @@
+import 'dart:ui';
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 import '../services/theme_service.dart';
 import '../utils/broker_config_helper.dart';
+import '../config/ui_constants.dart';
 
 /// Simple dialog to get new broker name for duplication
-import '../config/ui_constants.dart';
 class DuplicateConfigDialog extends StatefulWidget {
   final String originalName;
 
@@ -39,18 +40,24 @@ class _DuplicateConfigDialogState extends State<DuplicateConfigDialog> {
     final themeService = Provider.of<ThemeService>(context);
     final isDarkTheme = themeService.isDarkTheme;
 
-    final backgroundColor = UIConstants.dialogBackground(isDarkTheme);
-    final surfaceColor = UIConstants.dialogSurface(isDarkTheme);
-    final textColor = UIConstants.textPrimary(isDarkTheme);
-    final hintColor = UIConstants.textSecondary(isDarkTheme);
-    final primaryColor = UIConstants.commandColor(isDarkTheme);
+    final surfaceColor = isDarkTheme ? const Color(0xFF1e1e1e) : Colors.grey[100]!;
+    final textColor = Colors.white;
+    final hintColor = Colors.grey[400]!;
+    final primaryColor = isDarkTheme ? const Color(0xFF6b9eff) : UIConstants.colorCommand;
 
     return Dialog(
-      backgroundColor: backgroundColor,
-      shape: UIConstants.dialogShape(isDarkTheme) as RoundedRectangleBorder,
-      child: Container(
+      backgroundColor: Colors.transparent,
+      child: ClipRRect(
+        borderRadius: BorderRadius.circular(UIConstants.borderRadiusLg),
+        child: BackdropFilter(
+          filter: ImageFilter.blur(
+            sigmaX: UIConstants.glassBlurSigma,
+            sigmaY: UIConstants.glassBlurSigma,
+          ),
+          child: Container(
         width: 450,
         padding: UIConstants.paddingComfortable,
+        decoration: UIConstants.glassCardDecoration(),
         child: Form(
           key: _formKey,
           child: Column(
@@ -151,6 +158,8 @@ class _DuplicateConfigDialogState extends State<DuplicateConfigDialog> {
               ),
             ],
           ),
+        ),
+      ),
         ),
       ),
     );

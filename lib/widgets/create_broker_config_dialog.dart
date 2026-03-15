@@ -1,13 +1,14 @@
 import 'dart:async';
+import 'dart:ui';
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 import 'package:grpc/grpc.dart';
 import '../services/theme_service.dart';
 import '../utils/broker_config_helper.dart';
 import '../generated/prtagent/v1/agent.pbgrpc.dart';
+import '../config/ui_constants.dart';
 
 /// Dialog for creating a new broker configuration
-import '../config/ui_constants.dart';
 class CreateBrokerConfigDialog extends StatefulWidget {
   final String configDir;
 
@@ -186,19 +187,39 @@ class _CreateBrokerConfigDialogState extends State<CreateBrokerConfigDialog> {
     final themeService = Provider.of<ThemeService>(context);
     final isDarkTheme = themeService.isDarkTheme;
 
-    final backgroundColor = UIConstants.dialogBackground(isDarkTheme);
-    final surfaceColor = UIConstants.dialogSurface(isDarkTheme);
-    final textColor = UIConstants.textPrimary(isDarkTheme);
-    final hintColor = UIConstants.textSecondary(isDarkTheme);
-    final primaryColor = UIConstants.commandColor(isDarkTheme);
+    final surfaceColor = isDarkTheme ? const Color(0xFF1e1e1e) : Colors.grey[100]!;
+    final textColor = Colors.white;
+    final hintColor = Colors.grey[400]!;
+    final primaryColor = isDarkTheme ? const Color(0xFF6b9eff) : UIConstants.colorCommand;
 
     return Dialog(
-      backgroundColor: backgroundColor,
-      shape: UIConstants.dialogShape(isDarkTheme) as RoundedRectangleBorder,
-      child: Container(
+      backgroundColor: Colors.transparent,
+      child: ClipRRect(
+        borderRadius: BorderRadius.circular(UIConstants.borderRadiusLg),
+        child: BackdropFilter(
+          filter: ImageFilter.blur(
+            sigmaX: UIConstants.glassBlurSigma,
+            sigmaY: UIConstants.glassBlurSigma,
+          ),
+          child: Container(
         width: 600,
         constraints: const BoxConstraints(maxHeight: 700),
         padding: UIConstants.paddingComfortable,
+        decoration: BoxDecoration(
+          color: const Color(0xFF1a1754).withOpacity(0.95),
+          borderRadius: BorderRadius.circular(UIConstants.borderRadiusLg),
+          border: Border.all(
+            color: UIConstants.glassCardBorderColor,
+            width: UIConstants.glassCardBorderWidth,
+          ),
+          boxShadow: [
+            BoxShadow(
+              color: Colors.black.withOpacity(0.3),
+              blurRadius: 12,
+              offset: const Offset(0, 4),
+            ),
+          ],
+        ),
         child: Form(
           key: _formKey,
           child: Column(
@@ -524,6 +545,8 @@ class _CreateBrokerConfigDialogState extends State<CreateBrokerConfigDialog> {
               ),
             ],
           ),
+        ),
+      ),
         ),
       ),
     );

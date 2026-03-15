@@ -16,6 +16,7 @@ import '../services/chart_service.dart';
 import '../utils/connectivity_checker.dart';
 import '../utils/menu_items_helper.dart';
 import '../widgets/base_page.dart';
+import '../widgets/styled_data_table.dart';
 import '../services/page_state_service.dart';
 
 class TradingPage extends StatefulWidget {
@@ -985,7 +986,7 @@ class _TradingPageState extends State<TradingPage> {
   bool _isDraggingBottomSplit = false;
 
   // Top/Bottom section height split
-  double _topSectionRatio = 0.72; // 72% for top, 28% for bottom - ensures Buy Order button is visible
+  double _topSectionRatio = 0.61; // 61% for top, 39% for bottom
   bool _isDraggingTopBottomSplit = false;
 
   // Activity section tabs
@@ -3064,7 +3065,7 @@ class _TradingPageState extends State<TradingPage> {
                   isDarkTheme: isDarkTheme,
                   child: DropdownButtonHideUnderline(
                     child: DropdownButton<Map<String, String>>(
-                      value: _markets.isEmpty ? null : (_markets.any((market) => market['id'] == _selectedMarket['id']) ? _selectedMarket : _markets.isNotEmpty ? _markets.first : null),
+                      value: _markets.isEmpty ? null : _markets.cast<Map<String, String>?>().firstWhere((m) => m!['id'] == _selectedMarket['id'], orElse: () => _markets.isNotEmpty ? _markets.first : null),
                       isExpanded: true,
                       isDense: true,
                       onChanged: _markets.isEmpty ? null : (Map<String, String>? newValue) async {
@@ -3100,7 +3101,7 @@ class _TradingPageState extends State<TradingPage> {
                   isDarkTheme: isDarkTheme,
                   child: DropdownButtonHideUnderline(
                     child: DropdownButton<Map<String, String>>(
-                      value: _venues.isEmpty ? null : (_venues.any((venue) => venue['id'] == _selectedVenue['id']) ? _selectedVenue : _venues.isNotEmpty ? _venues.first : null),
+                      value: _venues.isEmpty ? null : _venues.cast<Map<String, String>?>().firstWhere((v) => v!['id'] == _selectedVenue['id'], orElse: () => _venues.isNotEmpty ? _venues.first : null),
                       isExpanded: true,
                       isDense: true,
                       onChanged: _venues.isEmpty ? null : (Map<String, String>? newValue) {
@@ -3531,160 +3532,50 @@ class _TradingPageState extends State<TradingPage> {
   }
 
   Widget _buildTradeHistoryTable(bool isDarkTheme) {
-    if (_tradeHistory.isEmpty) {
-      return Container(
-        padding: UIConstants.paddingStandard,
-        child: Column(
-          crossAxisAlignment: CrossAxisAlignment.start,
-          children: [
-            const SizedBox(height: UIConstants.spacingMd),
-            Row(
-              mainAxisAlignment: MainAxisAlignment.spaceBetween,
-              children: [
-                SizedBox(
-                  width: 60,
-                  child: Text('Price', style: TextStyle(color: Colors.grey[400], fontWeight: UIConstants.fontWeightMedium, fontSize: 13), textAlign: TextAlign.left),
-                ),
-                SizedBox(
-                  width: 70,
-                  child: Text('Quantity', style: TextStyle(color: Colors.grey[400], fontWeight: UIConstants.fontWeightMedium, fontSize: 13), textAlign: TextAlign.center),
-                ),
-                Expanded(
-                  child: Text('Time', style: TextStyle(color: Colors.grey[400], fontWeight: UIConstants.fontWeightMedium, fontSize: 13), textAlign: TextAlign.right),
-                ),
-              ],
-            ),
-            const SizedBox(height: 2),
-            Divider(color: Colors.grey, thickness: 0.7, height: 1),
-            // No rows if empty
-          ],
-        ),
-      );
-    }
+    final columns = [
+      StyledColumn(label: 'Price'),
+      StyledColumn(label: 'Quantity'),
+      StyledColumn(label: 'Time'),
+    ];
+
     return Container(
       padding: UIConstants.paddingStandard,
       decoration: BoxDecoration(
         color: UIConstants.tabPanelBackground(isDarkTheme),
       ),
-      child: Column(
-        crossAxisAlignment: CrossAxisAlignment.start,
-        children: [
-          const SizedBox(height: UIConstants.spacingMd),
-          Padding(
-            padding: const EdgeInsets.symmetric(vertical: 4, horizontal: 4),
-            child: Column(
-              children: [
-                Row(
-                  mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                  children: [
-                    SizedBox(
-                      width: 75,
-                      child: Text(
-                        'Price',
-                        style: TextStyle(
-                          color: Colors.grey[400],
-                          fontWeight: UIConstants.fontWeightMedium,
-                          fontSize: UIConstants.fontSizeSm,
-                        ),
-                        textAlign: TextAlign.left,
-                      ),
-                    ),
-                    SizedBox(
-                      width: 60,
-                      child: Text(
-                        'Quantity',
-                        style: TextStyle(
-                          color: Colors.grey[400],
-                          fontWeight: UIConstants.fontWeightMedium,
-                          fontSize: UIConstants.fontSizeSm,
-                        ),
-                        textAlign: TextAlign.center,
-                      ),
-                    ),
-                    Expanded(
-                      child: Text(
-                        'Time',
-                        style: TextStyle(
-                          color: Colors.grey[400],
-                          fontWeight: UIConstants.fontWeightMedium,
-                          fontSize: UIConstants.fontSizeSm,
-                        ),
-                        textAlign: TextAlign.right,
-                      ),
-                    ),
-                  ],
-                ),
-                const SizedBox(height: 2),
-                Divider(
-                  color: Colors.grey,
-                  thickness: 0.7,
-                  height: 1,
-                ),
-              ],
+      child: StyledDataTable(
+        isDarkTheme: isDarkTheme,
+        columns: columns,
+        onPageChanged: (page) => _goToTradeHistoryPage(page),
+        currentPage: _currentTradeHistoryPage,
+        totalPages: _totalTradeHistoryPages,
+        rows: List.generate(_tradeHistory.length, (index) {
+          final trade = _tradeHistory[index];
+          return StyledRow(cells: [
+            Text(
+              trade['price'].toString(),
+              style: TextStyle(
+                color: UIConstants.textPrimary(isDarkTheme),
+                fontWeight: UIConstants.fontWeightMedium,
+                fontSize: UIConstants.fontSizeSm,
+              ),
             ),
-          ),
-          Expanded(
-            child: Column(
-              children: [
-                Expanded(
-                  child: ListView.builder(
-                    itemCount: _tradeHistory.length,
-                    itemBuilder: (context, index) {
-                      final trade = _tradeHistory[index];
-                      Color priceColor = trade['priceColor'] ?? (UIConstants.textPrimary(isDarkTheme));
-                      return Container(
-                        margin: const EdgeInsets.only(bottom: 4),
-                        padding: const EdgeInsets.symmetric(vertical: 4, horizontal: 4),
-                        decoration: BoxDecoration(
-                          color: Colors.transparent,
-                        ),
-                        child: Row(
-                          mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                          children: [
-                            SizedBox(
-                              width: 75,
-                              child: Text(
-                                trade['price'].toString(),
-                                style: TextStyle(
-                                  color: UIConstants.textPrimary(isDarkTheme),
-                                  fontWeight: UIConstants.fontWeightMedium,
-                                  fontSize: UIConstants.fontSizeSm,
-                                ),
-                                textAlign: TextAlign.left,
-                              ),
-                            ),
-                            SizedBox(
-                              width: 60,
-                              child: Text(
-                                trade['quantity'].toString(),
-                                style: TextStyle(
-                                  color: UIConstants.textPrimary(isDarkTheme),
-                                  fontSize: UIConstants.fontSizeSm,
-                                ),
-                                textAlign: TextAlign.center,
-                              ),
-                            ),
-                            Expanded(
-                              child: Text(
-                                trade['time'].toString(),
-                                style: TextStyle(
-                                  color: Colors.grey,
-                                  fontSize: UIConstants.fontSizeSm,
-                                ),
-                                textAlign: TextAlign.right,
-                              ),
-                            ),
-                          ],
-                        ),
-                      );
-                    },
-                  ),
-                ),
-                _buildPaginationControls(_currentTradeHistoryPage, _totalTradeHistoryPages, _goToTradeHistoryPage),
-              ],
+            Text(
+              trade['quantity'].toString(),
+              style: TextStyle(
+                color: UIConstants.textPrimary(isDarkTheme),
+                fontSize: UIConstants.fontSizeSm,
+              ),
             ),
-          ),
-        ],
+            Text(
+              trade['time'].toString(),
+              style: TextStyle(
+                color: Colors.grey,
+                fontSize: UIConstants.fontSizeSm,
+              ),
+            ),
+          ]);
+        }),
       ),
     );
   }
@@ -4636,60 +4527,91 @@ class _TradingPageState extends State<TradingPage> {
     );
   }
 
+  StyledRow _buildOrderDataRow(Map<String, dynamic> order, int index, bool isDarkTheme) {
+    String formatSide(String side) {
+      final s = side.toUpperCase();
+      if (s.contains('BUY')) return 'BUY';
+      if (s.contains('SELL')) return 'SELL';
+      return side;
+    }
+
+    final side = formatSide(order['side'] ?? '');
+    final status = _getOrderStatus(order);
+    final statusColor = _getStatusColor(status, isDarkTheme);
+    final sideColor = side == 'BUY' ? UIConstants.colorAccept : UIConstants.colorReject;
+    final quantity = _formatDecimal(order['quantity'] ?? '0');
+    final remaining = _formatDecimal(order['remainingQuantity'] ?? order['remaining_quantity'] ?? order['quantity'] ?? '0');
+    final quantityDisplay = '$remaining / $quantity';
+    final price = order['price'] ?? '0';
+    final priceDisplay = (price == '0' || price == '0.00') ? 'Market' : _formatDecimal(price);
+
+    return StyledRow(cells: [
+      _copyableOrderCell(side, isDarkTheme, width: 75, color: sideColor, fontWeight: UIConstants.fontWeightMedium, fontSize: UIConstants.fontSizeSm, textAlign: TextAlign.left),
+      _copyableOrderCell(order['symbol'] ?? 'N/A', isDarkTheme),
+      _copyableOrderCell(quantityDisplay, isDarkTheme),
+      _copyableOrderCell(priceDisplay, isDarkTheme),
+      _copyableOrderCell(_formatOrderTimestamp(order['create_timestamp']), isDarkTheme, fontSize: 11),
+      SizedBox(
+        width: 140,
+        child: _buildExpireTimestampCell(order['expire_timestamp'], isDarkTheme, unit: order['expire_ts_unit'] ?? 'ms'),
+      ),
+      _copyableOrderCell(status, isDarkTheme, color: statusColor, fontSize: UIConstants.fontSizeSm),
+      Row(
+        mainAxisSize: MainAxisSize.min,
+        children: [
+          if (!_isTerminalStatus(status)) ...[
+            IconButton(
+              icon: const Icon(Icons.cancel_outlined, size: 16),
+              color: Colors.red,
+              tooltip: 'Cancel',
+              padding: EdgeInsets.zero,
+              constraints: const BoxConstraints(minWidth: 24, minHeight: 24),
+              onPressed: () => _cancelOrder(order['participantOrderId']?.toString() ?? ''),
+            ),
+            IconButton(
+              icon: const Icon(Icons.swap_horiz, size: 16),
+              color: Colors.blue,
+              tooltip: 'Replace',
+              padding: EdgeInsets.zero,
+              constraints: const BoxConstraints(minWidth: 24, minHeight: 24),
+              onPressed: () => _replaceOrder(order['participantOrderId']?.toString() ?? '', order),
+            ),
+          ],
+          IconButton(
+            icon: const Icon(Icons.copy, size: 14),
+            color: Colors.grey,
+            tooltip: 'Copy CSV',
+            padding: EdgeInsets.zero,
+            constraints: const BoxConstraints(minWidth: 22, minHeight: 22),
+            onPressed: () => _copyOrderCsv(order),
+          ),
+          IconButton(
+            icon: const Icon(Icons.data_object, size: 14),
+            color: Colors.grey,
+            tooltip: 'Copy JSON',
+            padding: EdgeInsets.zero,
+            constraints: const BoxConstraints(minWidth: 22, minHeight: 22),
+            onPressed: () => _copyOrderJson(order),
+          ),
+          IconButton(
+            icon: const Icon(Icons.info_outline, size: 14),
+            color: Colors.grey,
+            tooltip: 'Details',
+            padding: EdgeInsets.zero,
+            constraints: const BoxConstraints(minWidth: 22, minHeight: 22),
+            onPressed: () => _showOrderDetails(order),
+          ),
+        ],
+      ),
+    ]);
+  }
+
   Widget _buildOrdersTable(bool isDarkTheme) {
     return Container(
       padding: UIConstants.paddingStandard,
       child: Column(
-        crossAxisAlignment: CrossAxisAlignment.start,
         children: [
-          const SizedBox(height: 2),
-          // Orders table header
-          Row(
-            mainAxisAlignment: MainAxisAlignment.spaceBetween,
-            children: [
-              SizedBox(
-                width: 75,
-                child: Text('Side', style: TextStyle(color: Colors.grey[400], fontWeight: UIConstants.fontWeightMedium, fontSize: 13), textAlign: TextAlign.left),
-              ),
-              SizedBox(
-                width: 140,
-                child: Text('Pair', style: TextStyle(color: Colors.grey[400], fontWeight: UIConstants.fontWeightMedium, fontSize: 13), textAlign: TextAlign.center),
-              ),
-              SizedBox(
-                width: 140,
-                child: Text('Qty (Rem/Tot)', style: TextStyle(color: Colors.grey[400], fontWeight: UIConstants.fontWeightMedium, fontSize: 13), textAlign: TextAlign.center),
-              ),
-              SizedBox(
-                width: 140,
-                child: Text('Price', style: TextStyle(color: Colors.grey[400], fontWeight: UIConstants.fontWeightMedium, fontSize: 13), textAlign: TextAlign.center),
-              ),
-              SizedBox(
-                width: 140,
-                child: Text('Creation Time', style: TextStyle(color: Colors.grey[400], fontWeight: UIConstants.fontWeightMedium, fontSize: 13), textAlign: TextAlign.center),
-              ),
-              SizedBox(
-                width: 140,
-                child: Text('Expiration Time', style: TextStyle(color: Colors.grey[400], fontWeight: UIConstants.fontWeightMedium, fontSize: 13), textAlign: TextAlign.center),
-              ),
-              SizedBox(
-                width: 140,
-                child: Text('Status', style: TextStyle(color: Colors.grey[400], fontWeight: UIConstants.fontWeightMedium, fontSize: 13), textAlign: TextAlign.center),
-              ),
-              Expanded(
-                child: Text('Action', style: TextStyle(color: Colors.grey[400], fontWeight: UIConstants.fontWeightMedium, fontSize: 13), textAlign: TextAlign.center),
-              ),
-            ],
-          ),
-          const SizedBox(height: 2),
-          Divider(
-            color: Colors.grey,
-            thickness: 0.7,
-            height: 1,
-          ),
-          const SizedBox(height: 2),
-          Expanded(
-            child: _buildOrdersContent(isDarkTheme),
-          ),
+          Expanded(child: _buildOrdersContent(isDarkTheme)),
         ],
       ),
     );
@@ -4748,152 +4670,46 @@ class _TradingPageState extends State<TradingPage> {
       );
     }
 
-    // Show only real orders (no sample data fallback) with client-side pagination
-    final totalOrdersPages = (_realOrders.length / _ordersPerPage).ceil();
-    final ordersPageIndex = (_ordersCurrentPage - 1).clamp(0, totalOrdersPages > 0 ? totalOrdersPages - 1 : 0);
-    final ordersStart = ordersPageIndex * _ordersPerPage;
-    final ordersEnd = (ordersStart + _ordersPerPage).clamp(0, _realOrders.length);
-    final pagedOrders = _realOrders.length > 0 ? _realOrders.sublist(ordersStart, ordersEnd) : <Map<String, dynamic>>[];
-
-    return Column(
-      children: [
-        Expanded(
-          child: ListView(
-            children: [
-              // Orders from real data only (paginated)
-              ...pagedOrders.map((order) => _buildOrderRow(order, isDarkTheme)),
-              // Empty state message if no orders
-              if (_realOrders.isEmpty)
-                Padding(
-                  padding: UIConstants.paddingStandard,
-                  child: Center(
-                    child: Column(
-                      children: [
-                        Icon(
-                          Icons.list_alt,
-                          size: 48,
-                          color: UIConstants.textHint(isDarkTheme),
-                        ),
-                        const SizedBox(height: UIConstants.spacingMd),
-                        Text(
-                          'No orders found',
-                          style: TextStyle(
-                            color: UIConstants.textSecondary(isDarkTheme),
-                            fontSize: UIConstants.textFieldFontSize,
-                            fontWeight: UIConstants.fontWeightNormal,
-                          ),
-                        ),
-                        const SizedBox(height: UIConstants.spacingSm),
-                        Text(
-                          'Your active orders will appear here',
-                          style: TextStyle(
-                            color: UIConstants.textHint(isDarkTheme),
-                            fontSize: UIConstants.fontSizeSm,
-                          ),
-                        ),
-                      ],
-                    ),
-                  ),
-                ),
-            ],
-          ),
-        ),
-        _buildPaginationControls(_ordersCurrentPage, totalOrdersPages > 0 ? totalOrdersPages : 1, _goToOrdersPage),
+    return StyledDataTable(
+      isDarkTheme: isDarkTheme,
+      rowsPerPage: _ordersPerPage,
+      columns: [
+        StyledColumn(label: 'Side'),
+        StyledColumn(label: 'Pair'),
+        StyledColumn(label: 'Qty (Rem/Tot)'),
+        StyledColumn(label: 'Price'),
+        StyledColumn(label: 'Creation Time'),
+        StyledColumn(label: 'Expiration Time'),
+        StyledColumn(label: 'Status'),
+        StyledColumn(label: 'Action'),
       ],
+      rows: List.generate(_realOrders.length, (index) {
+        final order = _realOrders[index];
+        return _buildOrderDataRow(order, index, isDarkTheme);
+      }),
     );
   }
 
   Widget _buildOrderHistoryTable(bool isDarkTheme) {
     return Container(
       padding: UIConstants.paddingStandard,
-      child: Column(
-        crossAxisAlignment: CrossAxisAlignment.start,
-        children: [
-          const SizedBox(height: 2),
-          // History table header
-          Row(
-            mainAxisAlignment: MainAxisAlignment.spaceBetween,
-            children: [
-              SizedBox(
-                width: 75,
-                child: Text('Side', style: TextStyle(color: Colors.grey[400], fontWeight: UIConstants.fontWeightMedium, fontSize: 13), textAlign: TextAlign.left),
-              ),
-              SizedBox(
-                width: 150,
-                child: Text('Pair', style: TextStyle(color: Colors.grey[400], fontWeight: UIConstants.fontWeightMedium, fontSize: 13), textAlign: TextAlign.center),
-              ),
-              SizedBox(
-                width: 150,
-                child: Text('Qty (Rem/Tot)', style: TextStyle(color: Colors.grey[400], fontWeight: UIConstants.fontWeightMedium, fontSize: 13), textAlign: TextAlign.center),
-              ),
-              SizedBox(
-                width: 150,
-                child: Text('Price', style: TextStyle(color: Colors.grey[400], fontWeight: UIConstants.fontWeightMedium, fontSize: 13), textAlign: TextAlign.center),
-              ),
-              SizedBox(
-                width: 150,
-                child: Text('Creation Time', style: TextStyle(color: Colors.grey[400], fontWeight: UIConstants.fontWeightMedium, fontSize: 13), textAlign: TextAlign.center),
-              ),
-              SizedBox(
-                width: 150,
-                child: Text('Expiration Time', style: TextStyle(color: Colors.grey[400], fontWeight: UIConstants.fontWeightMedium, fontSize: 13), textAlign: TextAlign.center),
-              ),
-              SizedBox(
-                width: 140,
-                child: Text('Status', style: TextStyle(color: Colors.grey[400], fontWeight: UIConstants.fontWeightMedium, fontSize: 13), textAlign: TextAlign.center),
-              ),
-              Expanded(
-                child: Text('Action', style: TextStyle(color: Colors.grey[400], fontWeight: UIConstants.fontWeightMedium, fontSize: 13), textAlign: TextAlign.center),
-              ),
-            ],
-          ),
-          const SizedBox(height: 2),
-          Divider(
-            color: Colors.grey,
-            thickness: 0.7,
-            height: 1,
-          ),
-          const SizedBox(height: 2),
-          Expanded(
-            child: Builder(
-              builder: (context) {
-                final totalHistoryPages = (_orderHistory.length / _historyPerPage).ceil();
-                final historyPageIndex = (_historyCurrentPage - 1).clamp(0, totalHistoryPages > 0 ? totalHistoryPages - 1 : 0);
-                final historyStart = historyPageIndex * _historyPerPage;
-                final historyEnd = (historyStart + _historyPerPage).clamp(0, _orderHistory.length);
-                final pagedHistory = _orderHistory.length > 0 ? _orderHistory.sublist(historyStart, historyEnd) : <Map<String, dynamic>>[];
-
-                return Column(
-                  children: [
-                    Expanded(
-                      child: ListView(
-                        children: [
-                          // History from GetAccountOrders (filled, expired, cancelled) - paginated
-                          ...pagedHistory.map((order) => _buildOrderHistoryRow(order, isDarkTheme)),
-                          // Empty state message if no history
-                          if (_orderHistory.isEmpty)
-                            Padding(
-                              padding: UIConstants.paddingStandard,
-                              child: Center(
-                                child: Text(
-                                  'No order history found',
-                                  style: TextStyle(
-                                    color: UIConstants.textSecondary(isDarkTheme),
-                                    fontSize: UIConstants.textFieldFontSize,
-                                  ),
-                                ),
-                              ),
-                            ),
-                        ],
-                      ),
-                    ),
-                    _buildPaginationControls(_historyCurrentPage, totalHistoryPages > 0 ? totalHistoryPages : 1, _goToHistoryPage),
-                  ],
-                );
-              },
-            ),
-          ),
+      child: StyledDataTable(
+        isDarkTheme: isDarkTheme,
+        rowsPerPage: _historyPerPage,
+        columns: [
+          StyledColumn(label: 'Side'),
+          StyledColumn(label: 'Pair'),
+          StyledColumn(label: 'Qty (Rem/Tot)'),
+          StyledColumn(label: 'Price'),
+          StyledColumn(label: 'Creation Time'),
+          StyledColumn(label: 'Expiration Time'),
+          StyledColumn(label: 'Status'),
+          StyledColumn(label: 'Action'),
         ],
+        rows: List.generate(_orderHistory.length, (index) {
+          final order = _orderHistory[index];
+          return _buildOrderHistoryDataRow(order, index, isDarkTheme);
+        }),
       ),
     );
   }
@@ -4968,6 +4784,67 @@ class _TradingPageState extends State<TradingPage> {
         ],
       ),
     );
+  }
+
+  StyledRow _buildOrderHistoryDataRow(Map<String, dynamic> order, int index, bool isDarkTheme) {
+    String formatSide(String side) {
+      final s = side.toUpperCase();
+      if (s.contains('BUY')) return 'BUY';
+      if (s.contains('SELL')) return 'SELL';
+      return side;
+    }
+
+    final side = formatSide(order['side'] ?? '');
+    final status = _getOrderStatus(order);
+    final statusColor = _getStatusColor(status, isDarkTheme);
+    final sideColor = side == 'BUY' ? UIConstants.colorAccept : UIConstants.colorReject;
+    final quantity = _formatDecimal(order['quantity'] ?? '0');
+    final remaining = _formatDecimal(order['remainingQuantity'] ?? order['remaining_quantity'] ?? order['quantity'] ?? '0');
+    final quantityDisplay = '$remaining / $quantity';
+    final price = order['price'] ?? '0';
+    final priceDisplay = (price == '0' || price == '0.00') ? 'Market' : _formatDecimal(price);
+
+    return StyledRow(cells: [
+      _copyableOrderCell(side, isDarkTheme, width: 75, color: sideColor, fontWeight: UIConstants.fontWeightMedium, fontSize: UIConstants.fontSizeSm, textAlign: TextAlign.left),
+      _copyableOrderCell(order['symbol'] ?? 'N/A', isDarkTheme, width: 150),
+      _copyableOrderCell(quantityDisplay, isDarkTheme, width: 150),
+      _copyableOrderCell(priceDisplay, isDarkTheme, width: 150),
+      _copyableOrderCell(_formatOrderTimestamp(order['create_timestamp']), isDarkTheme, width: 150, fontSize: 11),
+      SizedBox(
+        width: 150,
+        child: _buildExpireTimestampCell(order['expire_timestamp'], isDarkTheme, unit: order['expire_ts_unit'] ?? 'ms'),
+      ),
+      _copyableOrderCell(status, isDarkTheme, color: statusColor, fontSize: UIConstants.fontSizeSm),
+      Row(
+        mainAxisSize: MainAxisSize.min,
+        children: [
+          IconButton(
+            icon: const Icon(Icons.copy, size: 14),
+            color: Colors.grey,
+            tooltip: 'Copy CSV',
+            padding: EdgeInsets.zero,
+            constraints: const BoxConstraints(minWidth: 22, minHeight: 22),
+            onPressed: () => _copyOrderCsv(order),
+          ),
+          IconButton(
+            icon: const Icon(Icons.data_object, size: 14),
+            color: Colors.grey,
+            tooltip: 'Copy JSON',
+            padding: EdgeInsets.zero,
+            constraints: const BoxConstraints(minWidth: 22, minHeight: 22),
+            onPressed: () => _copyOrderJson(order),
+          ),
+          IconButton(
+            icon: const Icon(Icons.info_outline, size: 14),
+            color: Colors.grey,
+            tooltip: 'Details',
+            padding: EdgeInsets.zero,
+            constraints: const BoxConstraints(minWidth: 22, minHeight: 22),
+            onPressed: () => _showOrderDetails(order),
+          ),
+        ],
+      ),
+    ]);
   }
 
   Widget _buildOrderbookSection(ThemeService themeService) {
@@ -5474,9 +5351,7 @@ class _TradingPageState extends State<TradingPage> {
                     child: DropdownButton<Map<String, String>>(
                       value: _supportedCurrencies.isEmpty
                           ? null
-                          : (_supportedCurrencies.any((currency) => currency['code'] == _selectedCurrency['code'])
-                              ? _selectedCurrency
-                              : _supportedCurrencies.isNotEmpty ? _supportedCurrencies.first : null),
+                          : _supportedCurrencies.cast<Map<String, String>?>().firstWhere((c) => c!['code'] == _selectedCurrency['code'], orElse: () => _supportedCurrencies.isNotEmpty ? _supportedCurrencies.first : null),
                       isExpanded: true,
                       onChanged: _supportedCurrencies.isEmpty ? null : (Map<String, String>? newValue) async {
                         if (newValue != null) {
@@ -5654,6 +5529,21 @@ class _TradingPageState extends State<TradingPage> {
                   style: TextStyle(
                     fontSize: UIConstants.textFieldFontSize,
                     color: UIConstants.textSecondary(isDarkTheme),
+                  ),
+                ),
+                SizedBox(
+                  width: 20,
+                  height: 20,
+                  child: IconButton(
+                    padding: EdgeInsets.zero,
+                    constraints: const BoxConstraints(),
+                    iconSize: 14,
+                    icon: Icon(
+                      Icons.refresh,
+                      color: UIConstants.textSecondary(isDarkTheme),
+                    ),
+                    tooltip: 'Refresh balances',
+                    onPressed: _isLoadingCashHoldings ? null : _fetchCashHoldings,
                   ),
                 ),
                 const SizedBox(width: UIConstants.spacingSm),

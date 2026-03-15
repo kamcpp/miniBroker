@@ -9,6 +9,7 @@ import '../utils/connectivity_checker.dart';
 import '../utils/menu_items_helper.dart';
 import '../config/ui_constants.dart';
 import '../widgets/base_page.dart';
+import '../widgets/styled_data_table.dart';
 
 class PortfolioPage extends StatefulWidget {
   const PortfolioPage({super.key});
@@ -444,22 +445,7 @@ class _PortfolioPageState extends State<PortfolioPage> {
             ),
             const SizedBox(height: 8),
 
-            // Security Holdings (top section)
-            Expanded(
-              flex: 1,
-              child: _buildHoldingsPane(
-                title: 'Security Holdings',
-                icon: Icons.account_balance_wallet,
-                isDarkTheme: isDarkTheme,
-                isLoading: _isLoadingSecurities,
-                data: _securityHoldingsData,
-                buildContent: () => _buildSecurityHoldingsContent(isDarkTheme),
-              ),
-            ),
-
-            const SizedBox(height: 16),
-
-            // Cash Token Holdings (bottom section)
+            // Cash Token Holdings (top section)
             Expanded(
               flex: 1,
               child: _buildHoldingsPane(
@@ -469,6 +455,21 @@ class _PortfolioPageState extends State<PortfolioPage> {
                 isLoading: _isLoadingCash,
                 data: _cashHoldingsData,
                 buildContent: () => _buildCashHoldingsContent(isDarkTheme),
+              ),
+            ),
+
+            const SizedBox(height: 16),
+
+            // Security Holdings (bottom section)
+            Expanded(
+              flex: 3,
+              child: _buildHoldingsPane(
+                title: 'Security Holdings',
+                icon: Icons.account_balance_wallet,
+                isDarkTheme: isDarkTheme,
+                isLoading: _isLoadingSecurities,
+                data: _securityHoldingsData,
+                buildContent: () => _buildSecurityHoldingsContent(isDarkTheme),
               ),
             ),
           ],
@@ -667,88 +668,49 @@ class _PortfolioPageState extends State<PortfolioPage> {
       print('📊 First holding entry: key=${firstEntry.key}, value=${firstEntry.value}');
     }
 
-    if (holdings.isEmpty) {
-      return _buildEmptyState(isDarkTheme, 'No security holdings');
-    }
-
     final holdingsList = holdings.entries.toList();
+    final cellStyle = StyledDataTable.cellStyle(isDarkTheme);
 
-    return Column(
-      children: [
-        // Table header
-        Container(
-          padding: const EdgeInsets.symmetric(vertical: 8, horizontal: 12),
-          decoration: BoxDecoration(
-            color: UIConstants.cardBackground(isDarkTheme),
-            borderRadius: BorderRadius.circular(4),
-          ),
-          child: Row(
-            children: [
-              _buildHeaderCell('Symbol', flex: 2, isDarkTheme: isDarkTheme),
-              _buildHeaderCell('Total Units', flex: 2, isDarkTheme: isDarkTheme, align: TextAlign.right),
-              _buildHeaderCell('Available', flex: 2, isDarkTheme: isDarkTheme, align: TextAlign.right),
-              _buildHeaderCell('Locked', flex: 2, isDarkTheme: isDarkTheme, align: TextAlign.right),
-            ],
-          ),
-        ),
-        const SizedBox(height: 8),
-        // Table body
-        Expanded(
-          child: ListView.separated(
-            itemCount: holdingsList.length,
-            separatorBuilder: (context, index) => Divider(
-              height: 1,
-              color: UIConstants.visibleBorderColor(isDarkTheme),
-            ),
-            itemBuilder: (context, index) {
-              final entry = holdingsList[index];
-              final securityIid = entry.key;
-              final secInfo = _securityIidToInfo[securityIid];
-              final ticker = secInfo?['symbol'] ?? '';
-              final currency = secInfo?['currency'] ?? '';
-              final symbol = ticker.isNotEmpty
-                  ? (currency.isNotEmpty ? '$ticker ($currency)' : ticker)
-                  : securityIid;
-              final holdingData = entry.value as Map<String, dynamic>? ?? {};
-              // Securities use divisibility 0 (whole units, no decimals)
-              const divisibility = '0';
-              final totalUnitsRaw = holdingData['totalUnits']?.toString()
-                  ?? holdingData['total_units']?.toString() ?? '0';
-              final availableUnitsRaw = _getAvailableFromHolding(holdingData);
-              final lockedUnitsRaw = _getLockedFromHolding(holdingData);
-              final totalUnits = _formatAmountWithDivisibility(totalUnitsRaw, divisibility);
-              final availableUnits = _formatAmountWithDivisibility(availableUnitsRaw, divisibility);
-              final lockedUnits = _formatAmountWithDivisibility(lockedUnitsRaw, divisibility);
-
-              return Container(
-                padding: const EdgeInsets.symmetric(vertical: 12, horizontal: 12),
-                child: Row(
-                  children: [
-                    Expanded(
-                      flex: 2,
-                      child: Tooltip(
-                        message: securityIid,
-                        child: Text(
-                          symbol,
-                          style: TextStyle(
-                            fontSize: UIConstants.fontSizeBody,
-                            fontWeight: UIConstants.fontWeightMedium,
-                            color: UIConstants.textPrimary(isDarkTheme),
-                          ),
-                          overflow: TextOverflow.ellipsis,
-                        ),
-                      ),
-                    ),
-                    _buildDataCell(totalUnits, flex: 2, isDarkTheme: isDarkTheme),
-                    _buildDataCell(availableUnits, flex: 2, isDarkTheme: isDarkTheme, color: Colors.green),
-                    _buildDataCell(lockedUnits, flex: 2, isDarkTheme: isDarkTheme, color: Colors.orange),
-                  ],
-                ),
-              );
-            },
-          ),
-        ),
+    return StyledDataTable(
+      isDarkTheme: isDarkTheme,
+      columns: [
+        StyledColumn(label: 'Symbol', flex: 2),
+        StyledColumn(label: 'Total Units', flex: 2),
+        StyledColumn(label: 'Available', flex: 2),
+        StyledColumn(label: 'Locked', flex: 2),
       ],
+      rows: holdingsList.asMap().entries.map((mapEntry) {
+        final entry = mapEntry.value;
+        final securityIid = entry.key;
+        final secInfo = _securityIidToInfo[securityIid];
+        final ticker = secInfo?['symbol'] ?? '';
+        final currency = secInfo?['currency'] ?? '';
+        final symbol = ticker.isNotEmpty
+            ? (currency.isNotEmpty ? '$ticker ($currency)' : ticker)
+            : securityIid;
+        final holdingData = entry.value as Map<String, dynamic>? ?? {};
+        // Securities use divisibility 0 (whole units, no decimals)
+        const divisibility = '0';
+        final totalUnitsRaw = holdingData['totalUnits']?.toString()
+            ?? holdingData['total_units']?.toString() ?? '0';
+        final availableUnitsRaw = _getAvailableFromHolding(holdingData);
+        final lockedUnitsRaw = _getLockedFromHolding(holdingData);
+        final totalUnits = _formatAmountWithDivisibility(totalUnitsRaw, divisibility);
+        final availableUnits = _formatAmountWithDivisibility(availableUnitsRaw, divisibility);
+        final lockedUnits = _formatAmountWithDivisibility(lockedUnitsRaw, divisibility);
+
+        return StyledRow(
+          cells: [
+            Tooltip(
+              message: securityIid,
+              child: Text(symbol, style: cellStyle.copyWith(fontWeight: FontWeight.w500)),
+            ),
+            Text(totalUnits, style: cellStyle),
+            Text(availableUnits, style: cellStyle.copyWith(color: Colors.green)),
+            Text(lockedUnits, style: cellStyle.copyWith(color: Colors.orange)),
+          ],
+        );
+      }).toList(),
     );
   }
 
@@ -763,115 +725,47 @@ class _PortfolioPageState extends State<PortfolioPage> {
         ? holdings.entries.toList()
         : holdings.entries.where((e) => _supportedCashTokenCodes.contains(e.key)).toList();
 
-    if (holdingsList.isEmpty) {
-      return _buildEmptyState(isDarkTheme, 'No cash holdings');
-    }
+    final cellStyle = StyledDataTable.cellStyle(isDarkTheme);
 
-    return Column(
-      children: [
-        // Table header
-        Container(
-          padding: const EdgeInsets.symmetric(vertical: 8, horizontal: 12),
-          decoration: BoxDecoration(
-            color: UIConstants.cardBackground(isDarkTheme),
-            borderRadius: BorderRadius.circular(4),
-          ),
-          child: Row(
-            children: [
-              _buildHeaderCell('Currency', flex: 2, isDarkTheme: isDarkTheme),
-              _buildHeaderCell('Div', flex: 1, isDarkTheme: isDarkTheme),
-              _buildHeaderCell('Total Balance', flex: 2, isDarkTheme: isDarkTheme, align: TextAlign.right),
-              _buildHeaderCell('Available', flex: 2, isDarkTheme: isDarkTheme, align: TextAlign.right),
-              _buildHeaderCell('Reserved', flex: 2, isDarkTheme: isDarkTheme, align: TextAlign.right),
-            ],
-          ),
-        ),
-        const SizedBox(height: 8),
-        // Table body
-        Expanded(
-          child: ListView.separated(
-            itemCount: holdingsList.length,
-            separatorBuilder: (context, index) => Divider(
-              height: 1,
-              color: UIConstants.visibleBorderColor(isDarkTheme),
-            ),
-            itemBuilder: (context, index) {
-              final entry = holdingsList[index];
-              final currencyCode = entry.key;
-              final holdingData = entry.value as Map<String, dynamic>? ?? {};
-              final totalBalanceRaw = holdingData['totalUnits']?.toString()
-                  ?? holdingData['total_units']?.toString() ?? '0';
-              final availableBalanceRaw = _getAvailableFromHolding(holdingData);
-              final reservedBalanceRaw = _getLockedFromHolding(holdingData);
-
-              // Look up divisibility from cash token info, fallback to default for fiat
-              final info = _cashTokenInfo[currencyCode];
-              var divisibility = info?['divisibility'] ?? '';
-              if (divisibility.isEmpty) {
-                divisibility = _defaultDivisibility(currencyCode);
-              }
-
-              final totalBalance = _formatAmountWithDivisibility(totalBalanceRaw, divisibility);
-              final availableBalance = _formatAmountWithDivisibility(availableBalanceRaw, divisibility);
-              final reservedBalance = _formatAmountWithDivisibility(reservedBalanceRaw, divisibility);
-
-              return Container(
-                padding: const EdgeInsets.symmetric(vertical: 12, horizontal: 12),
-                child: Row(
-                  children: [
-                    Expanded(
-                      flex: 2,
-                      child: Text(
-                        currencyCode,
-                        style: TextStyle(
-                          fontSize: UIConstants.fontSizeBody,
-                          fontWeight: UIConstants.fontWeightMedium,
-                          color: UIConstants.textPrimary(isDarkTheme),
-                        ),
-                        overflow: TextOverflow.ellipsis,
-                      ),
-                    ),
-                    _buildDataCell(divisibility, flex: 1, isDarkTheme: isDarkTheme),
-                    _buildDataCell(totalBalance, flex: 2, isDarkTheme: isDarkTheme),
-                    _buildDataCell(availableBalance, flex: 2, isDarkTheme: isDarkTheme, color: Colors.green),
-                    _buildDataCell(reservedBalance, flex: 2, isDarkTheme: isDarkTheme, color: Colors.orange),
-                  ],
-                ),
-              );
-            },
-          ),
-        ),
+    return StyledDataTable(
+      isDarkTheme: isDarkTheme,
+      columns: [
+        StyledColumn(label: 'Currency', flex: 2),
+        StyledColumn(label: 'Div', flex: 1),
+        StyledColumn(label: 'Total Balance', flex: 2),
+        StyledColumn(label: 'Available', flex: 2),
+        StyledColumn(label: 'Reserved', flex: 2),
       ],
-    );
-  }
+      rows: holdingsList.asMap().entries.map((mapEntry) {
+        final entry = mapEntry.value;
+        final currencyCode = entry.key;
+        final holdingData = entry.value as Map<String, dynamic>? ?? {};
+        final totalBalanceRaw = holdingData['totalUnits']?.toString()
+            ?? holdingData['total_units']?.toString() ?? '0';
+        final availableBalanceRaw = _getAvailableFromHolding(holdingData);
+        final reservedBalanceRaw = _getLockedFromHolding(holdingData);
 
-  Widget _buildHeaderCell(String text, {required int flex, required bool isDarkTheme, TextAlign align = TextAlign.left}) {
-    return Expanded(
-      flex: flex,
-      child: Text(
-        text,
-        textAlign: align,
-        style: TextStyle(
-          fontSize: UIConstants.fontSizeSm,
-          fontWeight: UIConstants.fontWeightMedium,
-          color: UIConstants.textSecondary(isDarkTheme),
-        ),
-      ),
-    );
-  }
+        // Look up divisibility from cash token info, fallback to default for fiat
+        final info = _cashTokenInfo[currencyCode];
+        var divisibility = info?['divisibility'] ?? '';
+        if (divisibility.isEmpty) {
+          divisibility = _defaultDivisibility(currencyCode);
+        }
 
-  Widget _buildDataCell(String text, {required int flex, required bool isDarkTheme, Color? color}) {
-    return Expanded(
-      flex: flex,
-      child: Text(
-        text,
-        textAlign: TextAlign.right,
-        style: TextStyle(
-          fontSize: UIConstants.fontSizeBody,
-          fontWeight: FontWeight.w500,
-          color: color ?? UIConstants.textPrimary(isDarkTheme),
-        ),
-      ),
+        final totalBalance = _formatAmountWithDivisibility(totalBalanceRaw, divisibility);
+        final availableBalance = _formatAmountWithDivisibility(availableBalanceRaw, divisibility);
+        final reservedBalance = _formatAmountWithDivisibility(reservedBalanceRaw, divisibility);
+
+        return StyledRow(
+          cells: [
+            Text(currencyCode, style: cellStyle.copyWith(fontWeight: FontWeight.w500)),
+            Text(divisibility, style: cellStyle),
+            Text(totalBalance, style: cellStyle),
+            Text(availableBalance, style: cellStyle.copyWith(color: Colors.green)),
+            Text(reservedBalance, style: cellStyle.copyWith(color: Colors.orange)),
+          ],
+        );
+      }).toList(),
     );
   }
 

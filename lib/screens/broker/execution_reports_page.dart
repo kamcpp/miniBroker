@@ -19,6 +19,7 @@ import '../../generated/prtagent/v1/reporting.pbgrpc.dart';
 import '../../generated/common.pb.dart' as common_pb;
 import '../../services/page_state_service.dart';
 
+
 class ExecutionReportsPage extends StatefulWidget {
   const ExecutionReportsPage({super.key});
 
@@ -175,7 +176,7 @@ class _ExecutionReportsPageState extends State<ExecutionReportsPage> {
         timeout: const Duration(minutes: 5),
       );
 
-      final client = ReportingServiceClient(channel);
+      final client = AdminServiceClient(channel);
 
       // Build request
       final request = GetExecutionReportsRequest(
@@ -236,6 +237,7 @@ class _ExecutionReportsPageState extends State<ExecutionReportsPage> {
         'transactTime': r.transactTime,
         'text': r.text,
         'createdAt': r.createdAt,
+        'rawFixMessage': r.rawFixMessage,
       }).toList();
 
       setState(() {
@@ -332,7 +334,7 @@ class _ExecutionReportsPageState extends State<ExecutionReportsPage> {
         timeout: const Duration(minutes: 5),
       );
 
-      final client = ReportingServiceClient(channel);
+      final client = AdminServiceClient(channel);
 
       while (true) {
         final request = GetExecutionReportsRequest(
@@ -381,6 +383,7 @@ class _ExecutionReportsPageState extends State<ExecutionReportsPage> {
             'transactTime': r.transactTime,
             'text': r.text,
             'createdAt': r.createdAt,
+            'rawFixMessage': r.rawFixMessage,
           });
         }
 
@@ -990,8 +993,11 @@ class _ExecutionReportsPageState extends State<ExecutionReportsPage> {
   }
 
   Widget _buildReportsTable(bool isDarkTheme) {
-    final headerColor = UIConstants.textSecondary(isDarkTheme);
-    final headerStyle = TextStyle(color: headerColor, fontSize: 10, fontWeight: FontWeight.bold);
+    final headerStyle = TextStyle(
+      color: UIConstants.textSecondary(isDarkTheme),
+      fontSize: 10,
+      fontWeight: FontWeight.bold,
+    );
 
     return DataTable(
       columnSpacing: UIConstants.spacingLg,
@@ -1023,6 +1029,7 @@ class _ExecutionReportsPageState extends State<ExecutionReportsPage> {
         DataColumn(label: Text('Time', style: headerStyle)),
         DataColumn(label: Text('Created At', style: headerStyle)),
         DataColumn(label: Text('Text', style: headerStyle)),
+        DataColumn(label: Text('Raw FIX', style: headerStyle)),
       ],
       rows: _reports.asMap().entries.map((entry) {
         final idx = entry.key;
@@ -1057,6 +1064,7 @@ class _ExecutionReportsPageState extends State<ExecutionReportsPage> {
           _copyableCell(_str(report, 'transactTime', 'transact_time'), isDarkTheme, noTruncate: true),
           _copyableCell(_str(report, 'createdAt', 'created_at'), isDarkTheme, noTruncate: true),
           _copyableTextCell(_str(report, 'text'), isDarkTheme),
+          _copyableTextCell(_str(report, 'rawFixMessage', 'raw_fix_message'), isDarkTheme),
         ]);
       }).toList(),
     );

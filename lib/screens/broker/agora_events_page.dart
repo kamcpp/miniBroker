@@ -125,7 +125,7 @@ class _AgoraEventsPageState extends State<AgoraEventsPage> {
         timeout: const Duration(minutes: 5),
       );
 
-      final client = ReportingServiceClient(channel);
+      final client = AdminServiceClient(channel);
 
       final request = GetAgoraEventsRequest(
         proposedExecutionId: 'get_agora_events_${DateTime.now().millisecondsSinceEpoch}',
@@ -273,7 +273,7 @@ class _AgoraEventsPageState extends State<AgoraEventsPage> {
         timeout: const Duration(minutes: 5),
       );
 
-      final client = ReportingServiceClient(channel);
+      final client = AdminServiceClient(channel);
 
       while (true) {
         final request = GetAgoraEventsRequest(
@@ -551,7 +551,7 @@ class _AgoraEventsPageState extends State<AgoraEventsPage> {
                                 ),
                               ),
                               SizedBox(
-                                height: UIConstants.buttonHeightStandard,
+                                height: UIConstants.buttonHeightStandard * 0.7,
                                 child: ElevatedButton(
                                   onPressed: _fetchEvents,
                                   style: UIConstants.buttonStyle(UIConstants.commandColor(isDarkTheme)),
@@ -593,7 +593,7 @@ class _AgoraEventsPageState extends State<AgoraEventsPage> {
             ),
           ),
         SizedBox(
-          height: UIConstants.buttonHeightStandard,
+          height: UIConstants.buttonHeightStandard * 0.7,
           child: ElevatedButton.icon(
             onPressed: _isLoading ? null : _fetchEvents,
             icon: const Icon(Icons.refresh, size: 16),
@@ -603,7 +603,7 @@ class _AgoraEventsPageState extends State<AgoraEventsPage> {
         ),
         const SizedBox(width: 8),
         SizedBox(
-          height: UIConstants.buttonHeightStandard,
+          height: UIConstants.buttonHeightStandard * 0.7,
           child: PopupMenuButton<String>(
             onSelected: _events.isEmpty ? null : (format) => _exportEvents(format),
             enabled: _events.isNotEmpty,
@@ -658,7 +658,7 @@ class _AgoraEventsPageState extends State<AgoraEventsPage> {
       children: [
         SizedBox(
           width: 120,
-          height: UIConstants.buttonHeightStandard,
+          height: UIConstants.buttonHeightStandard * 0.7,
           child: TextField(
             controller: _eventTypeController,
             style: textStyle,
@@ -669,7 +669,7 @@ class _AgoraEventsPageState extends State<AgoraEventsPage> {
         SizedBox(width: UIConstants.spacingSm),
         SizedBox(
           width: 120,
-          height: UIConstants.buttonHeightStandard,
+          height: UIConstants.buttonHeightStandard * 0.7,
           child: TextField(
             controller: _orderIdController,
             style: textStyle,
@@ -680,7 +680,7 @@ class _AgoraEventsPageState extends State<AgoraEventsPage> {
         SizedBox(width: UIConstants.spacingSm),
         SizedBox(
           width: 120,
-          height: UIConstants.buttonHeightStandard,
+          height: UIConstants.buttonHeightStandard * 0.7,
           child: TextField(
             controller: _tradeIdController,
             style: textStyle,
@@ -691,7 +691,7 @@ class _AgoraEventsPageState extends State<AgoraEventsPage> {
         SizedBox(width: UIConstants.spacingSm),
         SizedBox(
           width: 140,
-          height: UIConstants.buttonHeightStandard,
+          height: UIConstants.buttonHeightStandard * 0.7,
           child: TextField(
             controller: _deploymentIidController,
             style: textStyle,
@@ -701,7 +701,7 @@ class _AgoraEventsPageState extends State<AgoraEventsPage> {
         ),
         SizedBox(width: UIConstants.spacingSm),
         SizedBox(
-          height: UIConstants.buttonHeightStandard,
+          height: UIConstants.buttonHeightStandard * 0.7,
           child: ElevatedButton(
             onPressed: _applyFilters,
             style: UIConstants.buttonStyle(UIConstants.commandColor(isDarkTheme)),
@@ -710,7 +710,7 @@ class _AgoraEventsPageState extends State<AgoraEventsPage> {
         ),
         SizedBox(width: UIConstants.spacingXs),
         SizedBox(
-          height: UIConstants.buttonHeightStandard,
+          height: UIConstants.buttonHeightStandard * 0.7,
           child: TextButton(
             onPressed: _resetFilters,
             child: Text('Reset', style: TextStyle(fontSize: UIConstants.fontSizeSm)),
@@ -985,7 +985,7 @@ class _AgoraEventsPageState extends State<AgoraEventsPage> {
         SizedBox(width: UIConstants.spacingMd),
         SizedBox(
           width: 80,
-          height: UIConstants.buttonHeightStandard,
+          height: UIConstants.buttonHeightStandard * 0.7,
           child: DropdownButtonFormField<int>(
             value: _pageSize,
             isDense: true,

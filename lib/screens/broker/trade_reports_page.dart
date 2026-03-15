@@ -144,7 +144,7 @@ class _TradeReportsPageState extends State<TradeReportsPage> {
         timeout: const Duration(minutes: 5),
       );
 
-      final client = ReportingServiceClient(channel);
+      final client = AdminServiceClient(channel);
 
       // Build request
       final request = GetTradeReportsRequest(
@@ -195,6 +195,7 @@ class _TradeReportsPageState extends State<TradeReportsPage> {
         'transactTime': r.transactTime,
         'text': r.text,
         'createdAt': r.createdAt,
+        'rawFixMessage': r.rawFixMessage,
       }).toList();
 
       setState(() {
@@ -286,7 +287,7 @@ class _TradeReportsPageState extends State<TradeReportsPage> {
         timeout: const Duration(minutes: 5),
       );
 
-      final client = ReportingServiceClient(channel);
+      final client = AdminServiceClient(channel);
 
       while (true) {
         final request = GetTradeReportsRequest(
@@ -325,6 +326,7 @@ class _TradeReportsPageState extends State<TradeReportsPage> {
             'transactTime': r.transactTime,
             'text': r.text,
             'createdAt': r.createdAt,
+            'rawFixMessage': r.rawFixMessage,
           });
         }
 
@@ -599,7 +601,7 @@ class _TradeReportsPageState extends State<TradeReportsPage> {
                                 ),
                               ),
                               SizedBox(
-                                height: UIConstants.buttonHeightStandard,
+                                height: UIConstants.buttonHeightStandard * 0.7,
                                 child: ElevatedButton(
                                   onPressed: _fetchReports,
                                   style: UIConstants.buttonStyle(UIConstants.commandColor(isDarkTheme)),
@@ -641,7 +643,7 @@ class _TradeReportsPageState extends State<TradeReportsPage> {
             ),
           ),
         SizedBox(
-          height: UIConstants.buttonHeightStandard,
+          height: UIConstants.buttonHeightStandard * 0.7,
           child: ElevatedButton.icon(
             onPressed: _isLoading ? null : _fetchReports,
             icon: const Icon(Icons.refresh, size: 16),
@@ -651,7 +653,7 @@ class _TradeReportsPageState extends State<TradeReportsPage> {
         ),
         const SizedBox(width: 8),
         SizedBox(
-          height: UIConstants.buttonHeightStandard,
+          height: UIConstants.buttonHeightStandard * 0.7,
           child: PopupMenuButton<String>(
             onSelected: _reports.isEmpty ? null : (format) => _exportReports(format),
             enabled: _reports.isNotEmpty,
@@ -710,7 +712,7 @@ class _TradeReportsPageState extends State<TradeReportsPage> {
           children: [
             SizedBox(
               width: 160,
-              height: UIConstants.buttonHeightStandard,
+              height: UIConstants.buttonHeightStandard * 0.7,
               child: TextField(
                 controller: _searchController,
                 style: textStyle,
@@ -726,7 +728,7 @@ class _TradeReportsPageState extends State<TradeReportsPage> {
             SizedBox(width: UIConstants.spacingSm),
             SizedBox(
               width: 100,
-              height: UIConstants.buttonHeightStandard,
+              height: UIConstants.buttonHeightStandard * 0.7,
               child: TextField(
                 controller: _symbolController,
                 style: textStyle,
@@ -736,7 +738,7 @@ class _TradeReportsPageState extends State<TradeReportsPage> {
             SizedBox(width: UIConstants.spacingSm),
             SizedBox(
               width: 90,
-              height: UIConstants.buttonHeightStandard,
+              height: UIConstants.buttonHeightStandard * 0.7,
               child: TextField(
                 controller: _currencyController,
                 style: textStyle,
@@ -751,7 +753,7 @@ class _TradeReportsPageState extends State<TradeReportsPage> {
           children: [
             SizedBox(
               width: 130,
-              height: UIConstants.buttonHeightStandard,
+              height: UIConstants.buttonHeightStandard * 0.7,
               child: DropdownButtonFormField<String>(
                 value: _sideFilter,
                 isDense: true,
@@ -771,7 +773,7 @@ class _TradeReportsPageState extends State<TradeReportsPage> {
             SizedBox(width: UIConstants.spacingSm),
             SizedBox(
               width: 150,
-              height: UIConstants.buttonHeightStandard,
+              height: UIConstants.buttonHeightStandard * 0.7,
               child: DropdownButtonFormField<String>(
                 value: _sortBy,
                 isDense: true,
@@ -790,7 +792,7 @@ class _TradeReportsPageState extends State<TradeReportsPage> {
             ),
             SizedBox(width: UIConstants.spacingSm),
             SizedBox(
-              height: UIConstants.buttonHeightStandard,
+              height: UIConstants.buttonHeightStandard * 0.7,
               child: ElevatedButton(
                 onPressed: _applyFilters,
                 style: UIConstants.buttonStyle(UIConstants.commandColor(isDarkTheme)),
@@ -799,7 +801,7 @@ class _TradeReportsPageState extends State<TradeReportsPage> {
             ),
             SizedBox(width: UIConstants.spacingXs),
             SizedBox(
-              height: UIConstants.buttonHeightStandard,
+              height: UIConstants.buttonHeightStandard * 0.7,
               child: TextButton(
                 onPressed: _resetFilters,
                 child: Text('Reset', style: TextStyle(fontSize: UIConstants.fontSizeSm)),
@@ -894,6 +896,7 @@ class _TradeReportsPageState extends State<TradeReportsPage> {
         DataColumn(label: Text('Time', style: headerStyle)),
         DataColumn(label: Text('Created At', style: headerStyle)),
         DataColumn(label: Text('Text', style: headerStyle)),
+        DataColumn(label: Text('Raw FIX', style: headerStyle)),
       ],
       rows: _reports.asMap().entries.map((entry) {
         final idx = entry.key;
@@ -919,6 +922,7 @@ class _TradeReportsPageState extends State<TradeReportsPage> {
           _copyableCell(_str(report, 'transactTime'), isDarkTheme, noTruncate: true),
           _copyableCell(_str(report, 'createdAt'), isDarkTheme, noTruncate: true),
           _copyableTextCell(_str(report, 'text'), isDarkTheme),
+          _copyableTextCell(_str(report, 'rawFixMessage', 'raw_fix_message'), isDarkTheme),
         ]);
       }).toList(),
     );
@@ -1045,7 +1049,7 @@ class _TradeReportsPageState extends State<TradeReportsPage> {
         SizedBox(width: UIConstants.spacingMd),
         SizedBox(
           width: 80,
-          height: UIConstants.buttonHeightStandard,
+          height: UIConstants.buttonHeightStandard * 0.7,
           child: DropdownButtonFormField<int>(
             value: _pageSize,
             isDense: true,

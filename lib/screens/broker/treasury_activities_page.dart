@@ -142,7 +142,7 @@ class _TreasuryActivitiesPageState extends State<TreasuryActivitiesPage> {
         timeout: const Duration(minutes: 5),
       );
 
-      final client = ReportingServiceClient(channel);
+      final client = AdminServiceClient(channel);
 
       // Build request
       final request = GetTreasuryActivitiesRequest(
@@ -311,7 +311,7 @@ class _TreasuryActivitiesPageState extends State<TreasuryActivitiesPage> {
         timeout: const Duration(minutes: 5),
       );
 
-      final client = ReportingServiceClient(channel);
+      final client = AdminServiceClient(channel);
 
       while (true) {
         final request = GetTreasuryActivitiesRequest(
@@ -661,7 +661,7 @@ class _TreasuryActivitiesPageState extends State<TreasuryActivitiesPage> {
                                 ),
                               ),
                               SizedBox(
-                                height: UIConstants.buttonHeightStandard,
+                                height: UIConstants.buttonHeightStandard * 0.7,
                                 child: ElevatedButton(
                                   onPressed: _fetchActivities,
                                   style: UIConstants.buttonStyle(UIConstants.commandColor(isDarkTheme)),
@@ -703,7 +703,7 @@ class _TreasuryActivitiesPageState extends State<TreasuryActivitiesPage> {
             ),
           ),
         SizedBox(
-          height: UIConstants.buttonHeightStandard,
+          height: UIConstants.buttonHeightStandard * 0.7,
           child: ElevatedButton.icon(
             onPressed: _isLoading ? null : _fetchActivities,
             icon: const Icon(Icons.refresh, size: 16),
@@ -713,7 +713,7 @@ class _TreasuryActivitiesPageState extends State<TreasuryActivitiesPage> {
         ),
         const SizedBox(width: 8),
         SizedBox(
-          height: UIConstants.buttonHeightStandard,
+          height: UIConstants.buttonHeightStandard * 0.7,
           child: PopupMenuButton<String>(
             onSelected: _activities.isEmpty ? null : (format) => _exportActivities(format),
             enabled: _activities.isNotEmpty,
@@ -772,7 +772,7 @@ class _TreasuryActivitiesPageState extends State<TreasuryActivitiesPage> {
           children: [
             SizedBox(
               width: 160,
-              height: UIConstants.buttonHeightStandard,
+              height: UIConstants.buttonHeightStandard * 0.7,
               child: TextField(
                 controller: _searchController,
                 style: textStyle,
@@ -788,7 +788,7 @@ class _TreasuryActivitiesPageState extends State<TreasuryActivitiesPage> {
             SizedBox(width: UIConstants.spacingSm),
             SizedBox(
               width: 130,
-              height: UIConstants.buttonHeightStandard,
+              height: UIConstants.buttonHeightStandard * 0.7,
               child: TextField(
                 controller: _operationController,
                 style: textStyle,
@@ -798,7 +798,7 @@ class _TreasuryActivitiesPageState extends State<TreasuryActivitiesPage> {
             SizedBox(width: UIConstants.spacingSm),
             SizedBox(
               width: 130,
-              height: UIConstants.buttonHeightStandard,
+              height: UIConstants.buttonHeightStandard * 0.7,
               child: TextField(
                 controller: _contractAddrController,
                 style: textStyle,
@@ -808,7 +808,7 @@ class _TreasuryActivitiesPageState extends State<TreasuryActivitiesPage> {
             SizedBox(width: UIConstants.spacingSm),
             SizedBox(
               width: 130,
-              height: UIConstants.buttonHeightStandard,
+              height: UIConstants.buttonHeightStandard * 0.7,
               child: TextField(
                 controller: _senderAccountController,
                 style: textStyle,
@@ -823,7 +823,7 @@ class _TreasuryActivitiesPageState extends State<TreasuryActivitiesPage> {
           children: [
             SizedBox(
               width: 150,
-              height: UIConstants.buttonHeightStandard,
+              height: UIConstants.buttonHeightStandard * 0.7,
               child: DropdownButtonFormField<String>(
                 value: _sortBy,
                 isDense: true,
@@ -842,7 +842,7 @@ class _TreasuryActivitiesPageState extends State<TreasuryActivitiesPage> {
             ),
             SizedBox(width: UIConstants.spacingSm),
             SizedBox(
-              height: UIConstants.buttonHeightStandard,
+              height: UIConstants.buttonHeightStandard * 0.7,
               child: IconButton(
                 icon: Icon(
                   _sortDirection == 'asc' ? Icons.arrow_upward : Icons.arrow_downward,
@@ -857,7 +857,7 @@ class _TreasuryActivitiesPageState extends State<TreasuryActivitiesPage> {
             ),
             SizedBox(width: UIConstants.spacingSm),
             SizedBox(
-              height: UIConstants.buttonHeightStandard,
+              height: UIConstants.buttonHeightStandard * 0.7,
               child: ElevatedButton(
                 onPressed: _applyFilters,
                 style: UIConstants.buttonStyle(UIConstants.commandColor(isDarkTheme)),
@@ -866,7 +866,7 @@ class _TreasuryActivitiesPageState extends State<TreasuryActivitiesPage> {
             ),
             SizedBox(width: UIConstants.spacingXs),
             SizedBox(
-              height: UIConstants.buttonHeightStandard,
+              height: UIConstants.buttonHeightStandard * 0.7,
               child: TextButton(
                 onPressed: _resetFilters,
                 child: Text('Reset', style: TextStyle(fontSize: UIConstants.fontSizeSm)),
@@ -1198,7 +1198,7 @@ class _TreasuryActivitiesPageState extends State<TreasuryActivitiesPage> {
         SizedBox(width: UIConstants.spacingMd),
         SizedBox(
           width: 80,
-          height: UIConstants.buttonHeightStandard,
+          height: UIConstants.buttonHeightStandard * 0.7,
           child: DropdownButtonFormField<int>(
             value: _pageSize,
             isDense: true,
