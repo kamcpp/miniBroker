@@ -1405,7 +1405,7 @@ class GrpcurlHelper {
     required String quantity,
     required String price,
     String timeInForce = '0',
-    required String participantOrderIid,
+    required String investorOrderId,
     DateTime? expireTime,
     String? currency,
     String? feeAmount,
@@ -1436,7 +1436,7 @@ class GrpcurlHelper {
       'quantity': quantity,
       'price': price,
       'time_in_force': timeInForce,
-      'participant_order_iid': participantOrderIid,
+      'investor_order_id': investorOrderId,
     };
 
     requestBody['expire_dt'] = {

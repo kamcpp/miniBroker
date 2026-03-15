@@ -34,6 +34,9 @@ class StyledDataTable extends StatefulWidget {
   /// Called when the page changes (for server-side pagination).
   final void Function(int page)? onPageChanged;
 
+  /// Called when the page size changes (for server-side pagination).
+  final void Function(int pageSize)? onPageSizeChanged;
+
   /// Total number of pages (for server-side pagination).
   final int? totalPages;
 
@@ -53,6 +56,7 @@ class StyledDataTable extends StatefulWidget {
     this.showCheckboxColumn = false,
     this.rowsPerPage = 20,
     this.onPageChanged,
+    this.onPageSizeChanged,
     this.minColumnWidth = 80,
     this.totalPages,
     this.currentPage,
@@ -237,108 +241,85 @@ class _StyledDataTableState extends State<StyledDataTable> {
     );
   }
 
+  void _changePageSize(int newSize) {
+    if (_isServerSidePagination) {
+      widget.onPageSizeChanged?.call(newSize);
+    } else {
+      setState(() => _internalPage = 1);
+    }
+  }
+
   Widget _buildPaginationControls() {
     final isDark = widget.isDarkTheme;
     final textColor = UIConstants.textPrimary(isDark);
 
-    List<Widget> pageButtons = [];
-
-    pageButtons.add(_pageButton(
-      icon: Icons.chevron_left,
-      enabled: _currentPage > 1,
-      onTap: () => _goToPage(_currentPage - 1),
-      isDark: isDark,
-    ));
-
-    for (int i = 1; i <= _totalPages; i++) {
-      if (i == 1 ||
-          i == _totalPages ||
-          (i >= _currentPage - 1 && i <= _currentPage + 1)) {
-        pageButtons.add(
-          InkWell(
-            onTap: () => _goToPage(i),
-            child: Container(
-              width: 24,
-              height: 24,
-              margin: const EdgeInsets.symmetric(horizontal: 2),
-              decoration: BoxDecoration(
-                color: i == _currentPage
-                    ? Colors.blue
-                    : UIConstants.visibleBorderColor(isDark),
-                borderRadius:
-                    BorderRadius.circular(UIConstants.textFieldBorderRadius),
-              ),
-              child: Center(
-                child: Text(
-                  i.toString(),
-                  style: TextStyle(
-                    fontSize: UIConstants.fontSizeSm,
-                    color: i == _currentPage ? Colors.white : textColor,
-                  ),
-                ),
-              ),
-            ),
-          ),
-        );
-      } else if (i == _currentPage - 2 || i == _currentPage + 2) {
-        pageButtons.add(
-          Container(
-            width: 24,
-            height: 24,
-            margin: const EdgeInsets.symmetric(horizontal: 2),
-            child: Center(
-              child: Text(
-                '...',
-                style: TextStyle(
-                  fontSize: UIConstants.fontSizeSm,
-                  color: isDark ? Colors.white70 : Colors.black54,
-                ),
-              ),
-            ),
-          ),
-        );
-      }
-    }
-
-    pageButtons.add(_pageButton(
-      icon: Icons.chevron_right,
-      enabled: _currentPage < _totalPages,
-      onTap: () => _goToPage(_currentPage + 1),
-      isDark: isDark,
-    ));
-
     return Padding(
-      padding: const EdgeInsets.only(top: 8),
+      padding: const EdgeInsets.only(top: 6),
       child: Row(
         mainAxisAlignment: MainAxisAlignment.center,
-        children: pageButtons,
-      ),
-    );
-  }
-
-  Widget _pageButton({
-    required IconData icon,
-    required bool enabled,
-    required VoidCallback onTap,
-    required bool isDark,
-  }) {
-    return InkWell(
-      onTap: enabled ? onTap : null,
-      child: Container(
-        width: 24,
-        height: 24,
-        decoration: BoxDecoration(
-          color: enabled
-              ? UIConstants.visibleBorderColor(isDark)
-              : Colors.transparent,
-          borderRadius:
-              BorderRadius.circular(UIConstants.textFieldBorderRadius),
-        ),
-        child: Icon(
-          icon,
-          size: 16,
-          color: enabled ? UIConstants.textPrimary(isDark) : Colors.grey,
-        ),
+        children: [
+          IconButton(
+            icon: Icon(Icons.first_page, color: textColor, size: 18),
+            onPressed: _currentPage > 1 ? () => _goToPage(1) : null,
+            padding: EdgeInsets.zero,
+            constraints: const BoxConstraints(minWidth: 28, minHeight: 28),
+          ),
+          IconButton(
+            icon: Icon(Icons.chevron_left, color: textColor, size: 18),
+            onPressed: _currentPage > 1 ? () => _goToPage(_currentPage - 1) : null,
+            padding: EdgeInsets.zero,
+            constraints: const BoxConstraints(minWidth: 28, minHeight: 28),
+          ),
+          Text(
+            'Page $_currentPage of $_totalPages',
+            style: TextStyle(color: textColor, fontSize: UIConstants.fontSizeSm),
+          ),
+          IconButton(
+            icon: Icon(Icons.chevron_right, color: textColor, size: 18),
+            onPressed: _currentPage < _totalPages ? () => _goToPage(_currentPage + 1) : null,
+            padding: EdgeInsets.zero,
+            constraints: const BoxConstraints(minWidth: 28, minHeight: 28),
+          ),
+          IconButton(
+            icon: Icon(Icons.last_page, color: textColor, size: 18),
+            onPressed: _currentPage < _totalPages ? () => _goToPage(_totalPages) : null,
+            padding: EdgeInsets.zero,
+            constraints: const BoxConstraints(minWidth: 28, minHeight: 28),
+          ),
+          const SizedBox(width: 8),
+          SizedBox(
+            width: 70,
+            height: UIConstants.buttonHeightStandard * 0.7,
+            child: DropdownButtonFormField<int>(
+              value: widget.rowsPerPage,
+              isDense: true,
+              isExpanded: true,
+              decoration: InputDecoration(
+                border: OutlineInputBorder(
+                  borderRadius: BorderRadius.circular(UIConstants.textFieldBorderRadius),
+                  borderSide: BorderSide(color: UIConstants.borderColor(isDark)),
+                ),
+                contentPadding: const EdgeInsets.symmetric(horizontal: 8, vertical: 0),
+                isDense: true,
+              ),
+              style: TextStyle(color: textColor, fontSize: UIConstants.fontSizeSm),
+              dropdownColor: UIConstants.dropdownBackground(isDark),
+              items: [10, 20, 50, 100]
+                  .map((size) => DropdownMenuItem(
+                        value: size,
+                        child: Text('$size', style: TextStyle(color: textColor, fontSize: UIConstants.fontSizeSm)),
+                      ))
+                  .toList(),
+              onChanged: (value) {
+                if (value != null) _changePageSize(value);
+              },
+            ),
+          ),
+          Text(
+            ' / page',
+            style: TextStyle(color: UIConstants.textSecondary(isDark), fontSize: UIConstants.fontSizeSm),
+          ),
+        ],
       ),
     );
   }

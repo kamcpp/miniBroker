@@ -689,12 +689,14 @@ class _PortfolioPageState extends State<PortfolioPage> {
             ? (currency.isNotEmpty ? '$ticker ($currency)' : ticker)
             : securityIid;
         final holdingData = entry.value as Map<String, dynamic>? ?? {};
+        print('📊 Security holding $securityIid: $holdingData');
         // Securities use divisibility 0 (whole units, no decimals)
         const divisibility = '0';
         final totalUnitsRaw = holdingData['totalUnits']?.toString()
             ?? holdingData['total_units']?.toString() ?? '0';
         final availableUnitsRaw = _getAvailableFromHolding(holdingData);
         final lockedUnitsRaw = _getLockedFromHolding(holdingData);
+        print('📊 Security $symbol: total=$totalUnitsRaw, available=$availableUnitsRaw, locked=$lockedUnitsRaw');
         final totalUnits = _formatAmountWithDivisibility(totalUnitsRaw, divisibility);
         final availableUnits = _formatAmountWithDivisibility(availableUnitsRaw, divisibility);
         final lockedUnits = _formatAmountWithDivisibility(lockedUnitsRaw, divisibility);
@@ -740,10 +742,12 @@ class _PortfolioPageState extends State<PortfolioPage> {
         final entry = mapEntry.value;
         final currencyCode = entry.key;
         final holdingData = entry.value as Map<String, dynamic>? ?? {};
+        print('💰 Cash holding $currencyCode: $holdingData');
         final totalBalanceRaw = holdingData['totalUnits']?.toString()
             ?? holdingData['total_units']?.toString() ?? '0';
         final availableBalanceRaw = _getAvailableFromHolding(holdingData);
         final reservedBalanceRaw = _getLockedFromHolding(holdingData);
+        print('💰 Cash $currencyCode: total=$totalBalanceRaw, available=$availableBalanceRaw, locked=$reservedBalanceRaw');
 
         // Look up divisibility from cash token info, fallback to default for fiat
         final info = _cashTokenInfo[currencyCode];
@@ -886,14 +890,15 @@ class _PortfolioPageState extends State<PortfolioPage> {
   }
 
   /// Extract locked/reserved units from a holding entry.
-  /// Locked = totalUnits - available (LIQUID). Always calculated to be accurate.
+  /// Locked = totalUnits - available (LIQUID). Uses integer arithmetic to avoid float errors.
   String _getLockedFromHolding(Map<String, dynamic> holdingData) {
     final totalStr = holdingData['totalUnits']?.toString()
         ?? holdingData['total_units']?.toString() ?? '0';
-    final total = double.tryParse(totalStr) ?? 0;
     final availableStr = _getAvailableFromHolding(holdingData);
-    final available = double.tryParse(availableStr) ?? 0;
-    final locked = (total - available).round();
+    // Use int parsing first (raw units are integers), fallback to double
+    final total = int.tryParse(totalStr) ?? double.tryParse(totalStr)?.toInt() ?? 0;
+    final available = int.tryParse(availableStr) ?? double.tryParse(availableStr)?.toInt() ?? 0;
+    final locked = total - available;
     return locked > 0 ? locked.toString() : '0';
   }
 

@@ -647,7 +647,7 @@ class _TreasuryActivitiesPageState extends State<TreasuryActivitiesPage> {
                                 message: 'Click to copy',
                                 child: InkWell(
                                   onTap: () => _copyToClipboard(_errorMessage!),
-                                  child: Text(
+                                  child: SelectableText(
                                     _errorMessage!,
                                     style: TextStyle(color: Colors.red, fontSize: UIConstants.fontSizeSm),
                                     textAlign: TextAlign.center,

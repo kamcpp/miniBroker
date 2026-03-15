@@ -601,7 +601,7 @@ class _InvestorsPageState extends State<InvestorsPage> {
                                 message: 'Click to copy',
                                 child: InkWell(
                                   onTap: () => _copyToClipboard(_errorMessage!),
-                                  child: Text(
+                                  child: SelectableText(
                                     _errorMessage!,
                                     style: TextStyle(color: Colors.red, fontSize: UIConstants.fontSizeSm),
                                     textAlign: TextAlign.center,
@@ -1082,7 +1082,7 @@ class _InvestorInfoDialogState extends State<_InvestorInfoDialog> {
                           message: 'Click to copy',
                           child: InkWell(
                             onTap: () => _copyToClipboard(_error!),
-                            child: Text(
+                            child: SelectableText(
                               _error!,
                               style: TextStyle(color: Colors.orange, fontSize: UIConstants.fontSizeSm),
                               textAlign: TextAlign.center,

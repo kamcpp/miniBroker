@@ -975,7 +975,7 @@ class _TradingPageState extends State<TradingPage> {
 
   // Panel width variables for resizable panels
   double _leftPanelWidth = 329.0;
-  double _rightPanelWidth = 345.0;
+  double _rightPanelWidth = 362.0;
   bool _isDraggingLeft = false;
   bool _isDraggingRight = false;
   
@@ -2050,11 +2050,12 @@ class _TradingPageState extends State<TradingPage> {
               }
             }
 
-            // Apply price divisibility (raw integers, e.g. 1450 = 14.50)
-            final open = (double.tryParse(ohlcMap['open']?.toString() ?? '0') ?? 0.0) / 100.0;
-            final high = (double.tryParse(ohlcMap['high']?.toString() ?? '0') ?? 0.0) / 100.0;
-            final low = (double.tryParse(ohlcMap['low']?.toString() ?? '0') ?? 0.0) / 100.0;
-            final close = (double.tryParse(ohlcMap['close']?.toString() ?? '0') ?? 0.0) / 100.0;
+            // Apply price divisibility (raw integers, e.g. 1450 with divis 2 = 14.50)
+            final divisor = _pow10(_getCurrencyDecimals());
+            final open = (double.tryParse(ohlcMap['open']?.toString() ?? '0') ?? 0.0) / divisor;
+            final high = (double.tryParse(ohlcMap['high']?.toString() ?? '0') ?? 0.0) / divisor;
+            final low = (double.tryParse(ohlcMap['low']?.toString() ?? '0') ?? 0.0) / divisor;
+            final close = (double.tryParse(ohlcMap['close']?.toString() ?? '0') ?? 0.0) / divisor;
             final volume = double.tryParse(ohlcMap['volume']?.toString() ?? '0') ?? 0.0;
 
             final candle = Candle(
@@ -2623,6 +2624,12 @@ class _TradingPageState extends State<TradingPage> {
     final decimals = _getCurrencyDecimals();
     final factor = _pow10(decimals);
     return (value * factor).roundToDouble() / factor;
+  }
+
+  static const _idChars = '23456789ABCDEFGHJKLMNPQRSTUVWXYZabcdefghjkmnpqrstuvwxyz';
+  static String _generateId(int length) {
+    final rng = Random();
+    return String.fromCharCodes(List.generate(length, (_) => _idChars.codeUnitAt(rng.nextInt(_idChars.length))));
   }
 
   static double _pow10(int n) {
@@ -5145,8 +5152,8 @@ class _TradingPageState extends State<TradingPage> {
       final securityId = currency.isNotEmpty ? '$_selectedSymbol:$currency' : _selectedSymbol;
       print('🏷️ Using securityId: $securityId');
 
-      // Generate unique participant order ID
-      final participantOrderId = 'order_${DateTime.now().millisecondsSinceEpoch}';
+      // Generate unique investor order ID
+      final investorOrderId = 'invord_${_generateId(16)}';
 
       // Determine order side
       final side = _isBuySelected ? 'BUY' : 'SELL';
@@ -5187,7 +5194,7 @@ class _TradingPageState extends State<TradingPage> {
         quantity: _quantityController.text.trim(),
         price: price,
         timeInForce: _timeInForce,
-        participantOrderId: participantOrderId,
+        investorOrderId: investorOrderId,
         currency: currency,
         feeAmount: _roundToCurrencyPrecision(double.tryParse(_feeController.text.trim()) ?? 0.0).toStringAsFixed(decimals),
         expireTime: expireTime,
@@ -5701,6 +5708,9 @@ class _TradingPageState extends State<TradingPage> {
                     controller: _priceController,
                     hintText: '0',
                     isDarkTheme: isDarkTheme,
+                    inputFormatters: [
+                      _DecimalInputFormatter(_getCurrencyDecimals()),
+                    ],
                     suffixWidget: Container(
                       padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 6),
                       child: Text(
@@ -6146,12 +6156,14 @@ class _HoverInputField extends StatefulWidget {
   final String hintText;
   final bool isDarkTheme;
   final Widget? suffixWidget;
+  final List<TextInputFormatter>? inputFormatters;
 
   const _HoverInputField({
     required this.controller,
     required this.hintText,
     required this.isDarkTheme,
     this.suffixWidget,
+    this.inputFormatters,
   });
 
   @override
@@ -6185,7 +6197,8 @@ class _HoverInputFieldState extends State<_HoverInputField> {
             Expanded(
               child: TextField(
                 controller: widget.controller,
-                keyboardType: TextInputType.number,
+                keyboardType: const TextInputType.numberWithOptions(decimal: true),
+                inputFormatters: widget.inputFormatters,
                 style: TextStyle(
                   color: UIConstants.textPrimary(widget.isDarkTheme),
                   fontSize: UIConstants.textFieldFontSize,
@@ -6252,3 +6265,20 @@ class _HoverDropdownFieldState extends State<_HoverDropdownField> {
   }
 }
 
+/// Limits decimal input to a maximum number of decimal places.
+class _DecimalInputFormatter extends TextInputFormatter {
+  final int maxDecimals;
+  _DecimalInputFormatter(this.maxDecimals);
+
+  @override
+  TextEditingValue formatEditUpdate(TextEditingValue oldValue, TextEditingValue newValue) {
+    final text = newValue.text;
+    if (text.isEmpty) return newValue;
+    // Allow only digits and one dot
+    if (!RegExp(r'^\d*\.?\d*$').hasMatch(text)) return oldValue;
+    // Check decimal places
+    final dotIndex = text.indexOf('.');
+    if (dotIndex >= 0 && text.length - dotIndex - 1 > maxDecimals) return oldValue;
+    return newValue;
+  }
+}

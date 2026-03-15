@@ -652,7 +652,7 @@ class _ExecutionReportsPageState extends State<ExecutionReportsPage> {
                                 message: 'Click to copy',
                                 child: InkWell(
                                   onTap: () => _copyToClipboard(_errorMessage!),
-                                  child: Text(
+                                  child: SelectableText(
                                     _errorMessage!,
                                     style: TextStyle(color: Colors.red, fontSize: UIConstants.fontSizeSm),
                                     textAlign: TextAlign.center,
