@@ -11,6 +11,7 @@ import '../screens/broker/trade_reports_page.dart';
 import '../screens/broker/treasury_activities_page.dart';
 import '../screens/broker/agora_events_page.dart';
 import '../screens/broker/security_orderbooks_page.dart';
+import '../screens/broker/workflows_page.dart';
 import '../screens/investor/investor_info_page.dart';
 import '../services/auth_service.dart';
 // import '../screens/activity_page.dart';  // Disabled
@@ -177,6 +178,23 @@ class MenuItemsHelper {
               Navigator.of(context).pushReplacement(
                 PageRouteBuilder(
                   pageBuilder: (context, animation, secondaryAnimation) => const AgoraEventsPage(),
+                  transitionDuration: Duration.zero,
+                  reverseTransitionDuration: Duration.zero,
+                ),
+              );
+            }
+          },
+        ),
+      if (role == UserRole.broker)
+        MenuItem(
+          label: 'Workflows',
+          icon: Icons.account_tree,
+          isSelected: currentPage == 'workflows',
+          onTap: () {
+            if (currentPage != 'workflows') {
+              Navigator.of(context).pushReplacement(
+                PageRouteBuilder(
+                  pageBuilder: (context, animation, secondaryAnimation) => const WorkflowsPage(),
                   transitionDuration: Duration.zero,
                   reverseTransitionDuration: Duration.zero,
                 ),

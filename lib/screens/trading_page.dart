@@ -18,6 +18,7 @@ import '../utils/menu_items_helper.dart';
 import '../widgets/base_page.dart';
 import '../widgets/styled_data_table.dart';
 import '../services/page_state_service.dart';
+import '../services/event_subscription_service.dart';
 
 class TradingPage extends StatefulWidget {
   const TradingPage({super.key});
@@ -1517,42 +1518,25 @@ class _TradingPageState extends State<TradingPage> {
 
       if (confirmed != true) return;
 
-      // Show loading snackbar
-      ScaffoldMessenger.of(context).showSnackBar(
-        UIConstants.loadingSnackBar('Cancelling order...'),
-      );
-
-      // Call CancelOrderAsync
       final result = await GrpcurlHelper.cancelOrderAsync(
         participantOrderId: participantOrderId,
         reason: 'User requested cancellation',
         refRequestId: 'flutter-cancel-${DateTime.now().millisecondsSinceEpoch}',
       ).timeout(const Duration(minutes: 5));
 
-      // Hide loading snackbar
-      ScaffoldMessenger.of(context).hideCurrentSnackBar();
-
       if (result['success'] == true) {
-        // Show success message
-        ScaffoldMessenger.of(context).showSnackBar(
-          UIConstants.successSnackBar('Order $participantOrderId cancelled successfully!'),
+        EventSubscriptionService().notify(
+          title: 'Order Cancelled',
+          message: 'Cancel request sent',
+          icon: Icons.cancel_outlined,
         );
-
-        // Refresh orders to show updated status
         _fetchRealOrders();
       } else {
         final errorMsg = result['output']?['error'] ?? 'Failed to cancel order';
-        ScaffoldMessenger.of(context).showSnackBar(
-          UIConstants.errorSnackBar('Failed to cancel order: $errorMsg', duration: const Duration(seconds: 5)),
-        );
+        _showOrderErrorDialog('Cancel failed', errorMsg);
       }
     } catch (e) {
-      // Hide loading snackbar
-      ScaffoldMessenger.of(context).hideCurrentSnackBar();
-
-      ScaffoldMessenger.of(context).showSnackBar(
-        UIConstants.errorSnackBar('Error cancelling order: $e', duration: const Duration(seconds: 5)),
-      );
+      _showOrderErrorDialog('Cancel failed', e.toString());
       print('❌ Error in _cancelOrder: $e');
     }
   }
@@ -1735,21 +1719,12 @@ class _TradingPageState extends State<TradingPage> {
       if ((newQuantity == null || newQuantity.isEmpty) &&
           (newPrice == null || newPrice.isEmpty) &&
           expirationDateTime == null) {
-        ScaffoldMessenger.of(context).showSnackBar(
-          UIConstants.errorSnackBar('Please provide new quantity, price, or expiration time'),
-        );
+        EventSubscriptionService().notify(title: 'Validation', message: 'Please provide new quantity, price, or expiration time', icon: Icons.warning_amber, color: const Color(0xFFE65100));
         return;
       }
 
-      // Show loading snackbar
-      ScaffoldMessenger.of(context).showSnackBar(
-        UIConstants.loadingSnackBar('Replacing order...'),
-      );
-
-      // Generate new order ID
       final newOrderId = '${participantOrderId}_repl_${DateTime.now().millisecondsSinceEpoch}';
 
-      // Call ReplaceOrderAsync
       final replaceResult = await GrpcurlHelper.replaceOrderAsync(
         oldParticipantOrderId: participantOrderId,
         newParticipantOrderId: newOrderId,
@@ -1760,30 +1735,19 @@ class _TradingPageState extends State<TradingPage> {
         refRequestId: 'flutter-replace-${DateTime.now().millisecondsSinceEpoch}',
       ).timeout(const Duration(minutes: 5));
 
-      // Hide loading snackbar
-      ScaffoldMessenger.of(context).hideCurrentSnackBar();
-
       if (replaceResult['success'] == true) {
-        // Show success message
-        ScaffoldMessenger.of(context).showSnackBar(
-          UIConstants.successSnackBar('Order $participantOrderId replaced successfully!'),
+        EventSubscriptionService().notify(
+          title: 'Order Replaced',
+          message: 'Replace request sent',
+          icon: Icons.swap_horiz,
         );
-
-        // Refresh orders to show updated status
         _fetchRealOrders();
       } else {
         final errorMsg = replaceResult['output']?['error'] ?? 'Failed to replace order';
-        ScaffoldMessenger.of(context).showSnackBar(
-          UIConstants.errorSnackBar('Failed to replace order: $errorMsg', duration: const Duration(seconds: 5)),
-        );
+        _showOrderErrorDialog('Replace failed', errorMsg);
       }
     } catch (e) {
-      // Hide loading snackbar
-      ScaffoldMessenger.of(context).hideCurrentSnackBar();
-
-      ScaffoldMessenger.of(context).showSnackBar(
-        UIConstants.errorSnackBar('Error replacing order: $e', duration: const Duration(seconds: 5)),
-      );
+      _showOrderErrorDialog('Replace failed', e.toString());
       print('❌ Error in _replaceOrder: $e');
     }
   }
@@ -1824,6 +1788,10 @@ class _TradingPageState extends State<TradingPage> {
     // Don't auto-calculate if user manually edited
     if (_feeManuallyEdited) return;
 
+    _lastAutoFee = '...';
+    _feeController.text = '...';
+    _feeManuallyEdited = false;
+
     setState(() {
       _isLoadingFee = true;
     });
@@ -1839,7 +1807,7 @@ class _TradingPageState extends State<TradingPage> {
 
       _lastAutoFee = feeStr;
       _feeController.text = feeStr;
-      _feeManuallyEdited = false; // Reset since we just set it
+      _feeManuallyEdited = false;
 
       setState(() {
         _estimatedFee = '$feeStr $currencySymbol';
@@ -5153,30 +5121,22 @@ class _TradingPageState extends State<TradingPage> {
       print('📊 Controllers: quantity="${_quantityController.text}", price="${_priceController.text}"');
 
       if (_quantityController.text.isEmpty) {
-        ScaffoldMessenger.of(context).showSnackBar(
-          UIConstants.errorSnackBar('Please enter a quantity'),
-        );
+        EventSubscriptionService().notify(title: 'Validation', message: 'Please enter a quantity', icon: Icons.warning_amber, color: const Color(0xFFE65100));
         return;
       }
 
       if (_orderType == 'Limit' && _priceController.text.isEmpty) {
-        ScaffoldMessenger.of(context).showSnackBar(
-          UIConstants.errorSnackBar('Please enter a price for limit order'),
-        );
+        EventSubscriptionService().notify(title: 'Validation', message: 'Please enter a price for limit order', icon: Icons.warning_amber, color: const Color(0xFFE65100));
         return;
       }
 
       if (_cachedAccountId == null || _cachedAccountId!.isEmpty) {
-        ScaffoldMessenger.of(context).showSnackBar(
-          UIConstants.errorSnackBar('Account ID not available'),
-        );
+        EventSubscriptionService().notify(title: 'Validation', message: 'Account ID not available', icon: Icons.warning_amber, color: const Color(0xFFE65100));
         return;
       }
 
       if (_selectedSymbol.isEmpty) {
-        ScaffoldMessenger.of(context).showSnackBar(
-          UIConstants.errorSnackBar('No security selected'),
-        );
+        EventSubscriptionService().notify(title: 'Validation', message: 'No security selected', icon: Icons.warning_amber, color: const Color(0xFFE65100));
         return;
       }
 
@@ -5198,26 +5158,10 @@ class _TradingPageState extends State<TradingPage> {
 
       print('📝 Order details: side=$side, type=${_orderType.toUpperCase()}, quantity=${_quantityController.text.trim()}, price=$price');
 
-      // Show loading indicator
-      ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(
-          content: Row(
-            children: [
-              SizedBox(
-                width: 16,
-                height: 16,
-                child: CircularProgressIndicator(
-                  strokeWidth: 2,
-                  valueColor: AlwaysStoppedAnimation<Color>(Colors.white),
-                ),
-              ),
-              SizedBox(width: UIConstants.spacingSm),
-              Text('Placing ${side.toLowerCase()} order...'),
-            ],
-          ),
-          duration: Duration(seconds: 30), // Long duration for loading
-          backgroundColor: _isBuySelected ? UIConstants.colorAccept : UIConstants.colorReject,
-        ),
+      EventSubscriptionService().notify(
+        title: 'Placing Order',
+        message: '$side $_selectedSymbol',
+        icon: Icons.hourglass_top,
       );
 
       // Calculate expiry timestamp from selected period
@@ -5249,9 +5193,6 @@ class _TradingPageState extends State<TradingPage> {
         expireTime: expireTime,
       );
 
-      // Hide loading indicator
-      ScaffoldMessenger.of(context).hideCurrentSnackBar();
-
       if (result['success'] == true) {
         // Success - handle ExecutionAsyncResponse structure
         final output = result['output'] as Map<String, dynamic>?;
@@ -5266,12 +5207,10 @@ class _TradingPageState extends State<TradingPage> {
 
         print('📋 CreateOrderAsync response: $output');
 
-        ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(
-            content: Text('Order sent • $requestId'),
-            backgroundColor: UIConstants.colorCommand,
-            duration: Duration(seconds: 3),
-          ),
+        EventSubscriptionService().notify(
+          title: 'Order Sent',
+          message: 'Order request sent',
+          icon: Icons.send,
         );
 
         // Refresh orders list to show the new order
@@ -5286,16 +5225,10 @@ class _TradingPageState extends State<TradingPage> {
         _showOrderErrorDialog('Order failed', errorMessage);
       }
     } catch (e) {
-      // Hide loading indicator
-      ScaffoldMessenger.of(context).hideCurrentSnackBar();
       _showOrderErrorDialog('Order failed', e.toString());
     } catch (e, stackTrace) {
-      // Global catch block to prevent app crashes
       print('❌ Critical error in _placeOrder: $e');
       print('Stack trace: $stackTrace');
-
-      // Hide any loading indicators
-      ScaffoldMessenger.of(context).hideCurrentSnackBar();
       _showOrderErrorDialog('Unexpected error', e.toString());
     }
   }
@@ -5506,7 +5439,11 @@ class _TradingPageState extends State<TradingPage> {
                     isBuySelected: _isBuySelected,
                     isDarkTheme: isDarkTheme,
                     onTap: () {
-                      setState(() => _orderType = 'Limit');
+                      setState(() {
+                        _orderType = 'Limit';
+                        _feeController.clear();
+                        _feeManuallyEdited = false;
+                      });
                       _calculateOrderFees();
                     },
                   ),
@@ -5518,7 +5455,11 @@ class _TradingPageState extends State<TradingPage> {
                     isBuySelected: _isBuySelected,
                     isDarkTheme: isDarkTheme,
                     onTap: () {
-                      setState(() => _orderType = 'Market');
+                      setState(() {
+                        _orderType = 'Market';
+                        _feeController.clear();
+                        _feeManuallyEdited = false;
+                      });
                       _calculateOrderFees();
                     },
                   ),

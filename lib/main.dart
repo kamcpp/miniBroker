@@ -55,6 +55,7 @@ class MyApp extends StatelessWidget {
         ChangeNotifierProvider(create: (_) => ThemeService()),
       ],
       child: MaterialApp(
+        navigatorKey: eventSubscriptionService.navigatorKey,
         scaffoldMessengerKey: eventSubscriptionService.scaffoldMessengerKey,
         title: 'miniBroker-v1.0.0',
         debugShowCheckedModeBanner: false,

@@ -23,7 +23,74 @@ class EventSubscriptionService {
   /// Global scaffold messenger key for showing notifications from the service
   final GlobalKey<ScaffoldMessengerState> scaffoldMessengerKey = GlobalKey<ScaffoldMessengerState>();
 
+  /// Global navigator key for accessing the overlay
+  final GlobalKey<NavigatorState> navigatorKey = GlobalKey<NavigatorState>();
+
+  /// Get the overlay from the navigator's current route context.
+  OverlayState? _getOverlay() {
+    final navigator = navigatorKey.currentState;
+    if (navigator == null) return null;
+    // The overlay is inside the navigator — use the navigator's overlay directly
+    return navigator.overlay;
+  }
+
   bool get isSubscribed => _isSubscribed;
+
+  /// Show a notification using the same overlay system as streaming events.
+  /// Can be called from anywhere via EventSubscriptionService().notify(...)
+  void notify({
+    required String title,
+    required String message,
+    Color color = const Color(0xFF1565C0),
+    IconData icon = Icons.info_outline,
+    List<String> meta = const [],
+  }) {
+    _showCustomNotification(title, message, color, icon, meta);
+  }
+
+  void _showCustomNotification(String title, String message, Color color, IconData icon, List<String> meta) {
+    final overlay = _getOverlay();
+    if (overlay == null) return;
+
+    _currentOverlay?.remove();
+    _currentOverlay = null;
+    _dismissTimer?.cancel();
+
+    late OverlayEntry entry;
+    entry = OverlayEntry(
+      builder: (context) => _NotificationOverlayWidget(
+        color: color,
+        icon: icon,
+        typeStr: title,
+        primaryMessage: message,
+        meta: meta,
+        eventId: '',
+        onDismiss: () {
+          _dismissTimer?.cancel();
+          entry.remove();
+          if (_currentOverlay == entry) _currentOverlay = null;
+        },
+        onHoverStart: () {
+          _dismissTimer?.cancel();
+        },
+        onHoverEnd: () {
+          _dismissTimer?.cancel();
+          _dismissTimer = Timer(const Duration(seconds: 3), () {
+            entry.remove();
+            if (_currentOverlay == entry) _currentOverlay = null;
+          });
+        },
+      ),
+    );
+
+    _currentOverlay = entry;
+    overlay.insert(entry);
+
+    _dismissTimer = Timer(const Duration(seconds: 5), () {
+      entry.remove();
+      if (_currentOverlay == entry) _currentOverlay = null;
+    });
+  }
 
   /// Start the event subscription. Call after gRPC connection is established.
   Future<void> subscribe() async {
@@ -47,6 +114,11 @@ class EventSubscriptionService {
           credentials: AppConfig.grpcUseSecure
               ? const ChannelCredentials.secure()
               : const ChannelCredentials.insecure(),
+          keepAlive: const ClientKeepAliveOptions(
+            pingInterval: Duration(seconds: 15),
+            timeout: Duration(seconds: 5),
+            permitWithoutCalls: true,
+          ),
         ),
       );
 
@@ -349,16 +421,9 @@ class EventSubscriptionService {
   Timer? _dismissTimer;
 
   void _showNotification(EventTypeEnum type, String typeStr, String eventId, String primaryMessage, List<String> meta, {ExecutionUpdateEventTypeEnum? execUpdateType}) {
-    // Use the navigator overlay from the scaffold messenger's context
-    final messenger = scaffoldMessengerKey.currentState;
-    if (messenger == null) return;
+    final overlay = _getOverlay();
+    if (overlay == null) return;
 
-    final context = scaffoldMessengerKey.currentContext;
-    if (context == null) return;
-
-    final overlay = Overlay.of(context, rootOverlay: true);
-
-    // Remove previous notification
     _currentOverlay?.remove();
     _currentOverlay = null;
     _dismissTimer?.cancel();
