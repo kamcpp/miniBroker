@@ -939,7 +939,8 @@ class _TradingPageState extends State<TradingPage> {
   bool _isLoadingTradeHistory = false;
   final TextEditingController _quantityController = TextEditingController();
   final TextEditingController _priceController = TextEditingController();
-  final TextEditingController _feeController = TextEditingController(text: '1.52');
+  final TextEditingController _feeController = TextEditingController();
+  bool _feeManuallyEdited = false;
   final TextEditingController _orderIdController = TextEditingController();
   final TextEditingController _reasonController = TextEditingController();
   final TextEditingController _replaceOrderIdController = TextEditingController();
@@ -957,7 +958,9 @@ class _TradingPageState extends State<TradingPage> {
 
   // Order fee calculation
   bool _isLoadingFee = false;
-  String _estimatedFee = '0 \$'; // Store the estimated fee
+  String _estimatedFee = '';
+  String _lastAutoFee = '';
+  Timer? _feeDebounceTimer;
   
   // Message stream subscription
   StreamSubscription<String>? _messageSubscription;
@@ -971,7 +974,7 @@ class _TradingPageState extends State<TradingPage> {
 
   // Panel width variables for resizable panels
   double _leftPanelWidth = 329.0;
-  double _rightPanelWidth = 329.0;
+  double _rightPanelWidth = 345.0;
   bool _isDraggingLeft = false;
   bool _isDraggingRight = false;
   
@@ -1120,6 +1123,12 @@ class _TradingPageState extends State<TradingPage> {
       _calculateOrderFees();
     });
     _feeController.addListener(() {
+      if (_feeController.text.isEmpty) {
+        _feeManuallyEdited = false;
+        _calculateOrderFees();
+      } else if (_feeController.text != _lastAutoFee) {
+        _feeManuallyEdited = true;
+      }
       setState(() {});
     });
 
@@ -1794,94 +1803,49 @@ class _TradingPageState extends State<TradingPage> {
     return result;
   }
 
-  /// Calculate order fees using the real GetOrderFees API
-  Future<void> _calculateOrderFees() async {
-    // Reset fee to default if required fields are missing
-    if (_cachedAccountId == null ||
-        _selectedSymbol.isEmpty ||
-        _quantityController.text.trim().isEmpty) {
-      setState(() {
-        _estimatedFee = '0 \$';
-        _isLoadingFee = false;
-      });
+  /// Calculate order fees as 1% of volume (amount * price) with debounce.
+  void _calculateOrderFees() {
+    _feeDebounceTimer?.cancel();
+
+    final quantity = double.tryParse(_quantityController.text.trim()) ?? 0;
+    final price = double.tryParse(_priceController.text.trim()) ?? 0;
+
+    // Both fields must have values
+    if (quantity <= 0 || price <= 0) {
+      if (!_feeManuallyEdited) {
+        setState(() {
+          _estimatedFee = '';
+          _isLoadingFee = false;
+        });
+      }
       return;
     }
 
-    // Reset fee for Limit orders without price
-    if (_orderType == 'Limit' && _priceController.text.trim().isEmpty) {
-      setState(() {
-        _estimatedFee = '0 \$';
-        _isLoadingFee = false;
-      });
-      return;
-    }
-
-    if (_isLoadingFee) return;
+    // Don't auto-calculate if user manually edited
+    if (_feeManuallyEdited) return;
 
     setState(() {
       _isLoadingFee = true;
     });
 
-    try {
-      print('💰 Calculating order fees...');
+    // Debounce 500ms
+    _feeDebounceTimer = Timer(const Duration(milliseconds: 500), () {
+      if (!mounted) return;
+      final volume = quantity * price;
+      final fee = volume * 0.01; // 1% of volume
+      final decimals = _getCurrencyDecimals();
+      final feeStr = fee.toStringAsFixed(decimals);
+      final currencySymbol = _selectedCurrency['symbol'] ?? _selectedCurrency['code'] ?? '';
 
-      final securityId = _selectedSymbol.split('/').first; // Extract security part from symbol
-      final orderTypeApi = _orderType == 'Limit' ? 'LIMIT' : 'MARKET';
-      final sideApi = _isBuySelected ? 'BUY' : 'SELL';
-      final quantity = _quantityController.text.trim();
-      final price = _priceController.text.trim();
+      _lastAutoFee = feeStr;
+      _feeController.text = feeStr;
+      _feeManuallyEdited = false; // Reset since we just set it
 
-      final result = await realGrpcClient.getOrderFees(
-        accountId: _cachedAccountId!,
-        feePayerAccountId: _cachedAccountId!,
-        securityId: securityId,
-        orderType: orderTypeApi,
-        side: sideApi,
-        quantity: quantity,
-        price: orderTypeApi == 'LIMIT' ? price : null,
-        timeInForce: _timeInForce,
-      );
-
-      if (result['success'] == true && result['output'] != null) {
-        final output = result['output'] as Map<String, dynamic>;
-        final feeStructure = output['feeStructure'] as Map<String, dynamic>?;
-
-        if (feeStructure != null && feeStructure['totalEstimatedFee'] != null) {
-          final totalFee = feeStructure['totalEstimatedFee'].toString();
-          final currency = feeStructure['currency']?.toString() ?? '\$';
-          final formattedFee = _formatDecimal(totalFee);
-
-          setState(() {
-            _estimatedFee = '$formattedFee $currency';
-            _isLoadingFee = false;
-          });
-
-          print('✅ Fee calculated successfully: $_estimatedFee');
-        } else {
-          // Fallback to 0.00 if fee structure is incomplete
-          setState(() {
-            _estimatedFee = '0 \$';
-            _isLoadingFee = false;
-          });
-          print('⚠️ Fee structure incomplete, using default');
-        }
-      } else {
-        // On error, fallback to 0.00
-        setState(() {
-          _estimatedFee = '0 \$';
-          _isLoadingFee = false;
-        });
-        final error = result['output']?['error'] ?? 'Unknown error';
-        print('❌ Failed to calculate fees: $error');
-      }
-    } catch (e) {
-      // On exception, fallback to 0.00
       setState(() {
-        _estimatedFee = '0 \$';
+        _estimatedFee = '$feeStr $currencySymbol';
         _isLoadingFee = false;
       });
-      print('❌ Error calculating fees: $e');
-    }
+    });
   }
 
   // Fetch last price for security using exchangePairId
@@ -2716,6 +2680,7 @@ class _TradingPageState extends State<TradingPage> {
     _ordersRefreshTimer?.cancel();
     _tradeHistoryRefreshTimer?.cancel();
     _chartRetryTimer?.cancel();
+    _feeDebounceTimer?.cancel();
     _quantityController.dispose();
     _priceController.dispose();
     _orderIdController.dispose();
@@ -3277,7 +3242,7 @@ class _TradingPageState extends State<TradingPage> {
                         ),
                       ),
                       TextSpan(
-                        text: '${_candles.first.close.toStringAsFixed(2)}',
+                        text: '${_candles.first.close.toStringAsFixed(_getCurrencyDecimals())}',
                         style: TextStyle(
                           fontSize: UIConstants.fontSizeSm,
                           fontWeight: UIConstants.fontWeightMedium,
@@ -3317,7 +3282,7 @@ class _TradingPageState extends State<TradingPage> {
                                   mainAxisAlignment: MainAxisAlignment.center,
                                   children: [
                                     Text(
-                                      _candles.first.close.toStringAsFixed(2),
+                                      _candles.first.close.toStringAsFixed(_getCurrencyDecimals()),
                                       style: TextStyle(
                                         fontSize: 28,
                                         fontWeight: FontWeight.bold,
@@ -5303,17 +5268,9 @@ class _TradingPageState extends State<TradingPage> {
 
         ScaffoldMessenger.of(context).showSnackBar(
           SnackBar(
-            content: Row(
-              children: [
-                Expanded(
-                  child: Text(
-                    '$side order submitted!\nRequest ID: $requestId',
-                  ),
-                ),
-              ],
-            ),
-            backgroundColor: UIConstants.colorAccept,
-            duration: Duration(seconds: 8),
+            content: Text('Order sent • $requestId'),
+            backgroundColor: UIConstants.colorCommand,
+            duration: Duration(seconds: 3),
           ),
         );
 
@@ -5326,18 +5283,12 @@ class _TradingPageState extends State<TradingPage> {
       } else {
         // Error
         final errorMessage = result['output']?['error'] ?? 'Unknown error occurred';
-        ScaffoldMessenger.of(context).showSnackBar(
-          UIConstants.errorSnackBar('Order failed: $errorMessage', duration: const Duration(seconds: 7)),
-        );
+        _showOrderErrorDialog('Order failed', errorMessage);
       }
     } catch (e) {
       // Hide loading indicator
       ScaffoldMessenger.of(context).hideCurrentSnackBar();
-
-      // Show error
-      ScaffoldMessenger.of(context).showSnackBar(
-        UIConstants.errorSnackBar('Order failed: $e', duration: const Duration(seconds: 7)),
-      );
+      _showOrderErrorDialog('Order failed', e.toString());
     } catch (e, stackTrace) {
       // Global catch block to prevent app crashes
       print('❌ Critical error in _placeOrder: $e');
@@ -5345,12 +5296,90 @@ class _TradingPageState extends State<TradingPage> {
 
       // Hide any loading indicators
       ScaffoldMessenger.of(context).hideCurrentSnackBar();
-
-      // Show error to user
-      ScaffoldMessenger.of(context).showSnackBar(
-        UIConstants.errorSnackBar('An unexpected error occurred: $e', duration: const Duration(seconds: 7)),
-      );
+      _showOrderErrorDialog('Unexpected error', e.toString());
     }
+  }
+
+  void _showOrderErrorDialog(String title, String errorMessage) {
+    final themeService = Provider.of<ThemeService>(context, listen: false);
+    final isDark = themeService.isDarkTheme;
+
+    showDialog(
+      context: context,
+      builder: (context) => Dialog(
+        backgroundColor: UIConstants.dialogBackground(isDark),
+        shape: UIConstants.dialogShape(isDark) as RoundedRectangleBorder,
+        child: Container(
+          width: 450,
+          padding: UIConstants.paddingComfortable,
+          child: Column(
+            mainAxisSize: MainAxisSize.min,
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              Row(
+                children: [
+                  Icon(Icons.error_outline, color: UIConstants.colorReject, size: 24),
+                  const SizedBox(width: UIConstants.spacingSm),
+                  Expanded(
+                    child: Text(
+                      title,
+                      style: TextStyle(
+                        color: UIConstants.textPrimary(isDark),
+                        fontSize: UIConstants.fontSizeMd,
+                        fontWeight: UIConstants.fontWeightMedium,
+                      ),
+                    ),
+                  ),
+                  IconButton(
+                    icon: Icon(Icons.close, color: UIConstants.textSecondary(isDark), size: 18),
+                    onPressed: () => Navigator.of(context).pop(),
+                  ),
+                ],
+              ),
+              const SizedBox(height: UIConstants.spacingMd),
+              Container(
+                width: double.infinity,
+                padding: UIConstants.paddingStandard,
+                decoration: BoxDecoration(
+                  color: UIConstants.dialogSurface(isDark),
+                  borderRadius: BorderRadius.circular(UIConstants.borderRadiusMd),
+                ),
+                child: SelectableText(
+                  errorMessage,
+                  style: TextStyle(
+                    color: UIConstants.colorReject,
+                    fontSize: UIConstants.fontSizeSm,
+                    height: 1.4,
+                  ),
+                ),
+              ),
+              const SizedBox(height: UIConstants.spacingLg),
+              Row(
+                mainAxisAlignment: MainAxisAlignment.end,
+                children: [
+                  TextButton.icon(
+                    onPressed: () {
+                      Clipboard.setData(ClipboardData(text: errorMessage));
+                      ScaffoldMessenger.of(context).showSnackBar(
+                        const SnackBar(content: Text('Copied to clipboard'), duration: Duration(seconds: 2)),
+                      );
+                    },
+                    icon: Icon(Icons.copy, size: 14, color: UIConstants.textSecondary(isDark)),
+                    label: Text('Copy', style: TextStyle(color: UIConstants.textSecondary(isDark), fontSize: UIConstants.fontSizeSm)),
+                  ),
+                  const SizedBox(width: UIConstants.spacingSm),
+                  ElevatedButton(
+                    onPressed: () => Navigator.of(context).pop(),
+                    style: UIConstants.buttonStyle(UIConstants.colorCommand),
+                    child: const Text('OK'),
+                  ),
+                ],
+              ),
+            ],
+          ),
+        ),
+      ),
+    );
   }
 
   Widget _buildTradeOrdersTabs(bool isDarkTheme) {
@@ -5843,18 +5872,35 @@ class _TradingPageState extends State<TradingPage> {
             children: [
               SizedBox(
                 width: 80,
-                child: Text(
-                  'Fee',
-                  style: TextStyle(
-                    fontSize: UIConstants.textFieldFontSize,
-                    color: UIConstants.textSecondary(isDarkTheme),
-                  ),
+                child: Row(
+                  children: [
+                    Text(
+                      'Fee',
+                      style: TextStyle(
+                        fontSize: UIConstants.textFieldFontSize,
+                        color: UIConstants.textSecondary(isDarkTheme),
+                      ),
+                    ),
+                    if (_isLoadingFee) ...[
+                      const SizedBox(width: 4),
+                      SizedBox(
+                        width: 10,
+                        height: 10,
+                        child: CircularProgressIndicator(
+                          strokeWidth: 1.5,
+                          valueColor: AlwaysStoppedAnimation<Color>(
+                            UIConstants.textSecondary(isDarkTheme),
+                          ),
+                        ),
+                      ),
+                    ],
+                  ],
                 ),
               ),
               Expanded(
                 child: _HoverInputField(
                   controller: _feeController,
-                  hintText: '1.52',
+                  hintText: 'Auto (1%)',
                   isDarkTheme: isDarkTheme,
                   suffixWidget: Container(
                     padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 6),
