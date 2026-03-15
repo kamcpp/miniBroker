@@ -1,6 +1,5 @@
 import 'dart:convert';
 import 'dart:io';
-import 'dart:ui';
 import 'package:csv/csv.dart';
 import 'package:excel/excel.dart' as xl;
 import 'package:file_picker/file_picker.dart';
@@ -16,6 +15,7 @@ import '../../services/user_sync_service.dart';
 import '../../utils/menu_items_helper.dart';
 import '../../config/ui_constants.dart';
 import '../../widgets/base_page.dart';
+import '../../widgets/styled_data_table.dart';
 import '../../services/page_state_service.dart';
 
 class InvestorsPage extends StatefulWidget {
@@ -26,10 +26,6 @@ class InvestorsPage extends StatefulWidget {
 }
 
 class _InvestorsPageState extends State<InvestorsPage> {
-  // Scroll controllers
-  final _verticalScrollController = ScrollController();
-  final _horizontalScrollController = ScrollController();
-
   // Data
   List<Map<String, dynamic>> _users = [];
   List<Map<String, dynamic>> _filteredUsers = [];
@@ -108,8 +104,6 @@ class _InvestorsPageState extends State<InvestorsPage> {
   void dispose() {
     _saveState();
     _searchController.dispose();
-    _verticalScrollController.dispose();
-    _horizontalScrollController.dispose();
     super.dispose();
   }
 
@@ -825,71 +819,19 @@ class _InvestorsPageState extends State<InvestorsPage> {
       );
     }
 
-    return Column(
-      children: [
-        Expanded(
-          child: Scrollbar(
-            controller: _verticalScrollController,
-            thumbVisibility: true,
-            child: Scrollbar(
-              controller: _horizontalScrollController,
-              thumbVisibility: true,
-              notificationPredicate: (notification) => notification.depth == 1,
-              child: SingleChildScrollView(
-                controller: _verticalScrollController,
-                child: ScrollConfiguration(
-                  behavior: ScrollConfiguration.of(context).copyWith(
-                    dragDevices: {
-                      PointerDeviceKind.touch,
-                      PointerDeviceKind.mouse,
-                      PointerDeviceKind.trackpad,
-                    },
-                  ),
-                  child: LayoutBuilder(
-                    builder: (context, constraints) {
-                      return SingleChildScrollView(
-                        controller: _horizontalScrollController,
-                        scrollDirection: Axis.horizontal,
-                        child: ConstrainedBox(
-                          constraints: BoxConstraints(minWidth: constraints.maxWidth),
-                          child: _buildUsersTable(isDarkTheme),
-                        ),
-                      );
-                    },
-                  ),
-                ),
-              ),
-            ),
-          ),
-        ),
-        SizedBox(height: UIConstants.spacingMd),
-        _buildPaginationControls(isDarkTheme),
-      ],
-    );
+    return _buildUsersTable(isDarkTheme);
   }
 
   Widget _buildUsersTable(bool isDarkTheme) {
-    final headerColor = UIConstants.textSecondary(isDarkTheme);
-    final headerStyle = TextStyle(color: headerColor, fontSize: 10, fontWeight: FontWeight.bold);
-
-    return DataTable(
-      columnSpacing: UIConstants.spacingLg,
-      headingRowHeight: 32,
-      dataRowMinHeight: 28,
-      dataRowMaxHeight: 36,
-      showCheckboxColumn: false,
-      headingRowColor: WidgetStatePropertyAll(UIConstants.tableHeaderBackground(isDarkTheme)),
-      decoration: BoxDecoration(
-        border: Border.all(color: UIConstants.borderColor(isDarkTheme)),
-        borderRadius: BorderRadius.circular(4),
-      ),
+    return StyledDataTable(
+      isDarkTheme: isDarkTheme,
       columns: [
-        DataColumn(label: Text('ID', style: headerStyle)),
-        DataColumn(label: Text('Username', style: headerStyle)),
-        DataColumn(label: Text('Server Status', style: headerStyle)),
-        DataColumn(label: Text('Created At', style: headerStyle)),
-        DataColumn(label: Text('Last Login', style: headerStyle)),
-        DataColumn(label: Text('Actions', style: headerStyle)),
+        StyledColumn(label: 'ID', flex: 1),
+        StyledColumn(label: 'Username', flex: 2),
+        StyledColumn(label: 'Server Status', flex: 1),
+        StyledColumn(label: 'Created At', flex: 2),
+        StyledColumn(label: 'Last Login', flex: 2),
+        StyledColumn(label: 'Actions', flex: 1),
       ],
       rows: _filteredUsers.asMap().entries.map((entry) {
         final idx = entry.key;
@@ -900,21 +842,17 @@ class _InvestorsPageState extends State<InvestorsPage> {
         final createdAt = _formatDate(_parseUnixTimestamp(user['created_at']));
         final lastLogin = _formatDate(_parseUnixTimestamp(user['last_login']));
 
-        return DataRow(
-          selected: _selectedRowIndex == idx,
-          onSelectChanged: (_) {
+        return StyledRow(
+          onTap: () {
             setState(() => _selectedRowIndex = _selectedRowIndex == idx ? null : idx);
           },
-          color: WidgetStatePropertyAll(
-            idx % 2 == 0 ? UIConstants.tableRowEven(isDarkTheme) : UIConstants.tableRowOdd(isDarkTheme),
-          ),
+          selected: _selectedRowIndex == idx,
           cells: [
-          _copyableCell(id, isDarkTheme),
-          _copyableCell(username, isDarkTheme),
-          _serverStatusCell(onServer, isDarkTheme),
-          _copyableCell(createdAt, isDarkTheme, noTruncate: true),
-          _copyableCell(lastLogin, isDarkTheme, noTruncate: true),
-          DataCell(
+            _copyableCell(id, isDarkTheme),
+            _copyableCell(username, isDarkTheme),
+            _serverStatusCell(onServer, isDarkTheme),
+            _copyableCell(createdAt, isDarkTheme, noTruncate: true),
+            _copyableCell(lastLogin, isDarkTheme, noTruncate: true),
             Row(
               mainAxisSize: MainAxisSize.min,
               children: [
@@ -943,9 +881,13 @@ class _InvestorsPageState extends State<InvestorsPage> {
                 ),
               ],
             ),
-          ),
-        ]);
+          ],
+        );
       }).toList(),
+      rowsPerPage: _pageSize,
+      currentPage: _currentPage,
+      totalPages: _totalPages,
+      onPageChanged: _goToPage,
     );
   }
 
@@ -958,135 +900,61 @@ class _InvestorsPageState extends State<InvestorsPage> {
     return '${value.substring(0, keep)}...${value.substring(value.length - keep)}';
   }
 
-  DataCell _copyableCell(String value, bool isDarkTheme, {double maxWidth = _defaultMaxCellWidth, bool noTruncate = false}) {
+  Widget _copyableCell(String value, bool isDarkTheme, {double maxWidth = _defaultMaxCellWidth, bool noTruncate = false}) {
     final display = noTruncate ? value : _truncate(value);
     final needsTooltip = display != value;
     final child = ConstrainedBox(
       constraints: BoxConstraints(maxWidth: maxWidth),
       child: Text(
         display,
-        style: TextStyle(
-          color: UIConstants.textPrimary(isDarkTheme),
-          fontSize: UIConstants.fontSizeSm,
-        ),
+        style: StyledDataTable.cellStyle(isDarkTheme),
         overflow: TextOverflow.ellipsis,
       ),
     );
 
-    return DataCell(
-      Tooltip(
-        message: needsTooltip ? value : '',
-        waitDuration: const Duration(milliseconds: 300),
-        child: InkWell(
-          onTap: () => _copyToClipboard(value),
-          child: child,
-        ),
+    return Tooltip(
+      message: needsTooltip ? value : '',
+      waitDuration: const Duration(milliseconds: 300),
+      child: InkWell(
+        onTap: () => _copyToClipboard(value),
+        child: child,
       ),
     );
   }
 
-  DataCell _serverStatusCell(bool onServer, bool isDarkTheme) {
+  Widget _serverStatusCell(bool onServer, bool isDarkTheme) {
     final color = onServer ? Colors.blue : Colors.grey;
     final label = onServer ? 'On Server' : 'Local Only';
     final icon = onServer ? Icons.cloud_done : Icons.cloud_off;
 
-    return DataCell(
-      Tooltip(
-        message: label,
-        waitDuration: const Duration(milliseconds: 300),
-        child: InkWell(
-          onTap: () => _copyToClipboard(label),
-          child: Container(
-            padding: const EdgeInsets.symmetric(horizontal: 6, vertical: 2),
-            decoration: BoxDecoration(
-              color: color.withValues(alpha: 0.2),
-              borderRadius: BorderRadius.circular(4),
-              border: Border.all(color: color, width: 0.5),
-            ),
-            child: Row(
-              mainAxisSize: MainAxisSize.min,
-              children: [
-                Icon(icon, color: color, size: 12),
-                const SizedBox(width: 4),
-                Text(
-                  label,
-                  style: TextStyle(color: color, fontSize: 10, fontWeight: FontWeight.w600),
-                ),
-              ],
-            ),
+    return Tooltip(
+      message: label,
+      waitDuration: const Duration(milliseconds: 300),
+      child: InkWell(
+        onTap: () => _copyToClipboard(label),
+        child: Container(
+          padding: const EdgeInsets.symmetric(horizontal: 6, vertical: 2),
+          decoration: BoxDecoration(
+            color: color.withValues(alpha: 0.2),
+            borderRadius: BorderRadius.circular(4),
+            border: Border.all(color: color, width: 0.5),
+          ),
+          child: Row(
+            mainAxisSize: MainAxisSize.min,
+            children: [
+              Icon(icon, color: color, size: 12),
+              const SizedBox(width: 4),
+              Text(
+                label,
+                style: TextStyle(color: color, fontSize: 10, fontWeight: FontWeight.w600),
+              ),
+            ],
           ),
         ),
       ),
     );
   }
 
-  Widget _buildPaginationControls(bool isDarkTheme) {
-    final textColor = UIConstants.textPrimary(isDarkTheme);
-
-    return Row(
-      mainAxisAlignment: MainAxisAlignment.center,
-      children: [
-        IconButton(
-          icon: Icon(Icons.first_page, color: textColor, size: 20),
-          onPressed: _currentPage > 1 ? () => _goToPage(1) : null,
-        ),
-        IconButton(
-          icon: Icon(Icons.chevron_left, color: textColor, size: 20),
-          onPressed: _currentPage > 1 ? () => _goToPage(_currentPage - 1) : null,
-        ),
-        Text(
-          'Page $_currentPage of $_totalPages',
-          style: TextStyle(color: textColor, fontSize: UIConstants.fontSizeSm),
-        ),
-        IconButton(
-          icon: Icon(Icons.chevron_right, color: textColor, size: 20),
-          onPressed: _currentPage < _totalPages ? () => _goToPage(_currentPage + 1) : null,
-        ),
-        IconButton(
-          icon: Icon(Icons.last_page, color: textColor, size: 20),
-          onPressed: _currentPage < _totalPages ? () => _goToPage(_totalPages) : null,
-        ),
-        SizedBox(width: UIConstants.spacingMd),
-        SizedBox(
-          width: 80,
-          height: UIConstants.buttonHeightStandard,
-          child: DropdownButtonFormField<int>(
-            value: _pageSize,
-            isDense: true,
-            isExpanded: true,
-            decoration: InputDecoration(
-              border: OutlineInputBorder(
-                borderRadius: BorderRadius.circular(UIConstants.textFieldBorderRadius),
-              ),
-              contentPadding: UIConstants.textFieldContentPadding,
-              isDense: true,
-            ),
-            style: TextStyle(color: textColor, fontSize: UIConstants.fontSizeSm),
-            dropdownColor: UIConstants.dropdownBackground(isDarkTheme),
-            items: [10, 20, 50, 100]
-                .map((size) => DropdownMenuItem(
-                      value: size,
-                      child: Text('$size', style: TextStyle(color: textColor, fontSize: UIConstants.fontSizeSm)),
-                    ))
-                .toList(),
-            onChanged: (value) {
-              if (value != null) {
-                setState(() {
-                  _pageSize = value;
-                  _currentPage = 1;
-                  _applyLocalFilters();
-                });
-              }
-            },
-          ),
-        ),
-        Text(
-          ' / page',
-          style: TextStyle(color: UIConstants.textSecondary(isDarkTheme), fontSize: UIConstants.fontSizeSm),
-        ),
-      ],
-    );
-  }
 }
 
 /// Dialog that fetches and displays investor info from prtagent

@@ -2172,11 +2172,27 @@ class _TradingPageState extends State<TradingPage> {
       }
     } catch (e) {
       print('❌ Error loading chart data: $e');
-      setState(() {
-        _chartError = 'Failed to load chart data: $e';
-        _isLoadingChart = false;
-      });
+      if (mounted) {
+        setState(() {
+          _chartError = 'Failed to load chart data: $e';
+          _isLoadingChart = false;
+        });
+        // Auto-retry after 10 seconds
+        _scheduleChartRetry(symbol);
+      }
     }
+  }
+
+  Timer? _chartRetryTimer;
+
+  void _scheduleChartRetry(String symbol) {
+    _chartRetryTimer?.cancel();
+    _chartRetryTimer = Timer(const Duration(seconds: 10), () {
+      if (mounted && _chartError.isNotEmpty && symbol == _selectedSymbol) {
+        print('🔄 Auto-retrying chart load for $symbol');
+        _loadChartData(symbol);
+      }
+    });
   }
 
   /// Start live OHLC data stream for real-time chart updates
@@ -2373,9 +2389,10 @@ class _TradingPageState extends State<TradingPage> {
       setState(() {
         _sellOrders = sellOrders;
         _currentSellOrdersPage = pageNumber;
-        // Estimate total pages
         if (sellOrders.length == _orderbookPageSize) {
-          _totalSellOrdersPages = pageNumber + 1;
+          if (_totalSellOrdersPages <= pageNumber) {
+            _totalSellOrdersPages = pageNumber + 1;
+          }
         } else {
           _totalSellOrdersPages = pageNumber;
         }
@@ -2512,9 +2529,10 @@ class _TradingPageState extends State<TradingPage> {
       setState(() {
         _buyOrders = buyOrders;
         _currentBuyOrdersPage = pageNumber;
-        // Estimate total pages
         if (buyOrders.length == _orderbookPageSize) {
-          _totalBuyOrdersPages = pageNumber + 1;
+          if (_totalBuyOrdersPages <= pageNumber) {
+            _totalBuyOrdersPages = pageNumber + 1;
+          }
         } else {
           _totalBuyOrdersPages = pageNumber;
         }
@@ -2697,6 +2715,7 @@ class _TradingPageState extends State<TradingPage> {
     _orderbookRefreshTimer?.cancel();
     _ordersRefreshTimer?.cancel();
     _tradeHistoryRefreshTimer?.cancel();
+    _chartRetryTimer?.cancel();
     _quantityController.dispose();
     _priceController.dispose();
     _orderIdController.dispose();
@@ -3334,9 +3353,24 @@ class _TradingPageState extends State<TradingPage> {
                         color: Colors.red.withOpacity(0.85),
                         borderRadius: BorderRadius.circular(4),
                       ),
-                      child: Text(
-                        _chartError,
-                        style: const TextStyle(color: Colors.white, fontSize: 11),
+                      child: Row(
+                        children: [
+                          Expanded(
+                            child: Text(
+                              '$_chartError (retrying...)',
+                              style: const TextStyle(color: Colors.white, fontSize: 11),
+                            ),
+                          ),
+                          const SizedBox(width: 4),
+                          SizedBox(
+                            width: 12,
+                            height: 12,
+                            child: CircularProgressIndicator(
+                              strokeWidth: 1.5,
+                              valueColor: AlwaysStoppedAnimation<Color>(Colors.white70),
+                            ),
+                          ),
+                        ],
                       ),
                     ),
                   ),

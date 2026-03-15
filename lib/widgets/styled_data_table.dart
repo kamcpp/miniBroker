@@ -40,6 +40,11 @@ class StyledDataTable extends StatefulWidget {
   /// Current page (for server-side pagination, 1-based).
   final int? currentPage;
 
+  /// Minimum width per flex unit. When total columns * minColumnWidth exceeds
+  /// available width, horizontal scrolling is enabled automatically.
+  /// Default is 80.
+  final double minColumnWidth;
+
   const StyledDataTable({
     super.key,
     required this.isDarkTheme,
@@ -48,6 +53,7 @@ class StyledDataTable extends StatefulWidget {
     this.showCheckboxColumn = false,
     this.rowsPerPage = 20,
     this.onPageChanged,
+    this.minColumnWidth = 80,
     this.totalPages,
     this.currentPage,
   });
@@ -105,10 +111,34 @@ class _StyledDataTableState extends State<StyledDataTable> {
     }
   }
 
+  final _hScrollController = ScrollController();
+
   @override
   void dispose() {
     _scrollController.dispose();
+    _hScrollController.dispose();
     super.dispose();
+  }
+
+  /// Calculate the minimum total width needed based on column flex and minColumnWidth.
+  double _calcMinWidth() {
+    int totalFlex = 0;
+    for (final col in widget.columns) {
+      totalFlex += col.flex;
+    }
+    return totalFlex * widget.minColumnWidth + 32; // 32 for horizontal padding
+  }
+
+  Widget _buildRow(List<Widget> cells, {bool isHeader = false}) {
+    return Row(
+      children: List.generate(
+        cells.length,
+        (i) => Expanded(
+          flex: i < widget.columns.length ? widget.columns[i].flex : 1,
+          child: Center(child: cells[i]),
+        ),
+      ),
+    );
   }
 
   @override
@@ -121,73 +151,85 @@ class _StyledDataTableState extends State<StyledDataTable> {
     return Column(
       children: [
         Expanded(
-          child: Container(
-            decoration: BoxDecoration(
-              color: bgColor,
-              border: Border.all(color: borderColor),
-              borderRadius: BorderRadius.circular(4),
-            ),
-            clipBehavior: Clip.antiAlias,
-            child: Column(
-              children: [
-                // Fixed header
-                Container(
-                  color: UIConstants.tableHeaderBackground(isDark),
-                  padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 4),
-                  child: Row(
-                    children: widget.columns.map((col) {
-                      return Expanded(
-                        flex: col.flex,
-                        child: Text(
+          child: LayoutBuilder(
+            builder: (context, constraints) {
+              final minWidth = _calcMinWidth();
+              final needsHScroll = minWidth > constraints.maxWidth;
+              final contentWidth = needsHScroll ? minWidth : constraints.maxWidth;
+
+              Widget tableContent = Container(
+                width: contentWidth,
+                decoration: BoxDecoration(
+                  color: bgColor,
+                  border: Border.all(color: borderColor),
+                  borderRadius: BorderRadius.circular(4),
+                ),
+                clipBehavior: Clip.antiAlias,
+                child: Column(
+                  children: [
+                    // Fixed header
+                    Container(
+                      color: UIConstants.tableHeaderBackground(isDark),
+                      padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 4),
+                      child: _buildRow(
+                        widget.columns.map((col) => Text(
                           col.label,
                           style: StyledDataTable.headerStyle(isDark),
                           overflow: TextOverflow.ellipsis,
-                        ),
-                      );
-                    }).toList(),
-                  ),
-                ),
-                Divider(height: 1, thickness: 1, color: borderColor),
-                // Scrollable body
-                Expanded(
-                  child: pagedRows.isEmpty
-                      ? const SizedBox.expand()
-                      : Scrollbar(
-                          controller: _scrollController,
-                          thumbVisibility: true,
-                          child: ListView.builder(
-                            controller: _scrollController,
-                            itemCount: pagedRows.length,
-                            itemBuilder: (context, index) {
-                              final row = pagedRows[index];
-                              final rowBg = index % 2 == 0
-                                  ? UIConstants.tableRowEven(isDark)
-                                  : UIConstants.tableRowOdd(isDark);
-                              return InkWell(
-                                onTap: row.onTap,
-                                child: Container(
-                                  color: rowBg,
-                                  padding: const EdgeInsets.symmetric(
-                                      horizontal: 16, vertical: 3),
-                                  child: Row(
-                                    children: List.generate(
-                                      row.cells.length,
-                                      (i) => Expanded(
-                                        flex: i < widget.columns.length
-                                            ? widget.columns[i].flex
-                                            : 1,
-                                        child: row.cells[i],
-                                      ),
+                        )).toList().cast<Widget>(),
+                      ),
+                    ),
+                    Divider(height: 1, thickness: 1, color: borderColor),
+                    // Scrollable body
+                    Expanded(
+                      child: pagedRows.isEmpty
+                          ? const SizedBox.expand()
+                          : Scrollbar(
+                              controller: _scrollController,
+                              thumbVisibility: true,
+                              thickness: 8,
+                              radius: const Radius.circular(4),
+                              child: ListView.builder(
+                                controller: _scrollController,
+                                physics: const AlwaysScrollableScrollPhysics(),
+                                itemCount: pagedRows.length,
+                                itemBuilder: (context, index) {
+                                  final row = pagedRows[index];
+                                  final rowBg = index % 2 == 0
+                                      ? UIConstants.tableRowEven(isDark)
+                                      : UIConstants.tableRowOdd(isDark);
+                                  return InkWell(
+                                    onTap: row.onTap,
+                                    child: Container(
+                                      color: rowBg,
+                                      padding: const EdgeInsets.symmetric(
+                                          horizontal: 16, vertical: 3),
+                                      child: _buildRow(row.cells),
                                     ),
-                                  ),
-                                ),
-                              );
-                            },
+                                  );
+                                },
                           ),
                         ),
                 ),
               ],
             ),
+          );
+
+              if (needsHScroll) {
+                return Scrollbar(
+                  controller: _hScrollController,
+                  thumbVisibility: true,
+                  notificationPredicate: (n) => n.depth == 0,
+                  child: SingleChildScrollView(
+                    controller: _hScrollController,
+                    scrollDirection: Axis.horizontal,
+                    child: tableContent,
+                  ),
+                );
+              }
+
+              return tableContent;
+            },
           ),
         ),
         if (_needsPagination) _buildPaginationControls(),

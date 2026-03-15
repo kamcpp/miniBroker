@@ -1,6 +1,5 @@
 import 'dart:convert';
 import 'dart:io';
-import 'dart:ui';
 import 'package:csv/csv.dart';
 import 'package:excel/excel.dart' as xl;
 import 'package:file_picker/file_picker.dart';
@@ -15,6 +14,7 @@ import '../../utils/menu_items_helper.dart';
 import '../../config/app_config.dart';
 import '../../config/ui_constants.dart';
 import '../../widgets/base_page.dart';
+import '../../widgets/styled_data_table.dart';
 import '../../generated/prtagent/v1/reporting.pbgrpc.dart';
 import '../../generated/common.pb.dart' as common_pb;
 import '../../services/page_state_service.dart';
@@ -27,10 +27,6 @@ class AgoraEventsPage extends StatefulWidget {
 }
 
 class _AgoraEventsPageState extends State<AgoraEventsPage> {
-  // Scroll controllers
-  final _verticalScrollController = ScrollController();
-  final _horizontalScrollController = ScrollController();
-
   // Data
   List<Map<String, dynamic>> _events = [];
   int _totalCount = 0;
@@ -94,8 +90,6 @@ class _AgoraEventsPageState extends State<AgoraEventsPage> {
     _orderIdController.dispose();
     _tradeIdController.dispose();
     _deploymentIidController.dispose();
-    _verticalScrollController.dispose();
-    _horizontalScrollController.dispose();
     super.dispose();
   }
 
@@ -733,93 +727,37 @@ class _AgoraEventsPageState extends State<AgoraEventsPage> {
       );
     }
 
-    return Column(
-      children: [
-        Expanded(
-          child: Scrollbar(
-            controller: _verticalScrollController,
-            thumbVisibility: true,
-            child: Scrollbar(
-              controller: _horizontalScrollController,
-              thumbVisibility: true,
-              notificationPredicate: (notification) => notification.depth == 1,
-              child: SingleChildScrollView(
-                controller: _verticalScrollController,
-                child: ScrollConfiguration(
-                  behavior: ScrollConfiguration.of(context).copyWith(
-                    dragDevices: {
-                      PointerDeviceKind.touch,
-                      PointerDeviceKind.mouse,
-                      PointerDeviceKind.trackpad,
-                    },
-                  ),
-                  child: LayoutBuilder(
-                    builder: (context, constraints) {
-                      return SingleChildScrollView(
-                        controller: _horizontalScrollController,
-                        scrollDirection: Axis.horizontal,
-                        child: ConstrainedBox(
-                          constraints: BoxConstraints(minWidth: constraints.maxWidth),
-                          child: _buildEventsTable(isDarkTheme),
-                        ),
-                      );
-                    },
-                  ),
-                ),
-              ),
-            ),
-          ),
-        ),
-        SizedBox(height: UIConstants.spacingMd),
-        _buildPaginationControls(isDarkTheme),
-      ],
-    );
+    return _buildEventsTable(isDarkTheme);
   }
 
   Widget _buildEventsTable(bool isDarkTheme) {
-    final headerColor = UIConstants.textSecondary(isDarkTheme);
-    final headerStyle = TextStyle(color: headerColor, fontSize: 10, fontWeight: FontWeight.bold);
-
-    return DataTable(
-      columnSpacing: UIConstants.spacingLg,
-      headingRowHeight: 32,
-      dataRowMinHeight: 28,
-      dataRowMaxHeight: 36,
-      showCheckboxColumn: false,
-      headingRowColor: WidgetStatePropertyAll(UIConstants.tableHeaderBackground(isDarkTheme)),
-      decoration: BoxDecoration(
-        border: Border.all(color: UIConstants.borderColor(isDarkTheme)),
-        borderRadius: BorderRadius.circular(4),
-      ),
-      columns: [
-        DataColumn(label: Text('Event ID', style: headerStyle)),
-        DataColumn(label: Text('Event Hash', style: headerStyle)),
-        DataColumn(label: Text('Event Type', style: headerStyle)),
-        DataColumn(label: Text('Pair ID', style: headerStyle)),
-        DataColumn(label: Text('Order ID', style: headerStyle)),
-        DataColumn(label: Text('Other Order ID', style: headerStyle)),
-        DataColumn(label: Text('Trade ID', style: headerStyle)),
-        DataColumn(label: Text('Quantity', style: headerStyle)),
-        DataColumn(label: Text('Error Code', style: headerStyle)),
-        DataColumn(label: Text('Reason', style: headerStyle)),
-        DataColumn(label: Text('Quote Balance', style: headerStyle)),
-        DataColumn(label: Text('Engine Addr', style: headerStyle)),
-        DataColumn(label: Text('Deployment IID', style: headerStyle)),
-        DataColumn(label: Text('Timestamp', style: headerStyle)),
-        DataColumn(label: Text('Created At', style: headerStyle)),
-        DataColumn(label: Text('Data', style: headerStyle)),
+    return StyledDataTable(
+      isDarkTheme: isDarkTheme,
+      columns: const [
+        StyledColumn(label: 'Event ID', flex: 1),
+        StyledColumn(label: 'Event Hash', flex: 1),
+        StyledColumn(label: 'Event Type', flex: 1),
+        StyledColumn(label: 'Pair ID', flex: 1),
+        StyledColumn(label: 'Order ID', flex: 1),
+        StyledColumn(label: 'Other Order ID', flex: 1),
+        StyledColumn(label: 'Trade ID', flex: 1),
+        StyledColumn(label: 'Quantity', flex: 1),
+        StyledColumn(label: 'Error Code', flex: 1),
+        StyledColumn(label: 'Reason', flex: 1),
+        StyledColumn(label: 'Quote Balance', flex: 1),
+        StyledColumn(label: 'Engine Addr', flex: 1),
+        StyledColumn(label: 'Deployment IID', flex: 1),
+        StyledColumn(label: 'Timestamp', flex: 1),
+        StyledColumn(label: 'Created At', flex: 1),
+        StyledColumn(label: 'Data', flex: 1),
       ],
       rows: _events.asMap().entries.map((entry) {
         final idx = entry.key;
         final event = entry.value;
-        return DataRow(
-          selected: _selectedRowIndex == idx,
-          onSelectChanged: (_) {
+        return StyledRow(
+          onTap: () {
             setState(() => _selectedRowIndex = _selectedRowIndex == idx ? null : idx);
           },
-          color: WidgetStatePropertyAll(
-            idx % 2 == 0 ? UIConstants.tableRowEven(isDarkTheme) : UIConstants.tableRowOdd(isDarkTheme),
-          ),
           cells: [
             _copyableCell(_str(event, 'eventId'), isDarkTheme),
             _copyableCell(_str(event, 'eventHash'), isDarkTheme),
@@ -840,6 +778,10 @@ class _AgoraEventsPageState extends State<AgoraEventsPage> {
           ],
         );
       }).toList(),
+      rowsPerPage: _pageSize,
+      onPageChanged: _goToPage,
+      currentPage: _currentPage,
+      totalPages: _totalPages,
     );
   }
 
@@ -868,7 +810,7 @@ class _AgoraEventsPageState extends State<AgoraEventsPage> {
     return '${value.substring(0, keep)}...${value.substring(value.length - keep)}';
   }
 
-  DataCell _copyableCell(String value, bool isDarkTheme, {double maxWidth = _defaultMaxCellWidth, Color? textColor, bool noTruncate = false}) {
+  Widget _copyableCell(String value, bool isDarkTheme, {double maxWidth = _defaultMaxCellWidth, Color? textColor, bool noTruncate = false}) {
     final display = noTruncate ? value : _truncate(value);
     final needsTooltip = display != value;
     final child = ConstrainedBox(
@@ -884,19 +826,17 @@ class _AgoraEventsPageState extends State<AgoraEventsPage> {
       ),
     );
 
-    return DataCell(
-      Tooltip(
-        message: needsTooltip ? value : '',
-        waitDuration: const Duration(milliseconds: 300),
-        child: InkWell(
-          onTap: () => _copyToClipboard(value),
-          child: child,
-        ),
+    return Tooltip(
+      message: needsTooltip ? value : '',
+      waitDuration: const Duration(milliseconds: 300),
+      child: InkWell(
+        onTap: () => _copyToClipboard(value),
+        child: child,
       ),
     );
   }
 
-  DataCell _copyableTextCell(String value, bool isDarkTheme) {
+  Widget _copyableTextCell(String value, bool isDarkTheme) {
     return _copyableCell(value, isDarkTheme, maxWidth: _wideMaxCellWidth);
   }
 
@@ -915,7 +855,7 @@ class _AgoraEventsPageState extends State<AgoraEventsPage> {
     return Colors.amber.shade300; // default
   }
 
-  DataCell _eventTypeCell(String numericValue, String typeName, bool isDarkTheme) {
+  Widget _eventTypeCell(String numericValue, String typeName, bool isDarkTheme) {
     final display = typeName.isNotEmpty && typeName != '-' ? typeName : numericValue;
     final color = _eventTypeColor(display);
     final child = ConstrainedBox(
@@ -939,88 +879,19 @@ class _AgoraEventsPageState extends State<AgoraEventsPage> {
       ),
     );
 
-    return DataCell(
-      Tooltip(
-        message: numericValue,
-        waitDuration: const Duration(milliseconds: 300),
-        child: InkWell(
-          onTap: () => _copyToClipboard(numericValue),
-          child: child,
-        ),
+    return Tooltip(
+      message: numericValue,
+      waitDuration: const Duration(milliseconds: 300),
+      child: InkWell(
+        onTap: () => _copyToClipboard(numericValue),
+        child: child,
       ),
     );
   }
 
-  DataCell _errorCodeCell(String value, bool isDarkTheme) {
+  Widget _errorCodeCell(String value, bool isDarkTheme) {
     if (value == '-' || value == '0') return _copyableCell(value, isDarkTheme);
     return _copyableCell(value, isDarkTheme, textColor: Colors.red);
   }
 
-  Widget _buildPaginationControls(bool isDarkTheme) {
-    final textColor = UIConstants.textPrimary(isDarkTheme);
-
-    return Row(
-      mainAxisAlignment: MainAxisAlignment.center,
-      children: [
-        IconButton(
-          icon: Icon(Icons.first_page, color: textColor, size: 20),
-          onPressed: _currentPage > 1 ? () => _goToPage(1) : null,
-        ),
-        IconButton(
-          icon: Icon(Icons.chevron_left, color: textColor, size: 20),
-          onPressed: _currentPage > 1 ? () => _goToPage(_currentPage - 1) : null,
-        ),
-        Text(
-          'Page $_currentPage of $_totalPages',
-          style: TextStyle(color: textColor, fontSize: UIConstants.fontSizeSm),
-        ),
-        IconButton(
-          icon: Icon(Icons.chevron_right, color: textColor, size: 20),
-          onPressed: _currentPage < _totalPages ? () => _goToPage(_currentPage + 1) : null,
-        ),
-        IconButton(
-          icon: Icon(Icons.last_page, color: textColor, size: 20),
-          onPressed: _currentPage < _totalPages ? () => _goToPage(_totalPages) : null,
-        ),
-        SizedBox(width: UIConstants.spacingMd),
-        SizedBox(
-          width: 80,
-          height: UIConstants.buttonHeightStandard * 0.7,
-          child: DropdownButtonFormField<int>(
-            value: _pageSize,
-            isDense: true,
-            isExpanded: true,
-            decoration: InputDecoration(
-              border: OutlineInputBorder(
-                borderRadius: BorderRadius.circular(UIConstants.textFieldBorderRadius),
-              ),
-              contentPadding: UIConstants.textFieldContentPadding,
-              isDense: true,
-            ),
-            style: TextStyle(color: textColor, fontSize: UIConstants.fontSizeSm),
-            dropdownColor: UIConstants.dropdownBackground(isDarkTheme),
-            items: [10, 20, 50, 100]
-                .map((size) => DropdownMenuItem(
-                      value: size,
-                      child: Text('$size', style: TextStyle(color: textColor, fontSize: UIConstants.fontSizeSm)),
-                    ))
-                .toList(),
-            onChanged: (value) {
-              if (value != null) {
-                setState(() {
-                  _pageSize = value;
-                  _currentPage = 1;
-                });
-                _fetchEvents();
-              }
-            },
-          ),
-        ),
-        Text(
-          ' / page',
-          style: TextStyle(color: UIConstants.textSecondary(isDarkTheme), fontSize: UIConstants.fontSizeSm),
-        ),
-      ],
-    );
-  }
 }

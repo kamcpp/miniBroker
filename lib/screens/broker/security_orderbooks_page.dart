@@ -8,6 +8,7 @@ import '../../services/real_grpc_client.dart';
 import '../../services/grpcurl_helper.dart';
 import '../../utils/menu_items_helper.dart';
 import '../../widgets/base_page.dart';
+import '../../widgets/styled_data_table.dart';
 import '../../services/page_state_service.dart';
 
 class SecurityOrderbooksPage extends StatefulWidget {
@@ -440,7 +441,15 @@ class _SecurityOrderbooksPageState extends State<SecurityOrderbooksPage> {
         setState(() {
           _sellOrders = sellOrders;
           _currentSellOrdersPage = pageNumber;
-          _totalSellOrdersPages = sellOrders.length == _orderbookPageSize ? pageNumber + 1 : pageNumber;
+          if (sellOrders.length == _orderbookPageSize) {
+            // Full page: there might be more — ensure total is at least pageNumber + 1
+            if (_totalSellOrdersPages <= pageNumber) {
+              _totalSellOrdersPages = pageNumber + 1;
+            }
+          } else {
+            // Partial page: this is the last page
+            _totalSellOrdersPages = pageNumber;
+          }
           _isLoadingSellOrders = false;
         });
       }
@@ -494,7 +503,13 @@ class _SecurityOrderbooksPageState extends State<SecurityOrderbooksPage> {
         setState(() {
           _buyOrders = buyOrders;
           _currentBuyOrdersPage = pageNumber;
-          _totalBuyOrdersPages = buyOrders.length == _orderbookPageSize ? pageNumber + 1 : pageNumber;
+          if (buyOrders.length == _orderbookPageSize) {
+            if (_totalBuyOrdersPages <= pageNumber) {
+              _totalBuyOrdersPages = pageNumber + 1;
+            }
+          } else {
+            _totalBuyOrdersPages = pageNumber;
+          }
           _isLoadingBuyOrders = false;
         });
       }
@@ -1111,56 +1126,28 @@ class _SecurityOrderbooksPageState extends State<SecurityOrderbooksPage> {
             ),
           ),
           const SizedBox(height: UIConstants.spacingMd),
-          // Header
-          Row(
-            mainAxisAlignment: MainAxisAlignment.spaceBetween,
-            children: [
-              SizedBox(width: 75, child: Text('Price', style: TextStyle(color: Colors.grey[400], fontWeight: UIConstants.fontWeightMedium, fontSize: UIConstants.fontSizeSm), textAlign: TextAlign.left)),
-              SizedBox(width: 60, child: Text('Quantity', style: TextStyle(color: Colors.grey[400], fontWeight: UIConstants.fontWeightMedium, fontSize: UIConstants.fontSizeSm), textAlign: TextAlign.center)),
-              Expanded(child: Text('Time', style: TextStyle(color: Colors.grey[400], fontWeight: UIConstants.fontWeightMedium, fontSize: UIConstants.fontSizeSm), textAlign: TextAlign.right)),
-            ],
-          ),
-          const SizedBox(height: 2),
-          Divider(color: Colors.grey, thickness: 0.7, height: 1),
-          const SizedBox(height: UIConstants.spacingSm),
-          // Trade list
           Expanded(
             child: _isLoadingTradeHistory
                 ? const Center(child: CircularProgressIndicator())
                 : _tradeHistory.isEmpty
                     ? Center(child: Text('No trades', style: TextStyle(color: UIConstants.textSecondary(isDarkTheme), fontSize: UIConstants.textFieldFontSize)))
-                    : Column(
-                        children: [
-                          Expanded(
-                            child: ListView.builder(
-                              itemCount: _tradeHistory.length,
-                              itemBuilder: (context, index) {
-                                final trade = _tradeHistory[index];
-                                return Container(
-                                  margin: const EdgeInsets.only(bottom: 4),
-                                  padding: const EdgeInsets.symmetric(vertical: 4, horizontal: 4),
-                                  child: Row(
-                                    mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                                    children: [
-                                      SizedBox(
-                                        width: 75,
-                                        child: Text(trade['price'].toString(), style: TextStyle(color: UIConstants.textPrimary(isDarkTheme), fontWeight: UIConstants.fontWeightMedium, fontSize: UIConstants.fontSizeSm), textAlign: TextAlign.left),
-                                      ),
-                                      SizedBox(
-                                        width: 60,
-                                        child: Text(trade['quantity'].toString(), style: TextStyle(color: UIConstants.textPrimary(isDarkTheme), fontSize: UIConstants.fontSizeSm), textAlign: TextAlign.center),
-                                      ),
-                                      Expanded(
-                                        child: Text(trade['time'].toString(), style: TextStyle(color: Colors.grey, fontSize: UIConstants.fontSizeSm), textAlign: TextAlign.right),
-                                      ),
-                                    ],
-                                  ),
-                                );
-                              },
-                            ),
-                          ),
-                          _buildPaginationControls(_currentTradeHistoryPage, _totalTradeHistoryPages, _goToTradeHistoryPage),
+                    : StyledDataTable(
+                        isDarkTheme: isDarkTheme,
+                        columns: const [
+                          StyledColumn(label: 'Price', flex: 2),
+                          StyledColumn(label: 'Quantity', flex: 1),
+                          StyledColumn(label: 'Time', flex: 2),
                         ],
+                        rows: _tradeHistory.map((trade) {
+                          return StyledRow(cells: [
+                            Text(trade['price'].toString(), style: TextStyle(color: UIConstants.textPrimary(isDarkTheme), fontWeight: UIConstants.fontWeightMedium, fontSize: UIConstants.fontSizeSm)),
+                            Text(trade['quantity'].toString(), style: TextStyle(color: UIConstants.textPrimary(isDarkTheme), fontSize: UIConstants.fontSizeSm)),
+                            Text(trade['time'].toString(), style: TextStyle(color: Colors.grey, fontSize: UIConstants.fontSizeSm)),
+                          ]);
+                        }).toList(),
+                        onPageChanged: _goToTradeHistoryPage,
+                        currentPage: _currentTradeHistoryPage,
+                        totalPages: _totalTradeHistoryPages,
                       ),
           ),
         ],

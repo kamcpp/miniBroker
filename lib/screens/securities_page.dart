@@ -6,6 +6,7 @@ import '../config/ui_constants.dart';
 import '../utils/connectivity_checker.dart';
 import '../utils/menu_items_helper.dart';
 import '../widgets/base_page.dart';
+import '../widgets/styled_data_table.dart';
 
 class SecuritiesPage extends StatefulWidget {
   const SecuritiesPage({super.key});
@@ -395,118 +396,51 @@ class _SecuritiesPageState extends State<SecuritiesPage> {
       );
     }
 
-    final headerStyle = TextStyle(
-      fontSize: UIConstants.fontSizeSm,
-      fontWeight: UIConstants.fontWeightBold,
-      color: UIConstants.textSecondary(isDarkTheme),
-    );
-    final cellStyle = TextStyle(
-      fontSize: UIConstants.fontSizeBody,
-      color: UIConstants.textPrimary(isDarkTheme),
-    );
-    final symbolStyle = TextStyle(
-      fontSize: UIConstants.fontSizeBody,
-      fontWeight: UIConstants.fontWeightMedium,
-      color: UIConstants.textPrimary(isDarkTheme),
-    );
+    final cellStyle = StyledDataTable.cellStyle(isDarkTheme);
+    final symbolStyle = cellStyle.copyWith(fontWeight: UIConstants.fontWeightMedium);
 
-    final borderColor = UIConstants.borderColor(isDarkTheme);
+    final columns = [
+      const StyledColumn(label: 'Symbol', flex: 1),
+      const StyledColumn(label: 'Security ID', flex: 1),
+      const StyledColumn(label: 'Type', flex: 1),
+      const StyledColumn(label: 'Exchange', flex: 1),
+      const StyledColumn(label: 'Currency', flex: 1),
+      const StyledColumn(label: 'Tick', flex: 1),
+      const StyledColumn(label: 'Description', flex: 2),
+      const StyledColumn(label: 'Status', flex: 1),
+    ];
 
-    return SingleChildScrollView(
-      child: Table(
-        border: TableBorder(
-          horizontalInside: BorderSide(color: borderColor, width: UIConstants.dividerThickness),
-          bottom: BorderSide(color: borderColor, width: UIConstants.dividerThickness),
-          top: BorderSide(color: borderColor, width: UIConstants.dividerThickness),
-        ),
-        columnWidths: const {
-          0: FlexColumnWidth(1),   // Symbol
-          1: FlexColumnWidth(1),   // Security ID
-          2: FlexColumnWidth(0.8), // Type
-          3: FlexColumnWidth(1),   // Exchange
-          4: FlexColumnWidth(0.7), // Currency
-          5: FlexColumnWidth(0.8), // Tick
-          6: FlexColumnWidth(1.8), // Description
-          7: FlexColumnWidth(0.7), // Status
-        },
-        defaultVerticalAlignment: TableCellVerticalAlignment.middle,
-        children: [
-          // Header row
-          TableRow(
-            decoration: BoxDecoration(
-              color: UIConstants.cardBackground(isDarkTheme),
-            ),
-            children: [
-              _headerCell('Symbol', headerStyle),
-              _headerCell('Security ID', headerStyle),
-              _headerCell('Type', headerStyle),
-              _headerCell('Exchange', headerStyle),
-              _headerCell('Currency', headerStyle),
-              _headerCell('Tick', headerStyle),
-              _headerCell('Description', headerStyle),
-              _headerCell('Status', headerStyle),
-            ],
-          ),
-          // Data rows
-          for (var i = 0; i < listings.length; i++)
-            _buildListingRow(listings[i] as Map<String, dynamic>, i, isDarkTheme, cellStyle, symbolStyle),
-        ],
-      ),
-    );
-  }
+    final rows = listings.map((item) {
+      final listing = item as Map<String, dynamic>;
+      final symbol = listing['symbol'] ?? '';
+      final securityId = listing['securityId'] ?? '';
+      final securityType = listing['securityType'] ?? '';
+      final cfiCode = listing['cfiCode'] ?? '';
+      final exchange = listing['securityExchange'] ?? '';
+      final currency = listing['currency'] ?? '';
+      final minPriceIncrement = listing['minPriceIncrement'] ?? '';
+      final description = listing['securityDesc'] ?? '';
+      final rawStatus = listing['securityStatus'] ?? '';
 
-  Widget _headerCell(String text, TextStyle style) {
-    return Padding(
-      padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 10),
-      child: Text(text, style: style),
-    );
-  }
+      final typeDisplay = cfiCode.toString().isNotEmpty ? '$securityType / $cfiCode' : securityType;
+      final statusLabel = _formatSecurityStatus(rawStatus.toString());
 
-  TableRow _buildListingRow(
-    Map<String, dynamic> listing,
-    int index,
-    bool isDarkTheme,
-    TextStyle cellStyle,
-    TextStyle symbolStyle,
-  ) {
-    final symbol = listing['symbol'] ?? '';
-    final securityId = listing['securityId'] ?? '';
-    final securityType = listing['securityType'] ?? '';
-    final cfiCode = listing['cfiCode'] ?? '';
-    final exchange = listing['securityExchange'] ?? '';
-    final currency = listing['currency'] ?? '';
-    final minPriceIncrement = listing['minPriceIncrement'] ?? '';
-    final description = listing['securityDesc'] ?? '';
-    final rawStatus = listing['securityStatus'] ?? '';
+      return StyledRow(cells: [
+        Text(symbol.toString(), style: symbolStyle, overflow: TextOverflow.ellipsis),
+        Text(securityId.toString(), style: cellStyle, overflow: TextOverflow.ellipsis),
+        Text(typeDisplay.toString(), style: cellStyle, overflow: TextOverflow.ellipsis),
+        Text(exchange.toString(), style: cellStyle, overflow: TextOverflow.ellipsis),
+        Text(currency.toString(), style: cellStyle),
+        Text(minPriceIncrement.toString(), style: cellStyle),
+        Text(description.toString(), style: cellStyle, overflow: TextOverflow.ellipsis),
+        _statusBadge(statusLabel),
+      ]);
+    }).toList();
 
-    // Type display: securityType + cfiCode if available
-    final typeDisplay = cfiCode.isNotEmpty ? '$securityType / $cfiCode' : securityType;
-
-    final statusLabel = _formatSecurityStatus(rawStatus.toString());
-
-    final rowColor = index.isEven
-        ? UIConstants.tableRowEven(isDarkTheme)
-        : UIConstants.tableRowOdd(isDarkTheme);
-
-    return TableRow(
-      decoration: BoxDecoration(color: rowColor),
-      children: [
-        _dataCell(Text(symbol.toString(), style: symbolStyle, overflow: TextOverflow.ellipsis)),
-        _dataCell(Text(securityId.toString(), style: cellStyle, overflow: TextOverflow.ellipsis)),
-        _dataCell(Text(typeDisplay.toString(), style: cellStyle, overflow: TextOverflow.ellipsis)),
-        _dataCell(Text(exchange.toString(), style: cellStyle, overflow: TextOverflow.ellipsis)),
-        _dataCell(Text(currency.toString(), style: cellStyle)),
-        _dataCell(Text(minPriceIncrement.toString(), style: cellStyle)),
-        _dataCell(Text(description.toString(), style: cellStyle, overflow: TextOverflow.ellipsis)),
-        _dataCell(_statusBadge(statusLabel)),
-      ],
-    );
-  }
-
-  Widget _dataCell(Widget child) {
-    return Padding(
-      padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 8),
-      child: child,
+    return StyledDataTable(
+      isDarkTheme: isDarkTheme,
+      columns: columns,
+      rows: rows,
     );
   }
 

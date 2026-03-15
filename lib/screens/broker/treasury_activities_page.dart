@@ -1,6 +1,5 @@
 import 'dart:convert';
 import 'dart:io';
-import 'dart:ui';
 import 'package:csv/csv.dart';
 import 'package:excel/excel.dart' as xl;
 import 'package:file_picker/file_picker.dart';
@@ -15,6 +14,7 @@ import '../../utils/menu_items_helper.dart';
 import '../../config/app_config.dart';
 import '../../config/ui_constants.dart';
 import '../../widgets/base_page.dart';
+import '../../widgets/styled_data_table.dart';
 import '../../generated/prtagent/v1/reporting.pbgrpc.dart';
 import '../../generated/common.pb.dart' as common_pb;
 import '../../services/page_state_service.dart';
@@ -27,10 +27,6 @@ class TreasuryActivitiesPage extends StatefulWidget {
 }
 
 class _TreasuryActivitiesPageState extends State<TreasuryActivitiesPage> {
-  // Scroll controllers
-  final _verticalScrollController = ScrollController();
-  final _horizontalScrollController = ScrollController();
-
   // Data
   List<Map<String, dynamic>> _activities = [];
   int _totalCount = 0;
@@ -109,8 +105,6 @@ class _TreasuryActivitiesPageState extends State<TreasuryActivitiesPage> {
     _operationController.dispose();
     _contractAddrController.dispose();
     _senderAccountController.dispose();
-    _verticalScrollController.dispose();
-    _horizontalScrollController.dispose();
     super.dispose();
   }
 
@@ -891,81 +885,29 @@ class _TreasuryActivitiesPageState extends State<TreasuryActivitiesPage> {
       );
     }
 
-    return Column(
-      children: [
-        Expanded(
-          child: Scrollbar(
-            controller: _verticalScrollController,
-            thumbVisibility: true,
-            child: Scrollbar(
-              controller: _horizontalScrollController,
-              thumbVisibility: true,
-              notificationPredicate: (notification) => notification.depth == 1,
-              child: SingleChildScrollView(
-                controller: _verticalScrollController,
-                child: ScrollConfiguration(
-                  behavior: ScrollConfiguration.of(context).copyWith(
-                    dragDevices: {
-                      PointerDeviceKind.touch,
-                      PointerDeviceKind.mouse,
-                      PointerDeviceKind.trackpad,
-                    },
-                  ),
-                  child: LayoutBuilder(
-                    builder: (context, constraints) {
-                      return SingleChildScrollView(
-                        controller: _horizontalScrollController,
-                        scrollDirection: Axis.horizontal,
-                        child: ConstrainedBox(
-                          constraints: BoxConstraints(minWidth: constraints.maxWidth),
-                          child: _buildActivitiesTable(isDarkTheme),
-                        ),
-                      );
-                    },
-                  ),
-                ),
-              ),
-            ),
-          ),
-        ),
-        SizedBox(height: UIConstants.spacingMd),
-        _buildPaginationControls(isDarkTheme),
-      ],
-    );
+    return _buildActivitiesTable(isDarkTheme);
   }
 
   Widget _buildActivitiesTable(bool isDarkTheme) {
-    final headerColor = UIConstants.textSecondary(isDarkTheme);
-    final headerStyle = TextStyle(color: headerColor, fontSize: 10, fontWeight: FontWeight.bold);
-
-    return DataTable(
-      columnSpacing: UIConstants.spacingLg,
-      headingRowHeight: 32,
-      dataRowMinHeight: 28,
-      dataRowMaxHeight: 36,
-      showCheckboxColumn: false,
-      headingRowColor: WidgetStatePropertyAll(UIConstants.tableHeaderBackground(isDarkTheme)),
-      decoration: BoxDecoration(
-        border: Border.all(color: UIConstants.borderColor(isDarkTheme)),
-        borderRadius: BorderRadius.circular(4),
-      ),
+    return StyledDataTable(
+      isDarkTheme: isDarkTheme,
       columns: [
-        DataColumn(label: Text('#', style: headerStyle)),
-        DataColumn(label: Text('Activity ID', style: headerStyle)),
-        DataColumn(label: Text('Operation', style: headerStyle)),
-        DataColumn(label: Text('Amount', style: headerStyle)),
-        DataColumn(label: Text('Sender Account', style: headerStyle)),
-        DataColumn(label: Text('From Account', style: headerStyle)),
-        DataColumn(label: Text('To Account', style: headerStyle)),
-        DataColumn(label: Text('From Vault', style: headerStyle)),
-        DataColumn(label: Text('To Vault', style: headerStyle)),
-        DataColumn(label: Text('From Stash', style: headerStyle)),
-        DataColumn(label: Text('To Stash', style: headerStyle)),
-        DataColumn(label: Text('Contract Addr', style: headerStyle)),
-        DataColumn(label: Text('Contract Type', style: headerStyle)),
-        DataColumn(label: Text('Timestamp', style: headerStyle)),
-        DataColumn(label: Text('Created At', style: headerStyle)),
-        DataColumn(label: Text('Data', style: headerStyle)),
+        StyledColumn(label: '#', flex: 1),
+        StyledColumn(label: 'Activity ID', flex: 1),
+        StyledColumn(label: 'Operation', flex: 3),
+        StyledColumn(label: 'Amount', flex: 1),
+        StyledColumn(label: 'Sender Account', flex: 2),
+        StyledColumn(label: 'From Account', flex: 2),
+        StyledColumn(label: 'To Account', flex: 2),
+        StyledColumn(label: 'From Vault', flex: 2),
+        StyledColumn(label: 'To Vault', flex: 2),
+        StyledColumn(label: 'From Stash', flex: 2),
+        StyledColumn(label: 'To Stash', flex: 2),
+        StyledColumn(label: 'Contract Addr', flex: 2),
+        StyledColumn(label: 'Contract Type', flex: 2),
+        StyledColumn(label: 'Timestamp', flex: 2),
+        StyledColumn(label: 'Created At', flex: 2),
+        StyledColumn(label: 'Data', flex: 2),
       ],
       rows: _activities.asMap().entries.map((entry) {
         final idx = entry.key;
@@ -982,33 +924,35 @@ class _TreasuryActivitiesPageState extends State<TreasuryActivitiesPage> {
         final fromStash = isDeposit ? 'N/A' : _str(activity, 'fromStash');
         final toStash = isDeposit ? 'N/A' : _str(activity, 'toStash');
 
-        return DataRow(
+        return StyledRow(
           selected: _selectedRowIndex == idx,
-          onSelectChanged: (_) {
+          onTap: () {
             setState(() => _selectedRowIndex = _selectedRowIndex == idx ? null : idx);
           },
-          color: WidgetStatePropertyAll(
-            idx % 2 == 0 ? UIConstants.tableRowEven(isDarkTheme) : UIConstants.tableRowOdd(isDarkTheme),
-          ),
           cells: [
-          _hashCell(_str(activity, 'activityHash'), isDarkTheme),
-          _copyableCell(_str(activity, 'activityId'), isDarkTheme),
-          _operationBadgeCell(_str(activity, 'operation'), _str(activity, 'operationName'), isDarkTheme),
-          _amountCell(_str(activity, 'amount'), isDarkTheme),
-          _copyableCell(_str(activity, 'senderAccount'), isDarkTheme),
-          _copyableCell(fromAccount, isDarkTheme),
-          _copyableCell(toAccount, isDarkTheme),
-          _copyableCell(fromVault, isDarkTheme),
-          _copyableCell(_str(activity, 'toVault'), isDarkTheme),
-          _copyableCell(fromStash, isDarkTheme),
-          _copyableCell(toStash, isDarkTheme),
-          _copyableCell(_str(activity, 'contractAddr'), isDarkTheme),
-          _copyableCell(_str(activity, 'contractType'), isDarkTheme),
-          _copyableCell(_str(activity, 'timestamp'), isDarkTheme, noTruncate: true),
-          _copyableCell(_str(activity, 'createdAt'), isDarkTheme, noTruncate: true),
-          _copyableTextCell(_str(activity, 'data'), isDarkTheme),
-        ]);
+            _hashCell(_str(activity, 'activityHash'), isDarkTheme),
+            _copyableCell(_str(activity, 'activityId'), isDarkTheme),
+            _operationBadgeCell(_str(activity, 'operation'), _str(activity, 'operationName'), isDarkTheme),
+            _amountCell(_str(activity, 'amount'), isDarkTheme),
+            _copyableCell(_str(activity, 'senderAccount'), isDarkTheme),
+            _copyableCell(fromAccount, isDarkTheme),
+            _copyableCell(toAccount, isDarkTheme),
+            _copyableCell(fromVault, isDarkTheme),
+            _copyableCell(_str(activity, 'toVault'), isDarkTheme),
+            _copyableCell(fromStash, isDarkTheme),
+            _copyableCell(toStash, isDarkTheme),
+            _copyableCell(_str(activity, 'contractAddr'), isDarkTheme),
+            _copyableCell(_str(activity, 'contractType'), isDarkTheme),
+            _copyableCell(_str(activity, 'timestamp'), isDarkTheme, noTruncate: true),
+            _copyableCell(_str(activity, 'createdAt'), isDarkTheme, noTruncate: true),
+            _copyableTextCell(_str(activity, 'data'), isDarkTheme),
+          ],
+        );
       }).toList(),
+      rowsPerPage: _pageSize,
+      currentPage: _currentPage,
+      totalPages: _totalPages,
+      onPageChanged: _goToPage,
     );
   }
 
@@ -1035,9 +979,6 @@ class _TreasuryActivitiesPageState extends State<TreasuryActivitiesPage> {
     }
   }
 
-  /// Max column width for cell content
-  static const double _defaultMaxCellWidth = 140;
-  static const double _wideMaxCellWidth = 200;
   static const int _truncateThreshold = 20;
 
   /// Truncate long values showing start...end
@@ -1057,59 +998,51 @@ class _TreasuryActivitiesPageState extends State<TreasuryActivitiesPage> {
     return '${value.substring(0, keep)}...${value.substring(value.length - keep)}';
   }
 
-  DataCell _copyableCell(String value, bool isDarkTheme, {double maxWidth = _defaultMaxCellWidth, Color? textColor, bool noTruncate = false}) {
+  Widget _copyableCell(String value, bool isDarkTheme, {Color? textColor, bool noTruncate = false}) {
     final display = noTruncate ? value : _truncate(value);
     final needsTooltip = display != value;
-    final child = ConstrainedBox(
-      constraints: BoxConstraints(maxWidth: maxWidth),
-      child: Text(
-        display,
-        style: TextStyle(
-          color: textColor ?? UIConstants.textPrimary(isDarkTheme),
-          fontSize: UIConstants.fontSizeSm,
-          fontWeight: textColor != null ? FontWeight.w600 : null,
-        ),
-        overflow: TextOverflow.ellipsis,
-      ),
-    );
 
-    return DataCell(
-      Tooltip(
-        message: needsTooltip ? value : '',
-        waitDuration: const Duration(milliseconds: 300),
-        child: InkWell(
-          onTap: () => _copyToClipboard(value),
-          child: child,
+    return Tooltip(
+      message: needsTooltip ? value : '',
+      waitDuration: const Duration(milliseconds: 300),
+      child: InkWell(
+        onTap: () => _copyToClipboard(value),
+        child: Text(
+          display,
+          style: TextStyle(
+            color: textColor ?? UIConstants.textPrimary(isDarkTheme),
+            fontSize: UIConstants.fontSizeSm,
+            fontWeight: textColor != null ? FontWeight.w600 : null,
+          ),
+          overflow: TextOverflow.ellipsis,
         ),
       ),
     );
   }
 
-  DataCell _copyableTextCell(String value, bool isDarkTheme) {
-    return _copyableCell(value, isDarkTheme, maxWidth: _wideMaxCellWidth);
+  Widget _copyableTextCell(String value, bool isDarkTheme) {
+    return _copyableCell(value, isDarkTheme);
   }
 
   /// Hash icon cell - shows # icon, copies full hash on click
-  DataCell _hashCell(String hash, bool isDarkTheme) {
+  Widget _hashCell(String hash, bool isDarkTheme) {
     if (hash == '-') return _copyableCell(hash, isDarkTheme);
-    return DataCell(
-      Tooltip(
-        message: hash,
-        waitDuration: const Duration(milliseconds: 300),
-        child: InkWell(
-          onTap: () => _copyToClipboard(hash),
-          child: Icon(
-            Icons.tag,
-            size: 16,
-            color: UIConstants.commandColor(isDarkTheme),
-          ),
+    return Tooltip(
+      message: hash,
+      waitDuration: const Duration(milliseconds: 300),
+      child: InkWell(
+        onTap: () => _copyToClipboard(hash),
+        child: Icon(
+          Icons.tag,
+          size: 16,
+          color: UIConstants.commandColor(isDarkTheme),
         ),
       ),
     );
   }
 
   /// Operation badge with color coding
-  DataCell _operationBadgeCell(String operation, String operationName, bool isDarkTheme) {
+  Widget _operationBadgeCell(String operation, String operationName, bool isDarkTheme) {
     final display = operationName != '-' ? operationName : operation;
     final fullValue = operationName != '-' ? '$operationName ($operation)' : operation;
     final op = operationName.toUpperCase();
@@ -1133,23 +1066,21 @@ class _TreasuryActivitiesPageState extends State<TreasuryActivitiesPage> {
       bgColor = UIConstants.textHint(isDarkTheme);
     }
 
-    return DataCell(
-      Tooltip(
-        message: fullValue,
-        waitDuration: const Duration(milliseconds: 300),
-        child: InkWell(
-          onTap: () => _copyToClipboard(fullValue),
-          child: Container(
-            padding: const EdgeInsets.symmetric(horizontal: 6, vertical: 2),
-            decoration: BoxDecoration(
-              color: bgColor.withValues(alpha: 0.2),
-              borderRadius: BorderRadius.circular(4),
-              border: Border.all(color: bgColor, width: 0.5),
-            ),
-            child: Text(
-              display,
-              style: TextStyle(color: bgColor, fontSize: 10, fontWeight: FontWeight.w600),
-            ),
+    return Tooltip(
+      message: fullValue,
+      waitDuration: const Duration(milliseconds: 300),
+      child: InkWell(
+        onTap: () => _copyToClipboard(fullValue),
+        child: Container(
+          padding: const EdgeInsets.symmetric(horizontal: 6, vertical: 2),
+          decoration: BoxDecoration(
+            color: bgColor.withValues(alpha: 0.2),
+            borderRadius: BorderRadius.circular(4),
+            border: Border.all(color: bgColor, width: 0.5),
+          ),
+          child: Text(
+            display,
+            style: TextStyle(color: bgColor, fontSize: 10, fontWeight: FontWeight.w600),
           ),
         ),
       ),
@@ -1157,7 +1088,7 @@ class _TreasuryActivitiesPageState extends State<TreasuryActivitiesPage> {
   }
 
   /// Amount cell with color (green for positive, red for negative)
-  DataCell _amountCell(String rawAmount, bool isDarkTheme) {
+  Widget _amountCell(String rawAmount, bool isDarkTheme) {
     final formatted = _formatAmount(rawAmount);
     if (formatted == '-') return _copyableCell(formatted, isDarkTheme);
     try {
@@ -1169,71 +1100,4 @@ class _TreasuryActivitiesPageState extends State<TreasuryActivitiesPage> {
     }
   }
 
-  Widget _buildPaginationControls(bool isDarkTheme) {
-    final textColor = UIConstants.textPrimary(isDarkTheme);
-
-    return Row(
-      mainAxisAlignment: MainAxisAlignment.center,
-      children: [
-        IconButton(
-          icon: Icon(Icons.first_page, color: textColor, size: 20),
-          onPressed: _currentPage > 1 ? () => _goToPage(1) : null,
-        ),
-        IconButton(
-          icon: Icon(Icons.chevron_left, color: textColor, size: 20),
-          onPressed: _currentPage > 1 ? () => _goToPage(_currentPage - 1) : null,
-        ),
-        Text(
-          'Page $_currentPage of $_totalPages',
-          style: TextStyle(color: textColor, fontSize: UIConstants.fontSizeSm),
-        ),
-        IconButton(
-          icon: Icon(Icons.chevron_right, color: textColor, size: 20),
-          onPressed: _currentPage < _totalPages ? () => _goToPage(_currentPage + 1) : null,
-        ),
-        IconButton(
-          icon: Icon(Icons.last_page, color: textColor, size: 20),
-          onPressed: _currentPage < _totalPages ? () => _goToPage(_totalPages) : null,
-        ),
-        SizedBox(width: UIConstants.spacingMd),
-        SizedBox(
-          width: 80,
-          height: UIConstants.buttonHeightStandard * 0.7,
-          child: DropdownButtonFormField<int>(
-            value: _pageSize,
-            isDense: true,
-            isExpanded: true,
-            decoration: InputDecoration(
-              border: OutlineInputBorder(
-                borderRadius: BorderRadius.circular(UIConstants.textFieldBorderRadius),
-              ),
-              contentPadding: UIConstants.textFieldContentPadding,
-              isDense: true,
-            ),
-            style: TextStyle(color: textColor, fontSize: UIConstants.fontSizeSm),
-            dropdownColor: UIConstants.dropdownBackground(isDarkTheme),
-            items: [10, 20, 50, 100]
-                .map((size) => DropdownMenuItem(
-                      value: size,
-                      child: Text('$size', style: TextStyle(color: textColor, fontSize: UIConstants.fontSizeSm)),
-                    ))
-                .toList(),
-            onChanged: (value) {
-              if (value != null) {
-                setState(() {
-                  _pageSize = value;
-                  _currentPage = 1;
-                });
-                _fetchActivities();
-              }
-            },
-          ),
-        ),
-        Text(
-          ' / page',
-          style: TextStyle(color: UIConstants.textSecondary(isDarkTheme), fontSize: UIConstants.fontSizeSm),
-        ),
-      ],
-    );
-  }
 }

@@ -886,30 +886,15 @@ class _PortfolioPageState extends State<PortfolioPage> {
   }
 
   /// Extract locked/reserved units from a holding entry.
+  /// Locked = totalUnits - available (LIQUID). Always calculated to be accurate.
   String _getLockedFromHolding(Map<String, dynamic> holdingData) {
-    final stashUnits = holdingData['stashUnits'] as Map<String, dynamic>?
-        ?? holdingData['stash_units'] as Map<String, dynamic>? ?? {};
-    if (stashUnits.containsKey('locked')) {
-      return stashUnits['locked']?.toString() ?? '0';
-    }
-    if (stashUnits.containsKey('LOCKED')) {
-      return stashUnits['LOCKED']?.toString() ?? '0';
-    }
-    if (stashUnits.containsKey('reserved')) {
-      return stashUnits['reserved']?.toString() ?? '0';
-    }
-    // If stashUnits has 'available' or 'LIQUID', locked = total - available
-    final availableKey = stashUnits.containsKey('available') ? 'available' :
-        stashUnits.containsKey('LIQUID') ? 'LIQUID' : null;
-    if (availableKey != null) {
-      final totalStr = holdingData['totalUnits']?.toString()
-          ?? holdingData['total_units']?.toString() ?? '0';
-      final total = double.tryParse(totalStr) ?? 0;
-      final available = double.tryParse(stashUnits[availableKey]?.toString() ?? '0') ?? 0;
-      final locked = total - available;
-      return locked > 0 ? locked.toString() : '0';
-    }
-    return '0';
+    final totalStr = holdingData['totalUnits']?.toString()
+        ?? holdingData['total_units']?.toString() ?? '0';
+    final total = double.tryParse(totalStr) ?? 0;
+    final availableStr = _getAvailableFromHolding(holdingData);
+    final available = double.tryParse(availableStr) ?? 0;
+    final locked = (total - available).round();
+    return locked > 0 ? locked.toString() : '0';
   }
 
   String _getAvailableBalanceForToken(String currencyCode) {

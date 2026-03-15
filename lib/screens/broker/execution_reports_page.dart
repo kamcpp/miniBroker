@@ -1,6 +1,5 @@
 import 'dart:convert';
 import 'dart:io';
-import 'dart:ui';
 import 'package:csv/csv.dart';
 import 'package:excel/excel.dart' as xl;
 import 'package:file_picker/file_picker.dart';
@@ -15,6 +14,7 @@ import '../../utils/menu_items_helper.dart';
 import '../../config/app_config.dart';
 import '../../config/ui_constants.dart';
 import '../../widgets/base_page.dart';
+import '../../widgets/styled_data_table.dart';
 import '../../generated/prtagent/v1/reporting.pbgrpc.dart';
 import '../../generated/common.pb.dart' as common_pb;
 import '../../services/page_state_service.dart';
@@ -29,10 +29,6 @@ class ExecutionReportsPage extends StatefulWidget {
 
 class _ExecutionReportsPageState extends State<ExecutionReportsPage> {
   static const double _commandButtonHeight = UIConstants.buttonHeightStandard * 0.7;
-
-  // Scroll controllers
-  final _verticalScrollController = ScrollController();
-  final _horizontalScrollController = ScrollController();
 
   // Data
   List<Map<String, dynamic>> _reports = [];
@@ -143,8 +139,6 @@ class _ExecutionReportsPageState extends State<ExecutionReportsPage> {
     _requestIdController.dispose();
     _symbolController.dispose();
     _currencyController.dispose();
-    _verticalScrollController.dispose();
-    _horizontalScrollController.dispose();
     super.dispose();
   }
 
@@ -221,6 +215,7 @@ class _ExecutionReportsPageState extends State<ExecutionReportsPage> {
         'iid': r.iid,
         'requestId': r.requestId,
         'venueIid': r.venueIid,
+        'exDestination': r.exDestination,
         'clOrdId': r.clOrdId,
         'orderId': r.orderId,
         'execId': r.execId,
@@ -367,6 +362,7 @@ class _ExecutionReportsPageState extends State<ExecutionReportsPage> {
             'iid': r.iid,
             'requestId': r.requestId,
             'venueIid': r.venueIid,
+            'exDestination': r.exDestination,
             'clOrdId': r.clOrdId,
             'orderId': r.orderId,
             'execId': r.execId,
@@ -949,87 +945,32 @@ class _ExecutionReportsPageState extends State<ExecutionReportsPage> {
       );
     }
 
-    return Column(
-      children: [
-        Expanded(
-          child: Scrollbar(
-            controller: _verticalScrollController,
-            thumbVisibility: true,
-            child: Scrollbar(
-              controller: _horizontalScrollController,
-              thumbVisibility: true,
-              notificationPredicate: (notification) => notification.depth == 1,
-              child: SingleChildScrollView(
-                controller: _verticalScrollController,
-                child: ScrollConfiguration(
-                  behavior: ScrollConfiguration.of(context).copyWith(
-                    dragDevices: {
-                      PointerDeviceKind.touch,
-                      PointerDeviceKind.mouse,
-                      PointerDeviceKind.trackpad,
-                    },
-                  ),
-                  child: LayoutBuilder(
-                    builder: (context, constraints) {
-                      return SingleChildScrollView(
-                        controller: _horizontalScrollController,
-                        scrollDirection: Axis.horizontal,
-                        child: ConstrainedBox(
-                          constraints: BoxConstraints(minWidth: constraints.maxWidth),
-                          child: _buildReportsTable(isDarkTheme),
-                        ),
-                      );
-                    },
-                  ),
-                ),
-              ),
-            ),
-          ),
-        ),
-        SizedBox(height: UIConstants.spacingMd),
-        _buildPaginationControls(isDarkTheme),
-      ],
-    );
+    return _buildReportsTable(isDarkTheme);
   }
 
   Widget _buildReportsTable(bool isDarkTheme) {
-    final headerStyle = TextStyle(
-      color: UIConstants.textSecondary(isDarkTheme),
-      fontSize: 10,
-      fontWeight: FontWeight.bold,
-    );
-
-    return DataTable(
-      columnSpacing: UIConstants.spacingLg,
-      headingRowHeight: 32,
-      dataRowMinHeight: 28,
-      dataRowMaxHeight: 36,
-      showCheckboxColumn: false,
-      headingRowColor: WidgetStatePropertyAll(UIConstants.tableHeaderBackground(isDarkTheme)),
-      decoration: BoxDecoration(
-        border: Border.all(color: UIConstants.borderColor(isDarkTheme)),
-        borderRadius: BorderRadius.circular(4),
-      ),
-      columns: [
-        DataColumn(label: Text('Exec ID', style: headerStyle)),
-        DataColumn(label: Text('Request ID', style: headerStyle)),
-        DataColumn(label: Text('Type', style: headerStyle)),
-        DataColumn(label: Text('Status', style: headerStyle)),
-        DataColumn(label: Text('Symbol', style: headerStyle)),
-        DataColumn(label: Text('Side', style: headerStyle)),
-        DataColumn(label: Text('Price', style: headerStyle)),
-        DataColumn(label: Text('Ord Qty', style: headerStyle)),
-        DataColumn(label: Text('Cum Qty', style: headerStyle)),
-        DataColumn(label: Text('Leaves', style: headerStyle)),
-        DataColumn(label: Text('Avg Px', style: headerStyle)),
-        DataColumn(label: Text('Currency', style: headerStyle)),
-        DataColumn(label: Text('Cl Ord ID', style: headerStyle)),
-        DataColumn(label: Text('Order ID', style: headerStyle)),
-        DataColumn(label: Text('Venue', style: headerStyle)),
-        DataColumn(label: Text('Time', style: headerStyle)),
-        DataColumn(label: Text('Created At', style: headerStyle)),
-        DataColumn(label: Text('Text', style: headerStyle)),
-        DataColumn(label: Text('Raw FIX', style: headerStyle)),
+    return StyledDataTable(
+      isDarkTheme: isDarkTheme,
+      columns: const [
+        StyledColumn(label: 'Exec ID', flex: 2),
+        StyledColumn(label: 'Request ID', flex: 2),
+        StyledColumn(label: 'Type', flex: 2),
+        StyledColumn(label: 'Status', flex: 1),
+        StyledColumn(label: 'Symbol', flex: 1),
+        StyledColumn(label: 'Side', flex: 1),
+        StyledColumn(label: 'Price', flex: 1),
+        StyledColumn(label: 'Ord Qty', flex: 1),
+        StyledColumn(label: 'Cum Qty', flex: 1),
+        StyledColumn(label: 'Leaves', flex: 1),
+        StyledColumn(label: 'Avg Px', flex: 1),
+        StyledColumn(label: 'Currency', flex: 1),
+        StyledColumn(label: 'Cl Ord ID', flex: 2),
+        StyledColumn(label: 'Order ID', flex: 2),
+        StyledColumn(label: 'Ex Dest', flex: 1),
+        StyledColumn(label: 'Time', flex: 2),
+        StyledColumn(label: 'Created At', flex: 2),
+        StyledColumn(label: 'Text', flex: 3),
+        StyledColumn(label: 'Raw FIX', flex: 4),
       ],
       rows: _reports.asMap().entries.map((entry) {
         final idx = entry.key;
@@ -1037,36 +978,38 @@ class _ExecutionReportsPageState extends State<ExecutionReportsPage> {
         final execType = _str(report, 'execType', 'exec_type');
         final ordStatus = _str(report, 'ordStatus', 'ord_status');
         final side = _str(report, 'side');
-        return DataRow(
+        return StyledRow(
           selected: _selectedRowIndex == idx,
-          onSelectChanged: (_) {
+          onTap: () {
             setState(() => _selectedRowIndex = _selectedRowIndex == idx ? null : idx);
           },
-          color: WidgetStatePropertyAll(
-            idx % 2 == 0 ? UIConstants.tableRowEven(isDarkTheme) : UIConstants.tableRowOdd(isDarkTheme),
-          ),
           cells: [
-          _copyableCell(_str(report, 'execId', 'exec_id'), isDarkTheme),
-          _copyableCell(_str(report, 'requestId', 'request_id'), isDarkTheme),
-          _badgeCell(execType, _execTypeBadge(execType, isDarkTheme)),
-          _badgeCell(ordStatus, _ordStatusBadge(ordStatus, isDarkTheme)),
-          _copyableCell(_str(report, 'symbol'), isDarkTheme),
-          _sideCell(side, isDarkTheme),
-          _priceCell(_str(report, 'price'), isDarkTheme),
-          _qtyCell(_str(report, 'orderQty', 'order_qty'), isDarkTheme),
-          _qtyCell(_str(report, 'cumQty', 'cum_qty'), isDarkTheme),
-          _qtyCell(_str(report, 'leavesQty', 'leaves_qty'), isDarkTheme),
-          _priceCell(_str(report, 'avgPx', 'avg_px'), isDarkTheme),
-          _copyableCell(_str(report, 'currency'), isDarkTheme),
-          _copyableCell(_str(report, 'clOrdId', 'cl_ord_id'), isDarkTheme),
-          _copyableCell(_str(report, 'orderId', 'order_id'), isDarkTheme),
-          _copyableCell(_str(report, 'venueIid', 'venue_iid'), isDarkTheme),
-          _copyableCell(_str(report, 'transactTime', 'transact_time'), isDarkTheme, noTruncate: true),
-          _copyableCell(_str(report, 'createdAt', 'created_at'), isDarkTheme, noTruncate: true),
-          _copyableTextCell(_str(report, 'text'), isDarkTheme),
-          _copyableTextCell(_str(report, 'rawFixMessage', 'raw_fix_message'), isDarkTheme),
-        ]);
+            _copyableCell(_str(report, 'execId', 'exec_id'), isDarkTheme),
+            _copyableCell(_str(report, 'requestId', 'request_id'), isDarkTheme),
+            _badgeCell(execType, _execTypeBadge(execType, isDarkTheme)),
+            _badgeCell(ordStatus, _ordStatusBadge(ordStatus, isDarkTheme)),
+            _copyableCell(_str(report, 'symbol'), isDarkTheme),
+            _sideCell(side, isDarkTheme),
+            _priceCell(_str(report, 'price'), isDarkTheme),
+            _qtyCell(_str(report, 'orderQty', 'order_qty'), isDarkTheme),
+            _qtyCell(_str(report, 'cumQty', 'cum_qty'), isDarkTheme),
+            _qtyCell(_str(report, 'leavesQty', 'leaves_qty'), isDarkTheme),
+            _priceCell(_str(report, 'avgPx', 'avg_px'), isDarkTheme),
+            _copyableCell(_str(report, 'currency'), isDarkTheme),
+            _copyableCell(_str(report, 'clOrdId', 'cl_ord_id'), isDarkTheme),
+            _copyableCell(_str(report, 'orderId', 'order_id'), isDarkTheme),
+            _copyableCell(_str(report, 'exDestination', 'ex_destination'), isDarkTheme),
+            _copyableCell(_str(report, 'transactTime', 'transact_time'), isDarkTheme, noTruncate: true),
+            _copyableCell(_str(report, 'createdAt', 'created_at'), isDarkTheme, noTruncate: true),
+            _copyableTextCell(_str(report, 'text'), isDarkTheme),
+            _rawFixCell(_str(report, 'rawFixMessage', 'raw_fix_message'), isDarkTheme),
+          ],
+        );
       }).toList(),
+      rowsPerPage: _pageSize,
+      currentPage: _currentPage,
+      totalPages: _totalPages,
+      onPageChanged: _goToPage,
     );
   }
 
@@ -1077,9 +1020,6 @@ class _ExecutionReportsPageState extends State<ExecutionReportsPage> {
     return val.toString().isEmpty ? '-' : val.toString();
   }
 
-  /// Max column width for cell content
-  static const double _defaultMaxCellWidth = 140;
-  static const double _wideMaxCellWidth = 200;
   static const int _truncateThreshold = 20;
 
   /// Truncate long values showing start...end
@@ -1097,54 +1037,48 @@ class _ExecutionReportsPageState extends State<ExecutionReportsPage> {
     return '${value.substring(0, keep)}...${value.substring(value.length - keep)}';
   }
 
-  DataCell _copyableCell(String value, bool isDarkTheme, {double maxWidth = _defaultMaxCellWidth, Color? textColor, bool noTruncate = false}) {
-    final display = noTruncate ? value : _truncate(value);
+  Widget _copyableCell(String value, bool isDarkTheme, {Color? textColor, bool noTruncate = false}) {
+    final sanitized = value.replaceAll('\x01', '|');
+    final display = noTruncate ? sanitized : _truncate(sanitized);
     final needsTooltip = display != value;
-    final child = ConstrainedBox(
-      constraints: BoxConstraints(maxWidth: maxWidth),
-      child: Text(
-        display,
-        style: TextStyle(
-          color: textColor ?? UIConstants.textPrimary(isDarkTheme),
-          fontSize: UIConstants.fontSizeSm,
-          fontWeight: textColor != null ? FontWeight.w600 : null,
-        ),
-        overflow: TextOverflow.ellipsis,
+    final child = Text(
+      display,
+      style: TextStyle(
+        color: textColor ?? UIConstants.textPrimary(isDarkTheme),
+        fontSize: UIConstants.fontSizeSm,
+        fontWeight: textColor != null ? FontWeight.w600 : null,
       ),
+      overflow: TextOverflow.ellipsis,
     );
 
-    return DataCell(
-      Tooltip(
-        message: needsTooltip ? value : '',
-        waitDuration: const Duration(milliseconds: 300),
-        child: InkWell(
-          onTap: () => _copyToClipboard(value),
-          child: child,
-        ),
+    return Tooltip(
+      message: needsTooltip ? value : '',
+      waitDuration: const Duration(milliseconds: 300),
+      child: InkWell(
+        onTap: () => _copyToClipboard(value),
+        child: child,
       ),
     );
   }
 
-  DataCell _copyableTextCell(String value, bool isDarkTheme) {
-    return _copyableCell(value, isDarkTheme, maxWidth: _wideMaxCellWidth);
+  Widget _copyableTextCell(String value, bool isDarkTheme) {
+    return _copyableCell(value, isDarkTheme);
   }
 
-  DataCell _sideCell(String side, bool isDarkTheme) {
+  Widget _sideCell(String side, bool isDarkTheme) {
     final isBuy = side == '1' || side.toUpperCase() == 'BUY';
     final displaySide = side == '1' ? 'BUY' : side == '2' ? 'SELL' : side;
-    return DataCell(
-      Tooltip(
-        message: displaySide,
-        waitDuration: const Duration(milliseconds: 300),
-        child: InkWell(
-          onTap: () => _copyToClipboard(displaySide),
-          child: Text(
-            displaySide,
-            style: TextStyle(
-              color: isBuy ? UIConstants.colorAccept : Colors.red,
-              fontSize: UIConstants.fontSizeSm,
-              fontWeight: FontWeight.w600,
-            ),
+    return Tooltip(
+      message: displaySide,
+      waitDuration: const Duration(milliseconds: 300),
+      child: InkWell(
+        onTap: () => _copyToClipboard(displaySide),
+        child: Text(
+          displaySide,
+          style: TextStyle(
+            color: isBuy ? UIConstants.colorAccept : Colors.red,
+            fontSize: UIConstants.fontSizeSm,
+            fontWeight: FontWeight.w600,
           ),
         ),
       ),
@@ -1152,25 +1086,122 @@ class _ExecutionReportsPageState extends State<ExecutionReportsPage> {
   }
 
   /// Price cell with amber color — show raw value as received
-  DataCell _priceCell(String value, bool isDarkTheme) {
+  Widget _priceCell(String value, bool isDarkTheme) {
     if (value == '-') return _copyableCell(value, isDarkTheme);
     return _copyableCell(value, isDarkTheme, textColor: Colors.amber.shade300);
   }
 
   /// Quantity cell — show raw value as received
-  DataCell _qtyCell(String value, bool isDarkTheme) {
+  Widget _qtyCell(String value, bool isDarkTheme) {
     return _copyableCell(value, isDarkTheme);
   }
 
-  DataCell _badgeCell(String value, Widget badge) {
-    return DataCell(
-      Tooltip(
-        message: value,
-        waitDuration: const Duration(milliseconds: 300),
-        child: InkWell(
-          onTap: () => _copyToClipboard(value),
-          child: badge,
+  Widget _rawFixCell(String value, bool isDarkTheme) {
+    if (value == '-') return _copyableCell(value, isDarkTheme);
+    final display = _truncate(value.replaceAll('\x01', '|'));
+    return Tooltip(
+      message: 'Click to view full message',
+      waitDuration: const Duration(milliseconds: 300),
+      child: InkWell(
+        onTap: () => _showRawFixDialog(value),
+        child: Text(
+          display,
+          style: TextStyle(
+            color: Colors.cyan.shade300,
+            fontSize: UIConstants.fontSizeSm,
+            decoration: TextDecoration.underline,
+            decorationColor: Colors.cyan.shade300,
+          ),
+          overflow: TextOverflow.ellipsis,
         ),
+      ),
+    );
+  }
+
+  void _showRawFixDialog(String rawMessage) {
+    final themeService = Provider.of<ThemeService>(context, listen: false);
+    final isDark = themeService.isDarkTheme;
+    // Replace SOH with pipe and split into fields for readable display
+    final readable = rawMessage.replaceAll('\x01', '|\n');
+    final copyText = rawMessage.replaceAll('\x01', '|');
+
+    showDialog(
+      context: context,
+      builder: (context) => Dialog(
+        backgroundColor: UIConstants.dialogBackground(isDark),
+        shape: UIConstants.dialogShape(isDark) as RoundedRectangleBorder,
+        child: Container(
+          width: 600,
+          constraints: const BoxConstraints(maxHeight: 500),
+          padding: UIConstants.paddingComfortable,
+          child: Column(
+            mainAxisSize: MainAxisSize.min,
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              Row(
+                children: [
+                  Icon(Icons.code, color: Colors.cyan.shade300, size: 20),
+                  const SizedBox(width: UIConstants.spacingSm),
+                  Expanded(
+                    child: Text(
+                      'Raw FIX Message',
+                      style: TextStyle(
+                        color: UIConstants.textPrimary(isDark),
+                        fontSize: UIConstants.fontSizeMd,
+                        fontWeight: UIConstants.fontWeightMedium,
+                      ),
+                    ),
+                  ),
+                  IconButton(
+                    icon: Icon(Icons.copy, color: UIConstants.textSecondary(isDark), size: 18),
+                    tooltip: 'Copy to clipboard',
+                    onPressed: () {
+                      _copyToClipboard(copyText);
+                      Navigator.of(context).pop();
+                    },
+                  ),
+                  IconButton(
+                    icon: Icon(Icons.close, color: UIConstants.textSecondary(isDark), size: 18),
+                    onPressed: () => Navigator.of(context).pop(),
+                  ),
+                ],
+              ),
+              const SizedBox(height: UIConstants.spacingMd),
+              Flexible(
+                child: Container(
+                  width: double.infinity,
+                  padding: UIConstants.paddingStandard,
+                  decoration: BoxDecoration(
+                    color: UIConstants.dialogSurface(isDark),
+                    borderRadius: BorderRadius.circular(UIConstants.borderRadiusMd),
+                  ),
+                  child: SingleChildScrollView(
+                    child: SelectableText(
+                      readable,
+                      style: TextStyle(
+                        color: UIConstants.textPrimary(isDark),
+                        fontSize: UIConstants.fontSizeSm,
+                        fontFamily: 'monospace',
+                        height: 1.5,
+                      ),
+                    ),
+                  ),
+                ),
+              ),
+            ],
+          ),
+        ),
+      ),
+    );
+  }
+
+  Widget _badgeCell(String value, Widget badge) {
+    return Tooltip(
+      message: value,
+      waitDuration: const Duration(milliseconds: 300),
+      child: InkWell(
+        onTap: () => _copyToClipboard(value),
+        child: badge,
       ),
     );
   }
@@ -1288,71 +1319,4 @@ class _ExecutionReportsPageState extends State<ExecutionReportsPage> {
     );
   }
 
-  Widget _buildPaginationControls(bool isDarkTheme) {
-    final textColor = UIConstants.textPrimary(isDarkTheme);
-
-    return Row(
-      mainAxisAlignment: MainAxisAlignment.center,
-      children: [
-        IconButton(
-          icon: Icon(Icons.first_page, color: textColor, size: 20),
-          onPressed: _currentPage > 1 ? () => _goToPage(1) : null,
-        ),
-        IconButton(
-          icon: Icon(Icons.chevron_left, color: textColor, size: 20),
-          onPressed: _currentPage > 1 ? () => _goToPage(_currentPage - 1) : null,
-        ),
-        Text(
-          'Page $_currentPage of $_totalPages',
-          style: TextStyle(color: textColor, fontSize: UIConstants.fontSizeSm),
-        ),
-        IconButton(
-          icon: Icon(Icons.chevron_right, color: textColor, size: 20),
-          onPressed: _currentPage < _totalPages ? () => _goToPage(_currentPage + 1) : null,
-        ),
-        IconButton(
-          icon: Icon(Icons.last_page, color: textColor, size: 20),
-          onPressed: _currentPage < _totalPages ? () => _goToPage(_totalPages) : null,
-        ),
-        SizedBox(width: UIConstants.spacingMd),
-        SizedBox(
-          width: 80,
-          height: UIConstants.buttonHeightStandard,
-          child: DropdownButtonFormField<int>(
-            value: _pageSize,
-            isDense: true,
-            isExpanded: true,
-            decoration: InputDecoration(
-              border: OutlineInputBorder(
-                borderRadius: BorderRadius.circular(UIConstants.textFieldBorderRadius),
-              ),
-              contentPadding: UIConstants.textFieldContentPadding,
-              isDense: true,
-            ),
-            style: TextStyle(color: textColor, fontSize: UIConstants.fontSizeSm),
-            dropdownColor: UIConstants.dropdownBackground(isDarkTheme),
-            items: [10, 20, 50, 100]
-                .map((size) => DropdownMenuItem(
-                      value: size,
-                      child: Text('$size', style: TextStyle(color: textColor, fontSize: UIConstants.fontSizeSm)),
-                    ))
-                .toList(),
-            onChanged: (value) {
-              if (value != null) {
-                setState(() {
-                  _pageSize = value;
-                  _currentPage = 1;
-                });
-                _fetchReports();
-              }
-            },
-          ),
-        ),
-        Text(
-          ' / page',
-          style: TextStyle(color: UIConstants.textSecondary(isDarkTheme), fontSize: UIConstants.fontSizeSm),
-        ),
-      ],
-    );
-  }
 }
