@@ -5602,7 +5602,12 @@ class _TradingPageState extends State<TradingPage> {
                       color: UIConstants.textSecondary(isDarkTheme),
                     ),
                     tooltip: 'Refresh balances',
-                    onPressed: _isLoadingCashHoldings ? null : _fetchCashHoldings,
+                    onPressed: _isLoadingCashHoldings ? null : () {
+                      _fetchCashHoldings();
+                      if (!_isBuySelected) {
+                        _fetchAccountMarketPortfolio();
+                      }
+                    },
                   ),
                 ),
                 const SizedBox(width: UIConstants.spacingSm),
@@ -5623,7 +5628,7 @@ class _TradingPageState extends State<TradingPage> {
                           : Text(
                               _isBuySelected
                                   ? '$_buyingPower ${_selectedCurrency['symbol'] ?? ''}'
-                                  : _availableBalance,
+                                  : '$_availableBalance ${_selectedSymbol.isNotEmpty ? _selectedSymbol : ''}',
                               style: TextStyle(
                                 fontSize: UIConstants.fontSizeMd,
                                 fontWeight: UIConstants.fontWeightMedium,

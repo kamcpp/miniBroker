@@ -1,14 +1,13 @@
 name: Build Windows
 
 on:
-  push:
-    branches: [master]
-    tags: ['v*']
   workflow_dispatch:
+  push:
+    tags: ['v*']
 
 jobs:
   build-windows:
-    runs-on: windows-2019
+    runs-on: windows-latest-large
     steps:
       - uses: actions/checkout@v4
 
