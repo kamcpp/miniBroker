@@ -1392,6 +1392,7 @@ class _TradingPageState extends State<TradingPage> {
           // Process all orders first
           final allProcessedOrders = ordersData.map<Map<String, dynamic>>((order) {
             print('📋 [Orders] RAW ORDER KEYS: ${(order as Map).keys.toList()}');
+            print('📋 [Orders] symbol=${order['symbol']}, securityIid=${order['securityIid']}, securityListingIid=${order['securityListingIid']}');
             print('📋 [Orders] expireTimestamp=${order['expireTimestamp']}, expire_timestamp=${order['expire_timestamp']}, expireAtDt=${order['expireAtDt']}, expire_at_dt=${order['expire_at_dt']}');
             // Extract creation timestamp: prefer explicit field, fall back to first event log
             final eventLogs = order['eventLogs'] ?? order['event_logs'] ?? [];
@@ -1403,8 +1404,9 @@ class _TradingPageState extends State<TradingPage> {
               'order_id': order['orderId'] ?? order['orderIid'] ?? order['order_id'] ?? 'N/A',
               'participantOrderId': order['participantOrderId'] ?? order['participant_order_id'] ?? order['orderIid'] ?? order['order_id'] ?? 'N/A',
               'side': order['side'] ?? 'N/A',
-              'symbol': order['symbol'] ?? order['securityIid'] ?? 'N/A',
+              'symbol': order['symbol'] ?? 'N/A',
               'quantity': order['quantity'] ?? '0',
+              'remainingQuantity': order['remainingQuantity'] ?? order['remaining_quantity'] ?? '?',
               'price': order['price'] ?? '0',
               'create_timestamp': createTs,
               'expire_timestamp': _extractExpireTimestamp(order),
@@ -3981,6 +3983,25 @@ class _TradingPageState extends State<TradingPage> {
   }
 
   /// Get display status preferring server order_status, falling back to boolean flags
+  /// Resolve symbol for an order: use symbol field, or look up securityListingIid in loaded securities.
+  String _resolveSymbol(Map<dynamic, dynamic> order) {
+    final symbol = order['symbol']?.toString();
+    if (symbol != null && symbol.isNotEmpty) return symbol;
+    final listingIid = order['securityListingIid']?.toString() ?? order['security_listing_iid']?.toString() ?? '';
+    if (listingIid.isNotEmpty) {
+      // Look up in loaded securities
+      for (final sec in _securities) {
+        if (sec['iid'] == listingIid) {
+          final ticker = sec['symbol']?.toString() ?? '';
+          final currency = sec['issueCurrency']?.toString() ?? '';
+          return currency.isNotEmpty ? '$ticker:$currency' : ticker;
+        }
+      }
+      return listingIid; // fallback to raw IID
+    }
+    return order['securityIid']?.toString() ?? 'N/A';
+  }
+
   String _getOrderStatus(Map<String, dynamic> order) {
     final rawStatus = (order['status'] ?? order['order_status'] ?? '').toString();
     if (rawStatus.isNotEmpty && rawStatus != 'UNKNOWN') {
@@ -3995,7 +4016,7 @@ class _TradingPageState extends State<TradingPage> {
   /// Whether a status is terminal (non-actionable)
   bool _isTerminalStatus(String status) {
     final s = status.toLowerCase().trim();
-    return ['filled', 'cancelled', 'expired', 'rejected', 'compensated'].contains(s);
+    return ['filled', 'completed', 'cancelled', 'expired', 'rejected', 'compensated'].contains(s);
   }
 
   /// Get color for an order status
@@ -4006,8 +4027,9 @@ class _TradingPageState extends State<TradingPage> {
       case 'pending': return Colors.amber.shade600;
       case 'validated': return Colors.cyan.shade300;
       case 'active': return Colors.lightBlue.shade300;
-      case 'partially filled': return Colors.lime.shade400;
+      case 'partially filled': return Colors.teal.shade300;
       case 'filled': return Colors.green.shade400;
+      case 'completed': return Colors.green.shade400;
       case 'cancelled': return Colors.orange.shade400;
       case 'expired': return Colors.grey.shade500;
       case 'rejected': return Colors.red.shade400;
@@ -4376,7 +4398,7 @@ class _TradingPageState extends State<TradingPage> {
     final side = formatSide(order['side'] ?? '');
     final symbol = order['symbol'] ?? 'N/A';
     final quantity = _formatDecimal(order['quantity'] ?? '0');
-    final remaining = _formatDecimal(order['remainingQuantity'] ?? order['remaining_quantity'] ?? order['quantity'] ?? '0');
+    final remaining = _formatDecimal(order['remainingQuantity'] ?? order['remaining_quantity'] ?? '?');
     final price = order['price'] ?? '0';
     final priceDisplay = (price == '0' || price == '0.00') ? 'Market' : _formatDecimal(price);
     final unit = order['expire_ts_unit'] ?? 'ms';
@@ -4434,7 +4456,7 @@ class _TradingPageState extends State<TradingPage> {
     final statusColor = _getStatusColor(status, isDarkTheme);
     final sideColor = side == 'BUY' ? UIConstants.colorAccept : UIConstants.colorReject;
     final quantity = _formatDecimal(order['quantity'] ?? '0');
-    final remaining = _formatDecimal(order['remainingQuantity'] ?? order['remaining_quantity'] ?? order['quantity'] ?? '0');
+    final remaining = _formatDecimal(order['remainingQuantity'] ?? order['remaining_quantity'] ?? '?');
     final quantityDisplay = '$remaining / $quantity';
     final price = order['price'] ?? '0';
     final priceDisplay = (price == '0' || price == '0.00') ? 'Market' : _formatDecimal(price);
@@ -4522,7 +4544,7 @@ class _TradingPageState extends State<TradingPage> {
     final statusColor = _getStatusColor(status, isDarkTheme);
     final sideColor = side == 'BUY' ? UIConstants.colorAccept : UIConstants.colorReject;
     final quantity = _formatDecimal(order['quantity'] ?? '0');
-    final remaining = _formatDecimal(order['remainingQuantity'] ?? order['remaining_quantity'] ?? order['quantity'] ?? '0');
+    final remaining = _formatDecimal(order['remainingQuantity'] ?? order['remaining_quantity'] ?? '?');
     final quantityDisplay = '$remaining / $quantity';
     final price = order['price'] ?? '0';
     final priceDisplay = (price == '0' || price == '0.00') ? 'Market' : _formatDecimal(price);
@@ -4710,7 +4732,7 @@ class _TradingPageState extends State<TradingPage> {
     final statusColor = _getStatusColor(status, isDarkTheme);
     final sideColor = side == 'BUY' ? UIConstants.colorAccept : UIConstants.colorReject;
     final quantity = _formatDecimal(order['quantity'] ?? '0');
-    final remaining = _formatDecimal(order['remainingQuantity'] ?? order['remaining_quantity'] ?? order['quantity'] ?? '0');
+    final remaining = _formatDecimal(order['remainingQuantity'] ?? order['remaining_quantity'] ?? '?');
     final quantityDisplay = '$remaining / $quantity';
     final price = order['price'] ?? '0';
     final priceDisplay = (price == '0' || price == '0.00') ? 'Market' : _formatDecimal(price);
@@ -4781,7 +4803,7 @@ class _TradingPageState extends State<TradingPage> {
     final statusColor = _getStatusColor(status, isDarkTheme);
     final sideColor = side == 'BUY' ? UIConstants.colorAccept : UIConstants.colorReject;
     final quantity = _formatDecimal(order['quantity'] ?? '0');
-    final remaining = _formatDecimal(order['remainingQuantity'] ?? order['remaining_quantity'] ?? order['quantity'] ?? '0');
+    final remaining = _formatDecimal(order['remainingQuantity'] ?? order['remaining_quantity'] ?? '?');
     final quantityDisplay = '$remaining / $quantity';
     final price = order['price'] ?? '0';
     final priceDisplay = (price == '0' || price == '0.00') ? 'Market' : _formatDecimal(price);
