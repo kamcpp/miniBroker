@@ -4469,7 +4469,7 @@ class _TradingPageState extends State<TradingPage> {
     final sideColor = side == 'BUY' ? UIConstants.colorAccept : UIConstants.colorReject;
     final quantity = _formatDecimal(order['quantity'] ?? '0');
     final remaining = _formatDecimal(order['remainingQuantity'] ?? order['remaining_quantity'] ?? '?');
-    final quantityDisplay = '$remaining / $quantity';
+    final quantityDisplay = (remaining == '0' || remaining == '0.0') ? quantity : '$remaining / $quantity';
     final price = order['price'] ?? '0';
     final priceDisplay = (price == '0' || price == '0.00') ? 'Market' : _formatDecimal(price);
 
@@ -4557,7 +4557,7 @@ class _TradingPageState extends State<TradingPage> {
     final sideColor = side == 'BUY' ? UIConstants.colorAccept : UIConstants.colorReject;
     final quantity = _formatDecimal(order['quantity'] ?? '0');
     final remaining = _formatDecimal(order['remainingQuantity'] ?? order['remaining_quantity'] ?? '?');
-    final quantityDisplay = '$remaining / $quantity';
+    final quantityDisplay = (remaining == '0' || remaining == '0.0') ? quantity : '$remaining / $quantity';
     final price = order['price'] ?? '0';
     final priceDisplay = (price == '0' || price == '0.00') ? 'Market' : _formatDecimal(price);
 
@@ -4745,7 +4745,7 @@ class _TradingPageState extends State<TradingPage> {
     final sideColor = side == 'BUY' ? UIConstants.colorAccept : UIConstants.colorReject;
     final quantity = _formatDecimal(order['quantity'] ?? '0');
     final remaining = _formatDecimal(order['remainingQuantity'] ?? order['remaining_quantity'] ?? '?');
-    final quantityDisplay = '$remaining / $quantity';
+    final quantityDisplay = (remaining == '0' || remaining == '0.0') ? quantity : '$remaining / $quantity';
     final price = order['price'] ?? '0';
     final priceDisplay = (price == '0' || price == '0.00') ? 'Market' : _formatDecimal(price);
 

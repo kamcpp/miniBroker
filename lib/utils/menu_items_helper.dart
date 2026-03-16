@@ -13,6 +13,7 @@ import '../screens/broker/agora_events_page.dart';
 import '../screens/broker/security_orderbooks_page.dart';
 import '../screens/broker/workflows_page.dart';
 import '../screens/investor/investor_info_page.dart';
+import '../screens/transaction_history_page.dart';
 import '../services/auth_service.dart';
 // import '../screens/activity_page.dart';  // Disabled
 // import '../screens/cash_management_page.dart';  // Removed
@@ -109,6 +110,23 @@ class MenuItemsHelper {
               Navigator.of(context).pushReplacement(
                 PageRouteBuilder(
                   pageBuilder: (context, animation, secondaryAnimation) => const InvestorInfoPage(),
+                  transitionDuration: Duration.zero,
+                  reverseTransitionDuration: Duration.zero,
+                ),
+              );
+            }
+          },
+        ),
+      if (role == UserRole.investor)
+        MenuItem(
+          label: 'Transactions',
+          icon: Icons.receipt_long,
+          isSelected: currentPage == 'transaction_history',
+          onTap: () {
+            if (currentPage != 'transaction_history') {
+              Navigator.of(context).pushReplacement(
+                PageRouteBuilder(
+                  pageBuilder: (context, animation, secondaryAnimation) => const TransactionHistoryPage(),
                   transitionDuration: Duration.zero,
                   reverseTransitionDuration: Duration.zero,
                 ),
