@@ -102,14 +102,14 @@ class MenuItemsHelper {
         ),
       if (role == UserRole.investor)
         MenuItem(
-          label: 'Investor Info',
-          icon: Icons.person,
-          isSelected: currentPage == 'investor_info',
+          label: 'Transactions',
+          icon: Icons.receipt_long,
+          isSelected: currentPage == 'transaction_history',
           onTap: () {
-            if (currentPage != 'investor_info') {
+            if (currentPage != 'transaction_history') {
               Navigator.of(context).pushReplacement(
                 PageRouteBuilder(
-                  pageBuilder: (context, animation, secondaryAnimation) => const InvestorInfoPage(),
+                  pageBuilder: (context, animation, secondaryAnimation) => const TransactionHistoryPage(),
                   transitionDuration: Duration.zero,
                   reverseTransitionDuration: Duration.zero,
                 ),
@@ -119,14 +119,14 @@ class MenuItemsHelper {
         ),
       if (role == UserRole.investor)
         MenuItem(
-          label: 'Transactions',
-          icon: Icons.receipt_long,
-          isSelected: currentPage == 'transaction_history',
+          label: 'Investor Info',
+          icon: Icons.person,
+          isSelected: currentPage == 'investor_info',
           onTap: () {
-            if (currentPage != 'transaction_history') {
+            if (currentPage != 'investor_info') {
               Navigator.of(context).pushReplacement(
                 PageRouteBuilder(
-                  pageBuilder: (context, animation, secondaryAnimation) => const TransactionHistoryPage(),
+                  pageBuilder: (context, animation, secondaryAnimation) => const InvestorInfoPage(),
                   transitionDuration: Duration.zero,
                   reverseTransitionDuration: Duration.zero,
                 ),

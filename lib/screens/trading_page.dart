@@ -5633,35 +5633,13 @@ class _TradingPageState extends State<TradingPage> {
                           : Text(
                               _isBuySelected
                                   ? '$_buyingPower ${_selectedCurrency['symbol'] ?? ''}'
-                                  : '$_availableBalance ${_selectedSymbol.isNotEmpty ? _selectedSymbol : ''}',
+                                  : '$_availableBalance $_selectedSymbol  |  $_buyingPower ${_selectedCurrency['symbol'] ?? ''}',
                               style: TextStyle(
                                 fontSize: UIConstants.fontSizeMd,
                                 fontWeight: UIConstants.fontWeightMedium,
                                 color: UIConstants.textPrimary(isDarkTheme),
                               ),
                             ),
-                      const SizedBox(width: 4),
-                      (!_isBuySelected && _securities.isEmpty)
-                          ? SizedBox(
-                              width: 14,
-                              height: 14,
-                              child: CircularProgressIndicator(
-                                strokeWidth: 1.5,
-                                valueColor: AlwaysStoppedAnimation<Color>(
-                                  UIConstants.textPrimary(isDarkTheme),
-                                ),
-                              ),
-                            )
-                          : (!_isBuySelected
-                              ? Text(
-                                  _getSelectedSecuritySymbol(),
-                                  style: TextStyle(
-                                    fontSize: UIConstants.fontSizeMd,
-                                    fontWeight: UIConstants.fontWeightMedium,
-                                    color: UIConstants.textPrimary(isDarkTheme),
-                                  ),
-                                )
-                              : SizedBox.shrink()),
                     ],
                   ),
                 ),
