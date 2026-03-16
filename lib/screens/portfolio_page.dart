@@ -372,7 +372,7 @@ class _PortfolioPageState extends State<PortfolioPage> {
                 // Cash token dropdown
                 SizedBox(
                   width: 180,
-                  height: UIConstants.buttonHeightStandard,
+                  height: UIConstants.buttonHeightStandard * 0.7,
                   child: DropdownButtonFormField<String>(
                     value: _selectedCashToken,
                     decoration: InputDecoration(
