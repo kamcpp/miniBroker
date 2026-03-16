@@ -45,7 +45,7 @@ class _WorkflowsPageState extends State<WorkflowsPage> {
 
   // Pagination
   int _currentPage = 1;
-  int _pageSize = 20;
+  int _pageSize = 100;
   int _totalPages = 1;
 
   // Filters
@@ -65,6 +65,7 @@ class _WorkflowsPageState extends State<WorkflowsPage> {
     'PENDING': Colors.grey,
     'RUNNING': UIConstants.colorPrimary,
     'IN_PROGRESS': UIConstants.colorPrimary,
+    'COMMITTED': UIConstants.colorAccept,
     'COMPLETED': UIConstants.colorAccept,
     'SUCCEEDED': UIConstants.colorAccept,
     'FAILED': UIConstants.colorReject,
@@ -78,6 +79,7 @@ class _WorkflowsPageState extends State<WorkflowsPage> {
     'PENDING': Icons.schedule,
     'RUNNING': Icons.play_circle_outline,
     'IN_PROGRESS': Icons.play_circle_outline,
+    'COMMITTED': Icons.check_circle_outline,
     'COMPLETED': Icons.check_circle_outline,
     'SUCCEEDED': Icons.check_circle_outline,
     'FAILED': Icons.error_outline,
@@ -119,7 +121,7 @@ class _WorkflowsPageState extends State<WorkflowsPage> {
       _templateFilterController.text = state['templateFilter'] ?? '';
       _submitterFilterController.text = state['submitterFilter'] ?? '';
       _currentPage = state['currentPage'] ?? 1;
-      _pageSize = state['pageSize'] ?? 20;
+      _pageSize = state['pageSize'] ?? 100;
     }
   }
 
@@ -194,7 +196,7 @@ class _WorkflowsPageState extends State<WorkflowsPage> {
       final submitterFilter = _submitterFilterController.text.trim();
       if (submitterFilter.isNotEmpty) request.sagaSubmitterId = submitterFilter;
 
-      print('📋 [Workflows] Calling ListSagas page=$_currentPage');
+      print('📋 [Workflows] Calling ListSagas page=$_currentPage, pageSize=$_pageSize');
       final response = await client.listSagas(request, options: _callOptions());
 
       if (!mounted) return;
@@ -204,6 +206,8 @@ class _WorkflowsPageState extends State<WorkflowsPage> {
       final totalPages = totalCount > 0
           ? (totalCount / _pageSize).ceil().clamp(1, 999999)
           : (sagas.length == _pageSize ? _currentPage + 1 : _currentPage);
+
+      print('📋 [Workflows] Got ${sagas.length} sagas, totalCount=$totalCount, totalPages=$totalPages');
 
       setState(() {
         _sagas = sagas;
@@ -427,11 +431,13 @@ class _WorkflowsPageState extends State<WorkflowsPage> {
   // ============================================================================
 
   Color _stateColor(String state) {
-    return _sagaStateColors[state.toUpperCase()] ?? Colors.grey;
+    final cleaned = _cleanState(state).toUpperCase();
+    return _sagaStateColors[cleaned] ?? Colors.grey;
   }
 
   IconData _stateIcon(String state) {
-    return _sagaStateIcons[state.toUpperCase()] ?? Icons.help_outline;
+    final cleaned = _cleanState(state).toUpperCase();
+    return _sagaStateIcons[cleaned] ?? Icons.help_outline;
   }
 
   String _formatTimestamp(int ts) {
@@ -669,18 +675,18 @@ class _WorkflowsPageState extends State<WorkflowsPage> {
           ),
           // Fetch button
           SizedBox(
-            height: _commandButtonHeight,
+            height: UIConstants.inputHeightCompact,
             child: ElevatedButton(
               onPressed: _applyFilters,
               style: UIConstants.buttonStyle(UIConstants.commandColor(isDarkTheme)).copyWith(
-                minimumSize: WidgetStatePropertyAll(Size(0, _commandButtonHeight)),
+                minimumSize: WidgetStatePropertyAll(Size(0, UIConstants.inputHeightCompact)),
               ),
               child: Text('Fetch', style: TextStyle(fontSize: UIConstants.fontSizeSm)),
             ),
           ),
           // Clear button
           SizedBox(
-            height: _commandButtonHeight,
+            height: UIConstants.inputHeightCompact,
             child: TextButton(
               onPressed: _resetFilters,
               style: UIConstants.cancelTextButtonStyle(isDarkTheme),
@@ -692,27 +698,121 @@ class _WorkflowsPageState extends State<WorkflowsPage> {
     );
   }
 
+  final Set<String> _expandedParents = {};
+
   Widget _buildSagaTable(bool isDarkTheme) {
     final cellStyle = StyledDataTable.cellStyle(isDarkTheme);
+    final childStyle = cellStyle.copyWith(color: UIConstants.textSecondary(isDarkTheme));
 
-    final rows = _sagas.map((saga) {
-      return StyledRow(
-        onTap: () => _navigateToDetail(saga.instanceId),
+    // Separate root sagas (depth 0) and children (depth > 0)
+    final roots = <saga_pb.SagaInstance>[];
+    final childrenByRoot = <String, List<saga_pb.SagaInstance>>{};
+
+    for (final saga in _sagas) {
+      if (saga.sagaDepth == 0) {
+        roots.add(saga);
+      } else {
+        final rootId = saga.rootSagaInstanceId.isNotEmpty ? saga.rootSagaInstanceId : saga.instanceId;
+        childrenByRoot.putIfAbsent(rootId, () => []).add(saga);
+      }
+    }
+
+    // Sort roots descending by created time
+    roots.sort((a, b) => b.createdAt.compareTo(a.createdAt));
+
+    // Build rows: parent, then its children if expanded
+    final rows = <StyledRow>[];
+    for (final root in roots) {
+      final children = childrenByRoot[root.instanceId] ?? [];
+      final hasChildren = children.isNotEmpty;
+      final isExpanded = _expandedParents.contains(root.instanceId);
+
+      // Parent row
+      rows.add(StyledRow(
+        onTap: () => _navigateToDetail(root.instanceId),
         cells: [
-          Tooltip(
-            message: saga.instanceId,
-            child: Text(_truncateId(saga.instanceId), style: cellStyle, overflow: TextOverflow.ellipsis),
+          Row(
+            mainAxisSize: MainAxisSize.min,
+            children: [
+              if (hasChildren)
+                InkWell(
+                  onTap: () => setState(() {
+                    if (isExpanded) {
+                      _expandedParents.remove(root.instanceId);
+                    } else {
+                      _expandedParents.add(root.instanceId);
+                    }
+                  }),
+                  child: Icon(
+                    isExpanded ? Icons.expand_more : Icons.chevron_right,
+                    size: 16,
+                    color: UIConstants.textSecondary(isDarkTheme),
+                  ),
+                )
+              else
+                SizedBox(width: 16),
+              SizedBox(width: 4),
+              Flexible(child: _copyableText(_truncateId(root.instanceId), root.instanceId, cellStyle, isDarkTheme)),
+            ],
           ),
-          Text(saga.sagaTemplateId, style: cellStyle, overflow: TextOverflow.ellipsis),
-          Text(_truncateId(saga.sagaSubmitterId), style: cellStyle, overflow: TextOverflow.ellipsis),
-          _stateChip(saga.state, compact: true),
-          Text('${saga.sagaDepth}', style: cellStyle),
-          Text(saga.childSagaInstanceIds.length.toString(), style: cellStyle),
-          Text(_formatTimestamp(saga.createdAt.toInt()), style: cellStyle, overflow: TextOverflow.ellipsis),
-          Text(_formatTimestamp(saga.updatedAt.toInt()), style: cellStyle, overflow: TextOverflow.ellipsis),
+          _copyableText(root.sagaTemplateId, root.sagaTemplateId, cellStyle, isDarkTheme),
+          _copyableText(_truncateId(root.sagaSubmitterId), root.sagaSubmitterId, cellStyle, isDarkTheme),
+          _stateChip(root.state, compact: true),
+          if (hasChildren)
+            Text('${children.length}', style: TextStyle(color: UIConstants.colorPrimary, fontSize: UIConstants.fontSizeSm, fontWeight: FontWeight.w500))
+          else
+            Text('-', style: cellStyle),
+          _copyableText(_formatTimestamp(root.createdAt.toInt()), _formatTimestamp(root.createdAt.toInt()), cellStyle, isDarkTheme),
+          _copyableText(_formatTimestamp(root.updatedAt.toInt()), _formatTimestamp(root.updatedAt.toInt()), cellStyle, isDarkTheme),
         ],
-      );
-    }).toList();
+      ));
+
+      // Child rows (if expanded)
+      if (isExpanded) {
+        for (final child in children) {
+          rows.add(StyledRow(
+            onTap: () => _navigateToDetail(child.instanceId),
+            cells: [
+              Row(
+                mainAxisSize: MainAxisSize.min,
+                children: [
+                  SizedBox(width: 20),
+                  Icon(Icons.subdirectory_arrow_right, size: 12, color: UIConstants.textHint(isDarkTheme)),
+                  SizedBox(width: 4),
+                  Flexible(child: _copyableText(_truncateId(child.instanceId), child.instanceId, childStyle, isDarkTheme)),
+                ],
+              ),
+              _copyableText(child.sagaTemplateId, child.sagaTemplateId, childStyle, isDarkTheme),
+              _copyableText(_truncateId(child.sagaSubmitterId), child.sagaSubmitterId, childStyle, isDarkTheme),
+              _stateChip(child.state, compact: true),
+              Text('', style: childStyle),
+              _copyableText(_formatTimestamp(child.createdAt.toInt()), _formatTimestamp(child.createdAt.toInt()), childStyle, isDarkTheme),
+              _copyableText(_formatTimestamp(child.updatedAt.toInt()), _formatTimestamp(child.updatedAt.toInt()), childStyle, isDarkTheme),
+            ],
+          ));
+        }
+      }
+    }
+
+    // Also show orphan children (depth > 0 but parent not in current page)
+    for (final entry in childrenByRoot.entries) {
+      if (!roots.any((r) => r.instanceId == entry.key)) {
+        for (final child in entry.value) {
+          rows.add(StyledRow(
+            onTap: () => _navigateToDetail(child.instanceId),
+            cells: [
+              _copyableText(_truncateId(child.instanceId), child.instanceId, childStyle, isDarkTheme),
+              _copyableText(child.sagaTemplateId, child.sagaTemplateId, childStyle, isDarkTheme),
+              _copyableText(_truncateId(child.sagaSubmitterId), child.sagaSubmitterId, childStyle, isDarkTheme),
+              _stateChip(child.state, compact: true),
+              Text('', style: childStyle),
+              _copyableText(_formatTimestamp(child.createdAt.toInt()), _formatTimestamp(child.createdAt.toInt()), childStyle, isDarkTheme),
+              _copyableText(_formatTimestamp(child.updatedAt.toInt()), _formatTimestamp(child.updatedAt.toInt()), childStyle, isDarkTheme),
+            ],
+          ));
+        }
+      }
+    }
 
     return StyledDataTable(
       isDarkTheme: isDarkTheme,
@@ -721,7 +821,6 @@ class _WorkflowsPageState extends State<WorkflowsPage> {
         StyledColumn(label: 'Template', flex: 2),
         StyledColumn(label: 'Submitter', flex: 2),
         StyledColumn(label: 'State', flex: 1),
-        StyledColumn(label: 'Depth', flex: 1),
         StyledColumn(label: 'Children', flex: 1),
         StyledColumn(label: 'Created', flex: 2),
         StyledColumn(label: 'Updated', flex: 2),
@@ -752,6 +851,34 @@ class _WorkflowsPageState extends State<WorkflowsPage> {
           _buildSagaInfoCard(saga, summary, isDarkTheme),
           SizedBox(height: UIConstants.spacingLg),
 
+          // Input data
+          ...[
+            Text('Input', style: TextStyle(color: UIConstants.textPrimary(isDarkTheme), fontSize: UIConstants.fontSizeMd, fontWeight: FontWeight.w500)),
+            SizedBox(height: UIConstants.spacingMd),
+            Container(
+              width: double.infinity,
+              padding: UIConstants.paddingStandard,
+              decoration: BoxDecoration(
+                color: UIConstants.cardBackground(isDarkTheme),
+                borderRadius: BorderRadius.circular(UIConstants.borderRadiusMd),
+                border: Border.all(color: UIConstants.borderColor(isDarkTheme)),
+              ),
+              child: InkWell(
+                onTap: () => _copyToClipboard(saga.inputData),
+                child: SelectableText(
+                  saga.inputData.isNotEmpty ? saga.inputData : '{}',
+                  style: TextStyle(
+                    color: UIConstants.textPrimary(isDarkTheme),
+                    fontSize: UIConstants.fontSizeSm,
+                    fontFamily: 'monospace',
+                    height: 1.4,
+                  ),
+                ),
+              ),
+            ),
+            SizedBox(height: UIConstants.spacingLg),
+          ],
+
           // Progress bar
           if (summary.total > 0) ...[
             _buildProgressBar(summary, isDarkTheme),
@@ -765,12 +892,12 @@ class _WorkflowsPageState extends State<WorkflowsPage> {
             _buildStepPipeline(isDarkTheme),
           ],
 
-          // Child sagas
-          if (saga.childSagaInstanceIds.isNotEmpty) ...[
+          // Child sagas (from SagaDetail.childSagas, not the deprecated childSagaInstanceIds)
+          if (detail.childSagas.isNotEmpty) ...[
             SizedBox(height: UIConstants.spacingLg),
             Text('Child Sagas', style: TextStyle(color: UIConstants.textPrimary(isDarkTheme), fontSize: UIConstants.fontSizeMd, fontWeight: FontWeight.w500)),
             SizedBox(height: UIConstants.spacingMd),
-            _buildChildSagaChips(saga.childSagaInstanceIds, isDarkTheme),
+            _buildChildSagaDetailChips(detail.childSagas, isDarkTheme),
           ],
         ],
       ),
@@ -789,7 +916,7 @@ class _WorkflowsPageState extends State<WorkflowsPage> {
         spacing: UIConstants.spacingXl,
         runSpacing: UIConstants.spacingMd,
         children: [
-          _infoItem('Instance ID', saga.instanceId, isDarkTheme, copyable: true),
+          _infoItem('Instance ID', saga.instanceId, isDarkTheme),
           _infoItem('Template', saga.sagaTemplateId, isDarkTheme),
           _infoItem('Submitter', saga.sagaSubmitterId, isDarkTheme),
           _stateChip(saga.state),
@@ -804,27 +931,34 @@ class _WorkflowsPageState extends State<WorkflowsPage> {
     );
   }
 
-  Widget _infoItem(String label, String value, bool isDarkTheme, {bool copyable = false}) {
-    final content = Column(
-      crossAxisAlignment: CrossAxisAlignment.start,
-      mainAxisSize: MainAxisSize.min,
-      children: [
-        Text(label, style: TextStyle(color: UIConstants.textSecondary(isDarkTheme), fontSize: UIConstants.fontSizeXs)),
-        SizedBox(height: 1),
-        Text(value, style: TextStyle(color: UIConstants.textPrimary(isDarkTheme), fontSize: UIConstants.fontSizeSm)),
-      ],
-    );
-
-    if (copyable) {
-      return Tooltip(
-        message: 'Click to copy',
-        child: InkWell(
-          onTap: () => _copyToClipboard(value),
-          child: content,
+  Widget _infoItem(String label, String value, bool isDarkTheme) {
+    return Tooltip(
+      message: 'Click to copy',
+      child: InkWell(
+        onTap: () => _copyToClipboard(value),
+        child: Column(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          mainAxisSize: MainAxisSize.min,
+          children: [
+            Text(label, style: TextStyle(color: UIConstants.textSecondary(isDarkTheme), fontSize: UIConstants.fontSizeXs)),
+            SizedBox(height: 1),
+            Text(value, style: TextStyle(color: UIConstants.textPrimary(isDarkTheme), fontSize: UIConstants.fontSizeSm)),
+          ],
         ),
-      );
-    }
-    return content;
+      ),
+    );
+  }
+
+  /// Copyable text widget — tap to copy full value, show truncated display.
+  Widget _copyableText(String display, String fullValue, TextStyle style, bool isDarkTheme) {
+    return Tooltip(
+      message: fullValue,
+      waitDuration: const Duration(milliseconds: 300),
+      child: InkWell(
+        onTap: () => _copyToClipboard(fullValue),
+        child: Text(display, style: style, overflow: TextOverflow.ellipsis),
+      ),
+    );
   }
 
   Widget _buildProgressBar(saga_pb.SagaStepSummary summary, bool isDarkTheme) {
@@ -957,9 +1091,11 @@ class _WorkflowsPageState extends State<WorkflowsPage> {
                         Icon(stateIconData, color: stateColor, size: UIConstants.iconSizeMd),
                         SizedBox(width: UIConstants.spacingMd),
                         Expanded(
-                          child: Text(
+                          child: _copyableText(
                             step.sagaStepTemplateId.isNotEmpty ? step.sagaStepTemplateId : 'Step ${index + 1}',
-                            style: TextStyle(color: UIConstants.textPrimary(isDarkTheme), fontSize: UIConstants.fontSizeSm, fontWeight: FontWeight.w500),
+                            step.sagaStepTemplateId,
+                            TextStyle(color: UIConstants.textPrimary(isDarkTheme), fontSize: UIConstants.fontSizeSm, fontWeight: FontWeight.w500),
+                            isDarkTheme,
                           ),
                         ),
                         _stateChip(step.state, compact: true),
@@ -992,7 +1128,10 @@ class _WorkflowsPageState extends State<WorkflowsPage> {
                             color: UIConstants.colorReject.withOpacity(0.1),
                             borderRadius: BorderRadius.circular(UIConstants.borderRadiusSm),
                           ),
-                          child: Text('Error: ${step.executionError}', style: TextStyle(color: UIConstants.colorReject, fontSize: UIConstants.fontSizeXs)),
+                          child: InkWell(
+                            onTap: () => _copyToClipboard(step.executionError),
+                            child: SelectableText('Error: ${step.executionError}', style: TextStyle(color: UIConstants.colorReject, fontSize: UIConstants.fontSizeXs)),
+                          ),
                         ),
                       if (step.resultData.isNotEmpty)
                         Container(
@@ -1003,7 +1142,10 @@ class _WorkflowsPageState extends State<WorkflowsPage> {
                             color: UIConstants.colorAccept.withOpacity(0.1),
                             borderRadius: BorderRadius.circular(UIConstants.borderRadiusSm),
                           ),
-                          child: Text('Result: ${step.resultData}', style: TextStyle(color: UIConstants.textPrimary(isDarkTheme), fontSize: UIConstants.fontSizeXs), maxLines: 3, overflow: TextOverflow.ellipsis),
+                          child: InkWell(
+                            onTap: () => _copyToClipboard(step.resultData),
+                            child: SelectableText('Result: ${step.resultData}', style: TextStyle(color: UIConstants.textPrimary(isDarkTheme), fontSize: UIConstants.fontSizeXs), maxLines: 3),
+                          ),
                         ),
                       ...step.executionHistory.asMap().entries.map(
                         (entry) => _buildExecutionLogEntry(entry.key, entry.value, isDarkTheme),
@@ -1078,7 +1220,13 @@ class _WorkflowsPageState extends State<WorkflowsPage> {
             if (hasError) ...[
               SizedBox(width: UIConstants.spacingSm),
               Flexible(
-                child: Text(log.executionError, style: TextStyle(color: UIConstants.colorReject, fontSize: UIConstants.fontSizeXs), overflow: TextOverflow.ellipsis),
+                child: InkWell(
+                  onTap: () => _copyToClipboard(log.executionError),
+                  child: Tooltip(
+                    message: log.executionError,
+                    child: Text(log.executionError, style: TextStyle(color: UIConstants.colorReject, fontSize: UIConstants.fontSizeXs), overflow: TextOverflow.ellipsis),
+                  ),
+                ),
               ),
             ],
             if (isCompensation) ...[
@@ -1112,17 +1260,28 @@ class _WorkflowsPageState extends State<WorkflowsPage> {
     );
   }
 
-  Widget _buildChildSagaChips(List<String> childIds, bool isDarkTheme) {
+  Widget _buildChildSagaDetailChips(List<saga_pb.SagaDetail> childSagas, bool isDarkTheme) {
     return Wrap(
       spacing: UIConstants.spacingMd,
       runSpacing: UIConstants.spacingXs,
-      children: childIds.map((id) {
+      children: childSagas.map((child) {
+        final label = child.saga.sagaTemplateId.isNotEmpty
+            ? child.saga.sagaTemplateId
+            : _truncateId(child.saga.instanceId);
+        final stateColor = _stateColor(child.saga.state);
         return ActionChip(
-          label: Text(_truncateId(id), style: TextStyle(fontSize: UIConstants.fontSizeXs, color: UIConstants.textPrimary(isDarkTheme))),
-          avatar: Icon(Icons.subdirectory_arrow_right, size: 14, color: UIConstants.colorPrimary),
+          label: Row(
+            mainAxisSize: MainAxisSize.min,
+            children: [
+              Text(label, style: TextStyle(fontSize: UIConstants.fontSizeXs, color: UIConstants.textPrimary(isDarkTheme))),
+              SizedBox(width: 4),
+              _stateChip(child.saga.state, compact: true),
+            ],
+          ),
+          avatar: Icon(Icons.subdirectory_arrow_right, size: 14, color: stateColor),
           backgroundColor: UIConstants.cardBackground(isDarkTheme),
           side: BorderSide(color: UIConstants.borderColor(isDarkTheme)),
-          onPressed: () => _navigateToDetail(id),
+          onPressed: () => _navigateToDetail(child.saga.instanceId),
         );
       }).toList(),
     );
@@ -1200,10 +1359,11 @@ class _WorkflowsPageState extends State<WorkflowsPage> {
                         Icon(_stateIcon(saga.state), color: _stateColor(saga.state), size: UIConstants.iconSizeSm),
                         SizedBox(width: UIConstants.spacingSm),
                         Expanded(
-                          child: Text(
+                          child: _copyableText(
                             saga.sagaTemplateId.isNotEmpty ? saga.sagaTemplateId : _truncateId(saga.instanceId),
-                            style: TextStyle(color: UIConstants.textPrimary(isDarkTheme), fontSize: UIConstants.fontSizeSm, fontWeight: FontWeight.w500),
-                            overflow: TextOverflow.ellipsis,
+                            saga.instanceId,
+                            TextStyle(color: UIConstants.textPrimary(isDarkTheme), fontSize: UIConstants.fontSizeSm, fontWeight: FontWeight.w500),
+                            isDarkTheme,
                           ),
                         ),
                         SizedBox(width: UIConstants.spacingMd),
@@ -1294,9 +1454,20 @@ class _WorkflowsPageState extends State<WorkflowsPage> {
   // Shared widgets
   // ============================================================================
 
+  /// Clean enum prefix: SAGA_STATE_ENUM_COMMITTED → COMMITTED
+  String _cleanState(String state) {
+    if (state.isEmpty) return 'UNKNOWN';
+    // Remove common prefixes
+    final cleaned = state
+        .replaceFirst(RegExp(r'^SAGA_STATE_ENUM_'), '')
+        .replaceFirst(RegExp(r'^SAGA_STEP_STATE_ENUM_'), '')
+        .replaceFirst(RegExp(r'^STEP_STATE_'), '');
+    return cleaned;
+  }
+
   Widget _stateChip(String state, {bool compact = false}) {
-    final color = _stateColor(state);
-    final displayState = state.isNotEmpty ? state : 'UNKNOWN';
+    final cleaned = _cleanState(state);
+    final color = _stateColor(cleaned);
 
     return Container(
       padding: EdgeInsets.symmetric(
@@ -1309,7 +1480,7 @@ class _WorkflowsPageState extends State<WorkflowsPage> {
         border: Border.all(color: color.withOpacity(0.4), width: 0.5),
       ),
       child: Text(
-        displayState,
+        cleaned,
         style: TextStyle(
           color: color,
           fontSize: compact ? UIConstants.fontSizeXs : UIConstants.fontSizeSm,

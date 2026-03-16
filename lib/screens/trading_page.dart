@@ -1428,20 +1428,31 @@ class _TradingPageState extends State<TradingPage> {
           final activeOrders = <Map<String, dynamic>>[];
           final historyOrders = <Map<String, dynamic>>[];
 
+          // Orders from today go to Orders tab, older ones to History
+          final now = DateTime.now();
+          final todayStart = DateTime(now.year, now.month, now.day);
+
           for (final order in allProcessedOrders) {
-            final isFilled = order['is_filled'] as bool;
-            final isCancelled = order['is_cancelled'] as bool;
-            final isExpired = order['is_expired'] as bool;
+            // Parse creation timestamp to determine if order is from today
+            final createTs = order['create_timestamp']?.toString() ?? '';
+            DateTime? createdAt;
+            if (createTs.isNotEmpty) {
+              // Try parsing as ISO string first, then as epoch ms
+              createdAt = DateTime.tryParse(createTs);
+              if (createdAt == null) {
+                final ms = int.tryParse(createTs);
+                if (ms != null) {
+                  createdAt = DateTime.fromMillisecondsSinceEpoch(ms > 9999999999 ? ms : ms * 1000);
+                }
+              }
+            }
 
-            // Check for compensated status
-            final status = _getOrderStatus(order).toLowerCase().trim();
-            final isFailed = status == 'failed';
+            final isToday = createdAt != null && createdAt.isAfter(todayStart);
 
-            // History orders: filled, cancelled, expired, or failed
-            if (isFilled || isCancelled || isExpired || isFailed) {
-              historyOrders.add(order);
-            } else {
+            if (isToday) {
               activeOrders.add(order);
+            } else {
+              historyOrders.add(order);
             }
           }
 
@@ -4704,7 +4715,7 @@ class _TradingPageState extends State<TradingPage> {
         columns: [
           StyledColumn(label: 'Side'),
           StyledColumn(label: 'Pair'),
-          StyledColumn(label: 'Qty (Rem/Tot)'),
+          StyledColumn(label: 'Qty'),
           StyledColumn(label: 'Price'),
           StyledColumn(label: 'Creation Time'),
           StyledColumn(label: 'Expiration Time'),
@@ -4804,15 +4815,13 @@ class _TradingPageState extends State<TradingPage> {
     final statusColor = _getStatusColor(status, isDarkTheme);
     final sideColor = side == 'BUY' ? UIConstants.colorAccept : UIConstants.colorReject;
     final quantity = _formatDecimal(order['quantity'] ?? '0');
-    final remaining = _formatDecimal(order['remainingQuantity'] ?? order['remaining_quantity'] ?? '?');
-    final quantityDisplay = '$remaining / $quantity';
     final price = order['price'] ?? '0';
     final priceDisplay = (price == '0' || price == '0.00') ? 'Market' : _formatDecimal(price);
 
     return StyledRow(cells: [
       _copyableOrderCell(side, isDarkTheme, width: 75, color: sideColor, fontWeight: UIConstants.fontWeightMedium, fontSize: UIConstants.fontSizeSm, textAlign: TextAlign.left),
       _copyableOrderCell(order['symbol'] ?? 'N/A', isDarkTheme, width: 150),
-      _copyableOrderCell(quantityDisplay, isDarkTheme, width: 150),
+      _copyableOrderCell(quantity, isDarkTheme, width: 150),
       _copyableOrderCell(priceDisplay, isDarkTheme, width: 150),
       _copyableOrderCell(_formatOrderTimestamp(order['create_timestamp']), isDarkTheme, width: 150, fontSize: 11),
       SizedBox(
