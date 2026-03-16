@@ -4495,20 +4495,18 @@ class _TradingPageState extends State<TradingPage> {
               children: [
                 if (!_isTerminalStatus(status)) ...[
                   IconButton(
-                    icon: const Icon(Icons.cancel_outlined, size: 18),
-                    color: Colors.red,
-                    tooltip: 'Cancel',
+                    icon: Icon(Icons.cancel_outlined, size: 18, color: Colors.grey.shade500),
+                    tooltip: 'Coming soon',
                     padding: EdgeInsets.zero,
                     constraints: const BoxConstraints(minWidth: 28, minHeight: 28),
-                    onPressed: () => _cancelOrder(order['participantOrderId']?.toString() ?? ''),
+                    onPressed: () {},
                   ),
                   IconButton(
-                    icon: const Icon(Icons.swap_horiz, size: 18),
-                    color: Colors.blue,
-                    tooltip: 'Replace',
+                    icon: Icon(Icons.swap_horiz, size: 18, color: Colors.grey.shade500),
+                    tooltip: 'Coming soon',
                     padding: EdgeInsets.zero,
                     constraints: const BoxConstraints(minWidth: 28, minHeight: 28),
-                    onPressed: () => _replaceOrder(order['participantOrderId']?.toString() ?? '', order),
+                    onPressed: () {},
                   ),
                 ],
                 IconButton(
@@ -4577,20 +4575,18 @@ class _TradingPageState extends State<TradingPage> {
         children: [
           if (!_isTerminalStatus(status)) ...[
             IconButton(
-              icon: const Icon(Icons.cancel_outlined, size: 16),
-              color: Colors.red,
-              tooltip: 'Cancel',
+              icon: Icon(Icons.cancel_outlined, size: 16, color: Colors.grey.shade500),
+              tooltip: 'Coming soon',
               padding: EdgeInsets.zero,
               constraints: const BoxConstraints(minWidth: 24, minHeight: 24),
-              onPressed: () => _cancelOrder(order['participantOrderId']?.toString() ?? ''),
+              onPressed: () {},
             ),
             IconButton(
-              icon: const Icon(Icons.swap_horiz, size: 16),
-              color: Colors.blue,
-              tooltip: 'Replace',
+              icon: Icon(Icons.swap_horiz, size: 16, color: Colors.grey.shade500),
+              tooltip: 'Coming soon',
               padding: EdgeInsets.zero,
               constraints: const BoxConstraints(minWidth: 24, minHeight: 24),
-              onPressed: () => _replaceOrder(order['participantOrderId']?.toString() ?? '', order),
+              onPressed: () {},
             ),
           ],
           IconButton(
