@@ -5289,6 +5289,11 @@ class _TradingPageState extends State<TradingPage> {
   }
 
   void _showOrderErrorDialog(String title, String errorMessage) {
+    // Refresh orders after 5 seconds
+    Future.delayed(const Duration(seconds: 5), () {
+      if (mounted) _fetchRealOrders();
+    });
+
     final themeService = Provider.of<ThemeService>(context, listen: false);
     final isDark = themeService.isDarkTheme;
 
