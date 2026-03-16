@@ -233,7 +233,30 @@ class _TransactionHistoryPageState extends State<TransactionHistoryPage> {
   }
 
   String _safeStr(String value) {
-    return value.isEmpty ? '-' : value;
+    if (value.isEmpty) return '-';
+    // Replace zero addresses with N/A
+    if (value.startsWith('0x') && value.replaceAll('0', '').replaceAll('x', '').isEmpty) return 'N/A';
+    return value;
+  }
+
+  /// Descale an amount using divisibility (e.g., 45000 with divis 2 = 450.00)
+  String _descaleAmount(String rawAmount, String assetIid) {
+    if (rawAmount == '-' || rawAmount.isEmpty) return '-';
+    final raw = int.tryParse(rawAmount);
+    if (raw == null) return rawAmount;
+    // Try to determine divisibility from asset name
+    final divis = _guessDivisibility(assetIid);
+    if (divis == 0) return rawAmount;
+    final divisor = List.generate(divis, (_) => 10).fold<int>(1, (a, b) => a * b);
+    return (raw / divisor).toStringAsFixed(divis);
+  }
+
+  int _guessDivisibility(String assetIid) {
+    final upper = assetIid.toUpperCase();
+    if (upper.contains('EUR') || upper.contains('USD') || upper.contains('GBP') || upper.contains('CHF')) return 2;
+    if (upper.contains('JPY') || upper.contains('KRW')) return 0;
+    if (upper.contains('BHD') || upper.contains('KWD') || upper.contains('OMR')) return 3;
+    return 2; // default
   }
 
   static const int _truncateThreshold = 20;
@@ -440,14 +463,14 @@ class _TransactionHistoryPageState extends State<TransactionHistoryPage> {
     return StyledDataTable(
       isDarkTheme: isDarkTheme,
       columns: [
-        StyledColumn(label: 'Transaction ID', flex: 2),
-        StyledColumn(label: 'Type', flex: 1),
-        StyledColumn(label: 'Operation', flex: 2),
+        StyledColumn(label: 'ID', flex: 1),
+        StyledColumn(label: 'Type', flex: 2),
+        StyledColumn(label: 'Operation', flex: 1),
         StyledColumn(label: 'Account', flex: 2),
         StyledColumn(label: 'From', flex: 2),
         StyledColumn(label: 'To', flex: 2),
         StyledColumn(label: 'Asset', flex: 2),
-        StyledColumn(label: 'Amount', flex: 1),
+        StyledColumn(label: 'Amount', flex: 2),
         StyledColumn(label: 'Reference', flex: 2),
         StyledColumn(label: 'Ref Type', flex: 1),
         StyledColumn(label: 'Timestamp', flex: 2),
@@ -463,7 +486,7 @@ class _TransactionHistoryPageState extends State<TransactionHistoryPage> {
         final fromAccountIid = _safeStr(tx.fromAccountIid);
         final toAccountIid = _safeStr(tx.toAccountIid);
         final assetIid = _safeStr(tx.assetIid);
-        final amount = _safeStr(tx.amount);
+        final amount = _descaleAmount(tx.amount, tx.assetIid);
         final referenceId = _safeStr(tx.referenceId);
         final referenceType = _safeStr(tx.referenceType);
         final timestamp = _formatTimestamp(tx.timestamp);
