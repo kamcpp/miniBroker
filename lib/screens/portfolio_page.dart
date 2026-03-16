@@ -410,7 +410,7 @@ class _PortfolioPageState extends State<PortfolioPage> {
                 const SizedBox(width: 12),
                 // Deposit button
                 SizedBox(
-                  height: UIConstants.buttonHeightStandard,
+                  height: UIConstants.buttonHeightStandard * 0.7,
                   child: ElevatedButton.icon(
                     onPressed: _selectedCashToken == null ? null : () => _showDepositDialog(_selectedCashToken!),
                     icon: const Icon(Icons.add, size: 16),
@@ -421,7 +421,7 @@ class _PortfolioPageState extends State<PortfolioPage> {
                 const SizedBox(width: 8),
                 // Withdraw button
                 SizedBox(
-                  height: UIConstants.buttonHeightStandard,
+                  height: UIConstants.buttonHeightStandard * 0.7,
                   child: ElevatedButton.icon(
                     onPressed: _selectedCashToken == null ? null : () {
                       final availableBalance = _getAvailableBalanceForToken(_selectedCashToken!);

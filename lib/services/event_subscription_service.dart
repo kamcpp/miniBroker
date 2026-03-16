@@ -284,7 +284,6 @@ class EventSubscriptionService {
       case ExecutionResponseEvent_Response.getInvestorCashHoldings: return 'Cash Holdings';
       case ExecutionResponseEvent_Response.getInvestorOrders: return 'Investor Orders';
       case ExecutionResponseEvent_Response.getInvestorTrades: return 'Investor Trades';
-      case ExecutionResponseEvent_Response.getInvestorSettlements: return 'Investor Settlements';
       case ExecutionResponseEvent_Response.getInvestorTransactions: return 'Investor Transactions';
       case ExecutionResponseEvent_Response.getVenueList: return 'Venue List';
       case ExecutionResponseEvent_Response.getVenueCalendar: return 'Venue Calendar';

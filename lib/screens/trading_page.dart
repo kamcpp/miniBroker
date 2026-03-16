@@ -4001,7 +4001,7 @@ class _TradingPageState extends State<TradingPage> {
     if (symbol.isNotEmpty && !symbol.startsWith('sec_listing_') && !symbol.startsWith('issued_instr_')) {
       return symbol;
     }
-    // Try to resolve from IID
+    // Try to resolve from IID — also check securityListingIid field
     final iid = symbol.isNotEmpty ? symbol
         : (order['securityListingIid']?.toString() ?? order['security_listing_iid']?.toString() ?? '');
     if (iid.isNotEmpty) {
