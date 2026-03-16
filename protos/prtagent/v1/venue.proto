@@ -1,0 +1,50 @@
+syntax = "proto3";
+
+package tech.qomet.agora.api.grpc.prtagent.v1;
+
+import "common.proto";
+import "fin/venue.proto";
+
+option go_package = "qomet.tech/agora/daemons/gen-pkg/tech/qomet/agora/api/grpc/prtagent/v1;agoraapigrpcprtagentv1";
+option java_package = "tech.qomet.agora.api.grpc.prtagent.v1";
+option java_outer_classname = "Venue";
+option csharp_namespace  = "Tech.Qomet.Agora.Api.Grpc.PrtAgent.V1";
+
+service VenueService {
+  rpc GetVenueList(GetVenueListRequest) returns (GetVenueListResponse);
+  rpc GetVenueListAsync(GetVenueListRequest) returns (tech.qomet.agora.api.grpc.common.ExecutionAsyncResponse);
+
+  rpc GetVenueCalendar(GetVenueCalendarRequest) returns (GetVenueCalendarResponse);
+  rpc GetVenueCalendarAsync(GetVenueCalendarRequest) returns (tech.qomet.agora.api.grpc.common.ExecutionAsyncResponse);
+}
+
+message GetVenueListRequest {
+  string proposed_execution_id = 1;                                  // OPTIONAL: Client-proposed execution ID for tracking
+  tech.qomet.agora.api.grpc.common.PaginationParams pagination = 2;  // OPTIONAL: Pagination parameters
+  string market_id_or_symbol_regex = 3;                              // OPTIONAL: Filter by market ID or symbol regex
+  string venue_id_or_symbol_regex = 4;                               // OPTIONAL: Filter by venue ID or symbol regex
+
+  map<string, string> aux_data = 105;                                // OPTIONAL: Additional request data
+}
+
+message GetVenueListResponse {
+  string ref_execution_id = 1;                                       // REQUIRED: Reference to the execution ID
+  tech.qomet.agora.api.grpc.common.PaginationInfo pagination = 2;    // OPTIONAL: Pagination information (required if paginated)
+  repeated tech.qomet.agora.api.grpc.fin.Venue venues = 3;        // REQUIRED: List of venues (can be empty)
+
+  map<string, string> metadata = 105;                                // OPTIONAL: Response metadata
+}
+
+message GetVenueCalendarRequest {
+  string proposed_execution_id = 1;                                  // OPTIONAL: Client-proposed execution ID for tracking
+  string venue_iid = 2;                                              // REQUIRED: Venue internal ID to get calendar for
+
+  map<string, string> aux_data = 105;                                // OPTIONAL: Additional request data
+}
+
+message GetVenueCalendarResponse {
+  string ref_execution_id = 1;                                       // REQUIRED: Reference to the execution ID
+  tech.qomet.agora.api.grpc.fin.VenueCalendar calendar = 2;       // REQUIRED: Venue calendar information
+
+  map<string, string> metadata = 105;                                // OPTIONAL: Response metadata
+}

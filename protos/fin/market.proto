@@ -1,0 +1,98 @@
+syntax = "proto3";
+
+package tech.qomet.agora.api.grpc.fin;
+
+import "common.proto";
+import "fin/identifier.proto";
+
+option go_package = "qomet.tech/agora/daemons/gen-pkg/tech/qomet/agora/api/grpc/fin;agoraapigrpcfin";
+option java_package = "tech.qomet.agora.api.grpc.fin";
+option java_outer_classname = "MarketProto";
+option csharp_namespace  = "Tech.Qomet.Agora.Api.Grpc.Fin";
+
+enum MarketStatusEnum {
+  MARKET_STATUS_ENUM_UNKNOWN = 0;
+
+  MARKET_STATUS_ENUM_OPENING_AUCTION = 1;
+  MARKET_STATUS_ENUM_PRE_OPEN = 2;
+  MARKET_STATUS_ENUM_OPEN = 3;
+  MARKET_STATUS_ENUM_PARTIALLY_OPEN = 4;
+  MARKET_STATUS_ENUM_REPORTING = 5;
+  MARKET_STATUS_ENUM_CLOSING_AUCTION = 6;
+  MARKET_STATUS_ENUM_CLOSED = 7;
+  MARKET_STATUS_ENUM_CLOSED_ON_PUBLIC_HOLIDAY = 8;
+  MARKET_STATUS_ENUM_SUSPENDED = 9;
+  MARKET_STATUS_ENUM_MAINTENANCE = 10;
+
+  MARKET_STATUS_ENUM_UNAVAILABLE = 100;
+
+  MARKET_STATUS_ENUM_OTHER = 0x0fff0000;
+}
+
+enum MarketTypeEnum {
+  MARKET_TYPE_ENUM_UNKNOWN = 0;
+
+  MARKET_TYPE_ENUM_FOREX = 1;
+  MARKET_TYPE_ENUM_FUTURES = 2;
+  MARKET_TYPE_ENUM_OPTIONS = 3;
+  MARKET_TYPE_ENUM_INDICES = 4;
+  MARKET_TYPE_ENUM_COMMODITIES = 5;
+  MARKET_TYPE_ENUM_CRYPTO = 6;
+  MARKET_TYPE_ENUM_DERIVATIVES = 7;
+  MARKET_TYPE_ENUM_FIXED_INCOME = 8;
+  MARKET_TYPE_ENUM_MUTUAL_FUNDS = 9;
+  MARKET_TYPE_ENUM_ETFS = 10;
+  MARKET_TYPE_ENUM_REITS = 11;
+  MARKET_TYPE_ENUM_CAPITAL_MARKETS = 12;
+  MARKET_TYPE_ENUM_BANKING = 13;
+  MARKET_TYPE_ENUM_PAYMENTS = 14;
+  MARKET_TYPE_ENUM_CLEARINGHOUSES = 15;
+  MARKET_TYPE_ENUM_EXCHANGES = 16;
+  MARKET_TYPE_ENUM_BROKERS = 17;
+  MARKET_TYPE_ENUM_DEALERS = 18;
+  MARKET_TYPE_ENUM_EQUITY = 19;
+  MARKET_TYPE_ENUM_STOCK = 20;
+  MARKET_TYPE_ENUM_BOND = 21;
+
+  MARKET_TYPE_ENUM_OTHER = 0x0fff0000;
+}
+
+message Market {
+  string iid = 1;                                                                          // REQUIRED: Internal market identifier
+
+  repeated FinIdentifier identifiers = 2;                                                  // OPTIONAL: List of market identifiers
+
+  string dominant_currency = 3;                                                            // OPTIONAL: ISO 4217 currency code
+  repeated string country_codes = 4;                                                        // OPTIONAL: ISO 3166-1 alpha-2 codes
+  string city_code = 5;                                                                    // OPTIONAL: UN/LOCODE
+  string website_url = 6;                                                                  // OPTIONAL: Market website URL
+  string timezone = 7;                                                                     // OPTIONAL: ISO 8601 time zone
+  tech.qomet.agora.api.grpc.common.Duration trading_hours = 8;                             // OPTIONAL: Daily trading hours
+  repeated string trading_days = 9;                                                        // OPTIONAL: Trading days (1=Monday, 2=Tuesday, ..., 7=Sunday)
+  MarketStatusEnum status = 10;                                                            // REQUIRED: Current market status
+  repeated MarketTypeEnum market_types = 11;                                               // OPTIONAL: Market classification types
+  string short_name = 12;                                                                  // OPTIONAL: Short name (e.g., "NASDAQ", "NYSE")
+  string name = 13;                                                                        // OPTIONAL: Full official name
+  string description = 14;                                                                 // OPTIONAL: Description of the market
+
+  map<string, string> display_names = 101;                                                 // OPTIONAL: Display names for localization
+  map<string, string> descriptions = 102;                                                  // OPTIONAL: Descriptions for localization
+  map<string, string> labels = 103;                                                        // OPTIONAL: Key-value labels
+  repeated string tags = 104;                                                              // OPTIONAL: Tags for categorization
+  map<string, string> metadata = 105;                                                      // OPTIONAL: Additional metadata
+}
+
+message MarketDuration {
+  tech.qomet.agora.api.grpc.common.Duration duration = 1;                                  // REQUIRED: Time duration period
+  MarketStatusEnum status = 2;                                                             // REQUIRED: Market status during this period
+  repeated string comments = 3;                                                            // OPTIONAL: Additional comments
+
+  map<string, string> metadata = 105;                                                      // OPTIONAL: Additional metadata
+}
+
+message MarketCalendar {
+  string market_iid = 1;                                                                   // REQUIRED: Market internal identifier
+  tech.qomet.agora.api.grpc.common.Time daily_open = 2;                                    // OPTIONAL: Default daily opening time
+  tech.qomet.agora.api.grpc.common.Time daily_close = 3;                                   // OPTIONAL: Default daily closing time
+  repeated tech.qomet.agora.api.grpc.common.Duration calendars = 4;                        // OPTIONAL: Calendar schedule entries
+}

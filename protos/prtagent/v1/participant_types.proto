@@ -1,0 +1,117 @@
+syntax = "proto3";
+
+package tech.qomet.agora.api.grpc.prtagent.v1;
+
+import "common.proto";
+import "fin/asset.proto";
+import "fin/participant.proto";
+import "fin/trading.proto";
+
+option go_package = "qomet.tech/agora/daemons/gen-pkg/tech/qomet/agora/api/grpc/prtagent/v1;agoraapigrpcprtagentv1";
+option java_package = "tech.qomet.agora.api.grpc.prtagent.v1";
+option java_outer_classname = "ParticipantTypes";
+option csharp_namespace  = "Tech.Qomet.Agora.Api.Grpc.PrtAgent.V1";
+
+message GetParticipantInfoRequest {
+  string proposed_execution_id = 1;                                      // OPTIONAL: Client-proposed execution ID for tracking
+
+  map<string, string> aux_data = 105;                                    // OPTIONAL: Additional request data
+}
+
+message GetParticipantInfoResponse {
+  string ref_execution_id = 1;                                           // REQUIRED: Reference to the execution ID
+  tech.qomet.agora.api.grpc.fin.Participant participant = 2;          // REQUIRED: Participant information
+
+  map<string, string> metadata = 105;                                    // OPTIONAL: Response metadata
+}
+
+message GetParticipantOrdersRequest {
+  string proposed_execution_id = 1;                                      // OPTIONAL: Client-proposed execution ID for tracking
+  tech.qomet.agora.api.grpc.common.PaginationParams pagination = 2;      // OPTIONAL: Pagination parameters
+  repeated string account_id_or_name_regexes = 3;                        // OPTIONAL: Filter by account ID or name regex
+  repeated string market_id_or_name_regexes = 4;                         // OPTIONAL: Filter by market ID or name regex
+  repeated string venue_id_or_symbol_regexes = 5;                        // OPTIONAL: Filter by venue ID or symbol regex
+  repeated string participant_id_or_symbol_regexes = 6;                  // OPTIONAL: Filter by participant ID or symbol regex
+  repeated string security_listing_iid_or_symbol_regexes = 7;             // OPTIONAL: Filter by security listing IID or symbol regex
+  tech.qomet.agora.api.grpc.common.DateTime from_dt = 8;                 // OPTIONAL: Start of time range
+  tech.qomet.agora.api.grpc.common.DateTime to_dt = 9;                   // OPTIONAL: End of time range
+  tech.qomet.agora.api.grpc.fin.OrderSideEnum side = 10;              // OPTIONAL: Filter by order side
+  repeated bool status_filters = 11;                                     // OPTIONAL: Status filters [is_filled, is_cancelled, is_expired]
+
+  map<string, string> aux_data = 105;                                    // OPTIONAL: Additional request data
+}
+
+message GetParticipantOrdersResponse {
+  string ref_execution_id = 1;                                           // REQUIRED: Reference to the execution ID
+  tech.qomet.agora.api.grpc.common.PaginationInfo pagination_info = 2;   // OPTIONAL: Pagination information (required if paginated)
+  tech.qomet.agora.api.grpc.common.DateTime generated_at_dt = 3;         // REQUIRED: Response generation timestamp
+  repeated tech.qomet.agora.api.grpc.fin.Order orders = 4;            // REQUIRED: List of orders (can be empty)
+  map<string, string> account_summaries = 5;                             // OPTIONAL: Account ID -> summary stats
+
+  map<string, string> metadata = 105;                                    // OPTIONAL: Response metadata
+}
+
+message GetParticipantTradesRequest {
+  string proposed_execution_id = 1;                                      // OPTIONAL: Client-proposed execution ID for tracking
+  tech.qomet.agora.api.grpc.common.PaginationParams pagination = 2;      // OPTIONAL: Pagination parameters
+  repeated string account_id_or_name_regexes = 3;                        // OPTIONAL: Filter by account ID or name regex
+  repeated string market_id_or_name_regexes = 4;                         // OPTIONAL: Filter by market ID or name regex
+  repeated string venue_id_or_symbol_regexes = 5;                        // OPTIONAL: Filter by venue ID or symbol regex
+  repeated string participant_id_or_symbol_regexes = 6;                  // OPTIONAL: Filter by participant ID or symbol regex
+  repeated string security_listing_iid_or_symbol_regexes = 7;             // OPTIONAL: Filter by security listing IID or symbol regex
+  tech.qomet.agora.api.grpc.common.DateTime from_dt = 8;                 // OPTIONAL: Start of time range
+  tech.qomet.agora.api.grpc.common.DateTime to_dt = 9;                   // OPTIONAL: End of time range
+  tech.qomet.agora.api.grpc.fin.OrderSideEnum side = 10;              // OPTIONAL: Filter by order side
+
+  map<string, string> aux_data = 105;                                    // OPTIONAL: Additional request data
+}
+
+message GetParticipantTradesResponse {
+  string ref_execution_id = 1;                                           // REQUIRED: Reference to the execution ID
+  tech.qomet.agora.api.grpc.common.PaginationInfo pagination_info = 2;   // OPTIONAL: Pagination information (required if paginated)
+  tech.qomet.agora.api.grpc.common.DateTime generated_at_dt = 3;         // REQUIRED: Response generation timestamp
+  repeated tech.qomet.agora.api.grpc.fin.Trade trades = 4;            // REQUIRED: List of trades (can be empty)
+  map<string, string> account_summaries = 5;                             // OPTIONAL: Account ID -> trade volume summary
+
+  map<string, string> metadata = 105;                                    // OPTIONAL: Response metadata
+}
+
+message GetParticipantSettlementsRequest {
+  string proposed_execution_id = 1;                                      // OPTIONAL: Client-proposed execution ID for tracking
+  tech.qomet.agora.api.grpc.common.PaginationParams pagination = 2;      // OPTIONAL: Pagination parameters
+  repeated string account_id_or_name_regexes = 3;                        // OPTIONAL: Filter by account ID or name regex
+  repeated string market_id_or_name_regexes = 4;                         // OPTIONAL: Filter by market ID or name regex
+  repeated string venue_id_or_symbol_regexes = 5;                        // OPTIONAL: Filter by venue ID or symbol regex
+  repeated string participant_id_or_symbol_regexes = 6;                  // OPTIONAL: Filter by participant ID or symbol regex
+  repeated string security_listing_iid_or_symbol_regexes = 7;             // OPTIONAL: Filter by security listing IID or symbol regex
+  tech.qomet.agora.api.grpc.common.DateTime from_dt = 8;                 // OPTIONAL: Start of time range
+  tech.qomet.agora.api.grpc.common.DateTime to_dt = 9;                   // OPTIONAL: End of time range
+  tech.qomet.agora.api.grpc.fin.ConfirmationStatusEnum status = 10;   // OPTIONAL: Filter by confirmation status
+
+  map<string, string> aux_data = 105;                                    // OPTIONAL: Additional request data
+}
+
+message GetParticipantSettlementsResponse {
+  string ref_execution_id = 1;                                           // REQUIRED: Reference to the execution ID
+  tech.qomet.agora.api.grpc.common.PaginationInfo pagination_info = 2;   // OPTIONAL: Pagination information (required if paginated)
+  tech.qomet.agora.api.grpc.common.DateTime generated_at_dt = 3;         // REQUIRED: Response generation timestamp
+  repeated tech.qomet.agora.api.grpc.fin.Settlement settlements = 4;  // REQUIRED: List of settlements (can be empty)
+  map<string, string> account_summaries = 5;                             // OPTIONAL: Account ID -> settlement summary
+
+  map<string, string> metadata = 105;                                    // OPTIONAL: Response metadata
+}
+
+message GetParticipantHoldingsRequest {
+  string proposed_execution_id = 1;                                      // OPTIONAL: Client-proposed execution ID for tracking
+  string mode = 2;                                                       // OPTIONAL: Query mode: 'treasury' (default) or 'direct'
+  string issued_instrument_iid = 3;                                      // OPTIONAL: Filter by issued instrument IID
+
+  map<string, string> aux_data = 105;                                    // OPTIONAL: Additional request data
+}
+
+message GetParticipantHoldingsResponse {
+  string ref_execution_id = 1;                                           // REQUIRED: Reference to the execution ID
+  tech.qomet.agora.api.grpc.fin.Portfolio portfolio = 2;                 // REQUIRED: Portfolio with all holdings (cash + security)
+
+  map<string, string> metadata = 105;                                    // OPTIONAL: Response metadata
+}

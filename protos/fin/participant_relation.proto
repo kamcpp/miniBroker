@@ -1,0 +1,118 @@
+syntax = "proto3";
+
+package tech.qomet.agora.api.grpc.fin;
+
+import "common.proto";
+
+option go_package = "qomet.tech/agora/daemons/gen-pkg/tech/qomet/agora/api/grpc/fin;agoraapigrpcfin";
+option java_package = "tech.qomet.agora.api.grpc.fin";
+option java_outer_classname = "ParticipantRelationProto";
+option csharp_namespace  = "Tech.Qomet.Agora.Api.Grpc.Fin";
+
+// DEPRECATED: This file is deprecated in favor of legal_structure_relation.proto.
+// Entity relations (Asset, Instrument, IssuedInstrument) are now managed through
+// LegalStructure rather than Participant. Use LegalStructureTo{Asset,Instrument,IssuedInstrument}Relation
+// from legal_structure_relation.proto instead.
+//
+// These types are retained for backward compatibility but should not be used for new code.
+
+// Deprecated: Use LegalStructureToAssetRelationTypeEnum from legal_structure_relation.proto
+enum ParticipantToAssetRelationTypeEnum {
+  option deprecated = true;
+  PARTICIPANT_TO_ASSET_RELATION_TYPE_ENUM_UNKNOWN = 0;
+
+  PARTICIPANT_TO_ASSET_RELATION_TYPE_ENUM_ISSUER = 1;
+  PARTICIPANT_TO_ASSET_RELATION_TYPE_ENUM_OWNER = 2;
+  PARTICIPANT_TO_ASSET_RELATION_TYPE_ENUM_SPONSOR = 3;
+  PARTICIPANT_TO_ASSET_RELATION_TYPE_ENUM_REGULATOR = 4;
+  PARTICIPANT_TO_ASSET_RELATION_TYPE_ENUM_SUPERVISOR = 5;
+  PARTICIPANT_TO_ASSET_RELATION_TYPE_ENUM_GOVERNOR = 6;
+  PARTICIPANT_TO_ASSET_RELATION_TYPE_ENUM_CUSTODIAN = 7;
+  PARTICIPANT_TO_ASSET_RELATION_TYPE_ENUM_BROKER = 8;
+  PARTICIPANT_TO_ASSET_RELATION_TYPE_ENUM_DEALER = 9;
+  PARTICIPANT_TO_ASSET_RELATION_TYPE_ENUM_MARKET = 10;
+  PARTICIPANT_TO_ASSET_RELATION_TYPE_ENUM_VENUE = 11;
+  PARTICIPANT_TO_ASSET_RELATION_TYPE_ENUM_AUDITOR = 12;
+  PARTICIPANT_TO_ASSET_RELATION_TYPE_ENUM_AGENT = 13;
+  PARTICIPANT_TO_ASSET_RELATION_TYPE_ENUM_ADVISOR = 14;
+  PARTICIPANT_TO_ASSET_RELATION_TYPE_ENUM_VALUATOR = 15;
+  PARTICIPANT_TO_ASSET_RELATION_TYPE_ENUM_ADMINISTRATOR = 16;
+  PARTICIPANT_TO_ASSET_RELATION_TYPE_ENUM_MARKET_MAKER = 21;
+  PARTICIPANT_TO_ASSET_RELATION_TYPE_ENUM_LIQUIDITY_PROVIDER = 22;
+  PARTICIPANT_TO_ASSET_RELATION_TYPE_ENUM_ORACLE = 23;
+  PARTICIPANT_TO_ASSET_RELATION_TYPE_ENUM_MINER_VALIDATOR = 24;
+  PARTICIPANT_TO_ASSET_RELATION_TYPE_ENUM_SERVICE_PROVIDER = 25;
+
+  PARTICIPANT_TO_ASSET_RELATION_TYPE_ENUM_OTHER = 0x0fff0000;
+}
+
+// Deprecated: Use LegalStructureToAssetRelation from legal_structure_relation.proto
+message ParticipantToAssetRelation {
+  option deprecated = true;
+  string iid = 1;                                                                          // REQUIRED: Internal relation identifier
+
+  string participant_iid = 2;                                                              // REQUIRED: Participant internal identifier
+  string asset_iid = 3;                                                                    // REQUIRED: Asset internal identifier
+
+  repeated ParticipantToAssetRelationTypeEnum relations = 4;                               // REQUIRED: Type of relation
+
+  tech.qomet.agora.api.grpc.common.DateTime effective_from_dt = 5;                         // OPTIONAL: Relation effective start date
+  tech.qomet.agora.api.grpc.common.DateTime effective_to_dt = 6;                           // OPTIONAL: Relation effective end date
+  string weight = 7;                                                                       // OPTIONAL: Relation weight (e.g. percentage of ownership)
+
+  map<string, string> display_names = 101;                                                 // OPTIONAL: Display names for localization
+  map<string, string> descriptions = 102;                                                  // OPTIONAL: Descriptions for localization
+  map<string, string> labels = 103;                                                        // OPTIONAL: Key-value labels
+  repeated string tags = 104;                                                              // OPTIONAL: Tags for categorization
+  map<string, string> metadata = 105;                                                      // OPTIONAL: Additional metadata
+}
+
+// Deprecated: Use LegalStructureToInstrumentRelationTypeEnum from legal_structure_relation.proto
+enum ParticipantToInstrumentRelationTypeEnum {
+  option deprecated = true;
+  PARTICIPANT_TO_INSTRUMENT_RELATION_TYPE_ENUM_UNKNOWN = 0;
+
+  PARTICIPANT_TO_INSTRUMENT_RELATION_TYPE_ENUM_ISSUER = 1;
+  PARTICIPANT_TO_INSTRUMENT_RELATION_TYPE_ENUM_OWNER = 2;
+  PARTICIPANT_TO_INSTRUMENT_RELATION_TYPE_ENUM_SPONSOR = 3;
+  PARTICIPANT_TO_INSTRUMENT_RELATION_TYPE_ENUM_REGULATOR = 4;
+  PARTICIPANT_TO_INSTRUMENT_RELATION_TYPE_ENUM_SUPERVISOR = 5;
+  PARTICIPANT_TO_INSTRUMENT_RELATION_TYPE_ENUM_GOVERNOR = 6;
+  PARTICIPANT_TO_INSTRUMENT_RELATION_TYPE_ENUM_CUSTODIAN = 7;
+  PARTICIPANT_TO_INSTRUMENT_RELATION_TYPE_ENUM_BROKER = 8;
+  PARTICIPANT_TO_INSTRUMENT_RELATION_TYPE_ENUM_DEALER = 9;
+  PARTICIPANT_TO_INSTRUMENT_RELATION_TYPE_ENUM_MARKET = 10;
+  PARTICIPANT_TO_INSTRUMENT_RELATION_TYPE_ENUM_VENUE = 11;
+  PARTICIPANT_TO_INSTRUMENT_RELATION_TYPE_ENUM_AUDITOR = 12;
+  PARTICIPANT_TO_INSTRUMENT_RELATION_TYPE_ENUM_AGENT = 13;
+  PARTICIPANT_TO_INSTRUMENT_RELATION_TYPE_ENUM_ADVISOR = 14;
+  PARTICIPANT_TO_INSTRUMENT_RELATION_TYPE_ENUM_ADMINISTRATOR = 16;
+  PARTICIPANT_TO_INSTRUMENT_RELATION_TYPE_ENUM_MARKET_MAKER = 21;
+  PARTICIPANT_TO_INSTRUMENT_RELATION_TYPE_ENUM_LIQUIDITY_PROVIDER = 22;
+  PARTICIPANT_TO_INSTRUMENT_RELATION_TYPE_ENUM_ORACLE = 23;
+  PARTICIPANT_TO_INSTRUMENT_RELATION_TYPE_ENUM_MINER_VALIDATOR = 24;
+  PARTICIPANT_TO_INSTRUMENT_RELATION_TYPE_ENUM_SERVICE_PROVIDER = 25;
+
+  PARTICIPANT_TO_INSTRUMENT_RELATION_TYPE_ENUM_OTHER = 0x0fff0000;
+}
+
+// Deprecated: Use LegalStructureToInstrumentRelation from legal_structure_relation.proto
+message ParticipantToInstrumentRelation {
+  option deprecated = true;
+  string iid = 1;                                                                          // REQUIRED: Internal relation identifier
+
+  string participant_iid = 2;                                                              // REQUIRED: Participant internal identifier
+  string instrument_iid = 3;                                                               // REQUIRED: Instrument internal identifier
+
+  repeated ParticipantToInstrumentRelationTypeEnum relations = 4;                          // REQUIRED: Type of relation
+
+  tech.qomet.agora.api.grpc.common.DateTime effective_from_dt = 5;                         // OPTIONAL: Relation effective start date
+  tech.qomet.agora.api.grpc.common.DateTime effective_to_dt = 6;                           // OPTIONAL: Relation effective end date
+  string weight = 7;                                                                       // OPTIONAL: Relation weight (e.g. percentage of ownership)
+
+  map<string, string> display_names = 101;                                                 // OPTIONAL: Display names for localization
+  map<string, string> descriptions = 102;                                                  // OPTIONAL: Descriptions for localization
+  map<string, string> labels = 103;                                                        // OPTIONAL: Key-value labels
+  repeated string tags = 104;                                                              // OPTIONAL: Tags for categorization
+  map<string, string> metadata = 105;                                                      // OPTIONAL: Additional metadata
+}

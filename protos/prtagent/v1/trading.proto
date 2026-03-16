@@ -1,0 +1,340 @@
+syntax = "proto3";
+
+package tech.qomet.agora.api.grpc.prtagent.v1;
+
+import "common.proto";
+import "fin/security.proto";
+import "fin/trading.proto";
+import "prtagent/v1/query.proto";
+
+option go_package = "qomet.tech/agora/daemons/gen-pkg/tech/qomet/agora/api/grpc/prtagent/v1;agoraapigrpcprtagentv1";
+option java_package = "tech.qomet.agora.api.grpc.prtagent.v1";
+option java_outer_classname = "Trading";
+option csharp_namespace  = "Tech.Qomet.Agora.Api.Grpc.PrtAgent.V1";
+
+service TradingService {
+  rpc GetLatestQuote(GetLatestQuoteRequest) returns (SecurityQuoteResponse);
+  rpc FetchLiveQuote(FetchLiveQuoteRequest) returns (stream SecurityQuoteResponse);
+  rpc GetHistoricalQuote(GetHistoricalQuoteRequest) returns (GetHistoricalQuoteResponse);
+  rpc FetchLiveOhlcData(FetchLiveOhlcDataRequest) returns (stream OhlcDataResponse);
+  rpc GetHistoricalOhlcData(GetHistoricalOhlcDataRequest) returns (GetHistoricalOhlcDataResponse);
+
+  rpc GetOrderFees(GetOrderFeesRequest) returns (GetOrderFeesResponse);
+  rpc GetOrderFeesAsync(GetOrderFeesRequest) returns (tech.qomet.agora.api.grpc.common.ExecutionAsyncResponse);
+
+  rpc CreateOrderAsync(CreateOrderAsyncRequest) returns (tech.qomet.agora.api.grpc.common.ExecutionAsyncResponse);
+  rpc ReplaceOrderAsync(ReplaceOrderAsyncRequest) returns (tech.qomet.agora.api.grpc.common.ExecutionAsyncResponse);
+  rpc CancelOrderAsync(CancelOrderAsyncRequest) returns (tech.qomet.agora.api.grpc.common.ExecutionAsyncResponse);
+
+  rpc GetOrderbook(GetOrderbookRequest) returns (GetOrderbookResponse);
+  rpc GetOrderbookAsync(GetOrderbookRequest) returns (tech.qomet.agora.api.grpc.common.ExecutionAsyncResponse);
+
+  rpc GetOrderExecutionReports(GetOrderExecutionReportsRequest) returns (GetOrderExecutionReportsResponse);
+}
+
+message SecurityQuote {
+  tech.qomet.agora.api.grpc.fin.Security security = 1;                  // REQUIRED: Security information
+  string amount = 2;                                                    // REQUIRED: Quote amount
+}
+
+message SecurityQuoteResponse {
+  string ref_execution_id = 1;                                          // REQUIRED: Reference to the execution ID
+  SecurityQuote quote = 3;                                              // REQUIRED: Security quote data
+
+  map<string, string> metadata = 105;                                   // OPTIONAL: Response metadata
+}
+
+message OhlcData {
+  tech.qomet.agora.api.grpc.fin.Security security = 3;                  // REQUIRED: Security information
+  tech.qomet.agora.api.grpc.common.Duration duration = 4;               // REQUIRED: Time period duration
+  string open = 5;                                                      // REQUIRED: Opening price
+  string high = 6;                                                      // REQUIRED: Highest price
+  string low = 7;                                                       // REQUIRED: Lowest price
+  string close = 8;                                                     // REQUIRED: Closing price
+  string volume = 9;                                                    // OPTIONAL: Trading volume
+}
+
+message OhlcDataResponse {
+  string ref_execution_id = 1;                                          // REQUIRED: Reference to the execution ID
+  OhlcData ohlc_data = 3;                                               // REQUIRED: OHLC data
+
+  map<string, string> metadata = 105;                                   // OPTIONAL: Response metadata
+}
+
+message GetLatestQuoteRequest {
+  string proposed_execution_id = 1;                                     // OPTIONAL: Client-proposed execution ID for tracking
+  repeated string security_listing_iid_or_symbol_regexes = 2;            // REQUIRED: Security listing IID or symbol regexes
+
+  map<string, string> aux_data = 105;                                   // OPTIONAL: Additional request data
+}
+
+message LiveQuoteFetchParams {
+  uint32 update_interval_ms = 1;                                        // OPTIONAL: Minimum interval between updates (ms)
+  uint32 max_duration_ms = 2;                                           // OPTIONAL: Maximum stream duration (ms)
+  bool include_depth = 3;                                               // OPTIONAL: Include orderbook depth (default: false)
+  uint32 depth_levels = 4;                                              // OPTIONAL: Number of depth levels (if include_depth)
+  bool include_trades = 5;                                              // OPTIONAL: Include recent trades (default: false)
+}
+
+message FetchLiveQuoteRequest {
+  string proposed_execution_id = 1;                                     // OPTIONAL: Client-proposed execution ID for tracking
+  repeated string security_listing_iid_or_symbol_regexes = 2;            // REQUIRED: Security listing IID or symbol regexes
+  LiveQuoteFetchParams fetch_params = 3;                                // OPTIONAL: Live quote fetch parameters
+
+  map<string, string> aux_data = 105;                                   // OPTIONAL: Additional request data
+}
+
+message GetHistoricalQuoteRequest {
+  string proposed_execution_id = 1;                                     // OPTIONAL: Client-proposed execution ID for tracking
+  tech.qomet.agora.api.grpc.common.PaginationParams pagination = 2;     // OPTIONAL: Pagination parameters
+  repeated string security_listing_iid_or_symbol_regexes = 3;            // REQUIRED: Security listing IID or symbol regexes
+  optional tech.qomet.agora.api.grpc.common.Duration duration = 4;      // OPTIONAL: Time range duration
+
+  map<string, string> aux_data = 105;                                   // OPTIONAL: Additional request data
+}
+
+message GetHistoricalQuoteResponse {
+  string ref_execution_id = 1;                                          // REQUIRED: Reference to the execution ID
+  tech.qomet.agora.api.grpc.common.PaginationInfo pagination_info = 2;  // OPTIONAL: Pagination information (required if paginated)
+  repeated SecurityQuote quotes = 3;                                    // REQUIRED: List of historical quotes (can be empty)
+
+  map<string, string> metadata = 105;                                   // OPTIONAL: Response metadata
+}
+
+message LiveOhlcDataFetchParams {
+  uint32 update_interval_ms = 1;                                        // OPTIONAL: Update interval in milliseconds
+  uint32 max_duration_ms = 2;                                           // OPTIONAL: Maximum stream duration in milliseconds
+  string period = 3;                                                    // REQUIRED: Time period ("1m", "5m", "15m", "1h", "1d")
+  bool include_volume = 4;                                              // OPTIONAL: Include volume data (default: false)
+  bool include_indicators = 5;                                          // OPTIONAL: Include indicators like RSI, MA (default: false)
+}
+
+message FetchLiveOhlcDataRequest {
+  string proposed_execution_id = 1;                                     // OPTIONAL: Client-proposed execution ID for tracking
+  repeated string security_listing_iid_or_symbol_regexes = 2;            // REQUIRED: Security listing IID or symbol regexes
+  LiveOhlcDataFetchParams fetch_params = 3;                             // OPTIONAL: Live OHLC fetch parameters
+
+  map<string, string> aux_data = 105;                                   // OPTIONAL: Additional request data
+}
+
+message GetHistoricalOhlcDataRequest {
+  string proposed_execution_id = 1;                                     // OPTIONAL: Client-proposed execution ID for tracking
+  tech.qomet.agora.api.grpc.common.PaginationParams pagination = 2;     // OPTIONAL: Pagination parameters
+  repeated string security_listing_iid_or_symbol_regexes = 3;            // REQUIRED: Security listing IID or symbol regexes
+  optional tech.qomet.agora.api.grpc.common.Duration duration = 4;      // OPTIONAL: Time range duration
+  string period = 5;                                                    // REQUIRED: Time period ("1m", "5m", "15m", "1h", "1d")
+  bool include_volume = 6;                                              // OPTIONAL: Include volume data (default: false)
+
+  map<string, string> aux_data = 105;                                   // OPTIONAL: Additional request data
+}
+
+message GetHistoricalOhlcDataResponse {
+  string ref_execution_id = 1;                                          // REQUIRED: Reference to the execution ID
+  tech.qomet.agora.api.grpc.common.PaginationInfo pagination_info = 2;  // OPTIONAL: Pagination information (required if paginated)
+  repeated OhlcData ohlc_data = 3;                                      // REQUIRED: List of historical OHLC data (can be empty)
+
+  map<string, string> metadata = 105;                                   // OPTIONAL: Response metadata
+}
+
+message FeeStructure {
+  string base_fee = 1;                                                  // OPTIONAL: Base transaction fee
+  string percentage_fee = 2;                                            // OPTIONAL: Percentage of order value
+  string minimum_fee = 3;                                               // OPTIONAL: Minimum fee amount
+  string maximum_fee = 4;                                               // OPTIONAL: Maximum fee amount
+  string maker_fee = 6;                                                 // OPTIONAL: Fee for maker orders (adds liquidity)
+  string taker_fee = 7;                                                 // OPTIONAL: Fee for taker orders (removes liquidity)
+  string currency = 8;                                                  // REQUIRED: ISO 4217 currency code for fees
+  string fee_tier = 9;                                                  // OPTIONAL: User's fee tier/level
+  string discount_rate = 10;                                            // OPTIONAL: Applicable discount percentage
+  string total_estimated_fee = 11;                                      // OPTIONAL: Total estimated fee for the order
+}
+
+message GetOrderFeesRequest {
+  string proposed_execution_id = 1;                                     // OPTIONAL: Client-proposed execution ID for tracking
+
+  string account_iid = 2;                                               // REQUIRED: Account ID to determine fee tier
+  string fee_payer_account_iid = 3;                                     // OPTIONAL: Fee payer account ID (if different from account_id)
+  string security_listing_iid = 4;                                      // REQUIRED: Security listing for the order
+
+  // Order details for fee calculation
+  string order_type = 5;                                                // REQUIRED: Order type ("LIMIT", "MARKET")
+  tech.qomet.agora.api.grpc.fin.OrderSideEnum side = 6;              // REQUIRED: Order side ("BUY", "SELL")
+  string quantity = 7;                                                  // REQUIRED: Order quantity
+  string price = 8;                                                     // OPTIONAL: Order price (required for LIMIT orders)
+
+  // Optional parameters that might affect fees
+  string time_in_force = 9;                                             // OPTIONAL: Time in force ("GTC", "IOC", "FOK", "DAY")
+
+  bool is_post_only = 10;                                               // OPTIONAL: If true, order will only be maker (default: false)
+  bool is_reduce_only = 11;                                             // OPTIONAL: If true, order can only reduce position (default: false)
+
+  map<string, string> aux_data = 105;                                   // OPTIONAL: Additional request data
+}
+
+message GetOrderFeesResponse {
+  string ref_execution_id = 1;                                          // REQUIRED: Reference to the execution ID
+
+  FeeStructure fee_structure = 2;                                       // REQUIRED: Primary fee structure
+
+  repeated string fee_notes = 3;                                        // OPTIONAL: Additional fee notes or warnings
+  tech.qomet.agora.api.grpc.common.DateTime fee_valid_until_dt = 4;     // OPTIONAL: Fee validity expiration
+  string msg = 5;                                                       // OPTIONAL: Additional message or status
+
+  map<string, string> fee_breakdown = 6;                                // OPTIONAL: Detailed breakdown of fee components
+
+  repeated FeeStructure alternative_fee_options = 7;                    // OPTIONAL: Alternative fee options (different currencies)
+
+  map<string, string> metadata = 8;                                     // OPTIONAL: Additional metadata
+}
+
+message CreateOrderAsyncRequest {
+  string proposed_execution_id = 1;                                     // OPTIONAL: Client-proposed execution ID for tracking
+
+  string account_iid = 2;                                               // REQUIRED: Account ID (won't be changed)
+  string fee_payer_account_iid = 3;                                     // OPTIONAL: Fee payer account ID (can be different)
+  string security_listing_iid = 4;                                      // REQUIRED: Security listing ID
+
+  // Order details
+  string order_type = 5;                                                // REQUIRED: Order type ("LIMIT", "MARKET", STOP not supported)
+  tech.qomet.agora.api.grpc.fin.OrderSideEnum side = 6;              // REQUIRED: Order side ("BUY", "SELL")
+  string quantity = 7;                                                  // REQUIRED: Order quantity (for both LIMIT and MARKET)
+  string price = 8;                                                     // REQUIRED for LIMIT orders, must be zero for MARKET
+
+  // Time constraints
+  string time_in_force = 9;                                             // OPTIONAL: Time in force ("GTC", "IOC", "FOK", "DAY")
+  tech.qomet.agora.api.grpc.common.DateTime expire_dt = 10;             // OPTIONAL: Expiration date for GTT orders
+
+  // Additional parameters
+  string investor_order_id = 11;                                       // REQUIRED: Investor's own order ID
+
+  // Currency and fee (required for create_investor_order saga)
+  string currency = 13;                                                 // REQUIRED: ISO 4217 3-letter currency code (e.g., "EUR", "USD")
+  string fee_amount = 14;                                               // REQUIRED: Fee amount in same currency (human-readable decimal)
+
+  map<string, string> aux_data = 105;                                   // OPTIONAL: Additional request data
+}
+
+message ReplaceOrderAsyncRequest {
+  string proposed_execution_id = 1;                                     // OPTIONAL: Client-proposed execution ID for tracking
+
+  string old_participant_order_id = 2;                                  // REQUIRED: Old participant order ID to replace
+  string new_participant_order_id = 3;                                  // REQUIRED: New proposed order ID for replacement
+
+  // Fields that can be modified
+  string new_quantity = 4;                                              // OPTIONAL: New order quantity
+  string new_price = 5;                                                 // OPTIONAL: New order price
+  tech.qomet.agora.api.grpc.common.Time new_expire_time = 6;            // OPTIONAL: New expiration time
+
+  string reason = 7;                                                    // OPTIONAL: Reason for modification
+
+  map<string, string> aux_data = 105;                                   // OPTIONAL: Additional request data
+}
+
+message CancelOrderAsyncRequest {
+  string proposed_execution_id = 1;                                     // OPTIONAL: Client-proposed execution ID for tracking
+
+  string participant_order_id = 2;                                      // REQUIRED: Participant order ID to cancel
+  string reason = 3;                                                    // OPTIONAL: Reason for cancellation
+
+  map<string, string> aux_data = 105;                                   // OPTIONAL: Additional request data
+}
+
+enum OrderbookModeEnum {
+  ORDERBOOK_MODE_ENUM_UNSPECIFIED = 0;                                  // Default: L2 aggregated price levels
+  ORDERBOOK_MODE_ENUM_L1_BEST_BID_ASK = 1;                             // Level 1: best bid/ask with VWAP snapshot (top of book)
+  ORDERBOOK_MODE_ENUM_L2_AGGREGATED_PRICE_LEVELS = 2;                  // Level 2: aggregated quantity at each price level
+  ORDERBOOK_MODE_ENUM_L3_INDIVIDUAL_ORDERS = 3;                        // Level 3: full order-by-order book
+  ORDERBOOK_MODE_ENUM_CUMULATIVE_DEPTH = 4;                            // Cumulative depth chart (bids/asks with running totals)
+  ORDERBOOK_MODE_ENUM_ACTUAL = 5;                                      // Actual on-chain orderbook (direct LASER query, bypasses cache)
+}
+
+message GetOrderbookRequest {
+  string proposed_execution_id = 1;                                     // OPTIONAL: Client-proposed execution ID for tracking
+
+  tech.qomet.agora.api.grpc.common.PaginationParams pagination = 2;     // OPTIONAL: Pagination parameters
+  string security_listing_iid = 3;                                      // REQUIRED: Security listing internal ID
+  OrderbookQueryFilter orderbook_query_filter = 4;                      // OPTIONAL: Orderbook query filters
+  OrderbookModeEnum mode = 5;                                           // OPTIONAL: Orderbook mode (default: L2)
+
+  map<string, string> aux_data = 105;                                   // OPTIONAL: Additional request data
+}
+
+message GetOrderbookResponse {
+  string ref_execution_id = 1;                                          // REQUIRED: Reference to the execution ID
+
+  tech.qomet.agora.api.grpc.common.DateTime generated_at_dt = 2;        // REQUIRED: Response generation timestamp
+  tech.qomet.agora.api.grpc.fin.Security security = 3;                  // REQUIRED: Security information
+  OrderList buy_list = 4;                                               // REQUIRED: Buy side orders (can be empty)
+  OrderList sell_list = 5;                                              // REQUIRED: Sell side orders (can be empty)
+
+  map<string, string> metadata = 105;                                   // OPTIONAL: Response metadata
+}
+
+// GetOrderExecutionReports — polls for execution reports via marketmgr relay
+message GetOrderExecutionReportsRequest {
+  string proposed_execution_id = 1;                                     // OPTIONAL: Client-proposed execution ID
+  string request_id = 2;                                                // REQUIRED: The request_id from CreateOrderAsync response
+  tech.qomet.agora.api.grpc.common.PaginationParams pagination = 3;    // OPTIONAL: Pagination parameters
+  string symbol_filter = 4;                                             // OPTIONAL: Filter by symbol (exact match)
+  string currency_filter = 5;                                           // OPTIONAL: Filter by currency
+  string exec_type_filter = 6;                                          // OPTIONAL: Filter by exec_type (e.g. "0"=NEW, "8"=REJECTED)
+  string from_date = 7;                                                 // OPTIONAL: ISO8601/RFC3339 lower bound on created_at
+  string to_date = 8;                                                   // OPTIONAL: ISO8601/RFC3339 upper bound on created_at
+  string sort_by = 9;                                                   // OPTIONAL: Field to sort by (default: "created_at")
+  string sort_direction = 10;                                           // OPTIONAL: "asc" or "desc" (default: "asc")
+
+  map<string, string> aux_data = 105;                                   // OPTIONAL: Additional request data
+}
+
+message OrderExecutionReport {
+  string order_id = 1;
+  string exec_id = 2;
+  string exec_type = 3;
+  string ord_status = 4;
+  string symbol = 5;
+  string side = 6;
+  string leaves_qty = 7;
+  string cum_qty = 8;
+  string avg_px = 9;
+  string cl_ord_id = 10;
+  string price = 11;
+  string order_qty = 12;
+  string currency = 13;
+  string transact_time = 14;
+  string text = 15;
+}
+
+message OrderBusinessReject {
+  string ref_seq_num = 1;
+  string ref_msg_type = 2;
+  string business_reject_reason = 3;
+  string text = 4;
+}
+
+message SentOrderInfo {
+  string request_id = 1;
+  string venue_iid = 2;
+  string cl_ord_id = 3;
+  string symbol = 4;
+  string side = 5;
+  string order_type = 6;
+  string quantity = 7;
+  string price = 8;
+  string currency = 9;
+  string status = 10;
+  string participant_iid = 11;
+  string investor_iid = 12;
+}
+
+message GetOrderExecutionReportsResponse {
+  string ref_execution_id = 1;
+  string request_id = 2;
+  SentOrderInfo sent_order = 3;
+  repeated OrderExecutionReport execution_reports = 4;
+  repeated OrderBusinessReject business_rejects = 5;
+  int32 total_execution_reports = 6;
+  int32 total_business_rejects = 7;
+  tech.qomet.agora.api.grpc.common.PaginationInfo pagination_info = 8; // OPTIONAL: Pagination info for execution reports
+
+  map<string, string> metadata = 105;
+}

@@ -1,0 +1,67 @@
+syntax = "proto3";
+
+package tech.qomet.agora.api.grpc.fin;
+
+import "common.proto";
+import "fin/identifier.proto";
+import "fin/instrument.proto";
+import "fin/participant.proto";
+
+option go_package = "qomet.tech/agora/daemons/gen-pkg/tech/qomet/agora/api/grpc/fin;agoraapigrpcfin";
+option java_package = "tech.qomet.agora.api.grpc.fin";
+option java_outer_classname = "SecurityProto";
+option csharp_namespace  = "Tech.Qomet.Agora.Api.Grpc.Fin";
+
+// Security represents a security (issued instrument with CFI code != MMCXXX)
+// Combines IssuedInstrument fields with the underlying Instrument
+message Security {
+  string iid = 1;                                                                          // REQUIRED: Internal security identifier (same as issued_instrument iid)
+
+  repeated FinIdentifier identifiers = 2;                                                  // REQUIRED: List of security identifiers (ISIN, CUSIP, etc.)
+
+  // Base instrument reference (one of these is required)
+  oneof instrument_ref {
+    string instrument_iid = 3;                                                             // Reference to local instrument definition
+    Instrument instrument = 4;                                                             // Embedded instrument definition
+  }
+
+  // External source fields (for imported securities)
+  string external_source_security_depository_iid = 5;                                      // OPTIONAL: Reference to external security depository (for imported securities)
+  string external_source_issued_instrument_id = 6;                                         // OPTIONAL: External issued-instrument identifier in source depository
+
+  // Issuance details
+  tech.qomet.agora.api.grpc.common.DateTime maturity_dt = 10;                              // OPTIONAL: Security maturity date
+  tech.qomet.agora.api.grpc.common.DateTime issue_dt = 11;                                 // REQUIRED: Issue date
+  repeated OneOfIdOrParticipant issuers = 12;                                              // OPTIONAL: List of issuers
+  string issue_country_code = 13;                                                          // REQUIRED: ISO 3166-1 alpha-2 country code
+  string issue_currency = 14;                                                              // REQUIRED: ISO 4217 currency code
+  string issue_initial_units = 15;                                                         // REQUIRED: Number of units issued
+  string issue_divisibility = 16;                                                          // REQUIRED: Unit divisibility (decimal places)
+  string issue_initial_authorized_units = 17;                                              // OPTIONAL: Number of units authorized
+  string issued_units_receiver_account_iid = 18;                                           // OPTIONAL: Account receiving issued units
+
+  // CFI code from underlying instrument (for validation)
+  string cfi_code = 20;                                                                    // REQUIRED: CFI 6 letters code (must NOT be MMCXXX)
+
+  // Classification from underlying instrument
+  repeated FinInstrumentClass classes = 21;                                                // OPTIONAL: List of instrument classifications
+
+  map<string, string> display_names = 101;                                                 // OPTIONAL: Display names for localization
+  map<string, string> descriptions = 102;                                                  // OPTIONAL: Descriptions for localization
+  map<string, string> labels = 103;                                                        // OPTIONAL: Key-value labels
+  repeated string tags = 104;                                                              // OPTIONAL: Tags for categorization
+  map<string, string> metadata = 105;                                                      // OPTIONAL: Additional metadata
+}
+
+enum SecurityStatusEnum {
+  SECURITY_STATUS_ENUM_UNKNOWN = 0;
+
+  SECURITY_STATUS_ENUM_PENDING = 1;                                                        // Security is pending issuance
+  SECURITY_STATUS_ENUM_ACTIVE = 2;                                                         // Security is active and tradable
+  SECURITY_STATUS_ENUM_SUSPENDED = 3;                                                      // Security is temporarily suspended
+  SECURITY_STATUS_ENUM_MATURED = 4;                                                        // Security has matured
+  SECURITY_STATUS_ENUM_CANCELLED = 5;                                                      // Security was cancelled
+  SECURITY_STATUS_ENUM_IMPORTED = 6;                                                       // Security was imported from external depository
+
+  SECURITY_STATUS_ENUM_OTHER = 0x0fff0000;
+}

@@ -1,0 +1,65 @@
+syntax = "proto3";
+
+package tech.qomet.agora.api.grpc.fin;
+
+import "common.proto";
+import "fin/identifier.proto";
+import "fin/instrument.proto";
+import "fin/participant.proto";
+
+option go_package = "qomet.tech/agora/daemons/gen-pkg/tech/qomet/agora/api/grpc/fin;agoraapigrpcfin";
+option java_package = "tech.qomet.agora.api.grpc.fin";
+option java_outer_classname = "CashTokenProto";
+option csharp_namespace  = "Tech.Qomet.Agora.Api.Grpc.Fin";
+
+// CashToken represents a cash token (issued instrument with CFI code == MMCXXX)
+// Combines IssuedInstrument fields with the underlying Instrument
+message CashToken {
+  string iid = 1;                                                                          // REQUIRED: Internal cash token identifier (same as issued_instrument iid)
+
+  repeated FinIdentifier identifiers = 2;                                                  // REQUIRED: List of cash token identifiers
+
+  // Base instrument reference (one of these is required)
+  oneof instrument_ref {
+    string instrument_iid = 3;                                                             // Reference to local instrument definition
+    Instrument instrument = 4;                                                             // Embedded instrument definition
+  }
+
+  // External source fields (for imported cash tokens)
+  string external_source_security_depository_iid = 5;                                      // OPTIONAL: Reference to external security depository (for imported cash tokens)
+  string external_source_issued_instrument_id = 6;                                         // OPTIONAL: External issued-instrument identifier in source depository
+
+  // Issuance details
+  tech.qomet.agora.api.grpc.common.DateTime issue_dt = 11;                                 // REQUIRED: Issue date
+  repeated OneOfIdOrParticipant issuers = 12;                                              // OPTIONAL: List of issuers
+  string issue_country_code = 13;                                                          // REQUIRED: ISO 3166-1 alpha-2 country code
+  string issue_currency = 14;                                                              // REQUIRED: ISO 4217 currency code (the currency this token represents)
+  string issue_initial_units = 15;                                                         // REQUIRED: Number of units issued
+  string issue_divisibility = 16;                                                          // REQUIRED: Unit divisibility (decimal places, typically 2 for fiat)
+  string issue_initial_authorized_units = 17;                                              // OPTIONAL: Number of units authorized
+  string issued_units_receiver_account_iid = 18;                                           // OPTIONAL: Account receiving issued units
+
+  // CFI code from underlying instrument (for validation)
+  string cfi_code = 20;                                                                    // REQUIRED: CFI 6 letters code (must be MMCXXX for cash tokens)
+
+  // Classification from underlying instrument
+  repeated FinInstrumentClass classes = 21;                                                // OPTIONAL: List of instrument classifications
+
+  map<string, string> display_names = 101;                                                 // OPTIONAL: Display names for localization
+  map<string, string> descriptions = 102;                                                  // OPTIONAL: Descriptions for localization
+  map<string, string> labels = 103;                                                        // OPTIONAL: Key-value labels
+  repeated string tags = 104;                                                              // OPTIONAL: Tags for categorization
+  map<string, string> metadata = 105;                                                      // OPTIONAL: Additional metadata
+}
+
+enum CashTokenStatusEnum {
+  CASH_TOKEN_STATUS_ENUM_UNKNOWN = 0;
+
+  CASH_TOKEN_STATUS_ENUM_PENDING = 1;                                                      // Cash token is pending issuance
+  CASH_TOKEN_STATUS_ENUM_ACTIVE = 2;                                                       // Cash token is active
+  CASH_TOKEN_STATUS_ENUM_SUSPENDED = 3;                                                    // Cash token is temporarily suspended
+  CASH_TOKEN_STATUS_ENUM_CANCELLED = 4;                                                    // Cash token was cancelled
+  CASH_TOKEN_STATUS_ENUM_IMPORTED = 5;                                                     // Cash token was imported from external depository
+
+  CASH_TOKEN_STATUS_ENUM_OTHER = 0x0fff0000;
+}

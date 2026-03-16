@@ -1,0 +1,46 @@
+syntax = "proto3";
+
+package tech.qomet.agora.api.grpc.fin;
+
+option go_package = "qomet.tech/agora/daemons/gen-pkg/tech/qomet/agora/api/grpc/fin;agoraapigrpcfin";
+option java_package = "tech.qomet.agora.api.grpc.fin";
+option java_outer_classname = "SecurityListingProto";
+option csharp_namespace  = "Tech.Qomet.Agora.Api.Grpc.Fin";
+
+// SecurityListing mirrors a FIX SecurityDefinition message (MsgType=d).
+// Fields map directly to FIX tags.
+message SecurityListing {
+  // Security identification
+  string symbol = 1;                                                             // FIX Tag 55
+  string security_id = 2;                                                        // FIX Tag 48
+  string security_id_source = 3;                                                 // FIX Tag 22
+  string security_type = 4;                                                      // FIX Tag 167 (e.g. CS, BOND, OPT)
+  string cfi_code = 5;                                                           // FIX Tag 461 (ISO 10962)
+  string security_exchange = 6;                                                  // FIX Tag 207
+  string security_desc = 7;                                                      // FIX Tag 107
+  string security_status = 8;                                                    // FIX Tag 965
+
+  // Pricing
+  string currency = 9;                                                           // FIX Tag 15 (ISO 4217)
+  string min_price_increment = 10;                                               // FIX Tag 969
+  string price_type = 11;                                                        // FIX Tag 432
+
+  // Trade info
+  string trade_date = 12;                                                        // FIX Tag 75
+
+  // Tick rules
+  string no_tick_rules = 13;                                                     // FIX Tag 1205
+  string start_tick_price_range = 14;                                            // FIX Tag 1206
+  string end_tick_price_range = 15;                                              // FIX Tag 1207
+  string tick_increment = 16;                                                    // FIX Tag 1208
+
+  // Alternate ID
+  string no_security_alt_id = 17;                                                // FIX Tag 454
+  string security_alt_id = 18;                                                   // FIX Tag 455
+  string security_alt_id_source = 19;                                            // FIX Tag 456
+
+  // Agora-specific: the IID of the SecurityListing in listingmgr
+  string security_listing_iid = 20;
+
+  map<string, string> metadata = 105;                                            // From FIX Tag 58 (Text field, JSON)
+}

@@ -1,0 +1,180 @@
+syntax = "proto3";
+
+package tech.qomet.agora.api.grpc.fin;
+
+import "common.proto";
+import "fin/identifier.proto";
+
+option go_package = "qomet.tech/agora/daemons/gen-pkg/tech/qomet/agora/api/grpc/fin;agoraapigrpcfin";
+option java_package = "tech.qomet.agora.api.grpc.fin";
+option java_outer_classname = "LegalStructureRelationProto";
+option csharp_namespace  = "Tech.Qomet.Agora.Api.Grpc.Fin";
+
+// LegalStructureToAssetRelationTypeEnum defines the types of relationships between
+// a LegalStructure and an Asset. Default is OWNER.
+enum LegalStructureToAssetRelationTypeEnum {
+  LEGAL_STRUCTURE_TO_ASSET_RELATION_TYPE_ENUM_UNKNOWN = 0;
+
+  LEGAL_STRUCTURE_TO_ASSET_RELATION_TYPE_ENUM_ISSUER = 1;
+  LEGAL_STRUCTURE_TO_ASSET_RELATION_TYPE_ENUM_OWNER = 2;
+  LEGAL_STRUCTURE_TO_ASSET_RELATION_TYPE_ENUM_SPONSOR = 3;
+  LEGAL_STRUCTURE_TO_ASSET_RELATION_TYPE_ENUM_REGULATOR = 4;
+  LEGAL_STRUCTURE_TO_ASSET_RELATION_TYPE_ENUM_SUPERVISOR = 5;
+  LEGAL_STRUCTURE_TO_ASSET_RELATION_TYPE_ENUM_GOVERNOR = 6;
+  LEGAL_STRUCTURE_TO_ASSET_RELATION_TYPE_ENUM_CUSTODIAN = 7;
+  LEGAL_STRUCTURE_TO_ASSET_RELATION_TYPE_ENUM_BROKER = 8;
+  LEGAL_STRUCTURE_TO_ASSET_RELATION_TYPE_ENUM_DEALER = 9;
+  LEGAL_STRUCTURE_TO_ASSET_RELATION_TYPE_ENUM_MARKET = 10;
+  LEGAL_STRUCTURE_TO_ASSET_RELATION_TYPE_ENUM_VENUE = 11;
+  LEGAL_STRUCTURE_TO_ASSET_RELATION_TYPE_ENUM_AUDITOR = 12;
+  LEGAL_STRUCTURE_TO_ASSET_RELATION_TYPE_ENUM_AGENT = 13;
+  LEGAL_STRUCTURE_TO_ASSET_RELATION_TYPE_ENUM_ADVISOR = 14;
+  LEGAL_STRUCTURE_TO_ASSET_RELATION_TYPE_ENUM_VALUATOR = 15;
+  LEGAL_STRUCTURE_TO_ASSET_RELATION_TYPE_ENUM_ADMINISTRATOR = 16;
+  LEGAL_STRUCTURE_TO_ASSET_RELATION_TYPE_ENUM_MARKET_MAKER = 21;
+  LEGAL_STRUCTURE_TO_ASSET_RELATION_TYPE_ENUM_LIQUIDITY_PROVIDER = 22;
+  LEGAL_STRUCTURE_TO_ASSET_RELATION_TYPE_ENUM_ORACLE = 23;
+  LEGAL_STRUCTURE_TO_ASSET_RELATION_TYPE_ENUM_MINER_VALIDATOR = 24;
+  LEGAL_STRUCTURE_TO_ASSET_RELATION_TYPE_ENUM_SERVICE_PROVIDER = 25;
+
+  LEGAL_STRUCTURE_TO_ASSET_RELATION_TYPE_ENUM_OTHER = 0x0fff0000;
+}
+
+// LegalStructureToAssetRelation represents a relationship between a LegalStructure and an Asset
+message LegalStructureToAssetRelation {
+  string iid = 1;                                                                          // REQUIRED: Internal relation identifier
+
+  string legal_structure_iid = 2;                                                          // REQUIRED: LegalStructure internal identifier
+  string asset_iid = 3;                                                                    // REQUIRED: Asset internal identifier
+
+  repeated LegalStructureToAssetRelationTypeEnum relations = 4;                            // REQUIRED: Type of relation (default: OWNER)
+
+  tech.qomet.agora.api.grpc.common.DateTime effective_from_dt = 5;                         // OPTIONAL: Relation effective start date
+  tech.qomet.agora.api.grpc.common.DateTime effective_to_dt = 6;                           // OPTIONAL: Relation effective end date
+  string weight = 7;                                                                       // OPTIONAL: Relation weight (e.g. percentage of ownership)
+
+  map<string, string> display_names = 101;                                                 // OPTIONAL: Display names for localization
+  map<string, string> descriptions = 102;                                                  // OPTIONAL: Descriptions for localization
+  map<string, string> labels = 103;                                                        // OPTIONAL: Key-value labels
+  repeated string tags = 104;                                                              // OPTIONAL: Tags for categorization
+  map<string, string> metadata = 105;                                                      // OPTIONAL: Additional metadata
+}
+
+// LegalStructureToInstrumentRelationTypeEnum defines the types of relationships between
+// a LegalStructure and an Instrument. Default is OWNER.
+enum LegalStructureToInstrumentRelationTypeEnum {
+  LEGAL_STRUCTURE_TO_INSTRUMENT_RELATION_TYPE_ENUM_UNKNOWN = 0;
+
+  LEGAL_STRUCTURE_TO_INSTRUMENT_RELATION_TYPE_ENUM_ISSUER = 1;
+  LEGAL_STRUCTURE_TO_INSTRUMENT_RELATION_TYPE_ENUM_OWNER = 2;
+  LEGAL_STRUCTURE_TO_INSTRUMENT_RELATION_TYPE_ENUM_SPONSOR = 3;
+  LEGAL_STRUCTURE_TO_INSTRUMENT_RELATION_TYPE_ENUM_REGULATOR = 4;
+  LEGAL_STRUCTURE_TO_INSTRUMENT_RELATION_TYPE_ENUM_SUPERVISOR = 5;
+  LEGAL_STRUCTURE_TO_INSTRUMENT_RELATION_TYPE_ENUM_GOVERNOR = 6;
+  LEGAL_STRUCTURE_TO_INSTRUMENT_RELATION_TYPE_ENUM_CUSTODIAN = 7;
+  LEGAL_STRUCTURE_TO_INSTRUMENT_RELATION_TYPE_ENUM_BROKER = 8;
+  LEGAL_STRUCTURE_TO_INSTRUMENT_RELATION_TYPE_ENUM_DEALER = 9;
+  LEGAL_STRUCTURE_TO_INSTRUMENT_RELATION_TYPE_ENUM_MARKET = 10;
+  LEGAL_STRUCTURE_TO_INSTRUMENT_RELATION_TYPE_ENUM_VENUE = 11;
+  LEGAL_STRUCTURE_TO_INSTRUMENT_RELATION_TYPE_ENUM_AUDITOR = 12;
+  LEGAL_STRUCTURE_TO_INSTRUMENT_RELATION_TYPE_ENUM_AGENT = 13;
+  LEGAL_STRUCTURE_TO_INSTRUMENT_RELATION_TYPE_ENUM_ADVISOR = 14;
+  LEGAL_STRUCTURE_TO_INSTRUMENT_RELATION_TYPE_ENUM_VALUATOR = 15;
+  LEGAL_STRUCTURE_TO_INSTRUMENT_RELATION_TYPE_ENUM_ADMINISTRATOR = 16;
+  LEGAL_STRUCTURE_TO_INSTRUMENT_RELATION_TYPE_ENUM_MARKET_MAKER = 21;
+  LEGAL_STRUCTURE_TO_INSTRUMENT_RELATION_TYPE_ENUM_LIQUIDITY_PROVIDER = 22;
+  LEGAL_STRUCTURE_TO_INSTRUMENT_RELATION_TYPE_ENUM_ORACLE = 23;
+  LEGAL_STRUCTURE_TO_INSTRUMENT_RELATION_TYPE_ENUM_MINER_VALIDATOR = 24;
+  LEGAL_STRUCTURE_TO_INSTRUMENT_RELATION_TYPE_ENUM_SERVICE_PROVIDER = 25;
+
+  LEGAL_STRUCTURE_TO_INSTRUMENT_RELATION_TYPE_ENUM_OTHER = 0x0fff0000;
+}
+
+// LegalStructureToInstrumentRelation represents a relationship between a LegalStructure and an Instrument
+message LegalStructureToInstrumentRelation {
+  string iid = 1;                                                                          // REQUIRED: Internal relation identifier
+
+  string legal_structure_iid = 2;                                                          // REQUIRED: LegalStructure internal identifier
+  string instrument_iid = 3;                                                               // REQUIRED: Instrument internal identifier
+
+  repeated LegalStructureToInstrumentRelationTypeEnum relations = 4;                       // REQUIRED: Type of relation (default: OWNER)
+
+  tech.qomet.agora.api.grpc.common.DateTime effective_from_dt = 5;                         // OPTIONAL: Relation effective start date
+  tech.qomet.agora.api.grpc.common.DateTime effective_to_dt = 6;                           // OPTIONAL: Relation effective end date
+  string weight = 7;                                                                       // OPTIONAL: Relation weight (e.g. percentage of ownership)
+
+  map<string, string> display_names = 101;                                                 // OPTIONAL: Display names for localization
+  map<string, string> descriptions = 102;                                                  // OPTIONAL: Descriptions for localization
+  map<string, string> labels = 103;                                                        // OPTIONAL: Key-value labels
+  repeated string tags = 104;                                                              // OPTIONAL: Tags for categorization
+  map<string, string> metadata = 105;                                                      // OPTIONAL: Additional metadata
+}
+
+// LegalStructureToIssuedInstrumentRelationTypeEnum defines the types of relationships between
+// a LegalStructure and an IssuedInstrument. Default is ISSUER.
+enum LegalStructureToIssuedInstrumentRelationTypeEnum {
+  LEGAL_STRUCTURE_TO_ISSUED_INSTRUMENT_RELATION_TYPE_ENUM_UNKNOWN = 0;
+
+  LEGAL_STRUCTURE_TO_ISSUED_INSTRUMENT_RELATION_TYPE_ENUM_ISSUER = 1;
+  LEGAL_STRUCTURE_TO_ISSUED_INSTRUMENT_RELATION_TYPE_ENUM_OWNER = 2;
+  LEGAL_STRUCTURE_TO_ISSUED_INSTRUMENT_RELATION_TYPE_ENUM_SPONSOR = 3;
+  LEGAL_STRUCTURE_TO_ISSUED_INSTRUMENT_RELATION_TYPE_ENUM_REGULATOR = 4;
+  LEGAL_STRUCTURE_TO_ISSUED_INSTRUMENT_RELATION_TYPE_ENUM_SUPERVISOR = 5;
+  LEGAL_STRUCTURE_TO_ISSUED_INSTRUMENT_RELATION_TYPE_ENUM_GOVERNOR = 6;
+  LEGAL_STRUCTURE_TO_ISSUED_INSTRUMENT_RELATION_TYPE_ENUM_CUSTODIAN = 7;
+  LEGAL_STRUCTURE_TO_ISSUED_INSTRUMENT_RELATION_TYPE_ENUM_BROKER = 8;
+  LEGAL_STRUCTURE_TO_ISSUED_INSTRUMENT_RELATION_TYPE_ENUM_DEALER = 9;
+  LEGAL_STRUCTURE_TO_ISSUED_INSTRUMENT_RELATION_TYPE_ENUM_MARKET = 10;
+  LEGAL_STRUCTURE_TO_ISSUED_INSTRUMENT_RELATION_TYPE_ENUM_VENUE = 11;
+  LEGAL_STRUCTURE_TO_ISSUED_INSTRUMENT_RELATION_TYPE_ENUM_AUDITOR = 12;
+  LEGAL_STRUCTURE_TO_ISSUED_INSTRUMENT_RELATION_TYPE_ENUM_AGENT = 13;
+  LEGAL_STRUCTURE_TO_ISSUED_INSTRUMENT_RELATION_TYPE_ENUM_ADVISOR = 14;
+  LEGAL_STRUCTURE_TO_ISSUED_INSTRUMENT_RELATION_TYPE_ENUM_VALUATOR = 15;
+  LEGAL_STRUCTURE_TO_ISSUED_INSTRUMENT_RELATION_TYPE_ENUM_ADMINISTRATOR = 16;
+  LEGAL_STRUCTURE_TO_ISSUED_INSTRUMENT_RELATION_TYPE_ENUM_MARKET_MAKER = 21;
+  LEGAL_STRUCTURE_TO_ISSUED_INSTRUMENT_RELATION_TYPE_ENUM_LIQUIDITY_PROVIDER = 22;
+  LEGAL_STRUCTURE_TO_ISSUED_INSTRUMENT_RELATION_TYPE_ENUM_ORACLE = 23;
+  LEGAL_STRUCTURE_TO_ISSUED_INSTRUMENT_RELATION_TYPE_ENUM_MINER_VALIDATOR = 24;
+  LEGAL_STRUCTURE_TO_ISSUED_INSTRUMENT_RELATION_TYPE_ENUM_SERVICE_PROVIDER = 25;
+
+  LEGAL_STRUCTURE_TO_ISSUED_INSTRUMENT_RELATION_TYPE_ENUM_OTHER = 0x0fff0000;
+}
+
+// LegalStructureToIssuedInstrumentRelation represents a relationship between a LegalStructure and an IssuedInstrument
+message LegalStructureToIssuedInstrumentRelation {
+  string iid = 1;                                                                          // REQUIRED: Internal relation identifier
+
+  string legal_structure_iid = 2;                                                          // REQUIRED: LegalStructure internal identifier
+  string issued_instrument_iid = 3;                                                        // REQUIRED: IssuedInstrument internal identifier
+
+  repeated LegalStructureToIssuedInstrumentRelationTypeEnum relations = 4;                 // REQUIRED: Type of relation (default: ISSUER)
+
+  tech.qomet.agora.api.grpc.common.DateTime effective_from_dt = 5;                         // OPTIONAL: Relation effective start date
+  tech.qomet.agora.api.grpc.common.DateTime effective_to_dt = 6;                           // OPTIONAL: Relation effective end date
+  string weight = 7;                                                                       // OPTIONAL: Relation weight (e.g. percentage of ownership)
+
+  map<string, string> display_names = 101;                                                 // OPTIONAL: Display names for localization
+  map<string, string> descriptions = 102;                                                  // OPTIONAL: Descriptions for localization
+  map<string, string> labels = 103;                                                        // OPTIONAL: Key-value labels
+  repeated string tags = 104;                                                              // OPTIONAL: Tags for categorization
+  map<string, string> metadata = 105;                                                      // OPTIONAL: Additional metadata
+}
+
+// ExternalLegalStructure represents an external LegalStructure from an external security depository.
+// Used when importing IssuedInstruments from external sources - stored in IssuedInstrument.metadata
+// with key "external_issuer_legal_structure".
+message ExternalLegalStructure {
+  string iid = 1;                                                                          // REQUIRED: External LegalStructure identifier
+  repeated FinIdentifier identifiers = 2;                                                  // OPTIONAL: External identifiers (LEI, etc.)
+  string type = 3;                                                                         // OPTIONAL: LegalStructure type (CORPORATION, PARTNERSHIP, etc.)
+
+  // External source tracking
+  string external_source_security_depository_iid = 10;                                     // REQUIRED: Source security depository IID
+  string external_source_issued_instrument_id = 11;                                        // REQUIRED: External issued instrument ID
+
+  map<string, string> display_names = 101;                                                 // OPTIONAL: Display names for localization
+  map<string, string> descriptions = 102;                                                  // OPTIONAL: Descriptions for localization
+  map<string, string> labels = 103;                                                        // OPTIONAL: Key-value labels
+  repeated string tags = 104;                                                              // OPTIONAL: Tags for categorization
+  map<string, string> metadata = 105;                                                      // OPTIONAL: Additional metadata
+}

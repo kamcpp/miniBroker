@@ -1,0 +1,33 @@
+syntax = "proto3";
+
+package tech.qomet.agora.api.grpc.prtagent.v1;
+
+import "common.proto";
+import "prtagent/v1/event.proto";
+import "prtagent/v1/participant_types.proto";
+
+option go_package = "qomet.tech/agora/daemons/gen-pkg/tech/qomet/agora/api/grpc/prtagent/v1;agoraapigrpcprtagentv1";
+option java_package = "tech.qomet.agora.api.grpc.prtagent.v1";
+option java_outer_classname = "Participant";
+option csharp_namespace  = "Tech.Qomet.Agora.Api.Grpc.PrtAgent.V1";
+
+service ParticipantService {
+  rpc GetParticipantInfo(GetParticipantInfoRequest) returns (GetParticipantInfoResponse);
+  rpc GetParticipantInfoAsync(GetParticipantInfoRequest) returns (tech.qomet.agora.api.grpc.common.ExecutionAsyncResponse);
+
+  rpc GetParticipantOrders(GetParticipantOrdersRequest) returns (GetParticipantOrdersResponse);
+  rpc GetParticipantOrdersAsync(GetParticipantOrdersRequest) returns (tech.qomet.agora.api.grpc.common.ExecutionAsyncResponse);
+
+  rpc GetParticipantTrades(GetParticipantTradesRequest) returns (GetParticipantTradesResponse);
+  rpc GetParticipantTradesAsync(GetParticipantTradesRequest) returns (tech.qomet.agora.api.grpc.common.ExecutionAsyncResponse);
+
+  rpc GetParticipantSettlements(GetParticipantSettlementsRequest)
+    returns (GetParticipantSettlementsResponse);
+  rpc GetParticipantSettlementsAsync(GetParticipantSettlementsRequest)
+    returns (tech.qomet.agora.api.grpc.common.ExecutionAsyncResponse);
+
+  rpc GetParticipantHoldings(GetParticipantHoldingsRequest) returns (GetParticipantHoldingsResponse);
+  rpc GetParticipantHoldingsAsync(GetParticipantHoldingsRequest) returns (tech.qomet.agora.api.grpc.common.ExecutionAsyncResponse);
+
+  rpc SubscribeToEvents(EventSubscriptionParams) returns (stream Event);
+}
