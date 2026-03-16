@@ -7,7 +7,7 @@ on:
 
 jobs:
   build-windows:
-    runs-on: windows-latest-large
+    runs-on: windows-latest-xlarge
     steps:
       - uses: actions/checkout@v4
 
