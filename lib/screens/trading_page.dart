@@ -1404,7 +1404,7 @@ class _TradingPageState extends State<TradingPage> {
               'order_id': order['orderId'] ?? order['orderIid'] ?? order['order_id'] ?? 'N/A',
               'participantOrderId': order['participantOrderId'] ?? order['participant_order_id'] ?? order['orderIid'] ?? order['order_id'] ?? 'N/A',
               'side': order['side'] ?? 'N/A',
-              'symbol': order['symbol'] ?? 'N/A',
+              'symbol': _resolveSymbol(order),
               'quantity': order['quantity'] ?? '0',
               'remainingQuantity': order['remainingQuantity'] ?? order['remaining_quantity'] ?? '?',
               'price': order['price'] ?? '0',
@@ -1435,10 +1435,10 @@ class _TradingPageState extends State<TradingPage> {
 
             // Check for compensated status
             final status = _getOrderStatus(order).toLowerCase().trim();
-            final isCompensated = status == 'compensated';
+            final isFailed = status == 'failed';
 
-            // History orders: filled, cancelled, expired, or compensated
-            if (isFilled || isCancelled || isExpired || isCompensated) {
+            // History orders: filled, cancelled, expired, or failed
+            if (isFilled || isCancelled || isExpired || isFailed) {
               historyOrders.add(order);
             } else {
               activeOrders.add(order);
@@ -3983,23 +3983,26 @@ class _TradingPageState extends State<TradingPage> {
   }
 
   /// Get display status preferring server order_status, falling back to boolean flags
-  /// Resolve symbol for an order: use symbol field, or look up securityListingIid in loaded securities.
+  /// Resolve symbol for an order: use symbol field, or look up IID in loaded securities.
   String _resolveSymbol(Map<dynamic, dynamic> order) {
-    final symbol = order['symbol']?.toString();
-    if (symbol != null && symbol.isNotEmpty) return symbol;
-    final listingIid = order['securityListingIid']?.toString() ?? order['security_listing_iid']?.toString() ?? '';
-    if (listingIid.isNotEmpty) {
-      // Look up in loaded securities
+    final symbol = order['symbol']?.toString() ?? '';
+    // If symbol is a proper ticker (not an IID), return it
+    if (symbol.isNotEmpty && !symbol.startsWith('sec_listing_') && !symbol.startsWith('issued_instr_')) {
+      return symbol;
+    }
+    // Try to resolve from IID
+    final iid = symbol.isNotEmpty ? symbol
+        : (order['securityListingIid']?.toString() ?? order['security_listing_iid']?.toString() ?? '');
+    if (iid.isNotEmpty) {
       for (final sec in _securities) {
-        if (sec['iid'] == listingIid) {
+        if (sec['iid'] == iid) {
           final ticker = sec['symbol']?.toString() ?? '';
           final currency = sec['issueCurrency']?.toString() ?? '';
           return currency.isNotEmpty ? '$ticker:$currency' : ticker;
         }
       }
-      return listingIid; // fallback to raw IID
     }
-    return order['securityIid']?.toString() ?? 'N/A';
+    return symbol.isNotEmpty ? symbol : 'N/A';
   }
 
   String _getOrderStatus(Map<String, dynamic> order) {
@@ -4016,7 +4019,7 @@ class _TradingPageState extends State<TradingPage> {
   /// Whether a status is terminal (non-actionable)
   bool _isTerminalStatus(String status) {
     final s = status.toLowerCase().trim();
-    return ['filled', 'completed', 'cancelled', 'expired', 'rejected', 'compensated'].contains(s);
+    return ['filled', 'cancelled', 'expired', 'rejected', 'failed'].contains(s);
   }
 
   /// Get color for an order status
@@ -4029,13 +4032,11 @@ class _TradingPageState extends State<TradingPage> {
       case 'active': return Colors.lightBlue.shade300;
       case 'partially filled': return Colors.teal.shade300;
       case 'filled': return Colors.green.shade400;
-      case 'completed': return Colors.green.shade400;
       case 'cancelled': return Colors.orange.shade400;
       case 'expired': return Colors.grey.shade500;
       case 'rejected': return Colors.red.shade400;
-      case 'compensated': return Colors.purple.shade300;
-      case 'error': return Colors.red.shade600;
       case 'failed': return Colors.red.shade600;
+      case 'error': return Colors.red.shade600;
       default: return UIConstants.textPrimary(isDarkTheme);
     }
   }
