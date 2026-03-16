@@ -1403,7 +1403,7 @@ class _TradingPageState extends State<TradingPage> {
               'order_id': order['orderId'] ?? order['orderIid'] ?? order['order_id'] ?? 'N/A',
               'participantOrderId': order['participantOrderId'] ?? order['participant_order_id'] ?? order['orderIid'] ?? order['order_id'] ?? 'N/A',
               'side': order['side'] ?? 'N/A',
-              'symbol': order['securityIid'] ?? order['symbol'] ?? 'N/A',
+              'symbol': order['symbol'] ?? order['securityIid'] ?? 'N/A',
               'quantity': order['quantity'] ?? '0',
               'price': order['price'] ?? '0',
               'create_timestamp': createTs,
@@ -1431,11 +1431,14 @@ class _TradingPageState extends State<TradingPage> {
             final isCancelled = order['is_cancelled'] as bool;
             final isExpired = order['is_expired'] as bool;
 
-            // History orders: filled, cancelled, or expired
-            if (isFilled || isCancelled || isExpired) {
+            // Check for compensated status
+            final status = _getOrderStatus(order).toLowerCase().trim();
+            final isCompensated = status == 'compensated';
+
+            // History orders: filled, cancelled, expired, or compensated
+            if (isFilled || isCancelled || isExpired || isCompensated) {
               historyOrders.add(order);
             } else {
-              // Active orders: not filled, not cancelled, not expired
               activeOrders.add(order);
             }
           }
@@ -3992,20 +3995,25 @@ class _TradingPageState extends State<TradingPage> {
   /// Whether a status is terminal (non-actionable)
   bool _isTerminalStatus(String status) {
     final s = status.toLowerCase().trim();
-    return ['filled', 'cancelled', 'expired', 'rejected'].contains(s);
+    return ['filled', 'cancelled', 'expired', 'rejected', 'compensated'].contains(s);
   }
 
   /// Get color for an order status
   Color _getStatusColor(String status, bool isDarkTheme) {
     switch (status.toLowerCase().trim()) {
-      case 'pending': return Colors.amber.shade700;
-      case 'validated': return Colors.blue;
-      case 'submitted': return Colors.teal;
-      case 'filled': return Colors.green;
-      case 'cancelled': return Colors.red;
-      case 'expired': return Colors.orange;
-      case 'rejected': return Colors.red;
-      case 'active': return const Color(0xFF000080);
+      case 'submitted': return Colors.white;
+      case 'accepted': return Colors.blue.shade300;
+      case 'pending': return Colors.amber.shade600;
+      case 'validated': return Colors.cyan.shade300;
+      case 'active': return Colors.lightBlue.shade300;
+      case 'partially filled': return Colors.lime.shade400;
+      case 'filled': return Colors.green.shade400;
+      case 'cancelled': return Colors.orange.shade400;
+      case 'expired': return Colors.grey.shade500;
+      case 'rejected': return Colors.red.shade400;
+      case 'compensated': return Colors.purple.shade300;
+      case 'error': return Colors.red.shade600;
+      case 'failed': return Colors.red.shade600;
       default: return UIConstants.textPrimary(isDarkTheme);
     }
   }
@@ -5147,10 +5155,18 @@ class _TradingPageState extends State<TradingPage> {
         return;
       }
 
-      // Build security listing ID as TICKER:CURRENCY (e.g., "FRSTSEC:EUR")
+      // Use the actual security_listing_iid from the selected security
+      final selectedSecurity = _securities.firstWhere(
+        (s) => s['symbol'] == _selectedSymbol,
+        orElse: () => <String, dynamic>{},
+      );
+      final securityId = selectedSecurity['iid']?.toString() ?? '';
+      if (securityId.isEmpty) {
+        EventSubscriptionService().notify(title: 'Validation', message: 'Security listing ID not found', icon: Icons.warning_amber, color: const Color(0xFFE65100));
+        return;
+      }
       final currency = _selectedCurrency['issueCurrency'] ?? _selectedCurrency['code'] ?? '';
-      final securityId = currency.isNotEmpty ? '$_selectedSymbol:$currency' : _selectedSymbol;
-      print('🏷️ Using securityId: $securityId');
+      print('🏷️ Using security_listing_iid: $securityId');
 
       // Generate unique investor order ID
       final investorOrderId = 'invord_${_generateId(16)}';

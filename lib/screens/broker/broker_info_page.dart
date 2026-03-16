@@ -94,6 +94,7 @@ class _BrokerInfoPageState extends State<BrokerInfoPage> {
 
       if (result['success'] == true) {
         final output = result['output'] as Map<String, dynamic>? ?? {};
+        print('🏦 [BrokerInfo] Raw holdings response: $output');
         setState(() {
           _holdingsData = output;
         });
@@ -700,11 +701,15 @@ class _BrokerInfoPageState extends State<BrokerInfoPage> {
                     holdingData['total_units']?.toString() ?? '0';
                 final stashUnits = holdingData['stashUnits'] as Map<String, dynamic>? ??
                     holdingData['stash_units'] as Map<String, dynamic>? ?? {};
+                print('🏦 Broker holding $assetId: totalUnits=$totalUnitsRaw, stashUnits=$stashUnits');
                 // Stash keys can be: available/locked OR LIQUID/LOCKED/TOTAL
                 final availableRaw = stashUnits['available']?.toString() ??
                     stashUnits['LIQUID']?.toString() ?? totalUnitsRaw;
-                final lockedRaw = stashUnits['locked']?.toString() ??
-                    stashUnits['LOCKED']?.toString() ?? '0';
+                // Calculate locked = total - available (don't rely on a 'locked' key)
+                final totalInt = int.tryParse(totalUnitsRaw) ?? 0;
+                final availableInt = int.tryParse(availableRaw) ?? 0;
+                final lockedCalc = totalInt - availableInt;
+                final lockedRaw = lockedCalc > 0 ? lockedCalc.toString() : '0';
 
                 // Look up currency and divisibility from resolved info
                 final tokenInfo = _cashTokenInfo[assetId];
