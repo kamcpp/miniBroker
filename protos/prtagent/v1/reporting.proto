@@ -309,6 +309,7 @@ message SagaInstance {
   string parent_saga_step_instance_id = 21;                             // Step that spawned this sub-saga
   string root_saga_instance_id = 22;                                    // Root ancestor saga ID
   int32 saga_depth = 23;                                                // 0 = root, 1 = child, 2 = grandchild, etc.
+  string compensation_reason = 24;                                      // Human-readable reason why compensation was triggered
 }
 
 // --- Saga Step Instance ---
@@ -337,6 +338,7 @@ message SagaStepInstance {
   string saga_template_id = 9;
   string saga_step_template_id = 10;                                    // Step name/template within the saga
   string result_data = 11;                                              // JSON-encoded step result map
+  string compensation_result_data = 22;                                 // JSON-encoded compensation result map
   repeated SagaStepExecutionLog execution_history = 12;                 // Full execution attempt history
   string execution_error = 13;                                          // First error from execution history
   map<string, string> labels = 14;

@@ -1403,6 +1403,7 @@ class _TradingPageState extends State<TradingPage> {
             return {
               'order_id': order['orderId'] ?? order['orderIid'] ?? order['order_id'] ?? 'N/A',
               'participantOrderId': order['participantOrderId'] ?? order['participant_order_id'] ?? order['orderIid'] ?? order['order_id'] ?? 'N/A',
+              'investorOrderId': order['investorOrderId'] ?? order['investor_order_id'] ?? order['participantOrderId'] ?? order['participant_order_id'] ?? '',
               'side': order['side'] ?? 'N/A',
               'symbol': _resolveSymbol(order),
               'quantity': order['quantity'] ?? '0',
@@ -1535,7 +1536,7 @@ class _TradingPageState extends State<TradingPage> {
       if (confirmed != true) return;
 
       final result = await GrpcurlHelper.cancelOrderAsync(
-        participantOrderId: participantOrderId,
+        externalOrderId: participantOrderId,
         reason: 'User requested cancellation',
         refRequestId: 'flutter-cancel-${DateTime.now().millisecondsSinceEpoch}',
       ).timeout(const Duration(minutes: 5));
@@ -4495,11 +4496,12 @@ class _TradingPageState extends State<TradingPage> {
               children: [
                 if (!_isTerminalStatus(status)) ...[
                   IconButton(
-                    icon: Icon(Icons.cancel_outlined, size: 18, color: Colors.grey.shade500),
-                    tooltip: 'Coming soon',
+                    icon: const Icon(Icons.cancel_outlined, size: 18),
+                    color: Colors.red,
+                    tooltip: 'Cancel order',
                     padding: EdgeInsets.zero,
                     constraints: const BoxConstraints(minWidth: 28, minHeight: 28),
-                    onPressed: () {},
+                    onPressed: () => _cancelOrder(order['investorOrderId']?.toString() ?? ''),
                   ),
                   IconButton(
                     icon: Icon(Icons.swap_horiz, size: 18, color: Colors.grey.shade500),
@@ -4575,11 +4577,12 @@ class _TradingPageState extends State<TradingPage> {
         children: [
           if (!_isTerminalStatus(status)) ...[
             IconButton(
-              icon: Icon(Icons.cancel_outlined, size: 16, color: Colors.grey.shade500),
-              tooltip: 'Coming soon',
+              icon: const Icon(Icons.cancel_outlined, size: 16),
+              color: Colors.red,
+              tooltip: 'Cancel order',
               padding: EdgeInsets.zero,
               constraints: const BoxConstraints(minWidth: 24, minHeight: 24),
-              onPressed: () {},
+              onPressed: () => _cancelOrder(order['investorOrderId']?.toString() ?? ''),
             ),
             IconButton(
               icon: Icon(Icons.swap_horiz, size: 16, color: Colors.grey.shade500),

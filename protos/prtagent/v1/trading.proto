@@ -233,7 +233,7 @@ message ReplaceOrderAsyncRequest {
 message CancelOrderAsyncRequest {
   string proposed_execution_id = 1;                                     // OPTIONAL: Client-proposed execution ID for tracking
 
-  string participant_order_id = 2;                                      // REQUIRED: Participant order ID to cancel
+  string external_order_id = 2;                                      // REQUIRED: External order ID (investor_order_id from creation) to cancel
   string reason = 3;                                                    // OPTIONAL: Reason for cancellation
 
   map<string, string> aux_data = 105;                                   // OPTIONAL: Additional request data

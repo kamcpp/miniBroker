@@ -1332,18 +1332,18 @@ class GrpcurlHelper {
   /// Cancel an order asynchronously
   /// TradingService.CancelOrderAsync
   static Future<Map<String, dynamic>> cancelOrderAsync({
-    required String participantOrderId,
+    required String externalOrderId,
     String? reason,
     String refRequestId = 'flutter-cancel-order',
   }) async {
-    print('❌ Cancelling order: $participantOrderId');
+    print('❌ Cancelling order: $externalOrderId');
 
     return _executeGrpcCall(
       method: 'CancelOrderAsync',
       endpoint: 'TradingService/CancelOrderAsync',
       requestBody: {
         'proposed_execution_id': refRequestId,
-        'participant_order_id': participantOrderId,
+        'external_order_id': externalOrderId,
         'reason': reason ?? 'User requested cancellation',
       },
     );

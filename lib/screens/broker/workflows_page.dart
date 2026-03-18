@@ -71,6 +71,7 @@ class _WorkflowsPageState extends State<WorkflowsPage> {
     'FAILED': UIConstants.colorReject,
     'COMPENSATING': UIConstants.colorWarning,
     'COMPENSATED': Color(0xFFE65100),
+    'BLOCKED': Color(0xFFD84315),
     'CANCELLED': Color(0xFF757575),
   };
 
@@ -85,6 +86,7 @@ class _WorkflowsPageState extends State<WorkflowsPage> {
     'FAILED': Icons.error_outline,
     'COMPENSATING': Icons.undo,
     'COMPENSATED': Icons.undo,
+    'BLOCKED': Icons.block,
     'CANCELLED': Icons.cancel_outlined,
   };
 
@@ -762,6 +764,9 @@ class _WorkflowsPageState extends State<WorkflowsPage> {
             Text('${children.length}', style: TextStyle(color: UIConstants.colorPrimary, fontSize: UIConstants.fontSizeSm, fontWeight: FontWeight.w500))
           else
             Text('-', style: cellStyle),
+          root.compensationReason.isNotEmpty
+              ? _reasonCell(root.compensationReason, isDarkTheme)
+              : Text('-', style: cellStyle),
           _copyableText(_formatTimestamp(root.createdAt.toInt()), _formatTimestamp(root.createdAt.toInt()), cellStyle, isDarkTheme),
           _copyableText(_formatTimestamp(root.updatedAt.toInt()), _formatTimestamp(root.updatedAt.toInt()), cellStyle, isDarkTheme),
         ],
@@ -786,6 +791,9 @@ class _WorkflowsPageState extends State<WorkflowsPage> {
               _copyableText(_truncateId(child.sagaSubmitterId), child.sagaSubmitterId, childStyle, isDarkTheme),
               _stateChip(child.state, compact: true),
               Text('', style: childStyle),
+              child.compensationReason.isNotEmpty
+                  ? _reasonCell(child.compensationReason, isDarkTheme)
+                  : Text('-', style: childStyle),
               _copyableText(_formatTimestamp(child.createdAt.toInt()), _formatTimestamp(child.createdAt.toInt()), childStyle, isDarkTheme),
               _copyableText(_formatTimestamp(child.updatedAt.toInt()), _formatTimestamp(child.updatedAt.toInt()), childStyle, isDarkTheme),
             ],
@@ -806,6 +814,9 @@ class _WorkflowsPageState extends State<WorkflowsPage> {
               _copyableText(_truncateId(child.sagaSubmitterId), child.sagaSubmitterId, childStyle, isDarkTheme),
               _stateChip(child.state, compact: true),
               Text('', style: childStyle),
+              child.compensationReason.isNotEmpty
+                  ? _reasonCell(child.compensationReason, isDarkTheme)
+                  : Text('-', style: childStyle),
               _copyableText(_formatTimestamp(child.createdAt.toInt()), _formatTimestamp(child.createdAt.toInt()), childStyle, isDarkTheme),
               _copyableText(_formatTimestamp(child.updatedAt.toInt()), _formatTimestamp(child.updatedAt.toInt()), childStyle, isDarkTheme),
             ],
@@ -822,6 +833,7 @@ class _WorkflowsPageState extends State<WorkflowsPage> {
         StyledColumn(label: 'Submitter', flex: 2),
         StyledColumn(label: 'State', flex: 1),
         StyledColumn(label: 'Children', flex: 1),
+        StyledColumn(label: 'Reason', flex: 2),
         StyledColumn(label: 'Created', flex: 2),
         StyledColumn(label: 'Updated', flex: 2),
       ],
@@ -926,6 +938,8 @@ class _WorkflowsPageState extends State<WorkflowsPage> {
           _infoItem('Steps', '${summary.completed}/${summary.total} done', isDarkTheme),
           if (summary.failed > 0) _infoItem('Failed', '${summary.failed}', isDarkTheme),
           _infoItem('Created', _formatTimestamp(saga.createdAt.toInt()), isDarkTheme),
+          if (saga.compensationReason.isNotEmpty)
+            _infoItem('Compensation Reason', saga.compensationReason, isDarkTheme),
         ],
       ),
     );
@@ -950,6 +964,95 @@ class _WorkflowsPageState extends State<WorkflowsPage> {
   }
 
   /// Copyable text widget — tap to copy full value, show truncated display.
+  Widget _reasonCell(String reason, bool isDarkTheme) {
+    return Tooltip(
+      message: 'Click to view full reason',
+      child: InkWell(
+        onTap: () => _showReasonDialog(reason, isDarkTheme),
+        child: Text(
+          reason.length > 30 ? '${reason.substring(0, 27)}...' : reason,
+          style: TextStyle(
+            color: UIConstants.colorWarning,
+            fontSize: UIConstants.fontSizeSm,
+            decoration: TextDecoration.underline,
+            decorationColor: UIConstants.colorWarning,
+          ),
+          overflow: TextOverflow.ellipsis,
+        ),
+      ),
+    );
+  }
+
+  void _showReasonDialog(String reason, bool isDarkTheme) {
+    showDialog(
+      context: context,
+      builder: (context) => Dialog(
+        backgroundColor: UIConstants.dialogBackground(isDarkTheme),
+        shape: UIConstants.dialogShape(isDarkTheme) as RoundedRectangleBorder,
+        child: Container(
+          width: 500,
+          constraints: const BoxConstraints(maxHeight: 400),
+          padding: UIConstants.paddingComfortable,
+          child: Column(
+            mainAxisSize: MainAxisSize.min,
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              Row(
+                children: [
+                  Icon(Icons.warning_amber, color: UIConstants.colorWarning, size: 20),
+                  const SizedBox(width: UIConstants.spacingSm),
+                  Expanded(
+                    child: Text(
+                      'Compensation Reason',
+                      style: TextStyle(
+                        color: UIConstants.textPrimary(isDarkTheme),
+                        fontSize: UIConstants.fontSizeMd,
+                        fontWeight: UIConstants.fontWeightMedium,
+                      ),
+                    ),
+                  ),
+                  IconButton(
+                    icon: Icon(Icons.copy, color: UIConstants.textSecondary(isDarkTheme), size: 18),
+                    tooltip: 'Copy to clipboard',
+                    onPressed: () {
+                      _copyToClipboard(reason);
+                      Navigator.of(context).pop();
+                    },
+                  ),
+                  IconButton(
+                    icon: Icon(Icons.close, color: UIConstants.textSecondary(isDarkTheme), size: 18),
+                    onPressed: () => Navigator.of(context).pop(),
+                  ),
+                ],
+              ),
+              const SizedBox(height: UIConstants.spacingMd),
+              Flexible(
+                child: Container(
+                  width: double.infinity,
+                  padding: UIConstants.paddingStandard,
+                  decoration: BoxDecoration(
+                    color: UIConstants.dialogSurface(isDarkTheme),
+                    borderRadius: BorderRadius.circular(UIConstants.borderRadiusMd),
+                  ),
+                  child: SingleChildScrollView(
+                    child: SelectableText(
+                      reason,
+                      style: TextStyle(
+                        color: UIConstants.textPrimary(isDarkTheme),
+                        fontSize: UIConstants.fontSizeSm,
+                        height: 1.4,
+                      ),
+                    ),
+                  ),
+                ),
+              ),
+            ],
+          ),
+        ),
+      ),
+    );
+  }
+
   Widget _copyableText(String display, String fullValue, TextStyle style, bool isDarkTheme) {
     return Tooltip(
       message: fullValue,
@@ -1145,6 +1248,20 @@ class _WorkflowsPageState extends State<WorkflowsPage> {
                           child: InkWell(
                             onTap: () => _copyToClipboard(step.resultData),
                             child: SelectableText('Result: ${step.resultData}', style: TextStyle(color: UIConstants.textPrimary(isDarkTheme), fontSize: UIConstants.fontSizeXs), maxLines: 3),
+                          ),
+                        ),
+                      if (step.compensationResultData.isNotEmpty)
+                        Container(
+                          width: double.infinity,
+                          padding: const EdgeInsets.all(6),
+                          margin: const EdgeInsets.only(bottom: 6),
+                          decoration: BoxDecoration(
+                            color: UIConstants.colorWarning.withOpacity(0.1),
+                            borderRadius: BorderRadius.circular(UIConstants.borderRadiusSm),
+                          ),
+                          child: InkWell(
+                            onTap: () => _copyToClipboard(step.compensationResultData),
+                            child: SelectableText('Compensation Result: ${step.compensationResultData}', style: TextStyle(color: UIConstants.colorWarning, fontSize: UIConstants.fontSizeXs), maxLines: 3),
                           ),
                         ),
                       ...step.executionHistory.asMap().entries.map(
