@@ -321,7 +321,7 @@ class _LoginPageState extends State<LoginPage> with TickerProviderStateMixin {
                         color: Colors.white,
                       ),
                     ),
-                    const SizedBox(height: UIConstants.spacingLg),
+                    const SizedBox(height: UIConstants.spacingMd),
 
                     // Username Field
                     TextFormField(
@@ -383,36 +383,10 @@ class _LoginPageState extends State<LoginPage> with TickerProviderStateMixin {
                     ),
                     const SizedBox(height: UIConstants.spacingMd),
 
-                    // Forgot Password Link (hidden)
-                    Visibility(
-                      visible: false,
-                      child: Align(
-                        alignment: Alignment.centerLeft,
-                        child: TextButton(
-                          onPressed: () {
-                            // TODO: Implement forgot password
-                            ScaffoldMessenger.of(context).showSnackBar(
-                              const SnackBar(
-                                content: Text('Forgot password feature coming soon'),
-                              ),
-                            );
-                          },
-                          child: const Text(
-                            'Forgot password?',
-                            style: TextStyle(
-                              color: UIConstants.colorCommand,
-                              fontSize: UIConstants.fontSizeSm,
-                            ),
-                          ),
-                        ),
-                      ),
-                    ),
-                    const SizedBox(height: UIConstants.spacingMd),
-
                     // Login Button
                     SizedBox(
                       width: double.infinity,
-                      height: UIConstants.loginButtonHeight,
+                      height: UIConstants.loginButtonHeight * 0.8,
                       child: ElevatedButton(
                         onPressed: _isLoading ? null : _handleLogin,
                         style: UIConstants.preLoginButtonStyle(),
@@ -434,7 +408,7 @@ class _LoginPageState extends State<LoginPage> with TickerProviderStateMixin {
                               ),
                       ),
                     ),
-                    const SizedBox(height: UIConstants.spacingMd),
+                    const SizedBox(height: UIConstants.spacingSm),
 
                     // Sign up link
                     Row(
