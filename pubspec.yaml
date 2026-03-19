@@ -18,7 +18,8 @@ dependencies:
   http: ^1.1.0
   grpc: ^3.2.4
   protobuf: ^3.1.0
-  candlesticks: ^2.1.0
+  candlesticks:
+    path: packages/candlesticks
   csv: ^6.0.0
   excel: ^4.0.6
   pdf: ^3.11.0

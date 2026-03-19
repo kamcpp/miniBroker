@@ -967,6 +967,7 @@ class _TradingPageState extends State<TradingPage> {
   StreamSubscription<String>? _messageSubscription;
   StreamSubscription<bool>? _connectionStatusSubscription;
   StreamSubscription<bool>? _logonStatusSubscription;
+  StreamSubscription<String>? _eventSubscription;
   bool _hasRequestedSecurityDefinitions = false;
   Timer? _securityRequestTimeout;
   Timer? _orderbookRefreshTimer;
@@ -1113,6 +1114,18 @@ class _TradingPageState extends State<TradingPage> {
     _listenToConnectionStatus();
     // Listen for FIX messages to handle Security Definition Responses
     _listenToFixMessages();
+    // Listen for gRPC events to refresh trading data
+    _eventSubscription = EventSubscriptionService().onEvent.listen((eventType) {
+      if (mounted) {
+        print('🔄 [Trading] Refreshing data due to event: $eventType');
+        _fetchRealOrders();
+        _fetchCashHoldings();
+        if (!_isBuySelected) _fetchAccountMarketPortfolio();
+        if (_selectedSymbol.isNotEmpty) {
+          _fetchOrderbookData(_selectedSymbol);
+        }
+      }
+    });
     
     // Add listeners to text controllers to update total calculation
     _quantityController.addListener(() {
@@ -2666,6 +2679,7 @@ class _TradingPageState extends State<TradingPage> {
     _messageSubscription?.cancel();
     _connectionStatusSubscription?.cancel();
     _logonStatusSubscription?.cancel();
+    _eventSubscription?.cancel();
     _securityRequestTimeout?.cancel();
     _liveOhlcSubscription?.cancel();
     _orderbookRefreshTimer?.cancel();
@@ -3289,14 +3303,19 @@ class _TradingPageState extends State<TradingPage> {
                                   ],
                                 ),
                               )
-                            : Theme(
-                                data: isDarkTheme
-                                    ? ThemeData(brightness: Brightness.dark)
-                                    : ThemeData(brightness: Brightness.light),
-                                child: Candlesticks(
-                                  candles: _candles,
-                                  onLoadMoreCandles: () async {},
-                                ),
+                            : Builder(
+                                builder: (context) {
+                                  HelperFunctions.priceDecimals = _getCurrencyDecimals();
+                                  return Theme(
+                                    data: isDarkTheme
+                                        ? ThemeData(brightness: Brightness.dark)
+                                        : ThemeData(brightness: Brightness.light),
+                                    child: Candlesticks(
+                                      candles: _candles,
+                                      onLoadMoreCandles: () async {},
+                                    ),
+                                  );
+                                },
                               ),
                 // Error overlay on top
                 if (_chartError.isNotEmpty)
