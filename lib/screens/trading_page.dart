@@ -1019,7 +1019,7 @@ class _TradingPageState extends State<TradingPage> {
   List<Candle> _candles = [];
   bool _isLoadingChart = false;
   String _chartError = '';
-  String _selectedTimePeriod = '1h'; // Default period
+  String _selectedTimePeriod = '1d'; // Default period
   ChartService? _chartService;
   Timer? _liveOhlcSubscription;
   int _chartRebuildKey = 0; // Key to force chart rebuild
@@ -1087,7 +1087,7 @@ class _TradingPageState extends State<TradingPage> {
       _orderType = state['orderType'] ?? 'Limit';
       _timeInForce = state['timeInForce'] ?? 'DAY';
       _expiryPeriod = state['expiryPeriod'] ?? '1 Month';
-      _selectedTimePeriod = state['selectedTimePeriod'] ?? '1h';
+      _selectedTimePeriod = state['selectedTimePeriod'] ?? '1d';
       _activityTabIndex = state['activityTabIndex'] ?? 0;
       _ordersTabIndex = state['ordersTabIndex'] ?? 0;
       if (state['quantity'] != null && (state['quantity'] as String).isNotEmpty) {
@@ -3345,9 +3345,17 @@ class _TradingPageState extends State<TradingPage> {
               const SizedBox(width: 4),
               _buildTimePeriodButton('15m', isDarkTheme),
               const SizedBox(width: 4),
+              _buildTimePeriodButton('30m', isDarkTheme),
+              const SizedBox(width: 4),
               _buildTimePeriodButton('1h', isDarkTheme),
               const SizedBox(width: 4),
+              _buildTimePeriodButton('12h', isDarkTheme),
+              const SizedBox(width: 4),
               _buildTimePeriodButton('1d', isDarkTheme),
+              const SizedBox(width: 4),
+              _buildTimePeriodButton('7d', isDarkTheme),
+              const SizedBox(width: 4),
+              _buildTimePeriodButton('1M', isDarkTheme),
             ],
           ),
         ],

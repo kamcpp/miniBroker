@@ -1582,9 +1582,18 @@ class _WorkflowsPageState extends State<WorkflowsPage> {
     return cleaned;
   }
 
+  static const _shortStateLabels = <String, String>{
+    'COMMITTED': 'COMM',
+    'COMPENSATED': 'COMP',
+    'BLOCKED': 'BLCK',
+    'COMPENSATING': 'CMPG',
+    'IN_PROGRESS': 'PROG',
+  };
+
   Widget _stateChip(String state, {bool compact = false}) {
     final cleaned = _cleanState(state);
     final color = _stateColor(cleaned);
+    final label = compact ? (_shortStateLabels[cleaned.toUpperCase()] ?? cleaned) : cleaned;
 
     return Container(
       padding: EdgeInsets.symmetric(
@@ -1597,7 +1606,7 @@ class _WorkflowsPageState extends State<WorkflowsPage> {
         border: Border.all(color: color.withOpacity(0.4), width: 0.5),
       ),
       child: Text(
-        cleaned,
+        label,
         style: TextStyle(
           color: color,
           fontSize: compact ? UIConstants.fontSizeXs : UIConstants.fontSizeSm,
