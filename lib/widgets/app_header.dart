@@ -3,6 +3,7 @@ import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 import '../services/auth_service.dart';
 import '../services/theme_service.dart';
+import '../services/event_subscription_service.dart';
 import '../config/ui_constants.dart';
 import '../screens/profile_page.dart';
 import '../screens/login_page.dart';
@@ -44,6 +45,11 @@ class AppHeader extends StatelessWidget {
           // Right side controls
           Row(
             children: [
+              // Heartbeat indicator
+              _HeartbeatIndicator(isDarkTheme: isDarkTheme),
+
+              const SizedBox(width: UIConstants.spacingMd),
+
               // Profile Button
               _buildProfileButton(context, authService, isDarkTheme),
 
@@ -199,6 +205,62 @@ class AppHeader extends StatelessWidget {
         icon: const Icon(Icons.logout, size: UIConstants.textFieldIconSize),
         label: const Text('Logout', style: TextStyle(fontSize: UIConstants.fontSizeBody)),
         style: UIConstants.buttonStyle(UIConstants.colorReject),
+      ),
+    );
+  }
+}
+
+/// Animated heartbeat indicator that pulses when gRPC heartbeats arrive.
+class _HeartbeatIndicator extends StatefulWidget {
+  final bool isDarkTheme;
+  const _HeartbeatIndicator({required this.isDarkTheme});
+
+  @override
+  State<_HeartbeatIndicator> createState() => _HeartbeatIndicatorState();
+}
+
+class _HeartbeatIndicatorState extends State<_HeartbeatIndicator> with SingleTickerProviderStateMixin {
+  late AnimationController _controller;
+  late Animation<double> _scaleAnimation;
+
+  @override
+  void initState() {
+    super.initState();
+    _controller = AnimationController(
+      duration: const Duration(milliseconds: 300),
+      vsync: this,
+    );
+    _scaleAnimation = Tween<double>(begin: 1.0, end: 1.4).animate(
+      CurvedAnimation(parent: _controller, curve: Curves.easeOut),
+    );
+
+    EventSubscriptionService().heartbeat.addListener(_onHeartbeat);
+  }
+
+  void _onHeartbeat() {
+    if (mounted) {
+      _controller.forward().then((_) => _controller.reverse());
+    }
+  }
+
+  @override
+  void dispose() {
+    EventSubscriptionService().heartbeat.removeListener(_onHeartbeat);
+    _controller.dispose();
+    super.dispose();
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    return Tooltip(
+      message: 'Server heartbeat',
+      child: ScaleTransition(
+        scale: _scaleAnimation,
+        child: Icon(
+          Icons.favorite,
+          size: 14,
+          color: Colors.red.shade400,
+        ),
       ),
     );
   }

@@ -20,6 +20,14 @@ class EventSubscriptionService {
   bool _shouldReconnect = true;
   Timer? _reconnectTimer;
 
+  /// Stream controller for notifying listeners when events are received.
+  /// Pages can listen to this to refresh their data.
+  final _eventController = StreamController<String>.broadcast();
+  Stream<String> get onEvent => _eventController.stream;
+
+  /// Heartbeat notifier — triggers on each heartbeat for UI pulse animation.
+  final heartbeat = ValueNotifier<int>(0);
+
   /// Global scaffold messenger key for showing notifications from the service
   final GlobalKey<ScaffoldMessengerState> scaffoldMessengerKey = GlobalKey<ScaffoldMessengerState>();
 
@@ -169,6 +177,7 @@ class EventSubscriptionService {
       case EventTypeEnum.EVENT_TYPE_ENUM_PRICE_UPDATE: return 'Price Update';
       case EventTypeEnum.EVENT_TYPE_ENUM_REGULATORY: return 'Regulatory';
       case EventTypeEnum.EVENT_TYPE_ENUM_SYSTEM: return 'System';
+      case EventTypeEnum.EVENT_TYPE_ENUM_HEARTBEAT: return 'Heartbeat';
       case EventTypeEnum.EVENT_TYPE_ENUM_EXECUTION_UPDATE: return 'Execution Update';
       case EventTypeEnum.EVENT_TYPE_ENUM_EXECUTION_RESPONSE: return 'Execution Response';
       default: return type.name;
@@ -313,6 +322,13 @@ class EventSubscriptionService {
   }
 
   void _onEvent(Event event) {
+    // Silently ignore heartbeats — just log
+    if (event.type == EventTypeEnum.EVENT_TYPE_ENUM_HEARTBEAT) {
+      print('💓 [EventSub] Heartbeat received');
+      heartbeat.value++;
+      return;
+    }
+
     final typeStr = _formatEventType(event.type);
     final eventId = event.id;
     final topic = event.topic;
@@ -393,6 +409,9 @@ class EventSubscriptionService {
     }
 
     _showNotification(event.type, typeStr, eventId, primaryMessage, meta, execUpdateType: execUpdateType);
+
+    // Notify listeners (trading page, portfolio, etc.) to refresh
+    _eventController.add(typeStr);
   }
 
   void _onError(Object error) {
