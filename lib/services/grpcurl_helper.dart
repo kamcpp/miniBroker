@@ -1231,7 +1231,7 @@ class GrpcurlHelper {
     int pageSize = 10,
     String? mode,
   }) async {
-    print('📋 Getting orderbook for security: $securityIid, side: $side, mode: $mode');
+    // print('📋 Getting orderbook for security: $securityIid, side: $side, mode: $mode');
 
     final requestBody = <String, dynamic>{
       'proposed_execution_id': 'get_orderbook_${DateTime.now().millisecondsSinceEpoch}',

@@ -1563,11 +1563,6 @@ class _TradingPageState extends State<TradingPage> {
       ).timeout(const Duration(minutes: 5));
 
       if (result['success'] == true) {
-        EventSubscriptionService().notify(
-          title: 'Order Cancelled',
-          message: 'Cancel request sent',
-          icon: Icons.cancel_outlined,
-        );
         _fetchRealOrders();
       } else {
         final errorMsg = result['output']?['error'] ?? 'Failed to cancel order';
@@ -5252,12 +5247,6 @@ class _TradingPageState extends State<TradingPage> {
 
       print('📝 Order details: side=$side, type=${_orderType.toUpperCase()}, quantity=${_quantityController.text.trim()}, price=$price');
 
-      EventSubscriptionService().notify(
-        title: 'Placing Order',
-        message: '$side $_selectedSymbol',
-        icon: Icons.hourglass_top,
-      );
-
       // Calculate expiry timestamp from selected period
       final DateTime? expireTime = _expiryPeriod == 'No Expiry'
           ? null
@@ -5308,12 +5297,6 @@ class _TradingPageState extends State<TradingPage> {
                          'Unknown';
 
         print('📋 CreateOrderAsync response: $output');
-
-        EventSubscriptionService().notify(
-          title: 'Order Sent',
-          message: 'Order request sent',
-          icon: Icons.send,
-        );
 
         // Refresh orders list to show the new order
         _fetchRealOrders();
