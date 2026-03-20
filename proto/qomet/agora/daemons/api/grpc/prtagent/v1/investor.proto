@@ -56,7 +56,7 @@ message GetInvestorListRequest {
 message GetInvestorListResponse {
   string ref_execution_id = 1;                                                          // REQUIRED: Reference to the execution ID
   tech.qomet.agora.api.grpc.common.PaginationInfo pagination_info = 2;                  // OPTIONAL: Pagination information (required if paginated)
-  repeated tech.qomet.agora.api.grpc.fin.Investor investors = 3;                     // REQUIRED: List of investors (can be empty)
+  repeated tech.qomet.agora.api.grpc.fin.Investor investors = 3;                        // REQUIRED: List of investors (can be empty)
 
   map<string, string> metadata = 105;                                                   // OPTIONAL: Response metadata
 }
@@ -123,14 +123,14 @@ message GetInvestorSecurityHoldingsRequest {
   string proposed_execution_id = 1;                                                     // OPTIONAL: Client-proposed execution ID for tracking
   string investor_iid = 2;                                                              // REQUIRED: Investor internal ID
   string venue_iid = 3;                                                                 // OPTIONAL: Venue internal ID (filter by venue)
-  repeated string security_listing_iids = 4;                                             // OPTIONAL: Specific security listing IIDs to retrieve
+  repeated string security_listing_iids = 4;                                            // OPTIONAL: Specific security listing IIDs to retrieve
 
   map<string, string> aux_data = 105;                                                   // OPTIONAL: Additional request data
 }
 
 message GetInvestorSecurityHoldingsResponse {
   string ref_execution_id = 1;                                                          // REQUIRED: Reference to the execution ID
-  tech.qomet.agora.api.grpc.fin.Portfolio portfolio = 2;                             // REQUIRED: Portfolio with security holdings
+  tech.qomet.agora.api.grpc.fin.Portfolio portfolio = 2;                                // REQUIRED: Portfolio with security holdings
 
   map<string, string> metadata = 105;                                                   // OPTIONAL: Response metadata
 }
@@ -145,7 +145,7 @@ message GetInvestorCashHoldingsRequest {
 
 message GetInvestorCashHoldingsResponse {
   string ref_execution_id = 1;                                                          // REQUIRED: Reference to the execution ID
-  tech.qomet.agora.api.grpc.fin.Portfolio cash_portfolio = 2;                        // REQUIRED: Portfolio with cash holdings
+  tech.qomet.agora.api.grpc.fin.Portfolio cash_portfolio = 2;                           // REQUIRED: Portfolio with cash holdings
 
   map<string, string> metadata = 105;                                                   // OPTIONAL: Response metadata
 }
@@ -213,9 +213,10 @@ message WithdrawSecurityResponse {
 message GetInvestorOrdersRequest {
   string proposed_execution_id = 1;                                                     // OPTIONAL: Client-proposed execution ID for tracking
   string investor_iid = 2;                                                              // REQUIRED: Investor internal ID
-  repeated string venue_id_or_symbol_regexes = 3;                                       // OPTIONAL: Filter by venue ID or symbol regex
+  repeated string venue_iids = 3;                                                       // OPTIONAL: Filter by venue IIDs
   tech.qomet.agora.api.grpc.common.PaginationParams pagination = 4;                     // OPTIONAL: Pagination parameters
   OrderQueryFilter order_query_filter = 5;                                              // OPTIONAL: Additional order filters
+  repeated string security_listing_iids = 6;                                            // OPTIONAL: Filter by security listing IIDs
 
   map<string, string> aux_data = 105;                                                   // OPTIONAL: Additional request data
 }
@@ -224,7 +225,7 @@ message GetInvestorOrdersResponse {
   string ref_execution_id = 1;                                                          // REQUIRED: Reference to the execution ID
   tech.qomet.agora.api.grpc.common.PaginationInfo pagination_info = 2;                  // OPTIONAL: Pagination information (required if paginated)
   tech.qomet.agora.api.grpc.common.DateTime generated_at_dt = 3;                        // REQUIRED: Response generation timestamp
-  repeated tech.qomet.agora.api.grpc.fin.Order orders = 4;                           // REQUIRED: List of orders (can be empty)
+  repeated tech.qomet.agora.api.grpc.fin.Order orders = 4;                              // REQUIRED: List of orders (can be empty)
 
   map<string, string> metadata = 105;                                                   // OPTIONAL: Response metadata
 }
@@ -232,12 +233,12 @@ message GetInvestorOrdersResponse {
 message GetInvestorTradesRequest {
   string proposed_execution_id = 1;                                                     // OPTIONAL: Client-proposed execution ID for tracking
   string investor_iid = 2;                                                              // REQUIRED: Investor internal ID
-  repeated string market_id_or_name_regexes = 3;                                        // OPTIONAL: Filter by market ID or name regex
+  repeated string market_iids = 3;                                                      // OPTIONAL: Filter by market IIDs
   tech.qomet.agora.api.grpc.common.PaginationParams pagination = 4;                     // OPTIONAL: Pagination parameters
   tech.qomet.agora.api.grpc.common.DateTime from_dt = 5;                                // OPTIONAL: Start of time range
   tech.qomet.agora.api.grpc.common.DateTime to_dt = 6;                                  // OPTIONAL: End of time range
-  repeated string security_listing_iid_or_symbol_regexes = 7;                            // OPTIONAL: Filter by security listing IID or symbol regex
-  tech.qomet.agora.api.grpc.fin.OrderSideEnum side = 8;                              // OPTIONAL: Filter by order side
+  repeated string security_listing_iids = 7;                                            // OPTIONAL: Filter by security listing IIDs
+  tech.qomet.agora.api.grpc.fin.OrderSideEnum side = 8;                                 // OPTIONAL: Filter by order side
 
   map<string, string> aux_data = 105;                                                   // OPTIONAL: Additional request data
 }
@@ -246,7 +247,7 @@ message GetInvestorTradesResponse {
   string ref_execution_id = 1;                                                          // REQUIRED: Reference to the execution ID
   tech.qomet.agora.api.grpc.common.PaginationInfo pagination_info = 2;                  // OPTIONAL: Pagination information (required if paginated)
   tech.qomet.agora.api.grpc.common.DateTime generated_at_dt = 3;                        // REQUIRED: Response generation timestamp
-  repeated tech.qomet.agora.api.grpc.fin.Trade trades = 4;                           // REQUIRED: List of trades (can be empty)
+  repeated tech.qomet.agora.api.grpc.fin.Trade trades = 4;                              // REQUIRED: List of trades (can be empty)
 
   map<string, string> metadata = 105;                                                   // OPTIONAL: Response metadata
 }
@@ -257,8 +258,8 @@ message GetInvestorTransactionsRequest {
   tech.qomet.agora.api.grpc.common.PaginationParams pagination = 3;                     // OPTIONAL: Pagination parameters
   tech.qomet.agora.api.grpc.common.DateTime from_dt = 4;                                // OPTIONAL: Start of time range
   tech.qomet.agora.api.grpc.common.DateTime to_dt = 5;                                  // OPTIONAL: End of time range
-  repeated tech.qomet.agora.api.grpc.fin.TransactionTypeEnum transaction_types = 6;  // OPTIONAL: Filter by transaction types
-  repeated string asset_id_or_name_regexes = 7;                                         // OPTIONAL: Filter by asset ID or name regex
+  repeated tech.qomet.agora.api.grpc.fin.TransactionTypeEnum transaction_types = 6;     // OPTIONAL: Filter by transaction types
+  repeated string asset_ids = 7;                                                        // OPTIONAL: Filter by asset IDs
 
   map<string, string> aux_data = 105;                                                   // OPTIONAL: Additional request data
 }
@@ -267,7 +268,7 @@ message GetInvestorTransactionsResponse {
   string ref_execution_id = 1;                                                          // REQUIRED: Reference to the execution ID
   tech.qomet.agora.api.grpc.common.PaginationInfo pagination_info = 2;                  // OPTIONAL: Pagination information (required if paginated)
   tech.qomet.agora.api.grpc.common.DateTime generated_at_dt = 3;                        // REQUIRED: Response generation timestamp
-  repeated tech.qomet.agora.api.grpc.fin.Transaction transactions = 4;               // REQUIRED: List of transactions (can be empty)
+  repeated tech.qomet.agora.api.grpc.fin.Transaction transactions = 4;                  // REQUIRED: List of transactions (can be empty)
 
   map<string, string> metadata = 105;                                                   // OPTIONAL: Response metadata
 }

@@ -13,7 +13,7 @@ option csharp_namespace  = "Tech.Qomet.Agora.Api.Grpc.PrtAgent.V1";
 message OrderQueryFilter {
   tech.qomet.agora.api.grpc.common.DateTime from_dt = 1;                // OPTIONAL: Start of time range
   tech.qomet.agora.api.grpc.common.DateTime to_dt = 2;                  // OPTIONAL: End of time range
-  tech.qomet.agora.api.grpc.fin.OrderSideEnum side = 3;              // OPTIONAL: Filter by order side
+  tech.qomet.agora.api.grpc.fin.OrderSideEnum side = 3;                 // OPTIONAL: Filter by order side
   repeated string order_types = 4;                                      // OPTIONAL: Filter by order types
   string price_min = 5;                                                 // OPTIONAL: Minimum price filter
   string price_max = 6;                                                 // OPTIONAL: Maximum price filter
@@ -26,7 +26,7 @@ message OrderQueryFilter {
 message TradeQueryFilter {
   tech.qomet.agora.api.grpc.common.DateTime from_dt = 1;                // OPTIONAL: Start of time range
   tech.qomet.agora.api.grpc.common.DateTime to_dt = 2;                  // OPTIONAL: End of time range
-  tech.qomet.agora.api.grpc.fin.OrderSideEnum side = 3;              // OPTIONAL: Filter by order side
+  tech.qomet.agora.api.grpc.fin.OrderSideEnum side = 3;                 // OPTIONAL: Filter by order side
   string price_min = 4;                                                 // OPTIONAL: Minimum price filter
   string price_max = 5;                                                 // OPTIONAL: Maximum price filter
   string volume_min = 6;                                                // OPTIONAL: Minimum volume filter
@@ -37,16 +37,16 @@ message TradeQueryFilter {
 message SettlementQueryFilter {
   tech.qomet.agora.api.grpc.common.DateTime from_dt = 1;                // OPTIONAL: Start of time range
   tech.qomet.agora.api.grpc.common.DateTime to_dt = 2;                  // OPTIONAL: End of time range
-  tech.qomet.agora.api.grpc.fin.ConfirmationStatusEnum status = 3;   // OPTIONAL: Filter by confirmation status
+  tech.qomet.agora.api.grpc.fin.ConfirmationStatusEnum status = 3;      // OPTIONAL: Filter by confirmation status
   repeated string settlement_types = 4;                                 // OPTIONAL: Filter by settlement types
-  repeated string asset_id_or_name_regexes = 5;                         // OPTIONAL: Filter by asset ID or name regex
+  repeated string asset_ids = 5;                                        // OPTIONAL: Filter by asset IDs
   string amount_min = 6;                                                // OPTIONAL: Minimum amount filter
   string amount_max = 7;                                                // OPTIONAL: Maximum amount filter
 }
 
 message OrderbookQueryFilter {
   bool aggregated = 1;                                                  // OPTIONAL: Whether to aggregate orders (default: false)
-  tech.qomet.agora.api.grpc.fin.OrderSideEnum side = 2;              // OPTIONAL: Filter by order side
+  tech.qomet.agora.api.grpc.fin.OrderSideEnum side = 2;                 // OPTIONAL: Filter by order side
   uint32 depth = 3;                                                     // OPTIONAL: Order book depth limit
   string price_min = 4;                                                 // OPTIONAL: Minimum price filter
   string price_max = 5;                                                 // OPTIONAL: Maximum price filter
@@ -56,5 +56,5 @@ message OrderbookQueryFilter {
 
 message OrderList {
   tech.qomet.agora.api.grpc.common.PaginationInfo pagination_info = 1;  // OPTIONAL: Pagination information
-  repeated tech.qomet.agora.api.grpc.fin.Order orders = 2;           // REQUIRED: List of orders (can be empty)
+  repeated tech.qomet.agora.api.grpc.fin.Order orders = 2;              // REQUIRED: List of orders (can be empty)
 }

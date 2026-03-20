@@ -6,7 +6,7 @@ import "common.proto";
 
 option go_package = "qomet.tech/agora/daemons/gen-pkg/tech/qomet/agora/api/grpc/prtagent/v1;agoraapigrpcprtagentv1";
 option java_package = "tech.qomet.agora.api.grpc.prtagent.v1";
-option java_outer_classname = "Reporting";
+option java_outer_classname = "Admin";
 option csharp_namespace  = "Tech.Qomet.Agora.Api.Grpc.PrtAgent.V1";
 
 service AdminService {
@@ -222,7 +222,7 @@ message TreasuryActivityReport {
 
 message GetTreasuryActivitiesResponse {
   string ref_execution_id = 1;                                          // REQUIRED: Reference to the execution ID
-  tech.qomet.agora.api.grpc.common.PaginationInfo pagination_info = 2; // REQUIRED: Pagination information
+  tech.qomet.agora.api.grpc.common.PaginationInfo pagination_info = 2;  // REQUIRED: Pagination information
   repeated TreasuryActivityReport activities = 3;                       // REQUIRED: List of treasury activities (can be empty)
 
   map<string, string> metadata = 105;                                   // OPTIONAL: Response metadata
@@ -234,7 +234,7 @@ message GetTreasuryActivitiesResponse {
 
 message GetAgoraEventsRequest {
   string proposed_execution_id = 1;                                     // OPTIONAL: Client-proposed execution ID for tracking
-  tech.qomet.agora.api.grpc.common.PaginationParams pagination = 2;    // REQUIRED: Pagination parameters
+  tech.qomet.agora.api.grpc.common.PaginationParams pagination = 2;     // REQUIRED: Pagination parameters
 
   // Optional filters
   string event_type = 3;                                                // OPTIONAL: Filter by event_type (numeric, e.g. "11"=ORDER_FILL)
@@ -374,7 +374,7 @@ message SagaDetail {
 
 message ListSagasRequest {
   string proposed_execution_id = 1;                                     // OPTIONAL: Tracking ID
-  tech.qomet.agora.api.grpc.common.PaginationParams pagination = 2;    // OPTIONAL: Pagination
+  tech.qomet.agora.api.grpc.common.PaginationParams pagination = 2;     // OPTIONAL: Pagination
 
   // Filters
   string state = 3;                                                     // OPTIONAL: Filter by saga state

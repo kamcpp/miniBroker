@@ -123,7 +123,7 @@ class _TransactionHistoryPageState extends State<TransactionHistoryPage> {
       // Apply optional asset filter
       final assetFilter = _assetFilterController.text.trim();
       if (assetFilter.isNotEmpty) {
-        request.assetIdOrNameRegexes.add(assetFilter);
+        request.assetIds.add(assetFilter);
       }
 
       print('[TransactionHistory] Calling InvestorService.GetInvestorTransactions via native gRPC');

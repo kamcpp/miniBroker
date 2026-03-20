@@ -57,7 +57,7 @@ message GetSecurityListingListResponse {
 message GetSecurityListingInfoBatchRequest {
   string proposed_execution_id = 1;                                                        // OPTIONAL: Client-proposed execution ID for tracking
   tech.qomet.agora.api.grpc.common.PaginationParams pagination = 2;                        // OPTIONAL: Pagination parameters
-  repeated string symbol_and_security_id_regexes = 3;                                      // REQUIRED: Symbol and security ID regexes to retrieve
+  repeated string security_ids = 3;                                                        // REQUIRED: Security IDs to retrieve
   repeated string statuses = 4;                                                            // OPTIONAL: Filter by security status
 
   map<string, string> aux_data = 105;                                                      // OPTIONAL: Additional request data
@@ -78,7 +78,7 @@ message GetSecurityListingInfoBatchResponse {
 message GetSecurityListingOrdersRequest {
   string proposed_execution_id = 1;                                                        // OPTIONAL: Client-proposed execution ID for tracking
   tech.qomet.agora.api.grpc.common.PaginationParams pagination = 2;                        // OPTIONAL: Pagination parameters
-  repeated string security_listing_iid_and_identifier_regexes = 3;                         // REQUIRED: Listing IID and identifier regexes
+  repeated string security_listing_iids = 3;                                               // REQUIRED: Security listing IIDs
   OrderQueryFilter order_query_filter = 4;                                                 // OPTIONAL: Additional order filters
 
   map<string, string> aux_data = 105;                                                      // OPTIONAL: Additional request data
@@ -95,7 +95,7 @@ message GetSecurityListingOrdersResponse {
 message GetSecurityListingTradesRequest {
   string proposed_execution_id = 1;                                                        // OPTIONAL: Client-proposed execution ID for tracking
   tech.qomet.agora.api.grpc.common.PaginationParams pagination = 2;                        // OPTIONAL: Pagination parameters
-  repeated string security_listing_iid_and_identifier_regexes = 3;                         // REQUIRED: Listing IID and identifier regexes
+  repeated string security_listing_iids = 3;                                               // REQUIRED: Security listing IIDs
   TradeQueryFilter trade_query_filter = 4;                                                 // OPTIONAL: Additional trade filters
 
   map<string, string> aux_data = 105;                                                      // OPTIONAL: Additional request data
@@ -112,7 +112,7 @@ message GetSecurityListingTradesResponse {
 message GetSecurityListingSettlementsRequest {
   string proposed_execution_id = 1;                                                        // OPTIONAL: Client-proposed execution ID for tracking
   tech.qomet.agora.api.grpc.common.PaginationParams pagination = 2;                        // OPTIONAL: Pagination parameters
-  repeated string security_listing_iid_and_identifier_regexes = 3;                         // REQUIRED: Listing IID and identifier regexes
+  repeated string security_listing_iids = 3;                                               // REQUIRED: Security listing IIDs
   SettlementQueryFilter settlement_query_filter = 4;                                       // OPTIONAL: Additional settlement filters
 
   map<string, string> aux_data = 105;                                                      // OPTIONAL: Additional request data

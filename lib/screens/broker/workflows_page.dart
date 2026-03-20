@@ -8,8 +8,8 @@ import '../../config/app_config.dart';
 import '../../config/ui_constants.dart';
 import '../../widgets/base_page.dart';
 import '../../widgets/styled_data_table.dart';
-import '../../generated/prtagent/v1/reporting.pbgrpc.dart';
-import '../../generated/prtagent/v1/reporting.pb.dart' as saga_pb;
+import '../../generated/prtagent/v1/admin.pbgrpc.dart';
+import '../../generated/prtagent/v1/admin.pb.dart' as saga_pb;
 import '../../generated/common.pb.dart' as common_pb;
 import '../../services/page_state_service.dart';
 

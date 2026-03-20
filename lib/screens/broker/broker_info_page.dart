@@ -135,6 +135,7 @@ class _BrokerInfoPageState extends State<BrokerInfoPage> {
 
       if (result['success'] == true) {
         final output = result['output'] as Map<String, dynamic>? ?? {};
+        print('💰 [BrokerInfo] Raw cash token response: $output');
         final cashTokens = output['cashTokens'] as List<dynamic>? ??
             output['cash_tokens'] as List<dynamic>? ?? [];
 
@@ -168,6 +169,7 @@ class _BrokerInfoPageState extends State<BrokerInfoPage> {
 
         if (result['success'] == true) {
           final output = result['output'] as Map<String, dynamic>? ?? {};
+          print('📊 [BrokerInfo] Raw security listing response: $output');
           final listings = output['securityListings'] as List<dynamic>? ??
               output['security_listings'] as List<dynamic>? ?? [];
 
@@ -701,7 +703,7 @@ class _BrokerInfoPageState extends State<BrokerInfoPage> {
                     holdingData['total_units']?.toString() ?? '0';
                 final stashUnits = holdingData['stashUnits'] as Map<String, dynamic>? ??
                     holdingData['stash_units'] as Map<String, dynamic>? ?? {};
-                print('🏦 Broker holding $assetId: totalUnits=$totalUnitsRaw, stashUnits=$stashUnits');
+                print('🏦 Broker holding $assetId: raw=$holdingData, tokenInfoMatch=${_cashTokenInfo.containsKey(assetId)}');
                 // Stash keys can be: available/locked OR LIQUID/LOCKED/TOTAL
                 final availableRaw = stashUnits['available']?.toString() ??
                     stashUnits['LIQUID']?.toString() ?? totalUnitsRaw;

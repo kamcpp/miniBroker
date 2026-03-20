@@ -2029,9 +2029,23 @@ class _TradingPageState extends State<TradingPage> {
     });
 
     try {
+      // Resolve security listing IID from symbol
+      final security = _securities.firstWhere(
+        (s) => s['symbol'] == symbol,
+        orElse: () => <String, dynamic>{},
+      );
+      final securityListingIid = security['iid']?.toString() ?? '';
+      if (securityListingIid.isEmpty) {
+        setState(() {
+          _isLoadingChart = false;
+          _chartError = 'Security listing IID not found for $symbol';
+        });
+        return;
+      }
+
       // Call gRPC GetHistoricalOhlcData using grpcurl
       final result = await GrpcurlHelper.getHistoricalOhlcData(
-        symbol: symbol,
+        securityListingIid: securityListingIid,
         period: _selectedTimePeriod,
         pageSize: 500,
       );
@@ -2108,8 +2122,7 @@ class _TradingPageState extends State<TradingPage> {
           }
         }
 
-        // Sort newest first (candlesticks package expects index 0 = newest)
-        candles.sort((a, b) => b.date.compareTo(a.date));
+        // Server returns candles newest-first (index 0 = newest) — no client sort needed
 
         print('━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━');
         print('📊 CHART CONVERSION RESULT:');

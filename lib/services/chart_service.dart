@@ -42,19 +42,19 @@ class ChartService {
     );
   }
 
-  /// Fetch historical OHLC data for a symbol
+  /// Fetch historical OHLC data for a security listing IID
   Future<List<Candle>> getHistoricalOhlcData({
-    required String symbol,
+    required String securityListingIid,
     required String period, // "1m", "5m", "15m", "1h", "1d"
     DateTime? startDate,
     DateTime? endDate,
     int? pageSize,
   }) async {
     try {
-      print('📊 Fetching historical OHLC data for $symbol, period: $period');
+      print('📊 Fetching historical OHLC data for $securityListingIid, period: $period');
 
       final request = trading_pb.GetHistoricalOhlcDataRequest()
-        ..securityListingIidOrSymbolRegexes.add(symbol)
+        ..securityListingIids.add(securityListingIid)
         ..period = period
         ..includeVolume = true;
 
@@ -99,8 +99,7 @@ class ChartService {
           .map((ohlcData) => _convertToCandle(ohlcData))
           .toList();
 
-      // Sort newest first (candlesticks package expects index 0 = newest)
-      candles.sort((a, b) => b.date.compareTo(a.date));
+      // Server returns candles newest-first (index 0 = newest) — no client sort needed
 
       return candles;
     } catch (e) {
@@ -120,7 +119,7 @@ class ChartService {
       print('📡 Starting live OHLC stream for $symbol, period: $period');
 
       final request = trading_pb.FetchLiveOhlcDataRequest()
-        ..securityListingIidOrSymbolRegexes.add(symbol);
+        ..securityListingIids.add(symbol);
 
       // Set fetch parameters
       final fetchParams = trading_pb.LiveOhlcDataFetchParams()
@@ -155,7 +154,7 @@ class ChartService {
   Future<double?> getLatestQuote(String symbol) async {
     try {
       final request = trading_pb.GetLatestQuoteRequest()
-        ..securityListingIidOrSymbolRegexes.add(symbol);
+        ..securityListingIids.add(symbol);
 
       final response = await _tradingClient.getLatestQuote(request);
 
@@ -176,7 +175,7 @@ class ChartService {
   }) async* {
     try {
       final request = trading_pb.FetchLiveQuoteRequest()
-        ..securityListingIidOrSymbolRegexes.add(symbol);
+        ..securityListingIids.add(symbol);
 
       if (updateIntervalMs != null) {
         final fetchParams = trading_pb.LiveQuoteFetchParams()

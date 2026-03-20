@@ -1169,7 +1169,7 @@ class GrpcurlHelper {
   /// Get historical OHLC data for a security
   /// TradingService.GetHistoricalOhlcData
   static Future<Map<String, dynamic>> getHistoricalOhlcData({
-    required String symbol,
+    required String securityListingIid,
     required String period,
     int pageSize = 0,
   }) async {
@@ -1211,7 +1211,7 @@ class GrpcurlHelper {
           'page_nr': 1,
           'page_size': pageSize,
         },
-        'security_listing_iid_or_symbol_regexes': [symbol],
+        'security_listing_iids': [securityListingIid],
         'period': period,
         'aux_data': {
           'from_ts': fromTs,

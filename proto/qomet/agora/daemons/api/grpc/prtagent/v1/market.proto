@@ -18,7 +18,7 @@ service MarketService {
 message GetMarketListRequest {
   string proposed_execution_id = 1;                                                        // OPTIONAL: Client-proposed execution ID for tracking
   tech.qomet.agora.api.grpc.common.PaginationParams pagination = 2;                        // OPTIONAL: Pagination parameters
-  string market_id_or_symbol_regex = 3;                                                    // OPTIONAL: Filter by market ID or symbol regex
+  string market_iid = 3;                                                                   // OPTIONAL: Filter by market IID
 
   map<string, string> aux_data = 105;                                                      // OPTIONAL: Additional request data
 }
