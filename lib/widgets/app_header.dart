@@ -220,34 +220,53 @@ class _HeartbeatIndicator extends StatefulWidget {
   State<_HeartbeatIndicator> createState() => _HeartbeatIndicatorState();
 }
 
-class _HeartbeatIndicatorState extends State<_HeartbeatIndicator> with SingleTickerProviderStateMixin {
-  late AnimationController _controller;
+class _HeartbeatIndicatorState extends State<_HeartbeatIndicator> with TickerProviderStateMixin {
+  late AnimationController _pulseController;
   late Animation<double> _scaleAnimation;
+  late AnimationController _fadeController;
+  late Animation<double> _fadeAnimation;
 
   @override
   void initState() {
     super.initState();
-    _controller = AnimationController(
+    // Pulse animation (scale up/down on heartbeat)
+    _pulseController = AnimationController(
       duration: const Duration(milliseconds: 300),
       vsync: this,
     );
     _scaleAnimation = Tween<double>(begin: 1.0, end: 1.4).animate(
-      CurvedAnimation(parent: _controller, curve: Curves.easeOut),
+      CurvedAnimation(parent: _pulseController, curve: Curves.easeOut),
     );
+
+    // Fade animation: 1.0 (red) → 0.0 (gray) over 20 seconds
+    _fadeController = AnimationController(
+      duration: const Duration(seconds: 29),
+      vsync: this,
+    );
+    _fadeAnimation = Tween<double>(begin: 1.0, end: 0.0).animate(
+      CurvedAnimation(parent: _fadeController, curve: Curves.easeIn),
+    );
+    // Start fading immediately
+    _fadeController.forward();
 
     EventSubscriptionService().heartbeat.addListener(_onHeartbeat);
   }
 
   void _onHeartbeat() {
     if (mounted) {
-      _controller.forward().then((_) => _controller.reverse());
+      // Reset color to red and restart fade
+      _fadeController.reset();
+      _fadeController.forward();
+      // Pulse
+      _pulseController.forward().then((_) => _pulseController.reverse());
     }
   }
 
   @override
   void dispose() {
     EventSubscriptionService().heartbeat.removeListener(_onHeartbeat);
-    _controller.dispose();
+    _pulseController.dispose();
+    _fadeController.dispose();
     super.dispose();
   }
 
@@ -262,10 +281,16 @@ class _HeartbeatIndicatorState extends State<_HeartbeatIndicator> with SingleTic
       message: tooltipMsg,
       child: ScaleTransition(
         scale: _scaleAnimation,
-        child: Icon(
-          Icons.favorite,
-          size: 14,
-          color: Colors.red.shade400,
+        child: AnimatedBuilder(
+          animation: _fadeAnimation,
+          builder: (context, child) {
+            final color = Color.lerp(Colors.grey, Colors.red.shade400, _fadeAnimation.value)!;
+            return Icon(
+              Icons.favorite,
+              size: 14,
+              color: color,
+            );
+          },
         ),
       ),
     );

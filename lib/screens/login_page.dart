@@ -8,6 +8,7 @@ import '../main.dart';
 import '../config/app_config.dart';
 import '../config/ui_constants.dart';
 import '../widgets/copyright_bar.dart';
+import '../services/event_subscription_service.dart';
 
 class LoginPage extends StatefulWidget {
   const LoginPage({super.key});
@@ -172,6 +173,8 @@ class _LoginPageState extends State<LoginPage> with TickerProviderStateMixin {
       );
 
       if (success) {
+        // Subscribe to event stream now that we have the investor ID
+        EventSubscriptionService().setExternalInvestorId(_userController.text.trim());
         if (mounted) {
           Navigator.of(context).popUntil((route) => route.isFirst);
         }

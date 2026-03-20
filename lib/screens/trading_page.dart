@@ -1271,9 +1271,6 @@ class _TradingPageState extends State<TradingPage> {
       _cachedAccountId = currentUsername;
       print('✅ Using logged-in username as investor ID: $_cachedAccountId');
 
-      // Set external investor ID for targeted event delivery
-      EventSubscriptionService().setExternalInvestorId(currentUsername);
-
       // Fetch real orders now that we have the account ID
       _fetchRealOrders();
 
@@ -4072,6 +4069,11 @@ class _TradingPageState extends State<TradingPage> {
     return ['filled', 'cancelled', 'expired', 'rejected', 'failed'].contains(s);
   }
 
+  bool _isCancellableStatus(String status) {
+    final s = status.toLowerCase().trim();
+    return ['accepted', 'partially filled'].contains(s);
+  }
+
   /// Get color for an order status
   Color _getStatusColor(String status, bool isDarkTheme) {
     switch (status.toLowerCase().trim()) {
@@ -4532,7 +4534,7 @@ class _TradingPageState extends State<TradingPage> {
               mainAxisAlignment: MainAxisAlignment.center,
               mainAxisSize: MainAxisSize.min,
               children: [
-                if (!_isTerminalStatus(status)) ...[
+                if (_isCancellableStatus(status)) ...[
                   IconButton(
                     icon: const Icon(Icons.cancel_outlined, size: 18),
                     color: Colors.red,
@@ -4613,7 +4615,7 @@ class _TradingPageState extends State<TradingPage> {
       Row(
         mainAxisSize: MainAxisSize.min,
         children: [
-          if (!_isTerminalStatus(status)) ...[
+          if (_isCancellableStatus(status)) ...[
             IconButton(
               icon: const Icon(Icons.cancel_outlined, size: 16),
               color: Colors.red,
