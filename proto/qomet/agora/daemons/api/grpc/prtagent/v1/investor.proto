@@ -41,9 +41,6 @@ service InvestorService {
   rpc GetInvestorTrades(GetInvestorTradesRequest) returns (GetInvestorTradesResponse);
   rpc GetInvestorTradesAsync(GetInvestorTradesRequest) returns (tech.qomet.agora.api.grpc.common.ExecutionAsyncResponse);
 
-  rpc GetInvestorSettlements(GetInvestorSettlementsRequest) returns (GetInvestorSettlementsResponse);
-  rpc GetInvestorSettlementsAsync(GetInvestorSettlementsRequest) returns (tech.qomet.agora.api.grpc.common.ExecutionAsyncResponse);
-
   rpc GetInvestorTransactions(GetInvestorTransactionsRequest) returns (GetInvestorTransactionsResponse);
   rpc GetInvestorTransactionsAsync(GetInvestorTransactionsRequest) returns (tech.qomet.agora.api.grpc.common.ExecutionAsyncResponse);
 }
@@ -250,28 +247,6 @@ message GetInvestorTradesResponse {
   tech.qomet.agora.api.grpc.common.PaginationInfo pagination_info = 2;                  // OPTIONAL: Pagination information (required if paginated)
   tech.qomet.agora.api.grpc.common.DateTime generated_at_dt = 3;                        // REQUIRED: Response generation timestamp
   repeated tech.qomet.agora.api.grpc.fin.Trade trades = 4;                           // REQUIRED: List of trades (can be empty)
-
-  map<string, string> metadata = 105;                                                   // OPTIONAL: Response metadata
-}
-
-message GetInvestorSettlementsRequest {
-  string proposed_execution_id = 1;                                                     // OPTIONAL: Client-proposed execution ID for tracking
-  string investor_iid = 2;                                                              // REQUIRED: Investor internal ID
-  repeated string market_id_or_name_regexes = 3;                                        // OPTIONAL: Filter by market ID or name regex
-  tech.qomet.agora.api.grpc.common.PaginationParams pagination = 4;                     // OPTIONAL: Pagination parameters
-  tech.qomet.agora.api.grpc.common.DateTime from_dt = 5;                                // OPTIONAL: Start of time range
-  tech.qomet.agora.api.grpc.common.DateTime to_dt = 6;                                  // OPTIONAL: End of time range
-  tech.qomet.agora.api.grpc.fin.ConfirmationStatusEnum status = 7;                   // OPTIONAL: Filter by confirmation status
-  repeated string asset_id_or_name_regexes = 8;                                         // OPTIONAL: Filter by asset ID or name regex
-
-  map<string, string> aux_data = 105;                                                   // OPTIONAL: Additional request data
-}
-
-message GetInvestorSettlementsResponse {
-  string ref_execution_id = 1;                                                          // REQUIRED: Reference to the execution ID
-  tech.qomet.agora.api.grpc.common.PaginationInfo pagination_info = 2;                  // OPTIONAL: Pagination information (required if paginated)
-  tech.qomet.agora.api.grpc.common.DateTime generated_at_dt = 3;                        // REQUIRED: Response generation timestamp
-  repeated tech.qomet.agora.api.grpc.fin.Settlement settlements = 4;                 // REQUIRED: List of settlements (can be empty)
 
   map<string, string> metadata = 105;                                                   // OPTIONAL: Response metadata
 }

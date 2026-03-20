@@ -869,74 +869,6 @@ class GrpcurlHelper {
     securityIdOrSymbolRegexes: securityIdOrSymbolRegexes,
   );
 
-  /// Get investor settlements using grpcurl
-  /// InvestorService.GetInvestorSettlements
-  static Future<Map<String, dynamic>> getInvestorSettlements({
-    required String investorId,
-    String refRequestId = 'flutter-get-settlements',
-    List<String>? marketIdOrNameRegexes,
-    Map<String, dynamic>? pagination,
-    String? fromTime,
-    String? toTime,
-    String? status,
-    List<String>? securityIdOrNameRegexes,
-  }) async {
-    print('📋 Getting settlements for investor: $investorId');
-
-    final requestBody = <String, dynamic>{
-      'proposed_execution_id': refRequestId,
-      'investor_iid': investorId,
-    };
-
-    if (marketIdOrNameRegexes != null && marketIdOrNameRegexes.isNotEmpty) {
-      requestBody['market_id_or_name_regexes'] = marketIdOrNameRegexes;
-    }
-    if (pagination != null) requestBody['pagination'] = pagination;
-    if (fromTime != null) {
-      try {
-        final parsed = jsonDecode(fromTime);
-        if (parsed is Map<String, dynamic>) requestBody['from_dt'] = parsed;
-      } catch (_) {}
-    }
-    if (toTime != null) {
-      try {
-        final parsed = jsonDecode(toTime);
-        if (parsed is Map<String, dynamic>) requestBody['to_dt'] = parsed;
-      } catch (_) {}
-    }
-    if (status != null) requestBody['status'] = status;
-    if (securityIdOrNameRegexes != null && securityIdOrNameRegexes.isNotEmpty) {
-      requestBody['asset_id_or_name_regexes'] = securityIdOrNameRegexes;
-    }
-
-    return _executeGrpcCall(
-      method: 'GetInvestorSettlements',
-      endpoint: 'InvestorService/GetInvestorSettlements',
-      requestBody: requestBody,
-    );
-  }
-
-  /// Legacy alias for getInvestorSettlements (backwards compatibility)
-  static Future<Map<String, dynamic>> getAccountSettlements({
-    required String accountId,
-    String refRequestId = 'flutter-get-settlements',
-    List<String>? marketIdOrNameRegexes,
-    Map<String, dynamic>? pagination,
-    String? fromTime,
-    String? toTime,
-    String? status,
-    List<String>? securityIdOrNameRegexes,
-  }) => getInvestorSettlements(
-    investorId: accountId,
-    refRequestId: refRequestId,
-    marketIdOrNameRegexes: marketIdOrNameRegexes,
-    pagination: pagination,
-    fromTime: fromTime,
-    toTime: toTime,
-    status: status,
-    securityIdOrNameRegexes: securityIdOrNameRegexes,
-  );
-
   /// Get investor transactions using grpcurl
   /// InvestorService.GetInvestorTransactions
   static Future<Map<String, dynamic>> getInvestorTransactions({
@@ -1335,17 +1267,23 @@ class GrpcurlHelper {
     required String externalOrderId,
     String? reason,
     String refRequestId = 'flutter-cancel-order',
+    Map<String, String>? auxData,
   }) async {
     print('❌ Cancelling order: $externalOrderId');
+
+    final requestBody = <String, dynamic>{
+      'proposed_execution_id': refRequestId,
+      'external_order_id': externalOrderId,
+      'reason': reason ?? 'User requested cancellation',
+    };
+    if (auxData != null) {
+      requestBody['aux_data'] = auxData;
+    }
 
     return _executeGrpcCall(
       method: 'CancelOrderAsync',
       endpoint: 'TradingService/CancelOrderAsync',
-      requestBody: {
-        'proposed_execution_id': refRequestId,
-        'external_order_id': externalOrderId,
-        'reason': reason ?? 'User requested cancellation',
-      },
+      requestBody: requestBody,
     );
   }
 

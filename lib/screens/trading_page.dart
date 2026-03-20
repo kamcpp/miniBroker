@@ -1271,6 +1271,9 @@ class _TradingPageState extends State<TradingPage> {
       _cachedAccountId = currentUsername;
       print('✅ Using logged-in username as investor ID: $_cachedAccountId');
 
+      // Set investor account IID for targeted event delivery
+      EventSubscriptionService().setInvestorAccountIid(currentUsername);
+
       // Fetch real orders now that we have the account ID
       _fetchRealOrders();
 
@@ -1548,10 +1551,18 @@ class _TradingPageState extends State<TradingPage> {
 
       if (confirmed != true) return;
 
+      // Pass session_iid in aux_data for targeted event delivery
+      final sessionIid = EventSubscriptionService().sessionIid;
+      final cancelAuxData = <String, String>{};
+      if (sessionIid != null && sessionIid.isNotEmpty) {
+        cancelAuxData['session_iid'] = sessionIid;
+      }
+
       final result = await GrpcurlHelper.cancelOrderAsync(
         externalOrderId: participantOrderId,
         reason: 'User requested cancellation',
         refRequestId: 'flutter-cancel-${DateTime.now().millisecondsSinceEpoch}',
+        auxData: cancelAuxData.isNotEmpty ? cancelAuxData : null,
       ).timeout(const Duration(minutes: 5));
 
       if (result['success'] == true) {
@@ -4308,7 +4319,7 @@ class _TradingPageState extends State<TradingPage> {
                       Wrap(
                         children: [
                           infoChip('Order ID', currentOrder['order_id']?.toString() ?? 'N/A'),
-                          infoChip('Participant Order ID', currentOrder['participantOrderId']?.toString() ?? 'N/A'),
+                          infoChip('Investor Order ID', currentOrder['investorOrderId']?.toString() ?? 'N/A'),
                           infoChip('Side', side),
                           infoChip('Symbol', currentOrder['symbol']?.toString() ?? 'N/A'),
                           infoChip('Quantity', currentOrder['quantity']?.toString() ?? '0'),
@@ -5258,6 +5269,13 @@ class _TradingPageState extends State<TradingPage> {
               _ => const Duration(days: 30),
             });
 
+      // Build aux_data with session_iid for targeted event delivery
+      final sessionIid = EventSubscriptionService().sessionIid;
+      final orderAuxData = <String, String>{};
+      if (sessionIid != null && sessionIid.isNotEmpty) {
+        orderAuxData['session_iid'] = sessionIid;
+      }
+
       // Call CreateOrder API
       final result = await realGrpcClient.createOrder(
         accountId: _cachedAccountId!,
@@ -5272,6 +5290,7 @@ class _TradingPageState extends State<TradingPage> {
         currency: currency,
         feeAmount: _roundToCurrencyPrecision(double.tryParse(_feeController.text.trim()) ?? 0.0).toStringAsFixed(decimals),
         expireTime: expireTime,
+        auxData: orderAuxData.isNotEmpty ? orderAuxData : null,
       );
 
       if (result['success'] == true) {

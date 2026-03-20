@@ -9,7 +9,7 @@ option java_package = "tech.qomet.agora.api.grpc.prtagent.v1";
 option java_outer_classname = "Reporting";
 option csharp_namespace  = "Tech.Qomet.Agora.Api.Grpc.PrtAgent.V1";
 
-service ReportingService {
+service AdminService {
   // GetExecutionReports returns paginated execution reports for the authenticated participant.
   rpc GetExecutionReports(GetExecutionReportsRequest) returns (GetExecutionReportsResponse);
 
@@ -21,6 +21,22 @@ service ReportingService {
 
   // GetAgoraEvents returns paginated raw on-chain AgoraEngine events for the authenticated participant.
   rpc GetAgoraEvents(GetAgoraEventsRequest) returns (GetAgoraEventsResponse);
+
+  // ---------------------------------------------------------------------------
+  // Saga Watch
+  // ---------------------------------------------------------------------------
+
+  // ListSagas returns a paginated list of saga instances for the participant's cluster.
+  rpc ListSagas(ListSagasRequest) returns (ListSagasResponse);
+
+  // GetSaga returns a single saga instance with its steps and step summary.
+  rpc GetSaga(GetSagaRequest) returns (GetSagaResponse);
+
+  // GetSagaTree returns the full saga hierarchy (root + all descendant sub-sagas) with steps.
+  rpc GetSagaTree(GetSagaTreeRequest) returns (GetSagaTreeResponse);
+
+  // WatchSaga streams real-time status updates for a saga instance until it reaches a terminal state.
+  rpc WatchSaga(WatchSagaRequest) returns (stream SagaWatchEvent);
 }
 
 // ============================================================================
@@ -73,6 +89,10 @@ message ExecutionReport {
   string transact_time = 17;
   string text = 18;
   string created_at = 19;
+  string raw_fix_message = 20;
+  string ex_destination = 21;
+  string last_qty = 22;
+  string last_px = 23;
 }
 
 message GetExecutionReportsResponse {
@@ -124,6 +144,7 @@ message TradeReport {
   string transact_time = 10;
   string text = 11;
   string created_at = 12;
+  string raw_fix_message = 13;
 }
 
 message GetTradeReportsResponse {
@@ -258,4 +279,167 @@ message GetAgoraEventsResponse {
   repeated AgoraEvent agora_events = 3;                                 // REQUIRED: List of agora events (can be empty)
 
   map<string, string> metadata = 105;                                   // OPTIONAL: Response metadata
+}
+
+// ============================================================================
+// Saga Watch
+// ============================================================================
+
+// --- Saga Instance ---
+
+message SagaInstance {
+  string instance_id = 1;
+  string cluster_id = 2;
+  string zone_id = 3;
+  string trace_id = 4;
+  string execution_id = 5;
+  string saga_submitter_id = 6;
+  string state = 7;                                                     // SagaStateEnum value (e.g. SAGA_STATE_ENUM_RUNNING)
+  string saga_template_id = 8;
+  string input_data = 9;                                                // JSON-encoded saga input map
+  map<string, string> labels = 10;
+  repeated string tags = 11;
+  string metadata = 12;                                                 // JSON-encoded metadata map
+  repeated string child_saga_instance_ids = 13;                         // Direct child saga IDs
+  string idempotent_key = 14;
+  int64 created_at = 15;                                                // Unix millis
+  int64 updated_at = 16;                                                // Unix millis
+  // Sub-saga hierarchy
+  string parent_saga_instance_id = 20;                                  // Empty for root sagas
+  string parent_saga_step_instance_id = 21;                             // Step that spawned this sub-saga
+  string root_saga_instance_id = 22;                                    // Root ancestor saga ID
+  int32 saga_depth = 23;                                                // 0 = root, 1 = child, 2 = grandchild, etc.
+  string compensation_reason = 24;                                      // Human-readable reason why compensation was triggered
+}
+
+// --- Saga Step Instance ---
+
+message SagaStepExecutionLog {
+  int64 next_execution_ts = 1;                                          // Scheduled execution time (Unix millis)
+  int64 execution_request_sent_ts = 2;                                  // When execution request was sent
+  int64 execution_timeout_ts = 3;                                       // Timeout deadline
+  int64 execution_result_received_ts = 4;                               // When result was received
+  int64 log_conclusion_ts = 5;                                          // When log entry was concluded
+  string execution_result = 6;                                          // JSON-encoded result map
+  string execution_error = 7;                                           // Error message (empty on success)
+  bool is_compensation = 8;                                             // true if this is a compensation execution
+  string metadata = 9;                                                  // JSON-encoded metadata
+}
+
+message SagaStepInstance {
+  string instance_id = 1;
+  string saga_instance_id = 2;
+  string cluster_id = 3;
+  string zone_id = 4;
+  string trace_id = 5;
+  string execution_id = 6;
+  string state = 7;                                                     // SagaStepStateEnum value
+  string affinity = 8;                                                  // Coordinator affinity group
+  string saga_template_id = 9;
+  string saga_step_template_id = 10;                                    // Step name/template within the saga
+  string result_data = 11;                                              // JSON-encoded step result map
+  string compensation_result_data = 22;                                 // JSON-encoded compensation result map
+  repeated SagaStepExecutionLog execution_history = 12;                 // Full execution attempt history
+  string execution_error = 13;                                          // First error from execution history
+  map<string, string> labels = 14;
+  repeated string tags = 15;
+  string metadata = 16;                                                 // JSON-encoded metadata
+  string previous_saga_step_instance_id = 17;                           // Linked list: previous step
+  string next_saga_step_instance_id = 18;                               // Linked list: next step
+  string idempotent_key = 19;
+  int64 created_at = 20;                                                // Unix millis
+  int64 updated_at = 21;                                                // Unix millis
+}
+
+// --- Step Summary ---
+
+message SagaStepSummary {
+  int32 total = 1;
+  int32 completed = 2;
+  int32 pending = 3;
+  int32 failed = 4;
+  map<string, int32> by_state = 5;                                      // Count of steps in each state
+}
+
+// --- Saga Detail (instance + steps + summary + children) ---
+
+message SagaDetail {
+  SagaInstance saga = 1;
+  repeated SagaStepInstance steps = 2;                                  // Steps in execution order
+  SagaStepSummary step_summary = 3;
+  repeated SagaDetail child_sagas = 4;                                  // Recursive child saga details
+}
+
+// --- List Sagas ---
+
+message ListSagasRequest {
+  string proposed_execution_id = 1;                                     // OPTIONAL: Tracking ID
+  tech.qomet.agora.api.grpc.common.PaginationParams pagination = 2;    // OPTIONAL: Pagination
+
+  // Filters
+  string state = 3;                                                     // OPTIONAL: Filter by saga state
+  string saga_template_id = 4;                                          // OPTIONAL: Filter by saga template
+  string saga_submitter_id = 5;                                         // OPTIONAL: Filter by submitter
+
+  map<string, string> aux_data = 105;
+}
+
+message ListSagasResponse {
+  string ref_execution_id = 1;
+  tech.qomet.agora.api.grpc.common.PaginationInfo pagination_info = 2;
+  repeated SagaInstance sagas = 3;
+
+  map<string, string> metadata = 105;
+}
+
+// --- Get Saga ---
+
+message GetSagaRequest {
+  string proposed_execution_id = 1;
+  string saga_instance_id = 2;                                          // REQUIRED: Saga instance ID
+
+  map<string, string> aux_data = 105;
+}
+
+message GetSagaResponse {
+  string ref_execution_id = 1;
+  SagaDetail saga = 2;                                                  // Full saga detail with steps and summary
+
+  map<string, string> metadata = 105;
+}
+
+// --- Get Saga Tree ---
+
+message GetSagaTreeRequest {
+  string proposed_execution_id = 1;
+  string saga_instance_id = 2;                                          // REQUIRED: Root saga instance ID
+
+  map<string, string> aux_data = 105;
+}
+
+message GetSagaTreeResponse {
+  string ref_execution_id = 1;
+  SagaDetail saga = 2;                                                  // Full recursive tree with all sub-sagas
+
+  map<string, string> metadata = 105;
+}
+
+// --- Watch Saga ---
+
+message WatchSagaRequest {
+  string proposed_execution_id = 1;
+  string saga_instance_id = 2;                                          // REQUIRED: Saga instance ID to watch
+  bool include_children = 3;                                            // OPTIONAL: Also stream child saga updates
+  int32 poll_interval_ms = 4;                                           // OPTIONAL: Poll interval in ms (default: 1000)
+
+  map<string, string> aux_data = 105;
+}
+
+message SagaWatchEvent {
+  string ref_execution_id = 1;
+  SagaDetail saga = 2;                                                  // Current saga snapshot with steps and summary
+  bool is_terminal = 3;                                                 // true when saga has reached a terminal state
+  string terminal_state = 4;                                            // Terminal state value (only set when is_terminal=true)
+
+  map<string, string> metadata = 105;
 }

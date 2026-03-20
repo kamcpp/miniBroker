@@ -35,6 +35,9 @@ enum EventTypeEnum {
   EVENT_TYPE_ENUM_EXECUTION_UPDATE = 12;
   EVENT_TYPE_ENUM_EXECUTION_RESPONSE = 13;
 
+  EVENT_TYPE_ENUM_HEARTBEAT = 14;
+  EVENT_TYPE_ENUM_SESSION_ESTABLISHED = 15;
+
   EVENT_TYPE_ENUM_OTHER = 0x0fff0000;
 }
 
@@ -43,7 +46,15 @@ message EventSubscriptionParams {
   repeated string topics = 2;                                     // OPTIONAL: Specific topics to subscribe to
   repeated EventTypeEnum subscribed_event_types = 3;              // OPTIONAL: Event types to receive
 
-  map<string, string> aux_data = 105;                             // OPTIONAL: Additional subscription data
+  // OPTIONAL: Additional subscription data for SubscribeToEvents.
+  // Supported keys:
+  //   "investor_account_iid" (REQUIRED): Internal investor account IID for event filtering
+  //   "session_iid" (OPTIONAL): If provided, server reuses this session ID (reconnect).
+  //                              If empty, server generates a new session_iid.
+  //                              The session_iid is returned in the SESSION_ESTABLISHED event.
+  //                              Client should pass this session_iid in CreateOrderAsync/CancelOrderAsync
+  //                              aux_data for targeted event delivery.
+  map<string, string> aux_data = 105;
 }
 
 message BlobEvent {
@@ -88,7 +99,6 @@ message ExecutionResponseEvent {
     GetInvestorCashHoldingsResponse get_investor_cash_holdings = 204;
     GetInvestorOrdersResponse get_investor_orders = 205;
     GetInvestorTradesResponse get_investor_trades = 206;
-    GetInvestorSettlementsResponse get_investor_settlements = 207;
     GetInvestorTransactionsResponse get_investor_transactions = 208;
     // venue responses
     GetVenueListResponse get_venue_list = 501;

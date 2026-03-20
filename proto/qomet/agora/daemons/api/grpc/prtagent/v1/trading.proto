@@ -205,8 +205,7 @@ message CreateOrderAsyncRequest {
   tech.qomet.agora.api.grpc.common.DateTime expire_dt = 10;             // OPTIONAL: Expiration date for GTT orders
 
   // Additional parameters
-  string participant_order_iid = 11;                                    // REQUIRED: Client's order ID (mandatory in FIX)
-  string csd_account_iid = 12;                                          // OPTIONAL: CSD account IID for settlement
+  string investor_order_id = 11;                                       // REQUIRED: Investor's own order ID
 
   // Currency and fee (required for create_investor_order saga)
   string currency = 13;                                                 // REQUIRED: ISO 4217 3-letter currency code (e.g., "EUR", "USD")
@@ -234,7 +233,7 @@ message ReplaceOrderAsyncRequest {
 message CancelOrderAsyncRequest {
   string proposed_execution_id = 1;                                     // OPTIONAL: Client-proposed execution ID for tracking
 
-  string participant_order_id = 2;                                      // REQUIRED: Participant order ID to cancel
+  string external_order_id = 2;                                      // REQUIRED: External order ID (investor_order_id from creation) to cancel
   string reason = 3;                                                    // OPTIONAL: Reason for cancellation
 
   map<string, string> aux_data = 105;                                   // OPTIONAL: Additional request data

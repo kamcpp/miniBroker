@@ -20,6 +20,14 @@ class EventSubscriptionService {
   bool _shouldReconnect = true;
   Timer? _reconnectTimer;
 
+  /// Session ID assigned by the server on SESSION_ESTABLISHED event.
+  /// Pass this in aux_data of CreateOrderAsync/CancelOrderAsync for targeted event delivery.
+  String? _sessionIid;
+  String? get sessionIid => _sessionIid;
+
+  /// Investor account IID used for event filtering (set before subscribing).
+  String? _investorAccountIid;
+
   /// Stream controller for notifying listeners when events are received.
   /// Pages can listen to this to refresh their data.
   final _eventController = StreamController<String>.broadcast();
@@ -100,6 +108,12 @@ class EventSubscriptionService {
     });
   }
 
+  /// Set the investor account IID for event filtering.
+  /// Must be called before subscribe().
+  void setInvestorAccountIid(String investorAccountIid) {
+    _investorAccountIid = investorAccountIid;
+  }
+
   /// Start the event subscription. Call after gRPC connection is established.
   Future<void> subscribe() async {
     if (_isSubscribed) {
@@ -139,8 +153,17 @@ class EventSubscriptionService {
 
       final client = ParticipantServiceClient(_channel!);
 
+      final auxData = <String, String>{};
+      if (_investorAccountIid != null && _investorAccountIid!.isNotEmpty) {
+        auxData['investor_account_iid'] = _investorAccountIid!;
+      }
+      if (_sessionIid != null && _sessionIid!.isNotEmpty) {
+        auxData['session_iid'] = _sessionIid!;
+      }
+
       final request = EventSubscriptionParams(
         proposedSubscriptionId: 'mini_broker_${DateTime.now().millisecondsSinceEpoch}',
+        auxData: auxData,
       );
 
       print('📡 [EventSub] Subscribing to events on ${AppConfig.grpcHost}:${AppConfig.grpcPort}...');
@@ -178,6 +201,7 @@ class EventSubscriptionService {
       case EventTypeEnum.EVENT_TYPE_ENUM_REGULATORY: return 'Regulatory';
       case EventTypeEnum.EVENT_TYPE_ENUM_SYSTEM: return 'System';
       case EventTypeEnum.EVENT_TYPE_ENUM_HEARTBEAT: return 'Heartbeat';
+      case EventTypeEnum.EVENT_TYPE_ENUM_SESSION_ESTABLISHED: return 'Session Established';
       case EventTypeEnum.EVENT_TYPE_ENUM_EXECUTION_UPDATE: return 'Execution Update';
       case EventTypeEnum.EVENT_TYPE_ENUM_EXECUTION_RESPONSE: return 'Execution Response';
       default: return type.name;
@@ -198,6 +222,7 @@ class EventSubscriptionService {
       case EventTypeEnum.EVENT_TYPE_ENUM_ANNOUNCEMENT: return Icons.campaign;
       case EventTypeEnum.EVENT_TYPE_ENUM_SYSTEM: return Icons.settings;
       case EventTypeEnum.EVENT_TYPE_ENUM_REGULATORY: return Icons.gavel;
+      case EventTypeEnum.EVENT_TYPE_ENUM_SESSION_ESTABLISHED: return Icons.link;
       case EventTypeEnum.EVENT_TYPE_ENUM_EXECUTION_UPDATE: return Icons.sync;
       case EventTypeEnum.EVENT_TYPE_ENUM_EXECUTION_RESPONSE: return Icons.task_alt;
       default: return Icons.notifications_active;
@@ -228,6 +253,8 @@ class EventSubscriptionService {
         return const Color(0xFFBF360C); // deep orange — compliance/regulatory
       case EventTypeEnum.EVENT_TYPE_ENUM_SYSTEM:
         return const Color(0xFF455A64); // blue-grey — system
+      case EventTypeEnum.EVENT_TYPE_ENUM_SESSION_ESTABLISHED:
+        return const Color(0xFF2E7D32); // green — session ready
       case EventTypeEnum.EVENT_TYPE_ENUM_EXECUTION_UPDATE:
         // Sub-color by execution update type
         if (execUpdateType == ExecutionUpdateEventTypeEnum.EXECUTION_UPDATE_EVENT_TYPE_ENUM_EXECUTION_COMPLETED) {
@@ -326,6 +353,19 @@ class EventSubscriptionService {
     if (event.type == EventTypeEnum.EVENT_TYPE_ENUM_HEARTBEAT) {
       print('💓 [EventSub] Heartbeat received');
       heartbeat.value++;
+      return;
+    }
+
+    // Handle SESSION_ESTABLISHED — store session_iid for targeted event delivery
+    if (event.type == EventTypeEnum.EVENT_TYPE_ENUM_SESSION_ESTABLISHED) {
+      final newSessionIid = event.metadata['session_iid'] ?? event.labels['session_iid'] ?? '';
+      if (newSessionIid.isNotEmpty) {
+        _sessionIid = newSessionIid;
+        print('📡 [EventSub] Session established: session_iid=$_sessionIid');
+      } else {
+        print('📡 [EventSub] Session established event received but no session_iid found');
+      }
+      // Don't show notification for session events — they're internal
       return;
     }
 
