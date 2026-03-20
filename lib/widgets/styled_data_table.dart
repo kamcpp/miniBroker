@@ -304,7 +304,7 @@ class _StyledDataTableState extends State<StyledDataTable> {
               ),
               style: TextStyle(color: textColor, fontSize: UIConstants.fontSizeSm),
               dropdownColor: UIConstants.dropdownBackground(isDark),
-              items: [10, 20, 50, 100]
+              items: [10, 20, 35, 50, 100]
                   .map((size) => DropdownMenuItem(
                         value: size,
                         child: Text('$size', style: TextStyle(color: textColor, fontSize: UIConstants.fontSizeSm)),

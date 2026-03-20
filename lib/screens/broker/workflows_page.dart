@@ -45,7 +45,7 @@ class _WorkflowsPageState extends State<WorkflowsPage> {
 
   // Pagination
   int _currentPage = 1;
-  int _pageSize = 100;
+  int _pageSize = 35;
   int _totalPages = 1;
 
   // Filters
@@ -123,7 +123,7 @@ class _WorkflowsPageState extends State<WorkflowsPage> {
       _templateFilterController.text = state['templateFilter'] ?? '';
       _submitterFilterController.text = state['submitterFilter'] ?? '';
       _currentPage = state['currentPage'] ?? 1;
-      _pageSize = state['pageSize'] ?? 100;
+      _pageSize = state['pageSize'] ?? 35;
     }
   }
 
@@ -838,7 +838,15 @@ class _WorkflowsPageState extends State<WorkflowsPage> {
         StyledColumn(label: 'Updated', flex: 2),
       ],
       rows: rows,
+      rowsPerPage: _pageSize,
       onPageChanged: _goToPage,
+      onPageSizeChanged: (newSize) {
+        setState(() {
+          _pageSize = newSize;
+          _currentPage = 1;
+        });
+        _fetchSagas();
+      },
       totalPages: _totalPages,
       currentPage: _currentPage,
     );
