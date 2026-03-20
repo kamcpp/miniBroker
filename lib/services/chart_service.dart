@@ -25,6 +25,7 @@ class ChartService {
               ymdhmss.date.day,
               ymdhmss.hasTime() ? ymdhmss.time.hour : 0,
               ymdhmss.hasTime() ? ymdhmss.time.minute : 0,
+              ymdhmss.hasTime() ? ymdhmss.time.second : 0,
             );
           }
         }

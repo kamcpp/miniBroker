@@ -639,7 +639,7 @@ class _WorkflowsPageState extends State<WorkflowsPage> {
           // State dropdown
           SizedBox(
             width: 140,
-            height: UIConstants.inputHeightCompact,
+            height: _commandButtonHeight,
             child: DropdownButtonFormField<String>(
               value: selectedState,
               items: _stateFilterOptions.entries.map((e) => DropdownMenuItem(
@@ -656,7 +656,7 @@ class _WorkflowsPageState extends State<WorkflowsPage> {
           // Template ID
           SizedBox(
             width: 160,
-            height: UIConstants.inputHeightCompact,
+            height: _commandButtonHeight,
             child: TextField(
               controller: _templateFilterController,
               style: TextStyle(fontSize: UIConstants.fontSizeSm, color: UIConstants.textPrimary(isDarkTheme)),
@@ -667,7 +667,7 @@ class _WorkflowsPageState extends State<WorkflowsPage> {
           // Submitter ID
           SizedBox(
             width: 160,
-            height: UIConstants.inputHeightCompact,
+            height: _commandButtonHeight,
             child: TextField(
               controller: _submitterFilterController,
               style: TextStyle(fontSize: UIConstants.fontSizeSm, color: UIConstants.textPrimary(isDarkTheme)),
@@ -677,18 +677,18 @@ class _WorkflowsPageState extends State<WorkflowsPage> {
           ),
           // Fetch button
           SizedBox(
-            height: UIConstants.inputHeightCompact,
+            height: _commandButtonHeight,
             child: ElevatedButton(
               onPressed: _applyFilters,
               style: UIConstants.buttonStyle(UIConstants.commandColor(isDarkTheme)).copyWith(
-                minimumSize: WidgetStatePropertyAll(Size(0, UIConstants.inputHeightCompact)),
+                minimumSize: WidgetStatePropertyAll(Size(0, _commandButtonHeight)),
               ),
               child: Text('Fetch', style: TextStyle(fontSize: UIConstants.fontSizeSm)),
             ),
           ),
           // Clear button
           SizedBox(
-            height: UIConstants.inputHeightCompact,
+            height: _commandButtonHeight,
             child: TextButton(
               onPressed: _resetFilters,
               style: UIConstants.cancelTextButtonStyle(isDarkTheme),

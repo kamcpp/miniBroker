@@ -2051,33 +2051,35 @@ class _TradingPageState extends State<TradingPage> {
           try {
             final ohlcMap = ohlcData as Map<String, dynamic>;
 
-            // Parse timestamp from duration
+            // Parse timestamp from duration.startDt.ymdhmss.{date,time}
             DateTime timestamp = DateTime.now();
             if (ohlcMap.containsKey('duration')) {
               final duration = ohlcMap['duration'] as Map<String, dynamic>?;
               if (duration != null && duration.containsKey('startDt')) {
                 final startDt = duration['startDt'] as Map<String, dynamic>?;
-                if (startDt != null && startDt.containsKey('date')) {
-                  final date = startDt['date'] as Map<String, dynamic>?;
-                  if (date != null) {
-                    final year = date['year'] ?? 0;
-                    final month = date['month'] ?? 1;
-                    final day = date['day'] ?? 1;
-                    int hour = 0;
-                    int minute = 0;
+                if (startDt != null && startDt.containsKey('ymdhmss')) {
+                  final ymdhmss = startDt['ymdhmss'] as Map<String, dynamic>?;
+                  if (ymdhmss != null && ymdhmss.containsKey('date')) {
+                    final date = ymdhmss['date'] as Map<String, dynamic>?;
+                    if (date != null) {
+                      final year = date['year'] ?? 0;
+                      final month = date['month'] ?? 1;
+                      final day = date['day'] ?? 1;
+                      int hour = 0;
+                      int minute = 0;
+                      int second = 0;
 
-                    if (startDt.containsKey('time')) {
-                      final time = startDt['time'] as Map<String, dynamic>?;
-                      if (time != null && time.containsKey('hms')) {
-                        final hms = time['hms'] as Map<String, dynamic>?;
-                        if (hms != null) {
-                          hour = hms['hour'] ?? 0;
-                          minute = hms['minute'] ?? 0;
+                      if (ymdhmss.containsKey('time')) {
+                        final time = ymdhmss['time'] as Map<String, dynamic>?;
+                        if (time != null) {
+                          hour = time['hour'] ?? 0;
+                          minute = time['minute'] ?? 0;
+                          second = time['second'] ?? 0;
                         }
                       }
-                    }
 
-                    timestamp = DateTime(year, month, day, hour, minute);
+                      timestamp = DateTime(year, month, day, hour, minute, second);
+                    }
                   }
                 }
               }
