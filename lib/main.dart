@@ -1,6 +1,7 @@
 import 'dart:async';
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
+import 'package:package_info_plus/package_info_plus.dart';
 import 'screens/securities_page.dart';
 import 'screens/role_selection_page.dart';
 import 'services/auth_service.dart';
@@ -13,7 +14,7 @@ import 'utils/config_rc_manager.dart';
 import 'widgets/config_finder_dialog.dart';
 import 'services/event_subscription_service.dart';
 
-void main() {
+Future<void> main() async {
   // Replace the red error screen with a subtle dark error widget
   ErrorWidget.builder = (FlutterErrorDetails details) {
     print('❌ CRITICAL: Widget error: ${details.exception}');
@@ -33,6 +34,17 @@ void main() {
     print('❌ CRITICAL: Flutter stack trace: ${details.stack}');
     // Don't crash - just log
   };
+
+  // Load version from pubspec.yaml
+  WidgetsFlutterBinding.ensureInitialized();
+  try {
+    final packageInfo = await PackageInfo.fromPlatform();
+    AppConfig.appVersion = packageInfo.version;
+    AppConfig.appFullVersion = '${packageInfo.version}+${packageInfo.buildNumber}';
+    print('📦 App version: ${AppConfig.appFullVersion}');
+  } catch (e) {
+    print('⚠️ Could not load package info: $e');
+  }
 
   // Add comprehensive error handling to catch ALL unhandled exceptions
   runZonedGuarded(() {
@@ -57,7 +69,7 @@ class MyApp extends StatelessWidget {
       child: MaterialApp(
         navigatorKey: eventSubscriptionService.navigatorKey,
         scaffoldMessengerKey: eventSubscriptionService.scaffoldMessengerKey,
-        title: 'miniBroker-v1.0.0',
+        title: '${AppConfig.appName}-v${AppConfig.appVersion}',
         debugShowCheckedModeBanner: false,
         theme: ThemeData(
           colorScheme: ColorScheme.fromSeed(seedColor: UIConstants.colorCommand),

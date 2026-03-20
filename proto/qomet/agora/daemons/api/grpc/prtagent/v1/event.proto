@@ -48,7 +48,9 @@ message EventSubscriptionParams {
 
   // OPTIONAL: Additional subscription data for SubscribeToEvents.
   // Supported keys:
-  //   "investor_account_iid" (REQUIRED): Internal investor account IID for event filtering
+  //   "external_investor_id" (REQUIRED): External investor ID (e.g., "alice14").
+  //                              Server resolves to internal investor_account_iid via accmgr.
+  //                              participant_iid is extracted from the authenticated API key context.
   //   "session_iid" (OPTIONAL): If provided, server reuses this session ID (reconnect).
   //                              If empty, server generates a new session_iid.
   //                              The session_iid is returned in the SESSION_ESTABLISHED event.

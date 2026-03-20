@@ -1,7 +1,8 @@
 import 'package:flutter/material.dart';
+import '../config/app_config.dart';
 import '../config/ui_constants.dart';
 
-/// A reusable copyright status bar widget that displays the VeroPulse GmbH copyright notice
+/// A reusable copyright status bar widget that displays version and VeroPulse GmbH copyright notice
 class CopyrightBar extends StatelessWidget {
   final bool isDarkTheme;
 
@@ -25,7 +26,7 @@ class CopyrightBar extends StatelessWidget {
       ),
       child: Center(
         child: Text(
-          '© 2026 VeroPulse GmbH',
+          'v${AppConfig.appVersion}  ·  © 2026 VeroPulse GmbH',
           style: TextStyle(
             fontSize: 11,
             color: Colors.white.withOpacity(0.7),

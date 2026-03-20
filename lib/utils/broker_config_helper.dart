@@ -2,6 +2,7 @@ import 'dart:io';
 import 'dart:convert';
 import 'package:path/path.dart' as path;
 import 'config_rc_manager.dart';
+import '../config/app_config.dart';
 
 /// Helper for managing broker configuration files
 class BrokerConfigHelper {
@@ -170,8 +171,8 @@ class BrokerConfigHelper {
           'name': participantName ?? brokerName,
         },
         'app': {
-          'name': 'miniBroker',
-          'version': '1.0.0',
+          'name': AppConfig.appName,
+          'version': AppConfig.appVersion,
           'environment': 'development',
         },
         'network': {

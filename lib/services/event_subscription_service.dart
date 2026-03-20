@@ -25,8 +25,9 @@ class EventSubscriptionService {
   String? _sessionIid;
   String? get sessionIid => _sessionIid;
 
-  /// Investor account IID used for event filtering (set before subscribing).
-  String? _investorAccountIid;
+  /// External investor ID (e.g., "alice14") for event filtering (set before subscribing).
+  /// Server resolves this to internal investor_account_iid via accmgr.
+  String? _externalInvestorId;
 
   /// Stream controller for notifying listeners when events are received.
   /// Pages can listen to this to refresh their data.
@@ -108,17 +109,24 @@ class EventSubscriptionService {
     });
   }
 
-  /// Set the investor account IID for event filtering.
-  /// Must be called before subscribe().
-  void setInvestorAccountIid(String investorAccountIid) {
-    _investorAccountIid = investorAccountIid;
+  /// Set the external investor ID and (re)subscribe for event filtering.
+  /// Triggers a reconnect if already subscribed so the new ID takes effect.
+  void setExternalInvestorId(String externalInvestorId) {
+    _externalInvestorId = externalInvestorId;
+    // (Re)subscribe with the new investor ID
+    subscribe();
   }
 
   /// Start the event subscription. Call after gRPC connection is established.
+  /// Requires external_investor_id to be set first.
   Future<void> subscribe() async {
-    if (_isSubscribed) {
-      print('📡 [EventSub] Already subscribed, skipping');
+    if (_externalInvestorId == null || _externalInvestorId!.isEmpty) {
+      print('📡 [EventSub] No external_investor_id set, deferring subscription');
       return;
+    }
+    if (_isSubscribed) {
+      print('📡 [EventSub] Already subscribed, reconnecting with new investor ID');
+      await _cleanup();
     }
 
     _shouldReconnect = true;
@@ -154,8 +162,8 @@ class EventSubscriptionService {
       final client = ParticipantServiceClient(_channel!);
 
       final auxData = <String, String>{};
-      if (_investorAccountIid != null && _investorAccountIid!.isNotEmpty) {
-        auxData['investor_account_iid'] = _investorAccountIid!;
+      if (_externalInvestorId != null && _externalInvestorId!.isNotEmpty) {
+        auxData['external_investor_id'] = _externalInvestorId!;
       }
       if (_sessionIid != null && _sessionIid!.isNotEmpty) {
         auxData['session_iid'] = _sessionIid!;
@@ -349,24 +357,40 @@ class EventSubscriptionService {
   }
 
   void _onEvent(Event event) {
-    // Silently ignore heartbeats — just log
+    // Heartbeats — pulse the indicator, no notification
     if (event.type == EventTypeEnum.EVENT_TYPE_ENUM_HEARTBEAT) {
       print('💓 [EventSub] Heartbeat received');
       heartbeat.value++;
       return;
     }
 
-    // Handle SESSION_ESTABLISHED — store session_iid for targeted event delivery
+    // Handle SESSION_ESTABLISHED — extract session_iid from blob JSON payload
     if (event.type == EventTypeEnum.EVENT_TYPE_ENUM_SESSION_ESTABLISHED) {
-      final newSessionIid = event.metadata['session_iid'] ?? event.labels['session_iid'] ?? '';
+      String newSessionIid = '';
+      // The session data is in CarryingObject.Blob.Data.Data as a JSON string
+      if (event.hasBlob()) {
+        try {
+          final jsonStr = event.blob.data.data;
+          if (jsonStr.isNotEmpty) {
+            final parsed = json.decode(jsonStr);
+            if (parsed is Map<String, dynamic>) {
+              newSessionIid = parsed['session_iid']?.toString() ?? '';
+            }
+          }
+        } catch (e) {
+          print('📡 [EventSub] Failed to parse SESSION_ESTABLISHED blob: $e');
+        }
+      }
+      // Fallback to metadata/labels
+      if (newSessionIid.isEmpty) {
+        newSessionIid = event.metadata['session_iid'] ?? event.labels['session_iid'] ?? '';
+      }
       if (newSessionIid.isNotEmpty) {
         _sessionIid = newSessionIid;
         print('📡 [EventSub] Session established: session_iid=$_sessionIid');
       } else {
         print('📡 [EventSub] Session established event received but no session_iid found');
       }
-      // Don't show notification for session events — they're internal
-      return;
     }
 
     final typeStr = _formatEventType(event.type);
@@ -376,79 +400,94 @@ class EventSubscriptionService {
 
     print('📡 [EventSub] Event received: id=$eventId, type=$typeStr, topic=$topic');
 
-    // Primary message — the main content shown prominently
-    String primaryMessage = '';
-    // Metadata lines — smaller supporting info
-    final meta = <String>[];
+    // Build a JSON-like map of all event data for the notification
+    final eventData = <String, dynamic>{};
+    if (topic.isNotEmpty) eventData['topic'] = topic;
 
-    if (topic.isNotEmpty) meta.add('Topic: $topic');
-
-    // Display names / descriptions are primary content
     if (event.displayNames.isNotEmpty) {
-      final displayName = event.displayNames['en'] ?? event.displayNames.values.first;
-      if (displayName.isNotEmpty) primaryMessage = displayName;
+      final dn = event.displayNames['en'] ?? event.displayNames.values.first;
+      if (dn.isNotEmpty) eventData['display'] = dn;
     }
     if (event.descriptions.isNotEmpty) {
       final desc = event.descriptions['en'] ?? event.descriptions.values.first;
-      if (desc.isNotEmpty) {
-        if (primaryMessage.isEmpty) {
-          primaryMessage = desc;
-        } else {
-          meta.insert(0, desc);
-        }
-      }
+      if (desc.isNotEmpty) eventData['desc'] = desc;
     }
 
     if (event.hasExecutionUpdate()) {
       final eu = event.executionUpdate;
       execUpdateType = eu.eventType;
-      print('📡 [EventSub]   ExecutionUpdate: refExecId=${eu.refExecutionId}, '
-          'type=${eu.eventType.name}, step=${eu.currentStepNr}/${eu.totalNrOfSteps}, msg=${eu.msg}');
-      // msg and stepDescription are the primary content
-      if (eu.msg.isNotEmpty && primaryMessage.isEmpty) primaryMessage = eu.msg;
-      if (eu.stepDescription.isNotEmpty) {
-        if (primaryMessage.isEmpty) {
-          primaryMessage = eu.stepDescription;
-        } else if (eu.stepDescription != primaryMessage) {
-          meta.add(eu.stepDescription);
-        }
-      }
-      if (eu.msg.isNotEmpty && primaryMessage != eu.msg) meta.add(eu.msg);
-      final updateTypeStr = _formatExecUpdateType(eu.eventType);
-      meta.add('Status: $updateTypeStr');
-      if (eu.refExecutionId.isNotEmpty) meta.add('Exec: ${eu.refExecutionId}');
-      if (eu.currentStepNr.isNotEmpty && eu.totalNrOfSteps.isNotEmpty) {
-        final pct = eu.progressPercentage.isNotEmpty ? ' (${eu.progressPercentage}%)' : '';
-        meta.add('Step ${eu.currentStepNr}/${eu.totalNrOfSteps}$pct');
-      }
-      if (eu.tags.isNotEmpty) meta.add('Tags: ${eu.tags.join(', ')}');
+      final euData = <String, dynamic>{
+        'type': _formatExecUpdateType(eu.eventType),
+      };
+      if (eu.refExecutionId.isNotEmpty) euData['exec_id'] = eu.refExecutionId;
+      if (eu.flowInstanceId.isNotEmpty) euData['flow_id'] = eu.flowInstanceId;
+      if (eu.currentStepNr.isNotEmpty) euData['step'] = '${eu.currentStepNr}/${eu.totalNrOfSteps}';
+      if (eu.progressPercentage.isNotEmpty) euData['progress'] = '${eu.progressPercentage}%';
+      if (eu.stepDescription.isNotEmpty) euData['step_desc'] = eu.stepDescription;
+      if (eu.msg.isNotEmpty) euData['msg'] = eu.msg;
+      if (eu.labels.isNotEmpty) euData['labels'] = eu.labels;
+      if (eu.tags.isNotEmpty) euData['tags'] = eu.tags;
+      if (eu.metadata.isNotEmpty) euData['metadata'] = eu.metadata;
+      eventData['execution_update'] = euData;
+      print('📡 [EventSub]   ExecutionUpdate: $euData');
     } else if (event.hasExecutionResponse()) {
       final er = event.executionResponse;
+      final which = er.whichResponse();
       print('📡 [EventSub]   ExecutionResponse: refExecId=${er.refExecutionId}, '
-          'response=${er.whichResponse().name}');
-      final responseType = _formatResponseType(er);
-      if (responseType.isNotEmpty && primaryMessage.isEmpty) primaryMessage = responseType;
-      if (responseType.isNotEmpty && primaryMessage != responseType) meta.add('Data: $responseType');
-      if (er.refExecutionId.isNotEmpty) meta.add('Exec: ${er.refExecutionId}');
-      if (er.tags.isNotEmpty) meta.add('Tags: ${er.tags.join(', ')}');
+          'response=${which.name}');
+      // Skip notification for bulky data responses
+      const _suppressedResponses = {
+        ExecutionResponseEvent_Response.getInvestorOrders,
+        ExecutionResponseEvent_Response.getInvestorTrades,
+        ExecutionResponseEvent_Response.getInvestorTransactions,
+        ExecutionResponseEvent_Response.getInvestorSecurityHoldings,
+        ExecutionResponseEvent_Response.getInvestorCashHoldings,
+        ExecutionResponseEvent_Response.getParticipantOrders,
+        ExecutionResponseEvent_Response.getParticipantTrades,
+        ExecutionResponseEvent_Response.getParticipantHoldings,
+        ExecutionResponseEvent_Response.getVenueList,
+        ExecutionResponseEvent_Response.getVenueCalendar,
+      };
+      if (_suppressedResponses.contains(which)) {
+        _eventController.add(_formatResponseType(er));
+        return;
+      }
+      final erData = <String, dynamic>{
+        'response_type': _formatResponseType(er),
+      };
+      if (er.refExecutionId.isNotEmpty) erData['exec_id'] = er.refExecutionId;
+      if (er.labels.isNotEmpty) erData['labels'] = er.labels;
+      if (er.tags.isNotEmpty) erData['tags'] = er.tags;
+      if (er.metadata.isNotEmpty) erData['metadata'] = er.metadata;
+      eventData['execution_response'] = erData;
     } else if (event.hasBlob()) {
-      final blobStr = _decodeBlobData(event.blob);
-      print('📡 [EventSub]   BlobEvent: $blobStr');
-      primaryMessage = blobStr;
-    }
-
-    // Labels as metadata
-    if (event.labels.isNotEmpty) {
-      for (final entry in event.labels.entries) {
-        meta.add('${entry.key}: ${entry.value}');
+      final blobData = event.blob.data.data;
+      print('📡 [EventSub]   BlobEvent: (${blobData.length} chars)');
+      // Try to parse blob as JSON for display
+      try {
+        final parsed = json.decode(blobData);
+        eventData['blob'] = parsed;
+      } catch (_) {
+        final decoded = _decodeBlobData(event.blob);
+        eventData['blob'] = decoded.length > 300 ? '${decoded.substring(0, 300)}...' : decoded;
       }
     }
 
+    if (event.labels.isNotEmpty) eventData['labels'] = event.labels;
     if (event.metadata.isNotEmpty) {
+      eventData['metadata'] = event.metadata;
       print('📡 [EventSub]   metadata: ${event.metadata}');
     }
 
-    _showNotification(event.type, typeStr, eventId, primaryMessage, meta, execUpdateType: execUpdateType);
+    // Format the event data as pretty JSON for the notification
+    String primaryMessage;
+    try {
+      primaryMessage = const JsonEncoder.withIndent('  ').convert(eventData);
+    } catch (_) {
+      primaryMessage = eventData.toString();
+    }
+
+    _showNotification(event.type, typeStr, eventId, primaryMessage, const [], execUpdateType: execUpdateType);
 
     // Notify listeners (trading page, portfolio, etc.) to refresh
     _eventController.add(typeStr);
@@ -635,7 +674,7 @@ class _NotificationOverlayWidgetState extends State<_NotificationOverlayWidget>
           child: Material(
             color: Colors.transparent,
             child: Container(
-              constraints: const BoxConstraints(maxWidth: 380),
+              constraints: const BoxConstraints(maxWidth: 480),
               decoration: BoxDecoration(
                 color: widget.color,
                 borderRadius: BorderRadius.circular(8),
@@ -672,14 +711,15 @@ class _NotificationOverlayWidgetState extends State<_NotificationOverlayWidget>
                             letterSpacing: 0.5,
                           ),
                         ),
-                        // Primary message — large and prominent
+                        // Primary message — JSON data
                         if (widget.primaryMessage.isNotEmpty) ...[
                           const SizedBox(height: 3),
                           _copyableText(
                             widget.primaryMessage,
                             const TextStyle(
-                              fontWeight: FontWeight.w500,
-                              fontSize: 13,
+                              fontFamily: 'monospace',
+                              fontWeight: FontWeight.w400,
+                              fontSize: 11,
                               color: Colors.white,
                               height: 1.3,
                             ),

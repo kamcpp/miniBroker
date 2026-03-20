@@ -222,17 +222,32 @@ class GrpcurlHelper {
           );
           stopwatch.stop();
 
-          // Log the response
-          _logResponse(
-            method: method,
-            exitCode: result.exitCode,
-            stdout: result.stdout.toString(),
-            stderr: result.stderr.toString(),
-            duration: stopwatch.elapsed,
-          );
+          // Log the response (suppress verbose body for bulky data calls)
+          const _quietMethods = {
+            'GetHistoricalOhlcData', 'FetchLiveOhlcData',
+            'GetInvestorOrders', 'GetInvestorTrades', 'GetInvestorTransactions',
+            'GetInvestorSettlements', 'GetInvestorCashHoldings', 'GetInvestorSecurityHoldings',
+            'GetOrderbook', 'GetHistoricalQuote',
+            'GetSecurityListingTrades', 'GetSecurityListingSettlements',
+            'GetExecutionReports', 'GetOrderExecutionReports',
+          };
+          final stdout = result.stdout.toString();
+          final stderr = result.stderr.toString();
+          if (_quietMethods.contains(method)) {
+            final len = stdout.length;
+            print('📥 $method response: ${result.exitCode == 0 ? "OK" : "ERR"} (${stopwatch.elapsedMilliseconds}ms, $len chars)');
+          } else {
+            _logResponse(
+              method: method,
+              exitCode: result.exitCode,
+              stdout: stdout,
+              stderr: stderr,
+              duration: stopwatch.elapsed,
+            );
+          }
 
           if (result.exitCode == 0) {
-            final responseJson = result.stdout.toString().trim();
+            final responseJson = stdout.trim();
             try {
               final parsedResponse = jsonDecode(responseJson) as Map<String, dynamic>;
               return {
@@ -255,7 +270,7 @@ class GrpcurlHelper {
               };
             }
           } else {
-            final errorStr = result.stderr.toString().toLowerCase();
+            final errorStr = stderr.toLowerCase();
 
             // Check if this is a retryable connection error
             if (enableRetry && attempt < maxRetries &&
@@ -283,7 +298,7 @@ class GrpcurlHelper {
             return {
               'input': requestBody,
               'output': {
-                'error': result.stderr.toString(),
+                'error': stderr,
                 'exit_code': result.exitCode,
               },
               'requestTime': _toUnixTimestamp(DateTime.now()).toString(),
@@ -440,51 +455,34 @@ class GrpcurlHelper {
           }
         }
 
-        // Now it's safer to run Process.run since we verified the executable exists
+        // Verify the binary works by checking its version (no server call needed)
         ProcessResult? result;
         try {
-          print('▶️ Running grpcurl at $path...');
-          final testArgs = AppConfig.grpcUseSecure
-              ? ['-insecure', '$_host:$_port', 'list']
-              : ['-plaintext', '$_host:$_port', 'list'];
-          result = await Process.run(
-            path,
-            testArgs,
-          ).timeout(
-            const Duration(minutes: 5),
+          print('▶️ Testing grpcurl binary at $path...');
+          result = await Process.run(path, ['--version']).timeout(
+            const Duration(seconds: 5),
             onTimeout: () {
               print('⏰ Timeout testing $path');
-              throw TimeoutException('Command timed out', const Duration(minutes: 5));
+              throw TimeoutException('Command timed out', const Duration(seconds: 5));
             }
           );
         } on TimeoutException catch (e) {
           print('⏰ Timeout testing $path: ${e.message}');
-          continue; // Skip to next path
+          continue;
         } on ProcessException catch (e) {
-          // Specifically catch ProcessException when executable not found
           print('❌ grpcurl not found at $path: ${e.message}');
-          continue; // Skip to next path
-        } catch (e, stackTrace) {
-          // Catch ANY other exception that might occur in sandboxed environment
-          print('❌ Process.run failed for $path in sandboxed app: ${e.runtimeType}: ${e.toString()}');
-          print('❌ Stack trace: $stackTrace');
-          continue; // Skip to next path
+          continue;
+        } catch (e) {
+          print('❌ Process.run failed for $path: ${e.runtimeType}: $e');
+          continue;
         }
 
         if (result.exitCode == 0) {
-          print('✅ Found working grpcurl at: $path');
+          print('✅ Found working grpcurl at: $path (${result.stdout.toString().trim()})');
           _cachedGrpcurlPath = path;
           return path;
         } else {
-          final stderr = result.stderr.toString().trim();
-          if (stderr.contains('does not support the reflection API')) {
-            print('❌ gRPC Reflection API not enabled on server $_host:$_port');
-            print('💡 Server must enable reflection or use -proto files with grpcurl');
-            // Don't try other paths if we know the server doesn't support reflection
-            break;
-          } else {
-            print('⚠️ grpcurl failed (exit ${result.exitCode}): ${stderr.length > 80 ? stderr.substring(0, 80) + "..." : stderr}');
-          }
+          print('⚠️ grpcurl --version failed (exit ${result.exitCode})');
         }
       } catch (e) {
         // Try next path quickly, but log the specific error
@@ -495,8 +493,8 @@ class GrpcurlHelper {
 
     // Provide more specific error message
     if (_cachedGrpcurlPath == null) {
-      print('❌ grpcurl unavailable: Server reflection API disabled or grpcurl not accessible');
-      print('💡 Ensure $_host:$_port has gRPC reflection enabled');
+      print('❌ grpcurl binary not found in any known path');
+      print('💡 Install grpcurl: brew install grpcurl');
     }
     return null;
     } finally {
@@ -1067,7 +1065,7 @@ class GrpcurlHelper {
     String? securityIdRegex,
     String? securityExchangeRegex,
   }) async {
-    print('📋 Getting security listing list from real server...');
+    // print('📋 Getting security listing list from real server...');
 
     final requestBody = <String, dynamic>{
       'proposed_execution_id': 'get_security_listing_list_${DateTime.now().millisecondsSinceEpoch}',
@@ -1175,7 +1173,7 @@ class GrpcurlHelper {
     required String period,
     int pageSize = 0,
   }) async {
-    print('📊 Getting historical OHLC data for symbol: $symbol, period: $period');
+    // print('📊 Getting historical OHLC data for symbol: $symbol, period: $period');
 
     // Calculate from_ts based on period
     final now = DateTime.now();

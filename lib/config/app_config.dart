@@ -35,8 +35,11 @@ class AppConfig {
   /// Application name
   static const String appName = 'miniBroker';
 
-  /// Application version
-  static const String appVersion = '1.0.0';
+  /// Application version (loaded from pubspec.yaml via package_info_plus)
+  static String appVersion = '0.0.0';
+
+  /// Full version string including build number (e.g. "1.0.1+2")
+  static String appFullVersion = '0.0.0+0';
 
   // ============================================================================
   // UI Configuration

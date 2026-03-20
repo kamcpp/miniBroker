@@ -29,7 +29,7 @@ class TradingPage extends StatefulWidget {
 
 class _TradingPageState extends State<TradingPage> {
   Future<void> _fetchTradeHistoryForSecurity(String symbol, {int pageNumber = 1}) async {
-    print('[TradeHistory] Fetching for symbol: $symbol, pageNumber: $pageNumber, pageSize: $_tradeHistoryPageSize');
+    // print('[TradeHistory] Fetching for symbol: $symbol, pageNumber: $pageNumber, pageSize: $_tradeHistoryPageSize');
 
     setState(() {
       _isLoadingTradeHistory = true;
@@ -54,7 +54,7 @@ class _TradingPageState extends State<TradingPage> {
     }
 
     final securityIid = security['iid']?.toString() ?? '';
-    print('[TradeHistory] securityIid: $securityIid');
+    // print('[TradeHistory] securityIid: $securityIid');
 
     if (securityIid.isEmpty) {
       setState(() {
@@ -80,7 +80,7 @@ class _TradingPageState extends State<TradingPage> {
 
         // Extract trades from the response
         final trades = output['trades'] as List<dynamic>? ?? [];
-        print('[TradeHistory] Found ${trades.length} trades');
+        // print('[TradeHistory] Found ${trades.length} trades');
 
         parsedTrades = trades.map<Map<String, dynamic>>((trade) {
           final tradeMap = trade as Map<String, dynamic>;
@@ -146,7 +146,7 @@ class _TradingPageState extends State<TradingPage> {
             _totalTradeHistoryPages = pageNumber; // This is the last page
           }
           _isLoadingTradeHistory = false;
-          print('[TradeHistory] Updated with ${_tradeHistory.length} trades, page $pageNumber of $_totalTradeHistoryPages');
+          // print('[TradeHistory] Updated with ${_tradeHistory.length} trades, page $pageNumber of $_totalTradeHistoryPages');
         });
       }
     } catch (e) {
@@ -578,11 +578,11 @@ class _TradingPageState extends State<TradingPage> {
         },
       );
       
-      print('🏪 GetSecurityListingList result: success=${result['success']}, output keys=${result['output']?.keys?.toList()}');
+      // print('🏪 GetSecurityListingList result: success=${result['success']}, output keys=${result['output']?.keys?.toList()}');
 
       if (result['success'] == true && result['output'] != null) {
         final output = result['output'] as Map<String, dynamic>;
-        print('🏪 GetSecurityListingList output keys: ${output.keys.toList()}');
+        // print('🏪 GetSecurityListingList output keys: ${output.keys.toList()}');
         final securities = output['securityListings'] as List<dynamic>? ?? [];
         print('🏪 Found ${securities.length} security listings');
 
@@ -1271,8 +1271,8 @@ class _TradingPageState extends State<TradingPage> {
       _cachedAccountId = currentUsername;
       print('✅ Using logged-in username as investor ID: $_cachedAccountId');
 
-      // Set investor account IID for targeted event delivery
-      EventSubscriptionService().setInvestorAccountIid(currentUsername);
+      // Set external investor ID for targeted event delivery
+      EventSubscriptionService().setExternalInvestorId(currentUsername);
 
       // Fetch real orders now that we have the account ID
       _fetchRealOrders();
@@ -1407,9 +1407,9 @@ class _TradingPageState extends State<TradingPage> {
 
           // Process all orders first
           final allProcessedOrders = ordersData.map<Map<String, dynamic>>((order) {
-            print('📋 [Orders] RAW ORDER KEYS: ${(order as Map).keys.toList()}');
-            print('📋 [Orders] symbol=${order['symbol']}, securityIid=${order['securityIid']}, securityListingIid=${order['securityListingIid']}');
-            print('📋 [Orders] expireTimestamp=${order['expireTimestamp']}, expire_timestamp=${order['expire_timestamp']}, expireAtDt=${order['expireAtDt']}, expire_at_dt=${order['expire_at_dt']}');
+            // print('📋 [Orders] RAW ORDER KEYS: ${(order as Map).keys.toList()}');
+            // print('📋 [Orders] symbol=${order['symbol']}, securityIid=${order['securityIid']}, securityListingIid=${order['securityListingIid']}');
+            // print('📋 [Orders] expireTimestamp=${order['expireTimestamp']}, expire_timestamp=${order['expire_timestamp']}, expireAtDt=${order['expireAtDt']}, expire_at_dt=${order['expire_at_dt']}');
             // Extract creation timestamp: prefer explicit field, fall back to first event log
             final eventLogs = order['eventLogs'] ?? order['event_logs'] ?? [];
             String? createTs = order['createTimestamp'] ?? order['createdAtDt']?['ts'] ?? order['create_timestamp'];
@@ -2050,7 +2050,7 @@ class _TradingPageState extends State<TradingPage> {
 
         print('━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━');
         print('📊 CHART DATA PROCESSING for $symbol:');
-        print('✅ Received ${ohlcDataList.length} OHLC data points from server');
+        // print('✅ Received ${ohlcDataList.length} OHLC data points from server');
         print('━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━');
 
         // Convert to CandleData objects for interactive_chart package
@@ -2174,7 +2174,7 @@ class _TradingPageState extends State<TradingPage> {
     // Cancel existing subscription if any
     _liveOhlcSubscription?.cancel();
 
-    print('📡 Starting live OHLC stream for $symbol, period: $period');
+    // print('📡 Starting live OHLC stream for $symbol, period: $period');
 
     // Subscribe to live OHLC updates using grpcurl
     _liveOhlcSubscription = _subscribeToLiveOhlcData(symbol, period);
@@ -2229,7 +2229,7 @@ class _TradingPageState extends State<TradingPage> {
   }
 
   Future<void> _fetchOrderbookData(String symbol) async {
-    print('📊 [ORDERBOOK] _fetchOrderbookData CALLED for symbol: "$symbol", _securities count: ${_securities.length}');
+    // print('📊 [ORDERBOOK] _fetchOrderbookData CALLED for symbol: "$symbol", _securities count: ${_securities.length}');
 
     // Reset pagination when fetching new symbol
     _currentSellOrdersPage = 1;
@@ -2267,7 +2267,7 @@ class _TradingPageState extends State<TradingPage> {
 
     final securityIid = security['iid']?.toString() ?? '';
 
-    print('[Orderbook-Sell] $symbol: securityIid="$securityIid"');
+    // print('[Orderbook-Sell] $symbol: securityIid="$securityIid"');
 
     if (securityIid.isEmpty) {
       print('❌ Missing security IID for sell orders $symbol - no orderbook data available');
@@ -2296,17 +2296,17 @@ class _TradingPageState extends State<TradingPage> {
 
       if (result['success'] == true && result['output'] != null) {
         final output = result['output'] as Map<String, dynamic>;
-        print('[Orderbook-Sell] $symbol gRPC response: $output');
+        // print('[Orderbook-Sell] $symbol gRPC response: $output');
 
         // Extract sell_list from the response
         final sellList = output['sellList'] as Map<String, dynamic>? ?? {};
         final orders = sellList['orders'] as List<dynamic>? ?? [];
 
-        print('[Orderbook-Sell] $symbol found ${orders.length} orders');
+        // print('[Orderbook-Sell] $symbol found ${orders.length} orders');
 
         sellOrders = orders.map<Map<String, dynamic>>((order) {
           final orderMap = order as Map<String, dynamic>;
-          print('[Orderbook-Sell] RAW ORDER KEYS: ${orderMap.keys.toList()}, data=${orderMap['data']}');
+          // print('[Orderbook-Sell] RAW ORDER KEYS: ${orderMap.keys.toList()}, data=${orderMap['data']}');
           final priceValue = orderMap['price'];
           final quantityValue = orderMap['quantity'];
 
@@ -2321,7 +2321,7 @@ class _TradingPageState extends State<TradingPage> {
 
           final total = _roundToCurrencyPrecision(price * quantity);
 
-          print('[Orderbook-Sell] Mapping order: rawPrice=$rawPrice, price=$price, quantity=$quantity, total=$total');
+          // print('[Orderbook-Sell] Mapping order: rawPrice=$rawPrice, price=$price, quantity=$quantity, total=$total');
 
           // L3: check expire_ts against now (orderbook sends seconds)
           final expireTs = orderMap['expireTimestamp'] ?? orderMap['expire_timestamp'] ?? orderMap['expireTs'] ?? orderMap['expire_ts'] ?? '';
@@ -2354,8 +2354,8 @@ class _TradingPageState extends State<TradingPage> {
           };
         }).toList();
 
-        print('[Orderbook-Sell] ✅ Mapped ${sellOrders.length} sell orders');
-        print('[Orderbook-Sell] First order: ${sellOrders.isNotEmpty ? sellOrders[0] : "none"}');
+        // print('[Orderbook-Sell] ✅ Mapped ${sellOrders.length} sell orders');
+        // print('[Orderbook-Sell] First order: ${sellOrders.isNotEmpty ? sellOrders[0] : "none"}');
       } else {
         print('[Orderbook-Sell] $symbol: gRPC call failed. Response: $result');
       }
@@ -2371,7 +2371,7 @@ class _TradingPageState extends State<TradingPage> {
           _totalSellOrdersPages = pageNumber;
         }
         _isLoadingSellOrders = false;
-        print('[Orderbook-Sell] Page $pageNumber of $_totalSellOrdersPages, ${sellOrders.length} orders');
+        // print('[Orderbook-Sell] Page $pageNumber of $_totalSellOrdersPages, ${sellOrders.length} orders');
       });
 
     } catch (e) {
@@ -2407,7 +2407,7 @@ class _TradingPageState extends State<TradingPage> {
 
     final securityIid = security['iid']?.toString() ?? '';
 
-    print('[Orderbook-Buy] $symbol: securityIid="$securityIid"');
+    // print('[Orderbook-Buy] $symbol: securityIid="$securityIid"');
 
     if (securityIid.isEmpty) {
       print('❌ Missing security IID for buy orders $symbol - no orderbook data available');
@@ -2436,17 +2436,17 @@ class _TradingPageState extends State<TradingPage> {
 
       if (result['success'] == true && result['output'] != null) {
         final output = result['output'] as Map<String, dynamic>;
-        print('[Orderbook-Buy] $symbol gRPC response: $output');
+        // print('[Orderbook-Buy] $symbol gRPC response: $output');
 
         // Extract buy_list from the response
         final buyList = output['buyList'] as Map<String, dynamic>? ?? {};
         final orders = buyList['orders'] as List<dynamic>? ?? [];
 
-        print('[Orderbook-Buy] $symbol found ${orders.length} orders');
+        // print('[Orderbook-Buy] $symbol found ${orders.length} orders');
 
         buyOrders = orders.map<Map<String, dynamic>>((order) {
           final orderMap = order as Map<String, dynamic>;
-          print('[Orderbook-Buy] RAW ORDER KEYS: ${orderMap.keys.toList()}, data=${orderMap['data']}');
+          // print('[Orderbook-Buy] RAW ORDER KEYS: ${orderMap.keys.toList()}, data=${orderMap['data']}');
           final priceValue = orderMap['price'];
           final quantityValue = orderMap['quantity'];
 
@@ -2461,7 +2461,7 @@ class _TradingPageState extends State<TradingPage> {
 
           final total = _roundToCurrencyPrecision(price * quantity);
 
-          print('[Orderbook-Buy] Mapping order: rawPrice=$rawPrice, price=$price, quantity=$quantity, total=$total');
+          // print('[Orderbook-Buy] Mapping order: rawPrice=$rawPrice, price=$price, quantity=$quantity, total=$total');
 
           // L3: check expire_ts against now (orderbook sends seconds)
           final expireTs = orderMap['expireTimestamp'] ?? orderMap['expire_timestamp'] ?? orderMap['expireTs'] ?? orderMap['expire_ts'] ?? '';
@@ -2494,8 +2494,8 @@ class _TradingPageState extends State<TradingPage> {
           };
         }).toList();
 
-        print('[Orderbook-Buy] ✅ Mapped ${buyOrders.length} buy orders');
-        print('[Orderbook-Buy] First order: ${buyOrders.isNotEmpty ? buyOrders[0] : "none"}');
+        // print('[Orderbook-Buy] ✅ Mapped ${buyOrders.length} buy orders');
+        // print('[Orderbook-Buy] First order: ${buyOrders.isNotEmpty ? buyOrders[0] : "none"}');
       } else {
         print('[Orderbook-Buy] $symbol: gRPC call failed. Response: $result');
       }
@@ -2511,7 +2511,7 @@ class _TradingPageState extends State<TradingPage> {
           _totalBuyOrdersPages = pageNumber;
         }
         _isLoadingBuyOrders = false;
-        print('[Orderbook-Buy] Page $pageNumber of $_totalBuyOrdersPages, ${buyOrders.length} orders');
+        // print('[Orderbook-Buy] Page $pageNumber of $_totalBuyOrdersPages, ${buyOrders.length} orders');
       });
 
     } catch (e) {
@@ -3832,7 +3832,7 @@ class _TradingPageState extends State<TradingPage> {
         final color = side == 'sell' ? UIConstants.colorReject : UIConstants.colorAccept;
 
         final isExpired = order['is_expired'] == true;
-        print('📊 [Orderbook] $side order[$index]: is_expired=$isExpired, expire_timestamp=${order['expire_timestamp']}, raw_order=$order');
+        // print('📊 [Orderbook] $side order[$index]: is_expired=$isExpired, expire_timestamp=${order['expire_timestamp']}, raw_order=$order');
 
         return Container(
           padding: const EdgeInsets.symmetric(vertical: 2, horizontal: 4),

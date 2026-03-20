@@ -4,6 +4,7 @@ import 'package:provider/provider.dart';
 import '../services/auth_service.dart';
 import '../services/theme_service.dart';
 import '../services/event_subscription_service.dart';
+import '../config/app_config.dart';
 import '../config/ui_constants.dart';
 import '../screens/profile_page.dart';
 import '../screens/login_page.dart';
@@ -100,7 +101,7 @@ class AppHeader extends StatelessWidget {
         ),
         const SizedBox(width: UIConstants.spacingSm),
         Text(
-          'miniBroker',
+          'Agora miniBroker (v${AppConfig.appVersion})',
           style: TextStyle(
             fontSize: UIConstants.fontSizeLg,
             fontWeight: UIConstants.fontWeightMedium,
@@ -252,8 +253,13 @@ class _HeartbeatIndicatorState extends State<_HeartbeatIndicator> with SingleTic
 
   @override
   Widget build(BuildContext context) {
+    final sessionIid = EventSubscriptionService().sessionIid;
+    final tooltipMsg = sessionIid != null && sessionIid.isNotEmpty
+        ? 'Session: $sessionIid'
+        : 'Server heartbeat (no session)';
+
     return Tooltip(
-      message: 'Server heartbeat',
+      message: tooltipMsg,
       child: ScaleTransition(
         scale: _scaleAnimation,
         child: Icon(
