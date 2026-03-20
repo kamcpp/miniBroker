@@ -13,6 +13,7 @@ import '../screens/broker/agora_events_page.dart';
 import '../screens/broker/security_orderbooks_page.dart';
 import '../screens/broker/workflows_page.dart';
 import '../screens/investor/investor_info_page.dart';
+import '../screens/investor/event_messages_page.dart';
 import '../screens/transaction_history_page.dart';
 import '../services/auth_service.dart';
 // import '../screens/activity_page.dart';  // Disabled
@@ -110,6 +111,23 @@ class MenuItemsHelper {
               Navigator.of(context).pushReplacement(
                 PageRouteBuilder(
                   pageBuilder: (context, animation, secondaryAnimation) => const TransactionHistoryPage(),
+                  transitionDuration: Duration.zero,
+                  reverseTransitionDuration: Duration.zero,
+                ),
+              );
+            }
+          },
+        ),
+      if (role == UserRole.investor)
+        MenuItem(
+          label: 'Event Messages',
+          icon: Icons.message,
+          isSelected: currentPage == 'event_messages',
+          onTap: () {
+            if (currentPage != 'event_messages') {
+              Navigator.of(context).pushReplacement(
+                PageRouteBuilder(
+                  pageBuilder: (context, animation, secondaryAnimation) => const EventMessagesPage(),
                   transitionDuration: Duration.zero,
                   reverseTransitionDuration: Duration.zero,
                 ),

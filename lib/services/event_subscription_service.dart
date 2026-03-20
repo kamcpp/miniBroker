@@ -6,6 +6,7 @@ import 'package:grpc/grpc.dart';
 import '../config/app_config.dart';
 import '../generated/prtagent/v1/participant.pbgrpc.dart';
 import '../generated/prtagent/v1/event.pb.dart';
+import 'database_helper.dart';
 
 /// Service that maintains a persistent gRPC stream subscription to SubscribeToEvents.
 /// Prints received events to console and shows them as snackbar notifications.
@@ -488,6 +489,18 @@ class EventSubscriptionService {
     }
 
     _showNotification(event.type, typeStr, eventId, primaryMessage, const [], execUpdateType: execUpdateType);
+
+    // Persist event to SQLite
+    if (_externalInvestorId != null && _externalInvestorId!.isNotEmpty) {
+      DatabaseHelper().insertEventMessage(
+        username: _externalInvestorId!,
+        eventType: typeStr,
+        eventId: eventId,
+        topic: topic,
+        primaryMessage: primaryMessage,
+        eventData: json.encode(eventData),
+      );
+    }
 
     // Notify listeners (trading page, portfolio, etc.) to refresh
     _eventController.add(typeStr);

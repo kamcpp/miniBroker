@@ -65,7 +65,7 @@ class DatabaseHelper {
 
       final db = await openDatabase(
         dbPath,
-        version: 2,
+        version: 3,
         onCreate: _createDatabase,
         onUpgrade: _upgradeDatabase,
       );
@@ -91,13 +91,43 @@ class DatabaseHelper {
       )
     ''');
 
+    await db.execute('''
+      CREATE TABLE event_messages (
+        id INTEGER PRIMARY KEY AUTOINCREMENT,
+        username TEXT NOT NULL,
+        event_id TEXT,
+        event_type TEXT NOT NULL,
+        topic TEXT,
+        primary_message TEXT,
+        event_data TEXT,
+        received_at INTEGER NOT NULL
+      )
+    ''');
+    await db.execute('CREATE INDEX idx_event_messages_username ON event_messages(username)');
+    await db.execute('CREATE INDEX idx_event_messages_received_at ON event_messages(received_at)');
   }
 
   Future<void> _upgradeDatabase(Database db, int oldVersion, int newVersion) async {
     if (oldVersion < 2) {
-      // Add exists_on_server column for version 2
       await db.execute('ALTER TABLE users ADD COLUMN exists_on_server INTEGER DEFAULT 0');
       print('📊 Database upgraded to version 2: added exists_on_server column');
+    }
+    if (oldVersion < 3) {
+      await db.execute('''
+        CREATE TABLE IF NOT EXISTS event_messages (
+          id INTEGER PRIMARY KEY AUTOINCREMENT,
+          username TEXT NOT NULL,
+          event_id TEXT,
+          event_type TEXT NOT NULL,
+          topic TEXT,
+          primary_message TEXT,
+          event_data TEXT,
+          received_at INTEGER NOT NULL
+        )
+      ''');
+      await db.execute('CREATE INDEX IF NOT EXISTS idx_event_messages_username ON event_messages(username)');
+      await db.execute('CREATE INDEX IF NOT EXISTS idx_event_messages_received_at ON event_messages(received_at)');
+      print('📊 Database upgraded to version 3: added event_messages table');
     }
   }
 
@@ -346,6 +376,105 @@ class DatabaseHelper {
       print('⚠️ Sync failed, returning local users only: $e');
       // Fallback to local users if sync fails
       return await getAllUsers();
+    }
+  }
+
+  // ============================================================================
+  // Event Messages
+  // ============================================================================
+
+  /// Insert an event message for a user
+  Future<int> insertEventMessage({
+    required String username,
+    required String eventType,
+    String? eventId,
+    String? topic,
+    String? primaryMessage,
+    String? eventData,
+  }) async {
+    try {
+      final db = await database;
+      return await db.insert('event_messages', {
+        'username': username.toLowerCase().trim(),
+        'event_id': eventId,
+        'event_type': eventType,
+        'topic': topic,
+        'primary_message': primaryMessage,
+        'event_data': eventData,
+        'received_at': DateTime.now().millisecondsSinceEpoch,
+      });
+    } catch (e) {
+      print('Error inserting event message: $e');
+      return -1;
+    }
+  }
+
+  /// Get event messages for a user, paginated, descending by received_at
+  Future<List<Map<String, dynamic>>> getEventMessages({
+    required String username,
+    int pageSize = 20,
+    int pageNumber = 1,
+  }) async {
+    try {
+      final db = await database;
+      final offset = (pageNumber - 1) * pageSize;
+      return await db.query(
+        'event_messages',
+        where: 'username = ?',
+        whereArgs: [username.toLowerCase().trim()],
+        orderBy: 'received_at DESC',
+        limit: pageSize,
+        offset: offset,
+      );
+    } catch (e) {
+      print('Error getting event messages: $e');
+      return [];
+    }
+  }
+
+  /// Get total count of event messages for a user
+  Future<int> getEventMessageCount(String username) async {
+    try {
+      final db = await database;
+      final result = await db.rawQuery(
+        'SELECT COUNT(*) as count FROM event_messages WHERE username = ?',
+        [username.toLowerCase().trim()],
+      );
+      return result.first['count'] as int? ?? 0;
+    } catch (e) {
+      print('Error counting event messages: $e');
+      return 0;
+    }
+  }
+
+  /// Delete a single event message by id
+  Future<bool> deleteEventMessage(int id) async {
+    try {
+      final db = await database;
+      final result = await db.delete(
+        'event_messages',
+        where: 'id = ?',
+        whereArgs: [id],
+      );
+      return result > 0;
+    } catch (e) {
+      print('Error deleting event message: $e');
+      return false;
+    }
+  }
+
+  /// Delete all event messages for a user
+  Future<int> clearEventMessages(String username) async {
+    try {
+      final db = await database;
+      return await db.delete(
+        'event_messages',
+        where: 'username = ?',
+        whereArgs: [username.toLowerCase().trim()],
+      );
+    } catch (e) {
+      print('Error clearing event messages: $e');
+      return 0;
     }
   }
 
