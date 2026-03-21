@@ -1002,10 +1002,10 @@ class _TradingPageState extends State<TradingPage> {
   int _ordersTabIndex = 0; // 0 = Orders (default), 1 = History
   final List<String> _ordersTabNames = ['Orders', 'History'];
 
-  // Real orders data from GetInvestorOrders API
+  // Orders data from GetInvestorOrders API
   List<Map<String, dynamic>> _realOrders = [];
-  bool _isLoadingRealOrders = false;
-  String? _realOrdersError;
+  bool _isLoadingOrders = false;
+  String? _ordersError;
 
   // Order history data (filled, expired, cancelled orders from GetInvestorOrders)
   List<Map<String, dynamic>> _orderHistory = [];
@@ -1067,6 +1067,7 @@ class _TradingPageState extends State<TradingPage> {
       'ordersTabIndex': _ordersTabIndex,
       'quantity': _quantityController.text,
       'price': _priceController.text,
+      'fee': _feeController.text,
     });
   }
 
@@ -1097,7 +1098,20 @@ class _TradingPageState extends State<TradingPage> {
       if (state['price'] != null && (state['price'] as String).isNotEmpty) {
         _priceController.text = state['price'];
       }
+      if (state['fee'] != null && (state['fee'] as String).isNotEmpty) {
+        _feeController.text = state['fee'];
+      }
     }
+  }
+
+  Timer? _saveDebounce;
+
+  @override
+  void setState(VoidCallback fn) {
+    super.setState(fn);
+    // Debounce save to avoid excessive writes during rapid state changes
+    _saveDebounce?.cancel();
+    _saveDebounce = Timer(const Duration(milliseconds: 500), _savePageState);
   }
 
   @override
@@ -1118,7 +1132,7 @@ class _TradingPageState extends State<TradingPage> {
     _eventSubscription = EventSubscriptionService().onEvent.listen((eventType) {
       if (mounted) {
         print('🔄 [Trading] Refreshing data due to event: $eventType');
-        _fetchRealOrders();
+        _fetchOrders();
         _fetchCashHoldings();
         if (!_isBuySelected) _fetchAccountMarketPortfolio();
         if (_selectedSymbol.isNotEmpty) {
@@ -1271,8 +1285,8 @@ class _TradingPageState extends State<TradingPage> {
       _cachedAccountId = currentUsername;
       print('✅ Using logged-in username as investor ID: $_cachedAccountId');
 
-      // Fetch real orders now that we have the account ID
-      _fetchRealOrders();
+      // Fetch orders now that we have the account ID
+      _fetchOrders();
 
       await _fetchCashHoldingsForInvestor(currentUsername);
     } catch (e) {
@@ -1370,22 +1384,22 @@ class _TradingPageState extends State<TradingPage> {
     }
   }
 
-  /// Fetch real account orders using GetInvestorOrders API
-  Future<void> _fetchRealOrders() async {
+  /// Fetch investor orders using GetInvestorOrders API
+  Future<void> _fetchOrders() async {
     if (_cachedAccountId == null || _cachedAccountId!.isEmpty) {
       print('❌ No cached account ID available for fetching orders');
       return;
     }
 
-    if (_isLoadingRealOrders) return;
+    if (_isLoadingOrders) return;
 
     setState(() {
-      _isLoadingRealOrders = true;
-      _realOrdersError = null;
+      _isLoadingOrders = true;
+      _ordersError = null;
     });
 
     try {
-      print('📋 Fetching real orders for account: $_cachedAccountId');
+      print('📋 Fetching orders for investor: $_cachedAccountId');
 
       // Resolve selected security listing IID
       final selectedSec = _securities.firstWhere(
@@ -1481,7 +1495,7 @@ class _TradingPageState extends State<TradingPage> {
           setState(() {
             _realOrders = activeOrders;  // Only active orders in main orders table
             _orderHistory = historyOrders;  // Filled/cancelled/expired in history table
-            _isLoadingRealOrders = false;
+            _isLoadingOrders = false;
           });
 
           print('✅ Successfully loaded ${activeOrders.length} active orders and ${historyOrders.length} history orders');
@@ -1490,22 +1504,22 @@ class _TradingPageState extends State<TradingPage> {
           setState(() {
             _realOrders = [];
             _orderHistory = [];
-            _isLoadingRealOrders = false;
+            _isLoadingOrders = false;
           });
         }
       } else {
         final errorMsg = result['output']?['error'] ?? 'Failed to fetch orders';
         print('❌ GetInvestorOrders failed: $errorMsg');
         setState(() {
-          _realOrdersError = errorMsg;
-          _isLoadingRealOrders = false;
+          _ordersError = errorMsg;
+          _isLoadingOrders = false;
         });
       }
     } catch (e) {
-      print('❌ Exception in _fetchRealOrders: $e');
+      print('❌ Exception in _fetchOrders: $e');
       setState(() {
-        _realOrdersError = 'Exception: ${e.toString()}';
-        _isLoadingRealOrders = false;
+        _ordersError = 'Exception: ${e.toString()}';
+        _isLoadingOrders = false;
       });
     }
   }
@@ -1571,7 +1585,7 @@ class _TradingPageState extends State<TradingPage> {
       ).timeout(const Duration(minutes: 5));
 
       if (result['success'] == true) {
-        _fetchRealOrders();
+        _fetchOrders();
       } else {
         final errorMsg = result['output']?['error'] ?? 'Failed to cancel order';
         _showOrderErrorDialog('Cancel failed', errorMsg);
@@ -1782,7 +1796,7 @@ class _TradingPageState extends State<TradingPage> {
           message: 'Replace request sent',
           icon: Icons.swap_horiz,
         );
-        _fetchRealOrders();
+        _fetchOrders();
       } else {
         final errorMsg = replaceResult['output']?['error'] ?? 'Failed to replace order';
         _showOrderErrorDialog('Replace failed', errorMsg);
@@ -2226,7 +2240,7 @@ class _TradingPageState extends State<TradingPage> {
         timer.cancel();
         return;
       }
-      _fetchRealOrders();
+      _fetchOrders();
     });
   }
 
@@ -2701,6 +2715,7 @@ class _TradingPageState extends State<TradingPage> {
   
   @override
   void dispose() {
+    _saveDebounce?.cancel();
     _savePageState();
     _messageSubscription?.cancel();
     _connectionStatusSubscription?.cancel();
@@ -3157,6 +3172,7 @@ class _TradingPageState extends State<TradingPage> {
                           _loadChartData(newValue);
                           _resetAndFetchTradeHistory(newValue);
                           _fetchOrderbookData(newValue);
+                          _fetchOrders();
                           _calculateOrderFees();
                           if (!_isBuySelected) { await _fetchAccountMarketPortfolioForMarket(_selectedMarket['id'] ?? ''); }
                         }
@@ -4004,7 +4020,7 @@ class _TradingPageState extends State<TradingPage> {
                 Icons.refresh,
                 color: UIConstants.textSecondary(isDarkTheme),
               ),
-              onPressed: _isLoadingRealOrders ? null : _fetchRealOrders,
+              onPressed: _isLoadingOrders ? null : _fetchOrders,
             ),
           ),
           const SizedBox(width: 8),
@@ -4692,7 +4708,7 @@ class _TradingPageState extends State<TradingPage> {
 
   /// Build orders content with loading states and real data
   Widget _buildOrdersContent(bool isDarkTheme) {
-    if (_isLoadingRealOrders) {
+    if (_isLoadingOrders) {
       return const Center(
         child: Column(
           mainAxisAlignment: MainAxisAlignment.center,
@@ -4705,7 +4721,7 @@ class _TradingPageState extends State<TradingPage> {
       );
     }
 
-    if (_realOrdersError != null) {
+    if (_ordersError != null) {
       return Center(
         child: Column(
           mainAxisAlignment: MainAxisAlignment.center,
@@ -4726,7 +4742,7 @@ class _TradingPageState extends State<TradingPage> {
             ),
             const SizedBox(height: UIConstants.spacingSm),
             Text(
-              _realOrdersError!,
+              _ordersError!,
               style: TextStyle(
                 fontSize: UIConstants.fontSizeSm,
                 color: Colors.red,
@@ -4735,7 +4751,7 @@ class _TradingPageState extends State<TradingPage> {
             ),
             const SizedBox(height: UIConstants.spacingMd),
             ElevatedButton(
-              onPressed: _fetchRealOrders,
+              onPressed: _fetchOrders,
               child: const Text('Retry'),
             ),
           ],
@@ -5322,7 +5338,7 @@ class _TradingPageState extends State<TradingPage> {
         print('📋 CreateOrderAsync response: $output');
 
         // Refresh orders list to show the new order
-        _fetchRealOrders();
+        _fetchOrders();
 
         // Clear form after successful order
         _quantityController.clear();
@@ -5344,7 +5360,7 @@ class _TradingPageState extends State<TradingPage> {
   void _showOrderErrorDialog(String title, String errorMessage) {
     // Refresh orders after 5 seconds
     Future.delayed(const Duration(seconds: 5), () {
-      if (mounted) _fetchRealOrders();
+      if (mounted) _fetchOrders();
     });
 
     final themeService = Provider.of<ThemeService>(context, listen: false);

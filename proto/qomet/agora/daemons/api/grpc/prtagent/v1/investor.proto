@@ -259,7 +259,7 @@ message GetInvestorTransactionsRequest {
   tech.qomet.agora.api.grpc.common.DateTime from_dt = 4;                                // OPTIONAL: Start of time range
   tech.qomet.agora.api.grpc.common.DateTime to_dt = 5;                                  // OPTIONAL: End of time range
   repeated tech.qomet.agora.api.grpc.fin.TransactionTypeEnum transaction_types = 6;     // OPTIONAL: Filter by transaction types
-  repeated string asset_ids = 7;                                                        // OPTIONAL: Filter by asset IDs
+  repeated string asset_iids = 7;                                                        // OPTIONAL: Filter by asset IIDs
 
   map<string, string> aux_data = 105;                                                   // OPTIONAL: Additional request data
 }

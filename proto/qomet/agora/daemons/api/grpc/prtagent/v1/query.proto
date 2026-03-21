@@ -39,7 +39,7 @@ message SettlementQueryFilter {
   tech.qomet.agora.api.grpc.common.DateTime to_dt = 2;                  // OPTIONAL: End of time range
   tech.qomet.agora.api.grpc.fin.ConfirmationStatusEnum status = 3;      // OPTIONAL: Filter by confirmation status
   repeated string settlement_types = 4;                                 // OPTIONAL: Filter by settlement types
-  repeated string asset_ids = 5;                                        // OPTIONAL: Filter by asset IDs
+  repeated string asset_iids = 5;                                        // OPTIONAL: Filter by asset IIDs
   string amount_min = 6;                                                // OPTIONAL: Minimum amount filter
   string amount_max = 7;                                                // OPTIONAL: Maximum amount filter
 }

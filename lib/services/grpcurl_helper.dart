@@ -818,7 +818,7 @@ class GrpcurlHelper {
       requestBody['transaction_types'] = transactionTypes;
     }
     if (assetIds != null && assetIds.isNotEmpty) {
-      requestBody['asset_ids'] = assetIds;
+      requestBody['asset_iids'] = assetIds;
     }
 
     return _executeGrpcCall(

@@ -80,9 +80,19 @@ class _DesktopChartState extends State<DesktopChart> {
     int minTiles = (height / MIN_PRICETILE_HEIGHT).floor();
     minTiles = max(2, minTiles);
     double sizeRange = high - low;
+    if (sizeRange <= 0 || sizeRange.isNaN || sizeRange.isInfinite) {
+      // All prices identical or invalid — use a small default step
+      return high > 0 ? high * 0.01 : 1.0;
+    }
     double minStepSize = sizeRange / minTiles;
+    if (minStepSize <= 0 || minStepSize.isNaN || minStepSize.isInfinite) {
+      return sizeRange / 2;
+    }
     double base =
         pow(10, HelperFunctions.log10(minStepSize).floor()).toDouble();
+    if (base <= 0 || base.isNaN || base.isInfinite) {
+      return minStepSize;
+    }
 
     if (2 * base > minStepSize) return 2 * base;
     if (5 * base > minStepSize) return 5 * base;
