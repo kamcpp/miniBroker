@@ -22,8 +22,6 @@ service InvestorService {
 
   rpc NewInvestor(NewInvestorRequest) returns (tech.qomet.agora.api.grpc.common.ExecutionAsyncResponse);
   rpc RegisterInvestorAtDepositories(RegisterInvestorAtDepositoriesRequest) returns (tech.qomet.agora.api.grpc.common.ExecutionAsyncResponse);
-  rpc ActivateVenueForInvestor(ActivateVenueForInvestorRequest) returns (tech.qomet.agora.api.grpc.common.ExecutionAsyncResponse);
-
   rpc DepositCash(DepositCashRequest) returns (tech.qomet.agora.api.grpc.common.ExecutionAsyncResponse);
   rpc DepositSecurity(DepositSecurityRequest) returns (tech.qomet.agora.api.grpc.common.ExecutionAsyncResponse);
   rpc WithdrawCash(WithdrawCashRequest) returns (tech.qomet.agora.api.grpc.common.ExecutionAsyncResponse);
@@ -48,7 +46,7 @@ service InvestorService {
 message GetInvestorListRequest {
   string proposed_execution_id = 1;                                                     // OPTIONAL: Client-proposed execution ID for tracking
   tech.qomet.agora.api.grpc.common.PaginationParams pagination = 2;                     // OPTIONAL: Pagination parameters
-  string investor_iid_or_external_id_regex = 3;                                         // OPTIONAL: Filter by investor IID regex
+  string external_investor_id = 3;                                                      // OPTIONAL: Filter by external investor ID
 
   map<string, string> aux_data = 105;                                                   // OPTIONAL: Additional request data
 }
@@ -68,7 +66,7 @@ message InvestorInfo {
 
 message GetInvestorInfoBatchRequest {
   string proposed_execution_id = 1;                                                     // OPTIONAL: Client-proposed execution ID for tracking
-  repeated string investor_iids = 2;                                                    // REQUIRED: List of investor IIDs to retrieve
+  repeated string external_investor_ids = 2;                                            // REQUIRED: List of external investor IDs
 
   map<string, string> aux_data = 105;                                                   // OPTIONAL: Additional request data
 }
@@ -98,30 +96,14 @@ message NewInvestorResponse {
 
 message RegisterInvestorAtDepositoriesRequest {
   string proposed_execution_id = 1;                                                     // OPTIONAL: Client-proposed execution ID for tracking
-  string investor_iid = 2;                                                              // REQUIRED: Investor internal ID to register at all depositories
+  string external_investor_id = 2;                                                      // REQUIRED: External investor ID to register at all depositories
 
   map<string, string> aux_data = 105;                                                   // OPTIONAL: Additional request data
-}
-
-message ActivateVenueForInvestorRequest {
-  string proposed_execution_id = 1;                                                     // OPTIONAL: Client-proposed execution ID for tracking
-  string investor_iid = 2;                                                              // REQUIRED: Investor internal ID
-  string venue_iid = 3;                                                                 // REQUIRED: Venue internal ID to activate
-
-  map<string, string> aux_data = 105;                                                   // OPTIONAL: Additional request data
-}
-
-message ActivateVenueForInvestorResponse {
-  string ref_execution_id = 1;                                                          // REQUIRED: Reference to the execution ID
-
-  tech.qomet.agora.api.grpc.common.DateTime activation_dt = 2;                          // REQUIRED: Venue activation timestamp
-
-  map<string, string> metadata = 105;                                                   // OPTIONAL: Response metadata
 }
 
 message GetInvestorSecurityHoldingsRequest {
   string proposed_execution_id = 1;                                                     // OPTIONAL: Client-proposed execution ID for tracking
-  string investor_iid = 2;                                                              // REQUIRED: Investor internal ID
+  string external_investor_id = 2;                                                      // REQUIRED: External investor ID
   string venue_iid = 3;                                                                 // OPTIONAL: Venue internal ID (filter by venue)
   repeated string security_listing_iids = 4;                                            // OPTIONAL: Specific security listing IIDs to retrieve
 
@@ -137,7 +119,7 @@ message GetInvestorSecurityHoldingsResponse {
 
 message GetInvestorCashHoldingsRequest {
   string proposed_execution_id = 1;                                                     // OPTIONAL: Client-proposed execution ID for tracking
-  string investor_iid = 2;                                                              // REQUIRED: Investor internal ID
+  string external_investor_id = 2;                                                      // REQUIRED: External investor ID
   repeated string currency_codes = 3;                                                   // OPTIONAL: Specific currency codes to retrieve
 
   map<string, string> aux_data = 105;                                                   // OPTIONAL: Additional request data
@@ -152,7 +134,7 @@ message GetInvestorCashHoldingsResponse {
 
 message DepositCashRequest {
   string proposed_execution_id = 1;                                                     // OPTIONAL: Client-proposed execution ID for tracking
-  string investor_iid = 2;                                                              // REQUIRED: Investor internal ID
+  string external_investor_id = 2;                                                      // REQUIRED: External investor ID
   string currency_code = 3;                                                             // REQUIRED: Currency code (e.g., "USD", "EUR")
   string amount = 4;                                                                    // REQUIRED: Amount to deposit
 
@@ -167,7 +149,7 @@ message DepositCashResponse {
 
 message DepositSecurityRequest {
   string proposed_execution_id = 1;                                                     // OPTIONAL: Client-proposed execution ID for tracking
-  string investor_iid = 2;                                                              // REQUIRED: Investor internal ID
+  string external_investor_id = 2;                                                      // REQUIRED: External investor ID
   string security_listing_iid = 3;                                                      // REQUIRED: Security listing internal ID
   string units = 4;                                                                     // REQUIRED: Number of units to deposit
 
@@ -182,7 +164,7 @@ message DepositSecurityResponse {
 
 message WithdrawCashRequest {
   string proposed_execution_id = 1;                                                     // OPTIONAL: Client-proposed execution ID for tracking
-  string investor_iid = 2;                                                              // REQUIRED: Investor internal ID
+  string external_investor_id = 2;                                                      // REQUIRED: External investor ID
   string currency_code = 3;                                                             // REQUIRED: Currency code (e.g., "USD", "EUR")
   string amount = 4;                                                                    // REQUIRED: Amount to withdraw
 
@@ -212,7 +194,7 @@ message WithdrawSecurityResponse {
 
 message GetInvestorOrdersRequest {
   string proposed_execution_id = 1;                                                     // OPTIONAL: Client-proposed execution ID for tracking
-  string investor_iid = 2;                                                              // REQUIRED: Investor internal ID
+  string external_investor_id = 2;                                                      // REQUIRED: External investor ID
   repeated string venue_iids = 3;                                                       // OPTIONAL: Filter by venue IIDs
   tech.qomet.agora.api.grpc.common.PaginationParams pagination = 4;                     // OPTIONAL: Pagination parameters
   OrderQueryFilter order_query_filter = 5;                                              // OPTIONAL: Additional order filters
@@ -232,7 +214,7 @@ message GetInvestorOrdersResponse {
 
 message GetInvestorTradesRequest {
   string proposed_execution_id = 1;                                                     // OPTIONAL: Client-proposed execution ID for tracking
-  string investor_iid = 2;                                                              // REQUIRED: Investor internal ID
+  string external_investor_id = 2;                                                      // REQUIRED: External investor ID
   repeated string market_iids = 3;                                                      // OPTIONAL: Filter by market IIDs
   tech.qomet.agora.api.grpc.common.PaginationParams pagination = 4;                     // OPTIONAL: Pagination parameters
   tech.qomet.agora.api.grpc.common.DateTime from_dt = 5;                                // OPTIONAL: Start of time range
@@ -254,7 +236,7 @@ message GetInvestorTradesResponse {
 
 message GetInvestorTransactionsRequest {
   string proposed_execution_id = 1;                                                     // OPTIONAL: Client-proposed execution ID for tracking
-  string investor_iid = 2;                                                              // REQUIRED: Investor internal ID
+  string external_investor_id = 2;                                                      // REQUIRED: External investor ID
   tech.qomet.agora.api.grpc.common.PaginationParams pagination = 3;                     // OPTIONAL: Pagination parameters
   tech.qomet.agora.api.grpc.common.DateTime from_dt = 4;                                // OPTIONAL: Start of time range
   tech.qomet.agora.api.grpc.common.DateTime to_dt = 5;                                  // OPTIONAL: End of time range

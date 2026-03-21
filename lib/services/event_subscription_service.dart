@@ -332,7 +332,6 @@ class EventSubscriptionService {
       case ExecutionResponseEvent_Response.getInvestorTransactions: return 'Investor Transactions';
       case ExecutionResponseEvent_Response.getVenueList: return 'Venue List';
       case ExecutionResponseEvent_Response.getVenueCalendar: return 'Venue Calendar';
-      case ExecutionResponseEvent_Response.getOrderFees: return 'Order Fees';
       case ExecutionResponseEvent_Response.getParticipantInfo: return 'Participant Info';
       case ExecutionResponseEvent_Response.getParticipantOrders: return 'Participant Orders';
       case ExecutionResponseEvent_Response.getParticipantTrades: return 'Participant Trades';
@@ -360,7 +359,7 @@ class EventSubscriptionService {
   void _onEvent(Event event) {
     // Heartbeats — pulse the indicator, no notification
     if (event.type == EventTypeEnum.EVENT_TYPE_ENUM_HEARTBEAT) {
-      print('💓 [EventSub] Heartbeat received');
+      // print('💓 [EventSub] Heartbeat received');
       heartbeat.value++;
       return;
     }

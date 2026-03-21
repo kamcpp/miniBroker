@@ -19,9 +19,6 @@ service TradingService {
   rpc FetchLiveOhlcData(FetchLiveOhlcDataRequest) returns (stream OhlcDataResponse);
   rpc GetHistoricalOhlcData(GetHistoricalOhlcDataRequest) returns (GetHistoricalOhlcDataResponse);
 
-  rpc GetOrderFees(GetOrderFeesRequest) returns (GetOrderFeesResponse);
-  rpc GetOrderFeesAsync(GetOrderFeesRequest) returns (tech.qomet.agora.api.grpc.common.ExecutionAsyncResponse);
-
   rpc CreateOrderAsync(CreateOrderAsyncRequest) returns (tech.qomet.agora.api.grpc.common.ExecutionAsyncResponse);
   rpc ReplaceOrderAsync(ReplaceOrderAsyncRequest) returns (tech.qomet.agora.api.grpc.common.ExecutionAsyncResponse);
   rpc CancelOrderAsync(CancelOrderAsyncRequest) returns (tech.qomet.agora.api.grpc.common.ExecutionAsyncResponse);
@@ -136,61 +133,10 @@ message GetHistoricalOhlcDataResponse {
   map<string, string> metadata = 105;                                   // OPTIONAL: Response metadata
 }
 
-message FeeStructure {
-  string base_fee = 1;                                                  // OPTIONAL: Base transaction fee
-  string percentage_fee = 2;                                            // OPTIONAL: Percentage of order value
-  string minimum_fee = 3;                                               // OPTIONAL: Minimum fee amount
-  string maximum_fee = 4;                                               // OPTIONAL: Maximum fee amount
-  string maker_fee = 6;                                                 // OPTIONAL: Fee for maker orders (adds liquidity)
-  string taker_fee = 7;                                                 // OPTIONAL: Fee for taker orders (removes liquidity)
-  string currency = 8;                                                  // REQUIRED: ISO 4217 currency code for fees
-  string fee_tier = 9;                                                  // OPTIONAL: User's fee tier/level
-  string discount_rate = 10;                                            // OPTIONAL: Applicable discount percentage
-  string total_estimated_fee = 11;                                      // OPTIONAL: Total estimated fee for the order
-}
-
-message GetOrderFeesRequest {
-  string proposed_execution_id = 1;                                     // OPTIONAL: Client-proposed execution ID for tracking
-
-  string account_iid = 2;                                               // REQUIRED: Account ID to determine fee tier
-  string fee_payer_account_iid = 3;                                     // OPTIONAL: Fee payer account ID (if different from account_id)
-  string security_listing_iid = 4;                                      // REQUIRED: Security listing for the order
-
-  // Order details for fee calculation
-  string order_type = 5;                                                // REQUIRED: Order type ("LIMIT", "MARKET")
-  tech.qomet.agora.api.grpc.fin.OrderSideEnum side = 6;                 // REQUIRED: Order side ("BUY", "SELL")
-  string quantity = 7;                                                  // REQUIRED: Order quantity
-  string price = 8;                                                     // OPTIONAL: Order price (required for LIMIT orders)
-
-  // Optional parameters that might affect fees
-  string time_in_force = 9;                                             // OPTIONAL: Time in force ("GTC", "IOC", "FOK", "DAY")
-
-  bool is_post_only = 10;                                               // OPTIONAL: If true, order will only be maker (default: false)
-  bool is_reduce_only = 11;                                             // OPTIONAL: If true, order can only reduce position (default: false)
-
-  map<string, string> aux_data = 105;                                   // OPTIONAL: Additional request data
-}
-
-message GetOrderFeesResponse {
-  string ref_execution_id = 1;                                          // REQUIRED: Reference to the execution ID
-
-  FeeStructure fee_structure = 2;                                       // REQUIRED: Primary fee structure
-
-  repeated string fee_notes = 3;                                        // OPTIONAL: Additional fee notes or warnings
-  tech.qomet.agora.api.grpc.common.DateTime fee_valid_until_dt = 4;     // OPTIONAL: Fee validity expiration
-  string msg = 5;                                                       // OPTIONAL: Additional message or status
-
-  map<string, string> fee_breakdown = 6;                                // OPTIONAL: Detailed breakdown of fee components
-
-  repeated FeeStructure alternative_fee_options = 7;                    // OPTIONAL: Alternative fee options (different currencies)
-
-  map<string, string> metadata = 8;                                     // OPTIONAL: Additional metadata
-}
-
 message CreateOrderAsyncRequest {
   string proposed_execution_id = 1;                                     // OPTIONAL: Client-proposed execution ID for tracking
 
-  string account_iid = 2;                                               // REQUIRED: Account ID (won't be changed)
+  string external_investor_id = 2;                                      // REQUIRED: External investor ID
   string fee_payer_account_iid = 3;                                     // OPTIONAL: Fee payer account ID (can be different)
   string security_listing_iid = 4;                                      // REQUIRED: Security listing ID
 
@@ -323,7 +269,11 @@ message SentOrderInfo {
   string currency = 9;
   string status = 10;
   string participant_iid = 11;
-  string investor_iid = 12;
+  string participant_csd_account_iid = 12;
+  string external_investor_id = 13;
+  string investor_iid = 14;
+  string investor_account_iid = 15;
+  string investor_csd_account_iid = 16;
 }
 
 message GetOrderExecutionReportsResponse {

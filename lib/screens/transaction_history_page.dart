@@ -113,7 +113,7 @@ class _TransactionHistoryPageState extends State<TransactionHistoryPage> {
 
       final request = GetInvestorTransactionsRequest(
         proposedExecutionId: 'get_investor_transactions_${DateTime.now().millisecondsSinceEpoch}',
-        investorIid: investorId,
+        externalInvestorId: investorId,
         pagination: common_pb.PaginationParams(
           pageNr: _currentPage,
           pageSize: _pageSize,

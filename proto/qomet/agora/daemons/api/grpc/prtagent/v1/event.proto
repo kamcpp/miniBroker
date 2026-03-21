@@ -107,8 +107,6 @@ message ExecutionResponseEvent {
     GetVenueCalendarResponse get_venue_calendar = 503;
     // TODO: Determine if GetVenueInstrumentListingListResponse should be included
     // GetVenueInstrumentListingListResponse get_venue_instrument_listing_list = 504;
-    // trading responses
-    GetOrderFeesResponse get_order_fees = 601;
     // participant responses
     GetParticipantInfoResponse get_participant_info = 701;
     GetParticipantOrdersResponse get_participant_orders = 702;

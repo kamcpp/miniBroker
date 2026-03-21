@@ -39,8 +39,8 @@ message GetSecurityListingListRequest {
   string proposed_execution_id = 1;                                                        // OPTIONAL: Client-proposed execution ID for tracking
   tech.qomet.agora.api.grpc.common.PaginationParams pagination = 2;                        // OPTIONAL: Pagination parameters
   string symbol_regex = 3;                                                                 // OPTIONAL: Filter by symbol regex
-  string security_id_regex = 4;                                                            // OPTIONAL: Filter by security ID regex
-  string security_exchange_regex = 5;                                                      // OPTIONAL: Filter by security exchange regex
+  string security_listing_iid = 4;                                                         // OPTIONAL: Filter by security listing IID
+  repeated string venue_iids = 5;                                                          // OPTIONAL: Filter by venue IIDs
   repeated string statuses = 7;                                                            // OPTIONAL: Filter by security status
 
   map<string, string> aux_data = 105;                                                      // OPTIONAL: Additional request data
@@ -57,8 +57,9 @@ message GetSecurityListingListResponse {
 message GetSecurityListingInfoBatchRequest {
   string proposed_execution_id = 1;                                                        // OPTIONAL: Client-proposed execution ID for tracking
   tech.qomet.agora.api.grpc.common.PaginationParams pagination = 2;                        // OPTIONAL: Pagination parameters
-  repeated string security_ids = 3;                                                        // REQUIRED: Security IDs to retrieve
-  repeated string statuses = 4;                                                            // OPTIONAL: Filter by security status
+  repeated string security_listing_iids = 3;                                               // REQUIRED: Security listing IIDs to retrieve
+  repeated string venue_iids = 4;                                                          // OPTIONAL: Filter by venue IIDs
+  repeated string statuses = 5;                                                            // OPTIONAL: Filter by security status
 
   map<string, string> aux_data = 105;                                                      // OPTIONAL: Additional request data
 }
