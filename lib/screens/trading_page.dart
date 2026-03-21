@@ -838,7 +838,7 @@ class _TradingPageState extends State<TradingPage> {
       print('   market_id: $marketId');
       print('   asset_ids: [$securityId]');
 
-      final portfolioResponse = await realGrpcClient.getAccountMarketPortfolio(
+      final portfolioResponse = await realGrpcClient.getInvestorSecurityHoldings(
         accountId: _cachedAccountId!,
         marketId: marketId,
         securityIds: [securityId],
@@ -1002,12 +1002,12 @@ class _TradingPageState extends State<TradingPage> {
   int _ordersTabIndex = 0; // 0 = Orders (default), 1 = History
   final List<String> _ordersTabNames = ['Orders', 'History'];
 
-  // Real orders data from GetAccountOrders API
+  // Real orders data from GetInvestorOrders API
   List<Map<String, dynamic>> _realOrders = [];
   bool _isLoadingRealOrders = false;
   String? _realOrdersError;
 
-  // Order history data (filled, expired, cancelled orders from GetAccountOrders)
+  // Order history data (filled, expired, cancelled orders from GetInvestorOrders)
   List<Map<String, dynamic>> _orderHistory = [];
 
   // Pagination variables for orders and history (client-side)
@@ -1370,7 +1370,7 @@ class _TradingPageState extends State<TradingPage> {
     }
   }
 
-  /// Fetch real account orders using GetAccountOrders API
+  /// Fetch real account orders using GetInvestorOrders API
   Future<void> _fetchRealOrders() async {
     if (_cachedAccountId == null || _cachedAccountId!.isEmpty) {
       print('❌ No cached account ID available for fetching orders');
@@ -1387,9 +1387,17 @@ class _TradingPageState extends State<TradingPage> {
     try {
       print('📋 Fetching real orders for account: $_cachedAccountId');
 
+      // Resolve selected security listing IID
+      final selectedSec = _securities.firstWhere(
+        (s) => s['symbol'] == _selectedSymbol,
+        orElse: () => <String, dynamic>{},
+      );
+      final selectedIid = selectedSec['iid']?.toString() ?? '';
+
       final result = await GrpcurlHelper.getInvestorOrders(
         investorId: _cachedAccountId!,
         refRequestId: 'flutter-trading-page-${DateTime.now().millisecondsSinceEpoch}',
+        securityListingIids: selectedIid.isNotEmpty ? [selectedIid] : null,
         pagination: {
           'page_size': 500,
         },
@@ -1397,7 +1405,7 @@ class _TradingPageState extends State<TradingPage> {
 
       if (result['success'] == true && result['output'] != null) {
         final output = result['output'];
-        // print('📬 GetAccountOrders Response: $output'); // Commented out - too verbose
+        // print('📬 GetInvestorOrders Response: $output'); // Commented out - too verbose
 
         if (output['orders'] != null && output['orders'] is List) {
           final List<dynamic> ordersData = output['orders'];
@@ -1487,7 +1495,7 @@ class _TradingPageState extends State<TradingPage> {
         }
       } else {
         final errorMsg = result['output']?['error'] ?? 'Failed to fetch orders';
-        print('❌ GetAccountOrders failed: $errorMsg');
+        print('❌ GetInvestorOrders failed: $errorMsg');
         setState(() {
           _realOrdersError = errorMsg;
           _isLoadingRealOrders = false;

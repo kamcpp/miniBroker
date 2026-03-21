@@ -411,7 +411,7 @@ class _ActivityPageState extends State<ActivityPage> {
       print('🔍 Getting account ID for user: $currentUsername');
 
       // Get account list to find the user's account ID
-      final accountListResponse = await realGrpcClient.getAccountList();
+      final accountListResponse = await realGrpcClient.getInvestorList();
       
       String? accountId;
       if (accountListResponse['success'] == true) {
@@ -435,7 +435,7 @@ class _ActivityPageState extends State<ActivityPage> {
     }
   }
 
-  /// Fetch orders using GetAccountOrders function (with account ID lookup)
+  /// Fetch orders using GetInvestorOrders function (with account ID lookup)
   Future<void> _fetchOrders() async {
     // Get account ID
     final accountId = await _getAccountId();
@@ -450,7 +450,7 @@ class _ActivityPageState extends State<ActivityPage> {
     await _fetchOrdersWithAccountId(accountId);
   }
 
-  /// Fetch orders using GetAccountOrders function (with provided account ID)
+  /// Fetch orders using GetInvestorOrders function (with provided account ID)
   Future<void> _fetchOrdersWithAccountId(String accountId) async {
     setState(() {
       _isLoadingOrders = true;
@@ -515,12 +515,10 @@ class _ActivityPageState extends State<ActivityPage> {
         'pagination': pagination,
       };
 
-      print('🔍 GetAccountOrders INPUT: ${jsonEncode(inputParams)}');
+      print('🔍 GetInvestorOrders INPUT: ${jsonEncode(inputParams)}');
 
-      // Call GetAccountOrders with all parameters
-      final ordersResponse = await realGrpcClient.getAccountOrders(
+      final ordersResponse = await realGrpcClient.getInvestorOrders(
         accountId: accountId,
-        marketIdOrNameRegexes: _marketFilters.isNotEmpty ? _marketFilters : null,
         pagination: pagination,
         fromTime: fromTimeFormatted != null ? jsonEncode(fromTimeFormatted) : null,
         toTime: toTimeFormatted != null ? jsonEncode(toTimeFormatted) : null,
@@ -559,7 +557,7 @@ class _ActivityPageState extends State<ActivityPage> {
     }
   }
 
-  /// Fetch trades using GetAccountTrades function (with account ID lookup)
+  /// Fetch trades using GetInvestorTrades function (with account ID lookup)
   Future<void> _fetchTrades() async {
     // Get account ID
     final accountId = await _getAccountId();
@@ -574,7 +572,7 @@ class _ActivityPageState extends State<ActivityPage> {
     await _fetchTradesWithAccountId(accountId);
   }
 
-  /// Fetch trades using GetAccountTrades function (with provided account ID)
+  /// Fetch trades using GetInvestorTrades function (with provided account ID)
   Future<void> _fetchTradesWithAccountId(String accountId) async {
     print('🚀 _fetchTradesWithAccountId() called - Starting trade fetch process with account ID: $accountId');
     
@@ -631,7 +629,7 @@ class _ActivityPageState extends State<ActivityPage> {
         'pagination': tradePagination,
       };
 
-      print('🔍 GetAccountTrades REQUEST PARAMETERS:');
+      print('🔍 GetInvestorTrades REQUEST PARAMETERS:');
       print('   Account ID: $accountId');
       print('   Market Filters: $tradeMarketFilters');
       print('   Security Filters: $tradeSecurityFilters');
@@ -639,26 +637,26 @@ class _ActivityPageState extends State<ActivityPage> {
       print('   To Date: $toTimeFormatted');
       print('   Side: $_selectedTradeSide');
       print('   Page Size: $_tradePageSize');
-      print('🔍 GetAccountTrades FULL INPUT: ${jsonEncode(tradeInputParams)}');
+      print('🔍 GetInvestorTrades FULL INPUT: ${jsonEncode(tradeInputParams)}');
 
-      print('📞 Making GetAccountTrades API call...');
+      print('📞 Making GetInvestorTrades API call...');
       
-      // Call GetAccountTrades with all parameters
-      final tradesResponse = await realGrpcClient.getAccountTrades(
+      // Call GetInvestorTrades with all parameters
+      final tradesResponse = await realGrpcClient.getInvestorTrades(
         accountId: accountId,
-        marketIdOrNameRegexes: _tradeMarketFilters.isNotEmpty ? _tradeMarketFilters : null,
+        marketIids: _tradeMarketFilters.isNotEmpty ? _tradeMarketFilters : null,
         pagination: tradePagination,
         fromTime: fromTimeFormatted != null ? jsonEncode(fromTimeFormatted) : null,
         toTime: toTimeFormatted != null ? jsonEncode(toTimeFormatted) : null,
         side: _selectedTradeSide,
-        securityIdOrSymbolRegexes: _tradeSecurityFilters.isNotEmpty ? _tradeSecurityFilters : null,
+        securityListingIids: _tradeSecurityFilters.isNotEmpty ? _tradeSecurityFilters : null,
       );
 
-      print('📤 GetAccountTrades API RESPONSE:');
+      print('📤 GetInvestorTrades API RESPONSE:');
       print('   Response Type: ${tradesResponse.runtimeType}');
       print('   Full Response: ${jsonEncode(tradesResponse)}');
 
-      print('🔄 Processing GetAccountTrades response...');
+      print('🔄 Processing GetInvestorTrades response...');
       
       if (mounted) {
         setState(() {
@@ -722,7 +720,7 @@ class _ActivityPageState extends State<ActivityPage> {
     await _fetchTransactionsWithAccountId(accountId);
   }
 
-  /// Fetch transactions using GetAccountTransactions function (with provided account ID)
+  /// Fetch transactions using GetInvestorTransactions function (with provided account ID)
   Future<void> _fetchTransactionsWithAccountId(String accountId) async {
     setState(() {
       _isLoadingTransactions = true;
@@ -771,7 +769,7 @@ class _ActivityPageState extends State<ActivityPage> {
         fromTime: fromTimeFormatted != null ? json.encode(fromTimeFormatted) : null,
         toTime: toTimeFormatted != null ? json.encode(toTimeFormatted) : null,
         transactionTypes: _selectedTransactionType != null ? [_selectedTransactionType!] : null,
-        securityIdOrNameRegexes: transactionSecurityFilters.isNotEmpty ? transactionSecurityFilters : null,
+        assetIds: transactionSecurityFilters.isNotEmpty ? transactionSecurityFilters : null,
       );
 
       if (mounted) {

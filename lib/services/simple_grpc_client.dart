@@ -131,7 +131,7 @@ class SimpleGrpcClient {
   }
 
   /// Get Account List from the gRPC server
-  Future<Map<String, dynamic>> getAccountList({
+  Future<Map<String, dynamic>> getInvestorList({
     int pageNumber = 0,
     int pageSize = 0,
     String? accountIdRegex,
@@ -141,7 +141,7 @@ class SimpleGrpcClient {
     }
 
     try {
-      print('🔄 Calling GetAccountList...');
+      print('🔄 Calling GetInvestorList...');
       
       // Prepare request parameters
       final requestParams = {
@@ -155,7 +155,7 @@ class SimpleGrpcClient {
 
       // Since we don't have the exact protobuf, we'll simulate the call
       // In a real implementation, this would be:
-      // final request = GetAccountListRequest()
+      // final request = GetInvestorListRequest()
       //   ..refRequestId = requestParams['refRequestId']
       //   ..pageNumber = pageNumber
       //   ..pageSize = pageSize;
@@ -204,12 +204,12 @@ class SimpleGrpcClient {
       };
 
       print('📬 Response Output: ${simulatedResponse['output']}');
-      print('✅ GetAccountList completed successfully');
+      print('✅ GetInvestorList completed successfully');
 
       return simulatedResponse;
     } catch (e) {
-      print('❌ GetAccountList failed: $e');
-      throw Exception('GetAccountList failed: $e');
+      print('❌ GetInvestorList failed: $e');
+      throw Exception('GetInvestorList failed: $e');
     }
   }
 

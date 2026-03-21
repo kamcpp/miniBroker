@@ -338,19 +338,8 @@ class RealGrpcClient {
     }
   }
 
-  /// Legacy alias for newInvestor (backwards compatibility)
-  Future<Map<String, dynamic>> newAccount({
-    required String externalAccountId,
-    String? auxData,
-    Duration? timeout,
-  }) => newInvestor(
-    externalInvestorId: externalAccountId,
-    auxData: auxData,
-    timeout: timeout,
-  );
-
-  /// Real GetAccountList call to AccountService.GetAccountList using grpcurl
-  Future<Map<String, dynamic>> getAccountList({
+  /// Real GetInvestorList call to InvestorService.GetInvestorList using grpcurl
+  Future<Map<String, dynamic>> getInvestorList({
     int pageNumber = 0,
     int pageSize = 0,
     String? accountIdRegex,
@@ -358,7 +347,7 @@ class RealGrpcClient {
     Duration? timeout,
   }) async {
     // Always test connectivity first to prevent crashes
-    print('🔍 Testing server connectivity before GetAccountList...');
+    print('🔍 Testing server connectivity before GetInvestorList...');
     final isServerReachable = await testServerConnectivity();
     
     if (!isServerReachable) {
@@ -393,18 +382,18 @@ class RealGrpcClient {
     }
 
     try {
-      print('🔄 GetAccountList button clicked - attempting real server connection');
+      print('🔄 GetInvestorList button clicked - attempting real server connection');
       
       // Try to call the real server with grpcurl, with comprehensive crash protection
-      final response = await GrpcurlHelper.getAccountList(
+      final response = await GrpcurlHelper.getInvestorList(
         pageNumber: pageNumber,
         pageSize: pageSize,
-        accountIdRegex: accountIdRegex,
+        investorIdRegex: accountIdRegex,
         auxData: auxData,
       ).timeout(
         const Duration(minutes: 5),
         onTimeout: () {
-          print('⏰ GetAccountList request timed out');
+          print('⏰ GetInvestorList request timed out');
           return {
             'input': {
               'proposed_execution_id': 'get_account_list_${DateTime.now().millisecondsSinceEpoch}',
@@ -428,7 +417,7 @@ class RealGrpcClient {
           };
         },
       ).catchError((error) {
-        print('❌ GetAccountList error caught: $error');
+        print('❌ GetInvestorList error caught: $error');
         return {
           'input': {
             'proposed_execution_id': 'get_account_list_${DateTime.now().millisecondsSinceEpoch}',
@@ -443,8 +432,8 @@ class RealGrpcClient {
               'aux_data': auxData,
           },
           'output': {
-            'error': 'GetAccountList execution failed',
-            'message': 'Failed to execute GetAccountList: ${error.toString()}',
+            'error': 'GetInvestorList execution failed',
+            'message': 'Failed to execute GetInvestorList: ${error.toString()}',
           },
           'requestTime': _toUnixTimestamp(DateTime.now()).toString(),
           'serverType': 'execution-error',
@@ -452,7 +441,7 @@ class RealGrpcClient {
         };
       });
 
-      print('📬 Real Server GetAccountList Response: ${response['output']}');
+      print('📬 Real Server GetInvestorList Response: ${response['output']}');
       print('✅ Real account list completed');
 
       // Update connection state based on response
@@ -466,7 +455,7 @@ class RealGrpcClient {
 
       return response;
     } catch (e, stackTrace) {
-      print('❌ Critical error in GetAccountList: $e');
+      print('❌ Critical error in GetInvestorList: $e');
       print('❌ Stack trace: $stackTrace');
       
       // Test connectivity to update state
@@ -479,8 +468,8 @@ class RealGrpcClient {
           'proposed_execution_id': 'get_account_list_${DateTime.now().millisecondsSinceEpoch}',
         },
         'output': {
-          'error': 'Critical GetAccountList error',
-          'message': 'A critical error occurred during GetAccountList: ${e.toString()}',
+          'error': 'Critical GetInvestorList error',
+          'message': 'A critical error occurred during GetInvestorList: ${e.toString()}',
           'details': stackTrace.toString(),
         },
         'requestTime': _toUnixTimestamp(DateTime.now()).toString(),
@@ -490,15 +479,15 @@ class RealGrpcClient {
     }
   }
 
-  /// Real GetAccountSecurityHoldings call to AccountService.GetAccountSecurityHoldings using grpcurl
-  Future<Map<String, dynamic>> getAccountMarketPortfolio({
+  /// Real GetInvestorSecurityHoldings call to AccountService.GetInvestorSecurityHoldings using grpcurl
+  Future<Map<String, dynamic>> getInvestorSecurityHoldings({
     required String accountId,
     String? marketId,
     List<String>? securityIds,
     Duration? timeout,
   }) async {
     // Always test connectivity first to prevent crashes
-    print('🔍 Testing server connectivity before GetAccountSecurityHoldings...');
+    print('🔍 Testing server connectivity before GetInvestorSecurityHoldings...');
     final isServerReachable = await testServerConnectivity();
     
     if (!isServerReachable) {
@@ -525,15 +514,15 @@ class RealGrpcClient {
     }
 
     try {
-      print('📊 GetAccountSecurityHoldings called - attempting to get security holdings for account $accountId');
+      print('📊 GetInvestorSecurityHoldings called - attempting to get security holdings for account $accountId');
 
       // Try to call the real server with grpcurl, with comprehensive crash protection
-      final response = await GrpcurlHelper.getAccountMarketPortfolio(
-        accountId: accountId,
+      final response = await GrpcurlHelper.getInvestorSecurityHoldings(
+        investorId: accountId,
       ).timeout(
         const Duration(minutes: 5),
         onTimeout: () {
-          print('⏰ GetAccountSecurityHoldings request timed out');
+          print('⏰ GetInvestorSecurityHoldings request timed out');
           return {
             'input': {
               'proposed_execution_id': 'get_account_security_holdings_${DateTime.now().millisecondsSinceEpoch}',
@@ -549,15 +538,15 @@ class RealGrpcClient {
           };
         },
       ).catchError((error) {
-        print('❌ GetAccountSecurityHoldings error caught: $error');
+        print('❌ GetInvestorSecurityHoldings error caught: $error');
         return {
           'input': {
             'proposed_execution_id': 'get_account_security_holdings_${DateTime.now().millisecondsSinceEpoch}',
             'account_iid': accountId,
           },
           'output': {
-            'error': 'GetAccountSecurityHoldings execution failed',
-            'message': 'Failed to execute GetAccountSecurityHoldings: ${error.toString()}',
+            'error': 'GetInvestorSecurityHoldings execution failed',
+            'message': 'Failed to execute GetInvestorSecurityHoldings: ${error.toString()}',
           },
           'requestTime': _toUnixTimestamp(DateTime.now()).toString(),
           'serverType': 'execution-error',
@@ -576,7 +565,7 @@ class RealGrpcClient {
 
       return response;
     } catch (e, stackTrace) {
-      print('❌ Critical error in GetAccountSecurityHoldings: $e');
+      print('❌ Critical error in GetInvestorSecurityHoldings: $e');
       print('❌ Stack trace: $stackTrace');
 
       // Test connectivity to update state
@@ -590,8 +579,8 @@ class RealGrpcClient {
           'account_iid': accountId,
         },
         'output': {
-          'error': 'Critical GetAccountSecurityHoldings error',
-          'message': 'A critical error occurred during GetAccountSecurityHoldings: ${e.toString()}',
+          'error': 'Critical GetInvestorSecurityHoldings error',
+          'message': 'A critical error occurred during GetInvestorSecurityHoldings: ${e.toString()}',
           'details': stackTrace.toString(),
         },
         'requestTime': _toUnixTimestamp(DateTime.now()).toString(),
@@ -1046,10 +1035,10 @@ class RealGrpcClient {
     return 'Real server error: ${error.toString()}';
   }
 
-  /// Real GetAccountOrders call to PortfolioService.GetAccountOrders using grpcurl
-  Future<Map<String, dynamic>> getAccountOrders({
+  /// Real GetInvestorOrders call to PortfolioService.GetInvestorOrders using grpcurl
+  Future<Map<String, dynamic>> getInvestorOrders({
     required String accountId,
-    List<String>? marketIdOrNameRegexes,
+    List<String>? venueIids,
     Map<String, dynamic>? pagination,
     String? fromTime,
     String? toTime,
@@ -1070,10 +1059,10 @@ class RealGrpcClient {
       print('📋 Fetching orders for account: $accountId');
 
       final response = await Future.any([
-        GrpcurlHelper.getAccountOrders(
-          accountId: accountId,
+        GrpcurlHelper.getInvestorOrders(
+          investorId: accountId,
           refRequestId: generateRequestId(prefix: 'get_orders'),
-          marketIdOrNameRegexes: marketIdOrNameRegexes,
+          venueIids: venueIids,
           pagination: pagination,
           fromTime: fromTime,
           toTime: toTime,
@@ -1081,11 +1070,11 @@ class RealGrpcClient {
           statusFilters: statusFilters,
         ),
       ]).catchError((error) {
-        print('❌ GetAccountOrders execution error: $error');
+        print('❌ GetInvestorOrders execution error: $error');
         return {
           'input': {'account_iid': accountId},
           'output': {
-            'error': 'GetAccountOrders execution error',
+            'error': 'GetInvestorOrders execution error',
             'message': error.toString(),
           },
           'requestTime': _toUnixTimestamp(DateTime.now()).toString(),
@@ -1094,7 +1083,7 @@ class RealGrpcClient {
         };
       });
 
-      print('📬 Real Server GetAccountOrders Response: ${response['output']}');
+      print('📬 Real Server GetInvestorOrders Response: ${response['output']}');
       print('✅ Real get account orders completed');
 
       // Update connection state based on response
@@ -1108,7 +1097,7 @@ class RealGrpcClient {
 
       return response;
     } catch (e, stackTrace) {
-      print('❌ Critical error in GetAccountOrders: $e');
+      print('❌ Critical error in GetInvestorOrders: $e');
       print('❌ Stack trace: $stackTrace');
       
       // Test connectivity to update state
@@ -1119,8 +1108,8 @@ class RealGrpcClient {
       return {
         'input': {'account_iid': accountId},
         'output': {
-          'error': 'Critical GetAccountOrders error',
-          'message': 'A critical error occurred during GetAccountOrders: ${e.toString()}',
+          'error': 'Critical GetInvestorOrders error',
+          'message': 'A critical error occurred during GetInvestorOrders: ${e.toString()}',
           'details': stackTrace.toString(),
         },
         'requestTime': _toUnixTimestamp(DateTime.now()).toString(),
@@ -1130,15 +1119,15 @@ class RealGrpcClient {
     }
   }
 
-  /// Real GetAccountTrades call to PortfolioService.GetAccountTrades using grpcurl
-  Future<Map<String, dynamic>> getAccountTrades({
+  /// Real GetInvestorTrades call to PortfolioService.GetInvestorTrades using grpcurl
+  Future<Map<String, dynamic>> getInvestorTrades({
     required String accountId,
-    List<String>? marketIdOrNameRegexes,
+    List<String>? marketIids,
     Map<String, dynamic>? pagination,
     String? fromTime,
     String? toTime,
     String? side,
-    List<String>? securityIdOrSymbolRegexes,
+    List<String>? securityListingIids,
   }) async {
     if (!_isConnected) {
       return {
@@ -1154,22 +1143,22 @@ class RealGrpcClient {
       print('📋 Fetching trades for account: $accountId');
 
       final response = await Future.any([
-        GrpcurlHelper.getAccountTrades(
-          accountId: accountId,
+        GrpcurlHelper.getInvestorTrades(
+          investorId: accountId,
           refRequestId: generateRequestId(prefix: 'get_trades'),
-          marketIdOrNameRegexes: marketIdOrNameRegexes,
+          marketIids: marketIids,
           pagination: pagination,
           fromTime: fromTime,
           toTime: toTime,
           side: side,
-          securityIdOrSymbolRegexes: securityIdOrSymbolRegexes,
+          securityListingIids: securityListingIids,
         ),
       ]).catchError((error) {
-        print('❌ GetAccountTrades execution error: $error');
+        print('❌ GetInvestorTrades execution error: $error');
         return {
           'input': {'account_iid': accountId},
           'output': {
-            'error': 'GetAccountTrades execution error',
+            'error': 'GetInvestorTrades execution error',
             'message': error.toString(),
           },
           'requestTime': _toUnixTimestamp(DateTime.now()).toString(),
@@ -1178,7 +1167,7 @@ class RealGrpcClient {
         };
       });
 
-      print('📬 Real Server GetAccountTrades Response: ${response['output']}');
+      print('📬 Real Server GetInvestorTrades Response: ${response['output']}');
       print('✅ Real get account trades completed');
 
       // Update connection state based on response
@@ -1192,7 +1181,7 @@ class RealGrpcClient {
 
       return response;
     } catch (e, stackTrace) {
-      print('❌ Critical error in GetAccountTrades: $e');
+      print('❌ Critical error in GetInvestorTrades: $e');
       print('❌ Stack trace: $stackTrace');
       
       // Test connectivity to update state
@@ -1203,8 +1192,8 @@ class RealGrpcClient {
       return {
         'input': {'account_iid': accountId},
         'output': {
-          'error': 'Critical GetAccountTrades error',
-          'message': 'A critical error occurred during GetAccountTrades: ${e.toString()}',
+          'error': 'Critical GetInvestorTrades error',
+          'message': 'A critical error occurred during GetInvestorTrades: ${e.toString()}',
           'details': stackTrace.toString(),
         },
         'requestTime': _toUnixTimestamp(DateTime.now()).toString(),
@@ -1531,7 +1520,7 @@ class RealGrpcClient {
     try {
       print('📋 Getting venue list from real server (marketId=$marketId)...');
       final result = await GrpcurlHelper.getVenueList(
-        marketIdOrSymbolRegex: marketId,
+        marketIid: marketId,
       );
       print('🏟️ getVenueList result: success=${result['success']}, output=${result['output']}');
       return result;
@@ -1581,7 +1570,7 @@ class RealGrpcClient {
     String? fromTime,
     String? toTime,
     List<String>? transactionTypes,
-    List<String>? securityIdOrNameRegexes,
+    List<String>? assetIds,
   }) async {
     if (!_isConnected) {
       return {
@@ -1614,11 +1603,11 @@ class RealGrpcClient {
       if (transactionTypes != null && transactionTypes.isNotEmpty) {
         requestParams['transaction_types'] = transactionTypes;
       }
-      if (securityIdOrNameRegexes != null && securityIdOrNameRegexes.isNotEmpty) {
-        requestParams['asset_id_or_name_regexes'] = securityIdOrNameRegexes;
+      if (assetIds != null && assetIds.isNotEmpty) {
+        requestParams['asset_id_or_name_regexes'] = assetIds;
       }
 
-      print('📤 GetAccountTransactions Request: $requestParams');
+      print('📤 GetInvestorTransactions Request: $requestParams');
 
       final response = await GrpcurlHelper.getInvestorTransactions(
         investorId: accountId,
@@ -1627,13 +1616,13 @@ class RealGrpcClient {
         fromTime: fromTime,
         toTime: toTime,
         transactionTypes: transactionTypes,
-        securityIdOrNameRegexes: securityIdOrNameRegexes,
+        assetIds: assetIds,
       ).catchError((error) {
-        print('❌ GetAccountTransactions execution error: $error');
+        print('❌ GetInvestorTransactions execution error: $error');
         return <String, dynamic>{
           'input': {'account_iid': accountId},
           'output': {
-            'error': 'GetAccountTransactions execution error',
+            'error': 'GetInvestorTransactions execution error',
             'message': error.toString(),
           },
           'requestTime': _toUnixTimestamp(DateTime.now()).toString(),
@@ -1642,7 +1631,7 @@ class RealGrpcClient {
         };
       });
 
-      print('📬 Real Server GetAccountTransactions Response: ${response['output']}');
+      print('📬 Real Server GetInvestorTransactions Response: ${response['output']}');
 
       // Update connection state based on response
       if (response['success'] == true) {
@@ -1655,7 +1644,7 @@ class RealGrpcClient {
 
       return response;
     } catch (e, stackTrace) {
-      print('❌ Critical error in GetAccountTransactions: $e');
+      print('❌ Critical error in GetInvestorTransactions: $e');
       print('❌ Stack trace: $stackTrace');
 
       // Test connectivity to update state
@@ -1666,8 +1655,8 @@ class RealGrpcClient {
       return {
         'input': {'account_iid': accountId},
         'output': {
-          'error': 'Critical GetAccountTransactions error',
-          'message': 'A critical error occurred during GetAccountTransactions: ${e.toString()}',
+          'error': 'Critical GetInvestorTransactions error',
+          'message': 'A critical error occurred during GetInvestorTransactions: ${e.toString()}',
           'details': stackTrace.toString(),
         },
         'requestTime': _toUnixTimestamp(DateTime.now()).toString(),

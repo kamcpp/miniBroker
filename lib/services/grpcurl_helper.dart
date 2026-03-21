@@ -611,15 +611,6 @@ class GrpcurlHelper {
     }
   }
 
-  /// Legacy alias for newInvestor (backwards compatibility)
-  static Future<Map<String, dynamic>> newAccount({
-    required String externalAccountId,
-    String? auxData,
-  }) => newInvestor(
-    externalInvestorId: externalAccountId,
-    auxData: auxData,
-  );
-
   /// Get investor list using grpcurl
   /// InvestorService.GetInvestorList
   static Future<Map<String, dynamic>> getInvestorList({
@@ -652,19 +643,6 @@ class GrpcurlHelper {
     );
   }
 
-  /// Legacy alias for getInvestorList (backwards compatibility)
-  static Future<Map<String, dynamic>> getAccountList({
-    int pageNumber = 0,
-    int pageSize = 0,
-    String? accountIdRegex,
-    Map<String, String>? auxData,
-  }) => getInvestorList(
-    pageNumber: pageNumber,
-    pageSize: pageSize,
-    investorIdRegex: accountIdRegex,
-    auxData: auxData,
-  );
-
   /// Get investor cash holdings using grpcurl
   /// InvestorService.GetInvestorCashHoldings
   static Future<Map<String, dynamic>> getInvestorCashHoldings({
@@ -684,15 +662,6 @@ class GrpcurlHelper {
       },
     );
   }
-
-  /// Legacy alias for getInvestorCashHoldings (backwards compatibility)
-  static Future<Map<String, dynamic>> getAccountCashHoldings({
-    required String accountId,
-    List<String>? cashSecurityIds,
-  }) => getInvestorCashHoldings(
-    investorId: accountId,
-    currencyCodes: cashSecurityIds,
-  );
 
   /// Get investor security holdings using grpcurl
   /// InvestorService.GetInvestorSecurityHoldings
@@ -714,37 +683,29 @@ class GrpcurlHelper {
     );
   }
 
-  /// Legacy alias for getInvestorSecurityHoldings (backwards compatibility)
-  static Future<Map<String, dynamic>> getAccountMarketPortfolio({
-    required String accountId,
-    String? marketId,
-    List<String>? securityIds,
-  }) => getInvestorSecurityHoldings(
-    investorId: accountId,
-    venueId: marketId,
-  );
-
   /// Get investor orders using grpcurl
   /// InvestorService.GetInvestorOrders
   static Future<Map<String, dynamic>> getInvestorOrders({
     required String investorId,
     String refRequestId = 'flutter-get-orders',
-    List<String>? venueIdOrSymbolRegexes,
+    List<String>? venueIids,
+    List<String>? securityListingIids,
     Map<String, dynamic>? pagination,
     String? fromTime,
     String? toTime,
     String? side,
     List<bool>? statusFilters,
   }) async {
-    print('📋 Getting orders for investor: $investorId');
-
     final requestBody = <String, dynamic>{
       'proposed_execution_id': refRequestId,
       'investor_iid': investorId,
     };
 
-    if (venueIdOrSymbolRegexes != null && venueIdOrSymbolRegexes.isNotEmpty) {
-      requestBody['venue_id_or_symbol_regexes'] = venueIdOrSymbolRegexes;
+    if (venueIids != null && venueIids.isNotEmpty) {
+      requestBody['venue_iids'] = venueIids;
+    }
+    if (securityListingIids != null && securityListingIids.isNotEmpty) {
+      requestBody['security_listing_iids'] = securityListingIids;
     }
     if (pagination != null) {
       requestBody['pagination'] = pagination;
@@ -778,48 +739,28 @@ class GrpcurlHelper {
     );
   }
 
-  /// Legacy alias for getInvestorOrders (backwards compatibility)
-  static Future<Map<String, dynamic>> getAccountOrders({
-    required String accountId,
-    String refRequestId = 'flutter-get-orders',
-    List<String>? marketIdOrNameRegexes,
-    Map<String, dynamic>? pagination,
-    String? fromTime,
-    String? toTime,
-    String? side,
-    List<bool>? statusFilters,
-  }) => getInvestorOrders(
-    investorId: accountId,
-    refRequestId: refRequestId,
-    venueIdOrSymbolRegexes: marketIdOrNameRegexes,
-    pagination: pagination,
-    fromTime: fromTime,
-    toTime: toTime,
-    side: side,
-    statusFilters: statusFilters,
-  );
-
   /// Get investor trades using grpcurl
   /// InvestorService.GetInvestorTrades
   static Future<Map<String, dynamic>> getInvestorTrades({
     required String investorId,
     String refRequestId = 'flutter-get-trades',
-    List<String>? venueIdOrSymbolRegexes,
+    List<String>? marketIids,
+    List<String>? securityListingIids,
     Map<String, dynamic>? pagination,
     String? fromTime,
     String? toTime,
     String? side,
-    List<String>? securityIdOrSymbolRegexes,
   }) async {
-    print('📋 Getting trades for investor: $investorId');
-
     final requestBody = <String, dynamic>{
       'proposed_execution_id': refRequestId,
       'investor_iid': investorId,
     };
 
-    if (venueIdOrSymbolRegexes != null && venueIdOrSymbolRegexes.isNotEmpty) {
-      requestBody['venue_id_or_symbol_regexes'] = venueIdOrSymbolRegexes;
+    if (marketIids != null && marketIids.isNotEmpty) {
+      requestBody['market_iids'] = marketIids;
+    }
+    if (securityListingIids != null && securityListingIids.isNotEmpty) {
+      requestBody['security_listing_iids'] = securityListingIids;
     }
     if (pagination != null) requestBody['pagination'] = pagination;
     if (fromTime != null) {
@@ -835,9 +776,6 @@ class GrpcurlHelper {
       } catch (_) {}
     }
     if (side != null) requestBody['side'] = side;
-    if (securityIdOrSymbolRegexes != null && securityIdOrSymbolRegexes.isNotEmpty) {
-      requestBody['security_id_or_symbol_regexes'] = securityIdOrSymbolRegexes;
-    }
 
     return _executeGrpcCall(
       method: 'GetInvestorTrades',
@@ -846,26 +784,6 @@ class GrpcurlHelper {
     );
   }
 
-  /// Legacy alias for getInvestorTrades (backwards compatibility)
-  static Future<Map<String, dynamic>> getAccountTrades({
-    required String accountId,
-    String refRequestId = 'flutter-get-trades',
-    List<String>? marketIdOrNameRegexes,
-    Map<String, dynamic>? pagination,
-    String? fromTime,
-    String? toTime,
-    String? side,
-    List<String>? securityIdOrSymbolRegexes,
-  }) => getInvestorTrades(
-    investorId: accountId,
-    refRequestId: refRequestId,
-    venueIdOrSymbolRegexes: marketIdOrNameRegexes,
-    pagination: pagination,
-    fromTime: fromTime,
-    toTime: toTime,
-    side: side,
-    securityIdOrSymbolRegexes: securityIdOrSymbolRegexes,
-  );
 
   /// Get investor transactions using grpcurl
   /// InvestorService.GetInvestorTransactions
@@ -876,10 +794,8 @@ class GrpcurlHelper {
     String? fromTime,
     String? toTime,
     List<String>? transactionTypes,
-    List<String>? securityIdOrNameRegexes,
+    List<String>? assetIds,
   }) async {
-    print('📋 Getting transactions for investor: $investorId');
-
     final requestBody = <String, dynamic>{
       'proposed_execution_id': refRequestId,
       'investor_iid': investorId,
@@ -901,8 +817,8 @@ class GrpcurlHelper {
     if (transactionTypes != null && transactionTypes.isNotEmpty) {
       requestBody['transaction_types'] = transactionTypes;
     }
-    if (securityIdOrNameRegexes != null && securityIdOrNameRegexes.isNotEmpty) {
-      requestBody['asset_id_or_name_regexes'] = securityIdOrNameRegexes;
+    if (assetIds != null && assetIds.isNotEmpty) {
+      requestBody['asset_ids'] = assetIds;
     }
 
     return _executeGrpcCall(
@@ -992,11 +908,9 @@ class GrpcurlHelper {
   static Future<Map<String, dynamic>> getVenueList({
     int pageNumber = 0,
     int pageSize = 0,
-    String? venueIdOrSymbolRegex,
-    String? marketIdOrSymbolRegex,
+    String? venueIid,
+    String? marketIid,
   }) async {
-    print('📋 Getting venue list from real server...');
-
     final requestBody = <String, dynamic>{
       'proposed_execution_id': 'get_venue_list_${DateTime.now().millisecondsSinceEpoch}',
       'pagination': {
@@ -1005,12 +919,12 @@ class GrpcurlHelper {
       },
     };
 
-    if (marketIdOrSymbolRegex != null && marketIdOrSymbolRegex.isNotEmpty) {
-      requestBody['market_id_or_symbol_regex'] = marketIdOrSymbolRegex;
+    if (marketIid != null && marketIid.isNotEmpty) {
+      requestBody['market_iid'] = marketIid;
     }
 
-    if (venueIdOrSymbolRegex != null && venueIdOrSymbolRegex.isNotEmpty) {
-      requestBody['venue_id_or_symbol_regex'] = venueIdOrSymbolRegex;
+    if (venueIid != null && venueIid.isNotEmpty) {
+      requestBody['venue_iid'] = venueIid;
     }
 
     return _executeGrpcCall(
@@ -1108,17 +1022,6 @@ class GrpcurlHelper {
       },
     );
   }
-
-  /// Legacy alias: getSecurityList now calls SecurityListingService
-  static Future<Map<String, dynamic>> getSecurityList({
-    int pageNumber = 0,
-    int pageSize = 0,
-    String? securityIdOrIdentifierRegex,
-  }) => getSecurityListingList(
-    pageNumber: pageNumber,
-    pageSize: pageSize,
-    symbolRegex: securityIdOrIdentifierRegex,
-  );
 
   // ============================================================================
   // CashTokenService Methods

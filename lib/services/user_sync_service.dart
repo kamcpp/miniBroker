@@ -16,7 +16,7 @@ class UserSyncService {
   Future<List<Map<String, dynamic>>> getSynchronizedUsers() async {
     try {
       // Get server accounts
-      final serverResponse = await _grpcClient.getAccountList();
+      final serverResponse = await _grpcClient.getInvestorList();
       if (serverResponse['success'] == true &&
           serverResponse['output'] != null &&
           serverResponse['output']['accounts'] != null) {
@@ -63,7 +63,7 @@ class UserSyncService {
   Future<Map<String, dynamic>> getSyncStatus() async {
     try {
       final localUsers = await _databaseHelper.getAllUsers();
-      final serverResponse = await _grpcClient.getAccountList();
+      final serverResponse = await _grpcClient.getInvestorList();
       
       final serverAccounts = (serverResponse['success'] == true && 
                             serverResponse['output'] != null && 
