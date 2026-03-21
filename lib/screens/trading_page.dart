@@ -659,18 +659,23 @@ class _TradingPageState extends State<TradingPage> {
           _securities.clear();
           _securities.addAll(processedSecurities);
           _securityCurrencies = securityCurrenciesMap;
-          if (_selectedSymbol.isEmpty && _securities.isNotEmpty) {
+
+          // Apply pending symbol from restored state, or default to first
+          if (_pendingSymbol != null && _securities.any((s) => s['symbol'] == _pendingSymbol)) {
+            _selectedSymbol = _pendingSymbol!;
+            _pendingSymbol = null;
+          } else if (_selectedSymbol.isEmpty && _securities.isNotEmpty) {
             _selectedSymbol = _securities.first['symbol'];
-            // Load chart immediately when symbol is first set
-            WidgetsBinding.instance.addPostFrameCallback((_) {
-              _loadChartData(_selectedSymbol);
-            });
           }
           _isLoadingMarketSecurities = false;
         });
 
-        // Fetch and filter currencies for the selected security
+        // Load all data for the selected symbol
         if (_selectedSymbol.isNotEmpty) {
+          _loadChartData(_selectedSymbol);
+          _fetchOrders();
+          _resetAndFetchTradeHistory(_selectedSymbol);
+          _fetchOrderbookData(_selectedSymbol);
           await _updateCurrenciesForSecurity(_selectedSymbol);
         }
 
@@ -1050,6 +1055,7 @@ class _TradingPageState extends State<TradingPage> {
 
 
   static const _pageId = 'trading';
+  String? _pendingSymbol; // Symbol to restore after securities load
 
   void _savePageState() {
     PageStateService.instance.save(_pageId, {
@@ -1074,7 +1080,11 @@ class _TradingPageState extends State<TradingPage> {
   void _restorePageState() {
     final state = PageStateService.instance.get(_pageId);
     if (state != null) {
-      _selectedSymbol = state['selectedSymbol'] ?? '';
+      // Don't set _selectedSymbol directly — defer until securities are loaded
+      final savedSymbol = state['selectedSymbol'] ?? '';
+      if (savedSymbol.isNotEmpty) {
+        _pendingSymbol = savedSymbol;
+      }
       if (state['selectedMarket'] is Map) {
         _selectedMarket = Map<String, String>.from(state['selectedMarket']);
       }
@@ -1117,6 +1127,7 @@ class _TradingPageState extends State<TradingPage> {
   @override
   void initState() {
     super.initState();
+    // Restore non-data-dependent state now; symbol will be applied after securities load
     _restorePageState();
 
     // Check server connectivity when page opens

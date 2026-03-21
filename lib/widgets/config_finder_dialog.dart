@@ -621,6 +621,13 @@ class _ConfigFinderDialogState extends State<ConfigFinderDialog> {
                                       _selectedConfig = fileName;
                                     });
                                   },
+                                  onDoubleTap: () {
+                                    BrokerConfigHelper.touchConfigFile(
+                                      fileName,
+                                      configDir: _configDir,
+                                    );
+                                    Navigator.of(context).pop(fileName);
+                                  },
                                   child: Container(
                                     padding: UIConstants.paddingStandard,
                                     decoration: BoxDecoration(

@@ -167,9 +167,7 @@ class _PortfolioPageState extends State<PortfolioPage> {
         print('📊 Security holdings count: ${holdings.length}');
         for (final entry in holdings.entries) {
           final holdingData = entry.value as Map<String, dynamic>? ?? {};
-          final totalUnits = holdingData['totalUnits'] ?? holdingData['total_units'] ?? '0';
-          final stashUnits = holdingData['stashUnits'] ?? holdingData['stash_units'] ?? {};
-          print('📊 Security [${entry.key}]: total=$totalUnits, stashes=$stashUnits');
+          print('📊 Security holding [${entry.key}]: raw=$holdingData');
         }
       }
 
@@ -236,8 +234,10 @@ class _PortfolioPageState extends State<PortfolioPage> {
         final l = listing as Map<String, dynamic>;
         final symbol = l['symbol']?.toString() ?? '';
         final securityId = l['securityId']?.toString() ?? l['security_id']?.toString() ?? '';
+        final listingIid = l['iid']?.toString() ?? '';
         final currency = l['currency']?.toString() ?? '';
         final meta = l['metadata'] as Map<String, dynamic>? ?? {};
+        print('📊 Listing: iid=$listingIid, symbol=$symbol, securityId=$securityId, currency=$currency, meta=$meta');
 
         final entry = {'symbol': symbol, 'currency': currency};
         allEntries.add(entry);
@@ -251,6 +251,9 @@ class _PortfolioPageState extends State<PortfolioPage> {
           if (v.isNotEmpty) listingMap[v] = entry;
         }
       }
+
+      print('📊 Listing lookup keys: ${listingMap.keys.toList()}');
+      print('📊 Holding keys to resolve: $holdingKeys');
 
       // Match holding keys against the lookup
       final infoMap = <String, Map<String, String>>{};
