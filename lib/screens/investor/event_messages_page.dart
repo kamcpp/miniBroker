@@ -1,7 +1,6 @@
 import 'dart:async';
 import 'dart:convert';
 import 'package:flutter/material.dart';
-import 'package:flutter/services.dart';
 import 'package:provider/provider.dart';
 import '../../services/theme_service.dart';
 import '../../services/auth_service.dart';
@@ -10,6 +9,7 @@ import '../../services/event_subscription_service.dart';
 import '../../utils/menu_items_helper.dart';
 import '../../config/ui_constants.dart';
 import '../../widgets/base_page.dart';
+import '../../widgets/detail_modal.dart';
 
 class EventMessagesPage extends StatefulWidget {
   const EventMessagesPage({super.key});
@@ -134,85 +134,11 @@ class _EventMessagesPageState extends State<EventMessagesPage> {
       }
     }
 
-    showDialog(
-      context: context,
-      builder: (context) {
-        String? copiedKey;
-        return StatefulBuilder(
-          builder: (context, setDialogState) => AlertDialog(
-            backgroundColor: UIConstants.dialogBackground(isDark),
-            shape: UIConstants.dialogShape(isDark),
-            title: Row(
-              children: [
-                Expanded(
-                  child: Text(
-                    msg['event_type']?.toString() ?? 'Event',
-                    style: TextStyle(color: UIConstants.textPrimary(isDark), fontSize: 16),
-                  ),
-                ),
-                IconButton(
-                  icon: Icon(Icons.close, color: UIConstants.textSecondary(isDark), size: 18),
-                  onPressed: () => Navigator.pop(context),
-                ),
-              ],
-            ),
-            content: SizedBox(
-              width: 600,
-              height: 400,
-              child: SingleChildScrollView(
-                child: Column(
-                  crossAxisAlignment: CrossAxisAlignment.start,
-                  children: allFields.entries.where((e) => e.value.isNotEmpty).map((entry) {
-                    final isCopied = copiedKey == entry.key;
-                    final isMultiLine = entry.value.contains('\n');
-                    return Padding(
-                      padding: const EdgeInsets.only(bottom: 8),
-                      child: InkWell(
-                        onTap: () {
-                          Clipboard.setData(ClipboardData(text: entry.value));
-                          setDialogState(() => copiedKey = entry.key);
-                          Future.delayed(const Duration(seconds: 1), () {
-                            if (context.mounted) setDialogState(() => copiedKey = null);
-                          });
-                        },
-                        child: Row(
-                          crossAxisAlignment: CrossAxisAlignment.start,
-                          children: [
-                            SizedBox(
-                              width: 120,
-                              child: Text(
-                                entry.key,
-                                style: TextStyle(
-                                  fontSize: 11,
-                                  fontWeight: FontWeight.w600,
-                                  color: UIConstants.textSecondary(isDark),
-                                ),
-                              ),
-                            ),
-                            Expanded(
-                              child: Text(
-                                isCopied ? 'Copied!' : entry.value,
-                                style: TextStyle(
-                                  fontSize: 11,
-                                  fontFamily: isMultiLine ? 'monospace' : null,
-                                  color: isCopied
-                                      ? Colors.green
-                                      : UIConstants.textPrimary(isDark),
-                                  fontStyle: isCopied ? FontStyle.italic : null,
-                                ),
-                              ),
-                            ),
-                          ],
-                        ),
-                      ),
-                    );
-                  }).toList(),
-                ),
-              ),
-            ),
-          ),
-        );
-      },
+    DetailModal.show(
+      context,
+      title: msg['event_type']?.toString() ?? 'Event',
+      fields: allFields,
+      isDarkTheme: isDark,
     );
   }
 

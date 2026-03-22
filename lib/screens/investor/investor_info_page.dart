@@ -49,7 +49,7 @@ class _InvestorInfoPageState extends State<InvestorInfoPage> {
       }
 
       final result = await GrpcurlHelper.getInvestorInfoBatch(
-        investorIids: [investorId],
+        externalInvestorIds: [investorId],
       ).timeout(
         const Duration(minutes: 5),
         onTimeout: () => {
@@ -160,7 +160,7 @@ class _InvestorInfoPageState extends State<InvestorInfoPage> {
         child: Row(
           mainAxisSize: MainAxisSize.min,
           children: [
-            Flexible(child: Text(_error!, style: TextStyle(color: Colors.red, fontSize: UIConstants.fontSizeSm))),
+            Flexible(child: SelectableText(_error!, style: TextStyle(color: Colors.red, fontSize: UIConstants.fontSizeSm))),
             const SizedBox(width: 4),
             Icon(Icons.copy, size: 10, color: Colors.red[300]),
           ],

@@ -65,7 +65,7 @@ class AppHeader extends StatelessWidget {
               Tooltip(
                 message: 'New Instance',
                 child: IconButton(
-                  onPressed: () => Process.run('open', ['-n', '-a', Platform.resolvedExecutable]),
+                  onPressed: () => Process.start(Platform.resolvedExecutable, [], mode: ProcessStartMode.detached),
                   icon: Icon(Icons.open_in_new, color: UIConstants.textPrimary(isDarkTheme), size: 20),
                 ),
               ),

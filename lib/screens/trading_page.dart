@@ -4068,6 +4068,10 @@ class _TradingPageState extends State<TradingPage> {
       }
     }
     if (cleaned.isEmpty) return cleaned;
+    // Normalize side aliases: BID/CALL → BUY, ASK/PUT → SELL
+    final upper = cleaned.toUpperCase();
+    if (upper == 'BID' || upper == 'CALL') return 'BUY';
+    if (upper == 'ASK' || upper == 'PUT') return 'SELL';
     // Title-case: replace underscores with spaces, capitalize each word
     return cleaned.split('_').map((w) =>
       w.isEmpty ? '' : w[0].toUpperCase() + w.substring(1).toLowerCase()
@@ -4489,8 +4493,8 @@ class _TradingPageState extends State<TradingPage> {
   void _copyOrderCsv(Map<String, dynamic> order) {
     String formatSide(String side) {
       final s = side.toUpperCase();
-      if (s.contains('BUY')) return 'BUY';
-      if (s.contains('SELL')) return 'SELL';
+      if (s.contains('BUY') || s.contains('BID') || s.contains('CALL')) return 'BUY';
+      if (s.contains('SELL') || s.contains('ASK') || s.contains('PUT')) return 'SELL';
       return side;
     }
     final side = formatSide(order['side'] ?? '');
@@ -4544,8 +4548,8 @@ class _TradingPageState extends State<TradingPage> {
     // Helper function to format side
     String formatSide(String side) {
       final s = side.toUpperCase();
-      if (s.contains('BUY')) return 'BUY';
-      if (s.contains('SELL')) return 'SELL';
+      if (s.contains('BUY') || s.contains('BID') || s.contains('CALL')) return 'BUY';
+      if (s.contains('SELL') || s.contains('ASK') || s.contains('PUT')) return 'SELL';
       return side;
     }
 
@@ -4631,8 +4635,8 @@ class _TradingPageState extends State<TradingPage> {
   StyledRow _buildOrderDataRow(Map<String, dynamic> order, int index, bool isDarkTheme) {
     String formatSide(String side) {
       final s = side.toUpperCase();
-      if (s.contains('BUY')) return 'BUY';
-      if (s.contains('SELL')) return 'SELL';
+      if (s.contains('BUY') || s.contains('BID') || s.contains('CALL')) return 'BUY';
+      if (s.contains('SELL') || s.contains('ASK') || s.contains('PUT')) return 'SELL';
       return side;
     }
 
@@ -4818,8 +4822,8 @@ class _TradingPageState extends State<TradingPage> {
     // Helper function to format side
     String formatSide(String side) {
       final s = side.toUpperCase();
-      if (s.contains('BUY')) return 'BUY';
-      if (s.contains('SELL')) return 'SELL';
+      if (s.contains('BUY') || s.contains('BID') || s.contains('CALL')) return 'BUY';
+      if (s.contains('SELL') || s.contains('ASK') || s.contains('PUT')) return 'SELL';
       return side;
     }
 
@@ -4889,8 +4893,8 @@ class _TradingPageState extends State<TradingPage> {
   StyledRow _buildOrderHistoryDataRow(Map<String, dynamic> order, int index, bool isDarkTheme) {
     String formatSide(String side) {
       final s = side.toUpperCase();
-      if (s.contains('BUY')) return 'BUY';
-      if (s.contains('SELL')) return 'SELL';
+      if (s.contains('BUY') || s.contains('BID') || s.contains('CALL')) return 'BUY';
+      if (s.contains('SELL') || s.contains('ASK') || s.contains('PUT')) return 'SELL';
       return side;
     }
 

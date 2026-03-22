@@ -656,7 +656,7 @@ class GrpcurlHelper {
       endpoint: 'InvestorService/GetInvestorCashHoldings',
       requestBody: {
         'proposed_execution_id': 'get_investor_cash_holdings_${DateTime.now().millisecondsSinceEpoch}',
-        'investor_iid': investorId,
+        'external_investor_id': investorId,
         if (currencyCodes != null && currencyCodes.isNotEmpty)
           'currency_codes': currencyCodes,
       },
@@ -676,7 +676,7 @@ class GrpcurlHelper {
       endpoint: 'InvestorService/GetInvestorSecurityHoldings',
       requestBody: {
         'proposed_execution_id': 'get_investor_security_holdings_${DateTime.now().millisecondsSinceEpoch}',
-        'investor_iid': investorId,
+        'external_investor_id': investorId,
         if (venueId != null && venueId.isNotEmpty)
           'venue_iid': venueId,
       },
@@ -698,7 +698,7 @@ class GrpcurlHelper {
   }) async {
     final requestBody = <String, dynamic>{
       'proposed_execution_id': refRequestId,
-      'investor_iid': investorId,
+      'external_investor_id': investorId,
     };
 
     if (venueIids != null && venueIids.isNotEmpty) {
@@ -753,7 +753,7 @@ class GrpcurlHelper {
   }) async {
     final requestBody = <String, dynamic>{
       'proposed_execution_id': refRequestId,
-      'investor_iid': investorId,
+      'external_investor_id': investorId,
     };
 
     if (marketIids != null && marketIids.isNotEmpty) {
@@ -798,7 +798,7 @@ class GrpcurlHelper {
   }) async {
     final requestBody = <String, dynamic>{
       'proposed_execution_id': refRequestId,
-      'investor_iid': investorId,
+      'external_investor_id': investorId,
     };
 
     if (pagination != null) requestBody['pagination'] = pagination;
@@ -843,7 +843,7 @@ class GrpcurlHelper {
       endpoint: 'InvestorService/DepositCash',
       requestBody: {
         'proposed_execution_id': 'deposit_cash_${DateTime.now().millisecondsSinceEpoch}',
-        'investor_iid': investorId,
+        'external_investor_id': investorId,
         'currency_code': currencyCode,
         'amount': amount,
         'aux_data': auxData ?? {
@@ -869,7 +869,7 @@ class GrpcurlHelper {
       endpoint: 'InvestorService/WithdrawCash',
       requestBody: {
         'proposed_execution_id': 'withdraw_cash_${DateTime.now().millisecondsSinceEpoch}',
-        'investor_iid': investorId,
+        'external_investor_id': investorId,
         'currency_code': currencyCode,
         'amount': amount,
         'aux_data': auxData ?? {
@@ -976,8 +976,8 @@ class GrpcurlHelper {
     int pageNumber = 0,
     int pageSize = 0,
     String? symbolRegex,
-    String? securityIdRegex,
-    String? securityExchangeRegex,
+    String? securityListingIid,
+    List<String>? venueIids,
   }) async {
     // print('📋 Getting security listing list from real server...');
 
@@ -992,11 +992,11 @@ class GrpcurlHelper {
     if (symbolRegex != null && symbolRegex.isNotEmpty) {
       requestBody['symbol_regex'] = symbolRegex;
     }
-    if (securityIdRegex != null && securityIdRegex.isNotEmpty) {
-      requestBody['security_id_regex'] = securityIdRegex;
+    if (securityListingIid != null && securityListingIid.isNotEmpty) {
+      requestBody['security_listing_iid'] = securityListingIid;
     }
-    if (securityExchangeRegex != null && securityExchangeRegex.isNotEmpty) {
-      requestBody['security_exchange_regex'] = securityExchangeRegex;
+    if (venueIids != null && venueIids.isNotEmpty) {
+      requestBody['venue_iids'] = venueIids;
     }
 
     return _executeGrpcCall(
@@ -1009,16 +1009,16 @@ class GrpcurlHelper {
   /// Get security listing info batch using grpcurl
   /// SecurityListingService.GetSecurityListingInfoBatch
   static Future<Map<String, dynamic>> getSecurityListingInfoBatch({
-    required List<String> symbolAndSecurityIdRegexes,
+    required List<String> securityListingIids,
   }) async {
-    print('📋 Getting security listing info for: $symbolAndSecurityIdRegexes');
+    print('📋 Getting security listing info for: $securityListingIids');
 
     return _executeGrpcCall(
       method: 'GetSecurityListingInfoBatch',
       endpoint: 'SecurityListingService/GetSecurityListingInfoBatch',
       requestBody: {
         'proposed_execution_id': 'get_security_listing_info_batch_${DateTime.now().millisecondsSinceEpoch}',
-        'symbol_and_security_id_regexes': symbolAndSecurityIdRegexes,
+        'security_listing_iids': securityListingIids,
       },
     );
   }
@@ -1236,7 +1236,7 @@ class GrpcurlHelper {
   /// Create an order asynchronously
   /// TradingService.CreateOrderAsync
   static Future<Map<String, dynamic>> createOrderAsync({
-    required String accountIid,
+    required String externalInvestorId,
     required String feePayerAccountIid,
     required String securityListingIid,
     required String orderType,
@@ -1267,7 +1267,7 @@ class GrpcurlHelper {
 
     final requestBody = <String, dynamic>{
       'proposed_execution_id': 'create_order_${DateTime.now().millisecondsSinceEpoch}',
-      'account_iid': accountIid,
+      'external_investor_id': externalInvestorId,
       'fee_payer_account_iid': feePayerAccountIid,
       'security_listing_iid': securityListingIid,
       'order_type': orderType,
@@ -1443,7 +1443,7 @@ class GrpcurlHelper {
           'page_nr': pageNumber,
           'page_size': pageSize,
         },
-        'security_listing_iid_and_identifier_regexes': [securityId],
+        'security_listing_iids': [securityId],
       },
     );
   }
@@ -1455,16 +1455,16 @@ class GrpcurlHelper {
   /// Get investor info batch using grpcurl
   /// InvestorService.GetInvestorInfoBatch
   static Future<Map<String, dynamic>> getInvestorInfoBatch({
-    required List<String> investorIids,
+    required List<String> externalInvestorIds,
   }) async {
-    print('📋 Getting investor info for: $investorIids');
+    print('📋 Getting investor info for: $externalInvestorIds');
 
     return _executeGrpcCall(
       method: 'GetInvestorInfoBatch',
       endpoint: 'InvestorService/GetInvestorInfoBatch',
       requestBody: {
         'proposed_execution_id': 'get_investor_info_batch_${DateTime.now().millisecondsSinceEpoch}',
-        'investor_iids': investorIids,
+        'external_investor_ids': externalInvestorIds,
       },
     );
   }

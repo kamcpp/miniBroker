@@ -6,6 +6,7 @@ import '../config/ui_constants.dart';
 import '../utils/connectivity_checker.dart';
 import '../utils/menu_items_helper.dart';
 import '../widgets/base_page.dart';
+import '../widgets/detail_modal.dart';
 import '../widgets/styled_data_table.dart';
 
 class SecuritiesPage extends StatefulWidget {
@@ -216,6 +217,14 @@ class _SecuritiesPageState extends State<SecuritiesPage> {
                                     color: UIConstants.textPrimary(isDarkTheme),
                                   ),
                                 ),
+                                const Spacer(),
+                                IconButton(
+                                  icon: Icon(Icons.refresh, color: UIConstants.textSecondary(isDarkTheme), size: 20),
+                                  onPressed: _isLoadingSecurities ? null : () => _fetchSecurities(),
+                                  tooltip: 'Refresh',
+                                  padding: EdgeInsets.zero,
+                                  constraints: const BoxConstraints(),
+                                ),
                               ],
                             ),
                           ),
@@ -401,46 +410,79 @@ class _SecuritiesPageState extends State<SecuritiesPage> {
 
     final columns = [
       const StyledColumn(label: 'Symbol', flex: 1),
-      const StyledColumn(label: 'Security ID', flex: 1),
       const StyledColumn(label: 'Type', flex: 1),
-      const StyledColumn(label: 'Exchange', flex: 1),
       const StyledColumn(label: 'Currency', flex: 1),
       const StyledColumn(label: 'Tick', flex: 1),
-      const StyledColumn(label: 'Description', flex: 2),
+      const StyledColumn(label: 'Venue', flex: 1),
       const StyledColumn(label: 'Status', flex: 1),
     ];
 
     final rows = listings.map((item) {
       final listing = item as Map<String, dynamic>;
       final symbol = listing['symbol'] ?? '';
-      final securityId = listing['securityId'] ?? '';
       final securityType = listing['securityType'] ?? '';
       final cfiCode = listing['cfiCode'] ?? '';
-      final exchange = listing['securityExchange'] ?? '';
       final currency = listing['currency'] ?? '';
       final minPriceIncrement = listing['minPriceIncrement'] ?? '';
-      final description = listing['securityDesc'] ?? '';
+      final venueSymbol = listing['venueSymbol'] ?? '';
       final rawStatus = listing['securityStatus'] ?? '';
 
       final typeDisplay = cfiCode.toString().isNotEmpty ? '$securityType / $cfiCode' : securityType;
       final statusLabel = _formatSecurityStatus(rawStatus.toString());
 
-      return StyledRow(cells: [
-        Text(symbol.toString(), style: symbolStyle, overflow: TextOverflow.ellipsis),
-        Text(securityId.toString(), style: cellStyle, overflow: TextOverflow.ellipsis),
-        Text(typeDisplay.toString(), style: cellStyle, overflow: TextOverflow.ellipsis),
-        Text(exchange.toString(), style: cellStyle, overflow: TextOverflow.ellipsis),
-        Text(currency.toString(), style: cellStyle),
-        Text(minPriceIncrement.toString(), style: cellStyle),
-        Text(description.toString(), style: cellStyle, overflow: TextOverflow.ellipsis),
-        _statusBadge(statusLabel),
-      ]);
+      return StyledRow(
+        onTap: () => _showSecurityDetailModal(listing),
+        cells: [
+          Text(symbol.toString(), style: symbolStyle, overflow: TextOverflow.ellipsis),
+          Text(typeDisplay.toString(), style: cellStyle, overflow: TextOverflow.ellipsis),
+          Text(currency.toString(), style: cellStyle),
+          Text(minPriceIncrement.toString(), style: cellStyle),
+          Text(venueSymbol.toString(), style: cellStyle, overflow: TextOverflow.ellipsis),
+          _statusBadge(statusLabel),
+        ],
+      );
     }).toList();
 
     return StyledDataTable(
       isDarkTheme: isDarkTheme,
       columns: columns,
       rows: rows,
+    );
+  }
+
+  void _showSecurityDetailModal(Map<String, dynamic> listing) {
+    final themeService = Provider.of<ThemeService>(context, listen: false);
+    final isDarkTheme = themeService.isDarkTheme;
+    final symbol = (listing['symbol'] ?? '').toString();
+
+    DetailModal.show(
+      context,
+      title: '$symbol — Security Details',
+      isDarkTheme: isDarkTheme,
+      fields: {
+        'Symbol': symbol,
+        'Security ID': (listing['securityId'] ?? '').toString(),
+        'Security ID Source': (listing['securityIdSource'] ?? '').toString(),
+        'Security Type': (listing['securityType'] ?? '').toString(),
+        'CFI Code': (listing['cfiCode'] ?? '').toString(),
+        'Security Exchange': (listing['securityExchange'] ?? '').toString(),
+        'Security Description': (listing['securityDesc'] ?? '').toString(),
+        'Security Status': _formatSecurityStatus((listing['securityStatus'] ?? '').toString()),
+        'Currency': (listing['currency'] ?? '').toString(),
+        'Min Price Increment': (listing['minPriceIncrement'] ?? '').toString(),
+        'Price Type': (listing['priceType'] ?? '').toString(),
+        'Trade Date': (listing['tradeDate'] ?? '').toString(),
+        'No Tick Rules': (listing['noTickRules'] ?? '').toString(),
+        'Start Tick Price Range': (listing['startTickPriceRange'] ?? '').toString(),
+        'End Tick Price Range': (listing['endTickPriceRange'] ?? '').toString(),
+        'Tick Increment': (listing['tickIncrement'] ?? '').toString(),
+        'No Security Alt ID': (listing['noSecurityAltId'] ?? '').toString(),
+        'Security Alt ID': (listing['securityAltId'] ?? '').toString(),
+        'Security Alt ID Source': (listing['securityAltIdSource'] ?? '').toString(),
+        'Security Listing IID': (listing['securityListingIid'] ?? '').toString(),
+        'Venue IID': (listing['venueIid'] ?? '').toString(),
+        'Venue Symbol': (listing['venueSymbol'] ?? '').toString(),
+      },
     );
   }
 

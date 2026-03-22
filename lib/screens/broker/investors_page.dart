@@ -992,7 +992,7 @@ class _InvestorInfoDialogState extends State<_InvestorInfoDialog> {
 
     try {
       final result = await GrpcurlHelper.getInvestorInfoBatch(
-        investorIids: [widget.investorId],
+        externalInvestorIds: [widget.investorId],
       ).timeout(
         const Duration(minutes: 2),
         onTimeout: () => {

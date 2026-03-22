@@ -1360,7 +1360,7 @@ class RealGrpcClient {
 
     try {
       final result = await GrpcurlHelper.createOrderAsync(
-        accountIid: accountId,
+        externalInvestorId: accountId,
         feePayerAccountIid: feePayerAccountId,
         securityListingIid: securityId,
         orderType: orderType,

@@ -39,8 +39,10 @@ message SecurityListing {
   string security_alt_id = 18;                                                   // FIX Tag 455
   string security_alt_id_source = 19;                                            // FIX Tag 456
 
-  // Agora-specific: the IID of the SecurityListing in listingmgr
-  string security_listing_iid = 20;
+  // Agora-specific
+  string security_listing_iid = 20;                                              // IID of the SecurityListing in listingmgr
+  string venue_iid = 21;                                                         // Venue internal identifier
+  string venue_symbol = 22;                                                      // Venue symbol/name
 
   map<string, string> metadata = 105;                                            // From FIX Tag 58 (Text field, JSON)
 }

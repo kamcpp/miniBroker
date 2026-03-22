@@ -379,7 +379,7 @@ class _BrokerInfoPageState extends State<BrokerInfoPage> {
         child: Row(
           mainAxisSize: MainAxisSize.min,
           children: [
-            Flexible(child: Text(_errorInfo!, style: TextStyle(color: Colors.red, fontSize: UIConstants.fontSizeSm))),
+            Flexible(child: SelectableText(_errorInfo!, style: TextStyle(color: Colors.red, fontSize: UIConstants.fontSizeSm))),
             const SizedBox(width: 4),
             Icon(Icons.copy, size: 10, color: Colors.red[300]),
           ],
@@ -596,7 +596,7 @@ class _BrokerInfoPageState extends State<BrokerInfoPage> {
         child: Row(
           mainAxisSize: MainAxisSize.min,
           children: [
-            Flexible(child: Text(_errorHoldings!, style: TextStyle(color: Colors.red, fontSize: UIConstants.fontSizeSm))),
+            Flexible(child: SelectableText(_errorHoldings!, style: TextStyle(color: Colors.red, fontSize: UIConstants.fontSizeSm))),
             const SizedBox(width: 4),
             Icon(Icons.copy, size: 10, color: Colors.red[300]),
           ],

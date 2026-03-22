@@ -234,7 +234,7 @@ class _ExecutionReportsPageState extends State<ExecutionReportsPage> {
                   ? const Center(child: CircularProgressIndicator())
                   : _errorMessage != null
                       ? Center(
-                          child: Text(
+                          child: SelectableText(
                             _errorMessage!,
                             style: TextStyle(
                               color: Colors.red,

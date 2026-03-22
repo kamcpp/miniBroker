@@ -93,7 +93,7 @@ class _BrokerLoginPageState extends State<BrokerLoginPage> {
                   UIConstants.brokerNameChip(AppConfig.selectedBrokerName!),
                 const SizedBox(width: 8),
                 IconButton(
-                  onPressed: () => Process.run('open', ['-n', '-a', Platform.resolvedExecutable]),
+                  onPressed: () => Process.start(Platform.resolvedExecutable, [], mode: ProcessStartMode.detached),
                   icon: const Icon(Icons.open_in_new, color: Colors.white, size: 28),
                   tooltip: 'New Instance',
                   style: UIConstants.preLoginIconButtonStyle(),

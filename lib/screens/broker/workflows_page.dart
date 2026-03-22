@@ -567,16 +567,10 @@ class _WorkflowsPageState extends State<WorkflowsPage> {
         children: [
           Icon(Icons.error_outline, size: 48, color: Colors.red),
           SizedBox(height: UIConstants.spacingMd),
-          Tooltip(
-            message: 'Click to copy',
-            child: InkWell(
-              onTap: () => _copyToClipboard(_errorMessage!),
-              child: Text(
-                _errorMessage!,
-                style: TextStyle(color: Colors.red, fontSize: UIConstants.fontSizeSm),
-                textAlign: TextAlign.center,
-              ),
-            ),
+          SelectableText(
+            _errorMessage!,
+            style: TextStyle(color: Colors.red, fontSize: UIConstants.fontSizeSm),
+            textAlign: TextAlign.center,
           ),
           SizedBox(height: UIConstants.spacingMd),
           SizedBox(

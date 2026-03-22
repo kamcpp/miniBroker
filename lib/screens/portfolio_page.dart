@@ -630,33 +630,36 @@ class _PortfolioPageState extends State<PortfolioPage> {
 
   Widget _buildErrorState(bool isDarkTheme, String error) {
     return Center(
-      child: Column(
-        mainAxisAlignment: MainAxisAlignment.center,
-        children: [
-          Icon(
-            Icons.error_outline,
-            size: 48,
-            color: Colors.red[400],
-          ),
-          const SizedBox(height: 12),
-          Text(
-            'Failed to load data',
-            style: TextStyle(
-              fontSize: UIConstants.fontSizeBody,
-              fontWeight: UIConstants.fontWeightMedium,
-              color: UIConstants.textPrimary(isDarkTheme),
-            ),
-          ),
-          const SizedBox(height: 4),
-          Text(
-            error,
-            textAlign: TextAlign.center,
-            style: TextStyle(
-              fontSize: UIConstants.fontSizeSm,
+      child: Padding(
+        padding: const EdgeInsets.symmetric(horizontal: 24),
+        child: Column(
+          mainAxisAlignment: MainAxisAlignment.center,
+          children: [
+            Icon(
+              Icons.error_outline,
+              size: 48,
               color: Colors.red[400],
             ),
-          ),
-        ],
+            const SizedBox(height: 12),
+            Text(
+              'Failed to load data',
+              style: TextStyle(
+                fontSize: UIConstants.fontSizeBody,
+                fontWeight: UIConstants.fontWeightMedium,
+                color: UIConstants.textPrimary(isDarkTheme),
+              ),
+            ),
+            const SizedBox(height: 4),
+            SelectableText(
+              error,
+              textAlign: TextAlign.center,
+              style: TextStyle(
+                fontSize: UIConstants.fontSizeSm,
+                color: Colors.red[400],
+              ),
+            ),
+          ],
+        ),
       ),
     );
   }
