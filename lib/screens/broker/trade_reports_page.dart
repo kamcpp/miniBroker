@@ -925,8 +925,10 @@ class _TradeReportsPageState extends State<TradeReportsPage> {
   }
 
   Widget _sideCell(String side, bool isDarkTheme) {
-    final isBuy = side == '1' || side.toUpperCase() == 'BUY';
-    final displaySide = side == '1' ? 'BUY' : side == '2' ? 'SELL' : side;
+    final s = side.toUpperCase();
+    final isBuy = s == '1' || s.contains('BUY') || s.contains('BID') || s.contains('CALL');
+    final isSell = s == '2' || s.contains('SELL') || s.contains('ASK') || s.contains('PUT');
+    final displaySide = isBuy ? 'BUY' : isSell ? 'SELL' : side;
     return Tooltip(
       message: displaySide,
       waitDuration: const Duration(milliseconds: 300),

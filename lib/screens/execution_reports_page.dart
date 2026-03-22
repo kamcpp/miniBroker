@@ -540,7 +540,7 @@ class _ExecutionReportsPageState extends State<ExecutionReportsPage> {
             children: [
               _orderField('Request ID', order['requestId'] ?? order['request_id'] ?? '-', labelColor, textColor),
               _orderField('Symbol', order['symbol'] ?? '-', labelColor, textColor),
-              _orderField('Side', order['side'] ?? '-', labelColor, textColor),
+              _orderField('Side', _normalizeSide(order['side'] ?? '-'), labelColor, textColor),
               _orderField('Type', order['orderType'] ?? order['order_type'] ?? '-', labelColor, textColor),
               _orderField('Qty', order['quantity'] ?? '-', labelColor, textColor),
               _orderField('Price', order['price'] ?? '-', labelColor, textColor),
@@ -600,7 +600,7 @@ class _ExecutionReportsPageState extends State<ExecutionReportsPage> {
         rows: _executionReports.map((report) {
           final execType = report['execType'] ?? report['exec_type'] ?? '';
           final ordStatus = report['ordStatus'] ?? report['ord_status'] ?? '';
-          final side = report['side'] ?? '';
+          final side = _normalizeSide(report['side'] ?? '');
 
           return DataRow(cells: [
             DataCell(Text(report['execId'] ?? report['exec_id'] ?? '-', style: cellStyle)),
@@ -610,7 +610,7 @@ class _ExecutionReportsPageState extends State<ExecutionReportsPage> {
             DataCell(Text(
               side,
               style: cellStyle.copyWith(
-                color: side.toUpperCase() == 'BUY' ? UIConstants.colorAccept : Colors.red,
+                color: side == 'BUY' ? UIConstants.colorAccept : Colors.red,
                 fontWeight: FontWeight.w600,
               ),
             )),
@@ -635,6 +635,13 @@ class _ExecutionReportsPageState extends State<ExecutionReportsPage> {
         }).toList(),
       ),
     );
+  }
+
+  String _normalizeSide(String side) {
+    final s = side.toUpperCase();
+    if (s.contains('BUY') || s.contains('BID') || s.contains('CALL') || s == '1') return 'BUY';
+    if (s.contains('SELL') || s.contains('ASK') || s.contains('PUT') || s == '2') return 'SELL';
+    return side;
   }
 
   Widget _execTypeBadge(String execType, bool isDarkTheme) {
