@@ -373,7 +373,7 @@ class _AppInitializerState extends State<AppInitializer> with SingleTickerProvid
       final participantConfig = config['participant'] as Map<String, dynamic>?;
       final apiKey = participantConfig?['apiKey'] as String?;
 
-      // Update AppConfig so GrpcurlHelper and other components use the correct host/port
+      // Update AppConfig so GrpcHelper and other components use the correct host/port
       AppConfig.grpcHost = host;
       AppConfig.grpcPort = port;
       AppConfig.grpcUseSecure = useSecure;

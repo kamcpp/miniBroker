@@ -1,6 +1,6 @@
 import 'dart:convert';
 import 'dart:io';
-import 'grpcurl_helper.dart';
+import 'grpc_helper.dart';
 import '../config/app_config.dart';
 
 /// Real gRPC client that uses native Dart gRPC to communicate with the simprtagent server
@@ -19,7 +19,7 @@ class RealGrpcClient {
   String get currentHost => _host;
   int get currentPort => _port;
 
-  /// Connect to the actual gRPC server using grpcurl
+  /// Connect to the actual gRPC server via native gRPC
   Future<void> connect({
     required String host,
     required int port,
@@ -52,28 +52,28 @@ class RealGrpcClient {
     }
   }
 
-  /// Test connection using grpcurl to verify server is actually working (async, non-blocking)
+  /// Test connection via native gRPC to verify server is actually working (async, non-blocking)
   void _testConnectionAsync() {
     // Run this in background without blocking the connection
     Future.delayed(Duration.zero, () async {
       try {
         print('🔄 Testing connection to real gRPC server...');
         
-        // Test if grpcurl can connect to the server with very short timeout
-        final isServerReachable = await GrpcurlHelper.testConnection().timeout(
+        // Test if gRPC server is reachable with very short timeout
+        final isServerReachable = await GrpcHelper.testConnection().timeout(
           const Duration(seconds: 1),
           onTimeout: () {
-            print('⏰ grpcurl test timed out after 1 second');
+            print('⏰ gRPC test timed out after 1 second');
             return false;
           },
         );
         
         if (isServerReachable) {
-          print('✅ Real gRPC server is reachable via grpcurl');
+          print('✅ Real gRPC server is reachable');
           
           // List available services to confirm (with timeout)
           try {
-            final services = await GrpcurlHelper.listServices().timeout(
+            final services = await GrpcHelper.listServices().timeout(
               const Duration(seconds: 1),
               onTimeout: () {
                 print('⏰ Service listing timed out');
@@ -85,7 +85,7 @@ class RealGrpcClient {
             print('⚠️ Could not list services: $e');
           }
         } else {
-          print('⚠️ Real gRPC server is not reachable via grpcurl (but connection established)');
+          print('⚠️ Real gRPC server is not reachable (but connection established)');
         }
         
         print('✅ Real gRPC client background test completed');
@@ -109,7 +109,7 @@ class RealGrpcClient {
     }
   }
 
-  /// Real Ping call to AgentService.Ping using grpcurl
+  /// Real Ping call to AgentService.Ping via native gRPC
   Future<Map<String, dynamic>> ping({
     String stringToBePonged = 'Hello from Flutter!',
     Duration? timeout,
@@ -144,8 +144,8 @@ class RealGrpcClient {
     try {
       print('🏓 Ping button clicked - attempting real server connection');
       
-      // Try to call the real server with grpcurl, with comprehensive crash protection
-      final response = await GrpcurlHelper.ping(
+      // Try to call the real server via native gRPC, with comprehensive crash protection
+      final response = await GrpcHelper.ping(
         stringToBePonged: stringToBePonged,
       ).timeout(
         const Duration(minutes: 5),
@@ -221,7 +221,7 @@ class RealGrpcClient {
     }
   }
 
-  /// Real NewInvestor call to InvestorService.NewInvestor using grpcurl
+  /// Real NewInvestor call to InvestorService.NewInvestor via native gRPC
   Future<Map<String, dynamic>> newInvestor({
     required String externalInvestorId,
     String? auxData,
@@ -265,8 +265,8 @@ class RealGrpcClient {
         'aux_data': auxData ?? 'Created from Flutter signup',
       };
 
-      // Try to call the real server with grpcurl, with comprehensive crash protection
-      final response = await GrpcurlHelper.newInvestor(
+      // Try to call the real server via native gRPC, with comprehensive crash protection
+      final response = await GrpcHelper.newInvestor(
         externalInvestorId: externalInvestorId,
         auxData: auxData,
       ).timeout(
@@ -338,7 +338,7 @@ class RealGrpcClient {
     }
   }
 
-  /// Real GetInvestorList call to InvestorService.GetInvestorList using grpcurl
+  /// Real GetInvestorList call to InvestorService.GetInvestorList via native gRPC
   Future<Map<String, dynamic>> getInvestorList({
     int pageNumber = 0,
     int pageSize = 0,
@@ -384,8 +384,8 @@ class RealGrpcClient {
     try {
       print('🔄 GetInvestorList button clicked - attempting real server connection');
       
-      // Try to call the real server with grpcurl, with comprehensive crash protection
-      final response = await GrpcurlHelper.getInvestorList(
+      // Try to call the real server via native gRPC, with comprehensive crash protection
+      final response = await GrpcHelper.getInvestorList(
         pageNumber: pageNumber,
         pageSize: pageSize,
         investorIdRegex: accountIdRegex,
@@ -479,7 +479,7 @@ class RealGrpcClient {
     }
   }
 
-  /// Real GetInvestorSecurityHoldings call to AccountService.GetInvestorSecurityHoldings using grpcurl
+  /// Real GetInvestorSecurityHoldings call to AccountService.GetInvestorSecurityHoldings via native gRPC
   Future<Map<String, dynamic>> getInvestorSecurityHoldings({
     required String accountId,
     String? marketId,
@@ -516,8 +516,8 @@ class RealGrpcClient {
     try {
       print('📊 GetInvestorSecurityHoldings called - attempting to get security holdings for account $accountId');
 
-      // Try to call the real server with grpcurl, with comprehensive crash protection
-      final response = await GrpcurlHelper.getInvestorSecurityHoldings(
+      // Try to call the real server via native gRPC, with comprehensive crash protection
+      final response = await GrpcHelper.getInvestorSecurityHoldings(
         investorId: accountId,
       ).timeout(
         const Duration(minutes: 5),
@@ -590,7 +590,7 @@ class RealGrpcClient {
     }
   }
 
-  /// Real GetInvestorCashHoldings call to InvestorService.GetInvestorCashHoldings using grpcurl
+  /// Real GetInvestorCashHoldings call to InvestorService.GetInvestorCashHoldings via native gRPC
   Future<Map<String, dynamic>> getInvestorCashHoldings({
     required String investorId,
     List<String>? currencyCodes,
@@ -627,8 +627,8 @@ class RealGrpcClient {
     try {
       print('💰 GetInvestorCashHoldings called - attempting to get cash holdings for investor $investorId');
 
-      // Try to call the real server with grpcurl, with comprehensive crash protection
-      final response = await GrpcurlHelper.getInvestorCashHoldings(
+      // Try to call the real server via native gRPC, with comprehensive crash protection
+      final response = await GrpcHelper.getInvestorCashHoldings(
         investorId: investorId,
         currencyCodes: currencyCodes,
       ).timeout(
@@ -745,8 +745,8 @@ class RealGrpcClient {
     try {
       print('💰 DepositCash called - attempting to deposit $amount $currencyCode to investor $investorId');
 
-      // Try to call the real server with grpcurl, with comprehensive crash protection
-      final response = await GrpcurlHelper.depositCash(
+      // Try to call the real server via native gRPC, with comprehensive crash protection
+      final response = await GrpcHelper.depositCash(
         investorId: investorId,
         currencyCode: currencyCode,
         amount: amount,
@@ -868,8 +868,8 @@ class RealGrpcClient {
     try {
       print('💰 WithdrawCash called - attempting to withdraw $amount $currencyCode from investor $investorId');
 
-      // Try to call the real server with grpcurl, with comprehensive crash protection
-      final response = await GrpcurlHelper.withdrawCash(
+      // Try to call the real server via native gRPC, with comprehensive crash protection
+      final response = await GrpcHelper.withdrawCash(
         investorId: investorId,
         currencyCode: currencyCode,
         amount: amount,
@@ -1035,7 +1035,7 @@ class RealGrpcClient {
     return 'Real server error: ${error.toString()}';
   }
 
-  /// Real GetInvestorOrders call to PortfolioService.GetInvestorOrders using grpcurl
+  /// Real GetInvestorOrders call to PortfolioService.GetInvestorOrders via native gRPC
   Future<Map<String, dynamic>> getInvestorOrders({
     required String accountId,
     List<String>? venueIids,
@@ -1059,7 +1059,7 @@ class RealGrpcClient {
       print('📋 Fetching orders for account: $accountId');
 
       final response = await Future.any([
-        GrpcurlHelper.getInvestorOrders(
+        GrpcHelper.getInvestorOrders(
           investorId: accountId,
           refRequestId: generateRequestId(prefix: 'get_orders'),
           venueIids: venueIids,
@@ -1119,7 +1119,7 @@ class RealGrpcClient {
     }
   }
 
-  /// Real GetInvestorTrades call to PortfolioService.GetInvestorTrades using grpcurl
+  /// Real GetInvestorTrades call to PortfolioService.GetInvestorTrades via native gRPC
   Future<Map<String, dynamic>> getInvestorTrades({
     required String accountId,
     List<String>? marketIids,
@@ -1143,7 +1143,7 @@ class RealGrpcClient {
       print('📋 Fetching trades for account: $accountId');
 
       final response = await Future.any([
-        GrpcurlHelper.getInvestorTrades(
+        GrpcHelper.getInvestorTrades(
           investorId: accountId,
           refRequestId: generateRequestId(prefix: 'get_trades'),
           marketIids: marketIids,
@@ -1203,7 +1203,7 @@ class RealGrpcClient {
     }
   }
 
-  /// Real GetMarketList call to MarketService.GetMarketList using grpcurl
+  /// Real GetMarketList call to MarketService.GetMarketList via native gRPC
   Future<Map<String, dynamic>> getMarketList({Duration? timeout}) async {
     if (!_isConnected) {
       return {
@@ -1217,7 +1217,7 @@ class RealGrpcClient {
 
     try {
       print('📋 Getting market list from real server...');
-      return await GrpcurlHelper.getMarketList();
+      return await GrpcHelper.getMarketList();
     } catch (e) {
       print('❌ Critical error in getMarketList: $e');
       return {
@@ -1251,7 +1251,7 @@ class RealGrpcClient {
       print('📋 Getting security listings from real server (market: $marketId)...');
 
       // Fetch all security listings — the SecurityListingListRequest has no market filter field
-      return await GrpcurlHelper.getSecurityListingList(
+      return await GrpcHelper.getSecurityListingList(
         pageNumber: pageNumber,
         pageSize: pageSize,
       );
@@ -1274,7 +1274,7 @@ class RealGrpcClient {
   }) async {
     // AgentService only supports Ping - getSupportedCurrencies not available
     print('⚠️ getSupportedCurrencies not available - using CashTokenService instead');
-    return GrpcurlHelper.getCashTokenList(
+    return GrpcHelper.getCashTokenList(
       pageNumber: pageNumber,
       pageSize: pageSize,
     );
@@ -1289,7 +1289,7 @@ class RealGrpcClient {
     // AgentService only supports Ping - getMarketSupportedCurrencies not available
     // Using CashTokenService.GetCashTokenList as fallback
     print('⚠️ getMarketSupportedCurrencies not available - using CashTokenService instead');
-    return GrpcurlHelper.getCashTokenList(
+    return GrpcHelper.getCashTokenList(
       pageNumber: pageNumber,
       pageSize: pageSize,
     );
@@ -1359,7 +1359,7 @@ class RealGrpcClient {
     }
 
     try {
-      final result = await GrpcurlHelper.createOrderAsync(
+      final result = await GrpcHelper.createOrderAsync(
         externalInvestorId: accountId,
         feePayerAccountIid: feePayerAccountId,
         securityListingIid: securityId,
@@ -1417,7 +1417,7 @@ class RealGrpcClient {
     }
 
     try {
-      final result = await GrpcurlHelper.getOrderExecutionReports(
+      final result = await GrpcHelper.getOrderExecutionReports(
         requestId: requestId,
         pageNumber: pageNumber,
         pageSize: pageSize,
@@ -1471,7 +1471,7 @@ class RealGrpcClient {
     }
 
     try {
-      final result = await GrpcurlHelper.getExecutionReports(
+      final result = await GrpcHelper.getExecutionReports(
         pageNumber: pageNumber,
         pageSize: pageSize,
         requestId: requestId,
@@ -1500,7 +1500,7 @@ class RealGrpcClient {
     }
   }
 
-  /// Real GetVenueList call to VenueService.GetVenueList using grpcurl
+  /// Real GetVenueList call to VenueService.GetVenueList via native gRPC
   Future<Map<String, dynamic>> getVenueList({
     String? marketId,
     Duration? timeout,
@@ -1519,7 +1519,7 @@ class RealGrpcClient {
 
     try {
       print('📋 Getting venue list from real server (marketId=$marketId)...');
-      final result = await GrpcurlHelper.getVenueList(
+      final result = await GrpcHelper.getVenueList(
         marketIid: marketId,
       );
       print('🏟️ getVenueList result: success=${result['success']}, output=${result['output']}');
@@ -1544,7 +1544,7 @@ class RealGrpcClient {
     try {
       print('📋 Getting security listing list...');
 
-      return await GrpcurlHelper.getSecurityListingList(
+      return await GrpcHelper.getSecurityListingList(
         pageNumber: pageNumber,
         pageSize: pageSize,
       );
@@ -1609,7 +1609,7 @@ class RealGrpcClient {
 
       print('📤 GetInvestorTransactions Request: $requestParams');
 
-      final response = await GrpcurlHelper.getInvestorTransactions(
+      final response = await GrpcHelper.getInvestorTransactions(
         investorId: accountId,
         refRequestId: refRequestId,
         pagination: pagination,

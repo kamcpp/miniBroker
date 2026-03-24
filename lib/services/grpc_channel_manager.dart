@@ -12,7 +12,7 @@ import '../generated/prtagent/v1/cash_token.pbgrpc.dart';
 import '../generated/prtagent/v1/venue.pbgrpc.dart';
 
 /// Singleton that manages a shared gRPC channel and provides service clients.
-/// Eliminates the need for the external grpcurl binary.
+/// Eliminates the need for any external gRPC binary.
 class GrpcChannelManager {
   GrpcChannelManager._();
   static final GrpcChannelManager instance = GrpcChannelManager._();

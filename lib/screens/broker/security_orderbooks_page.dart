@@ -5,7 +5,7 @@ import 'package:provider/provider.dart';
 import '../../config/ui_constants.dart';
 import '../../services/theme_service.dart';
 import '../../services/real_grpc_client.dart';
-import '../../services/grpcurl_helper.dart';
+import '../../services/grpc_helper.dart';
 import '../../utils/menu_items_helper.dart';
 import '../../widgets/base_page.dart';
 import '../../widgets/styled_data_table.dart';
@@ -416,7 +416,7 @@ class _SecurityOrderbooksPageState extends State<SecurityOrderbooksPage> {
     setState(() => _isLoadingSellOrders = true);
 
     try {
-      final result = await GrpcurlHelper.getOrderbook(
+      final result = await GrpcHelper.getOrderbook(
         securityIid: securityIid,
         side: 'ORDER_SIDE_ENUM_SELL',
         pageNumber: pageNumber,
@@ -478,7 +478,7 @@ class _SecurityOrderbooksPageState extends State<SecurityOrderbooksPage> {
     setState(() => _isLoadingBuyOrders = true);
 
     try {
-      final result = await GrpcurlHelper.getOrderbook(
+      final result = await GrpcHelper.getOrderbook(
         securityIid: securityIid,
         side: 'ORDER_SIDE_ENUM_BUY',
         pageNumber: pageNumber,
@@ -584,7 +584,7 @@ class _SecurityOrderbooksPageState extends State<SecurityOrderbooksPage> {
     setState(() => _isLoadingTradeHistory = true);
 
     try {
-      final result = await GrpcurlHelper.getSecurityTrades(
+      final result = await GrpcHelper.getSecurityTrades(
         securityId: securityIid,
         pageNumber: pageNumber,
         pageSize: _tradeHistoryPageSize,

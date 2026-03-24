@@ -4,7 +4,7 @@ import 'package:flutter/services.dart';
 import 'package:provider/provider.dart';
 import '../../services/theme_service.dart';
 import '../../services/auth_service.dart';
-import '../../services/grpcurl_helper.dart';
+import '../../services/grpc_helper.dart';
 import '../../utils/menu_items_helper.dart';
 import '../../config/ui_constants.dart';
 import '../../widgets/base_page.dart';
@@ -48,7 +48,7 @@ class _InvestorInfoPageState extends State<InvestorInfoPage> {
         return;
       }
 
-      final result = await GrpcurlHelper.getInvestorInfoBatch(
+      final result = await GrpcHelper.getInvestorInfoBatch(
         externalInvestorIds: [investorId],
       ).timeout(
         const Duration(minutes: 5),

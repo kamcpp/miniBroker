@@ -3,7 +3,7 @@ import 'package:flutter/services.dart';
 import 'package:provider/provider.dart';
 import '../services/auth_service.dart';
 import '../services/theme_service.dart';
-import '../services/grpcurl_helper.dart';
+import '../services/grpc_helper.dart';
 import '../services/real_grpc_client.dart';
 import '../utils/connectivity_checker.dart';
 import '../utils/menu_items_helper.dart';
@@ -144,7 +144,7 @@ class _PortfolioPageState extends State<PortfolioPage> {
     });
 
     try {
-      final response = await GrpcurlHelper.getInvestorSecurityHoldings(
+      final response = await GrpcHelper.getInvestorSecurityHoldings(
         investorId: _investorId!,
       ).timeout(
         const Duration(minutes: 5),
@@ -208,7 +208,7 @@ class _PortfolioPageState extends State<PortfolioPage> {
   Future<void> _resolveSecuritySymbols(List<String> holdingKeys) async {
     try {
       // Fetch ALL security listings and build a comprehensive lookup
-      final result = await GrpcurlHelper.getSecurityListingList(
+      final result = await GrpcHelper.getSecurityListingList(
         pageSize: 0, // get all
       ).timeout(
         const Duration(minutes: 2),
@@ -294,7 +294,7 @@ class _PortfolioPageState extends State<PortfolioPage> {
     });
 
     try {
-      final response = await GrpcurlHelper.getInvestorCashHoldings(
+      final response = await GrpcHelper.getInvestorCashHoldings(
         investorId: _investorId!,
       ).timeout(
         const Duration(minutes: 5),
@@ -1061,7 +1061,7 @@ class _PortfolioPageState extends State<PortfolioPage> {
                       // Convert decimal amount to raw integer units for the server
                       final rawAmount = _toRawUnits(amount, divisibility);
 
-                      final response = await GrpcurlHelper.depositCash(
+                      final response = await GrpcHelper.depositCash(
                         investorId: _investorId!,
                         currencyCode: currencyCode,
                         amount: rawAmount,
@@ -1235,7 +1235,7 @@ class _PortfolioPageState extends State<PortfolioPage> {
                       // Convert decimal amount to raw integer units for the server
                       final rawAmount = _toRawUnits(amount, divisibility);
 
-                      final response = await GrpcurlHelper.withdrawCash(
+                      final response = await GrpcHelper.withdrawCash(
                         investorId: _investorId!,
                         currencyCode: currencyCode,
                         amount: rawAmount,

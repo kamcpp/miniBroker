@@ -2,7 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:provider/provider.dart';
 import '../../services/theme_service.dart';
-import '../../services/grpcurl_helper.dart';
+import '../../services/grpc_helper.dart';
 import '../../utils/menu_items_helper.dart';
 import '../../config/ui_constants.dart';
 import '../../widgets/base_page.dart';
@@ -45,7 +45,7 @@ class _BrokerInfoPageState extends State<BrokerInfoPage> {
     });
 
     try {
-      final result = await GrpcurlHelper.getParticipantInfo().timeout(
+      final result = await GrpcHelper.getParticipantInfo().timeout(
         const Duration(minutes: 5),
         onTimeout: () => {
           'success': false,
@@ -82,7 +82,7 @@ class _BrokerInfoPageState extends State<BrokerInfoPage> {
     });
 
     try {
-      final result = await GrpcurlHelper.getParticipantHoldings().timeout(
+      final result = await GrpcHelper.getParticipantHoldings().timeout(
         const Duration(minutes: 5),
         onTimeout: () => {
           'success': false,
@@ -128,7 +128,7 @@ class _BrokerInfoPageState extends State<BrokerInfoPage> {
 
     // 1. Fetch ALL cash tokens and build a lookup
     try {
-      final result = await GrpcurlHelper.getCashTokenList().timeout(
+      final result = await GrpcHelper.getCashTokenList().timeout(
         const Duration(minutes: 2),
         onTimeout: () => {'success': false, 'output': {'error': 'Cash token list timed out'}},
       );
@@ -160,7 +160,7 @@ class _BrokerInfoPageState extends State<BrokerInfoPage> {
     if (unresolvedIds.isNotEmpty) {
       print('🔍 Unresolved holdings after cash tokens: $unresolvedIds');
       try {
-        final result = await GrpcurlHelper.getSecurityListingList(
+        final result = await GrpcHelper.getSecurityListingList(
           pageSize: 0, // get all
         ).timeout(
           const Duration(minutes: 2),

@@ -11,7 +11,7 @@ import 'package:candlesticks/candlesticks.dart';
 import '../services/auth_service.dart';
 import '../services/theme_service.dart';
 import '../services/real_grpc_client.dart';
-import '../services/grpcurl_helper.dart';
+import '../services/grpc_helper.dart';
 import '../services/chart_service.dart';
 import '../utils/connectivity_checker.dart';
 import '../utils/menu_items_helper.dart';
@@ -66,7 +66,7 @@ class _TradingPageState extends State<TradingPage> {
 
     try {
       // Call GetSecurityTrades gRPC function
-      final result = await GrpcurlHelper.getSecurityTrades(
+      final result = await GrpcHelper.getSecurityTrades(
         securityId: securityIid,
         pageNumber: pageNumber,
         pageSize: _tradeHistoryPageSize,
@@ -1419,7 +1419,7 @@ class _TradingPageState extends State<TradingPage> {
       );
       final selectedIid = selectedSec['iid']?.toString() ?? '';
 
-      final result = await GrpcurlHelper.getInvestorOrders(
+      final result = await GrpcHelper.getInvestorOrders(
         investorId: _cachedAccountId!,
         refRequestId: 'flutter-trading-page-${DateTime.now().millisecondsSinceEpoch}',
         securityListingIids: selectedIid.isNotEmpty ? [selectedIid] : null,
@@ -1588,7 +1588,7 @@ class _TradingPageState extends State<TradingPage> {
         cancelAuxData['session_iid'] = sessionIid;
       }
 
-      final result = await GrpcurlHelper.cancelOrderAsync(
+      final result = await GrpcHelper.cancelOrderAsync(
         externalOrderId: participantOrderId,
         reason: 'User requested cancellation',
         refRequestId: 'flutter-cancel-${DateTime.now().millisecondsSinceEpoch}',
@@ -1791,7 +1791,7 @@ class _TradingPageState extends State<TradingPage> {
 
       final newOrderId = '${participantOrderId}_repl_${DateTime.now().millisecondsSinceEpoch}';
 
-      final replaceResult = await GrpcurlHelper.replaceOrderAsync(
+      final replaceResult = await GrpcHelper.replaceOrderAsync(
         oldParticipantOrderId: participantOrderId,
         newParticipantOrderId: newOrderId,
         newQuantity: newQuantity,
@@ -2076,8 +2076,8 @@ class _TradingPageState extends State<TradingPage> {
         return;
       }
 
-      // Call gRPC GetHistoricalOhlcData using grpcurl
-      final result = await GrpcurlHelper.getHistoricalOhlcData(
+      // Call gRPC GetHistoricalOhlcData
+      final result = await GrpcHelper.getHistoricalOhlcData(
         securityListingIid: securityListingIid,
         period: _selectedTimePeriod,
         pageSize: 500,
@@ -2216,7 +2216,7 @@ class _TradingPageState extends State<TradingPage> {
 
     // print('📡 Starting live OHLC stream for $symbol, period: $period');
 
-    // Subscribe to live OHLC updates using grpcurl
+    // Subscribe to live OHLC updates
     _liveOhlcSubscription = _subscribeToLiveOhlcData(symbol, period);
   }
 
@@ -2324,7 +2324,7 @@ class _TradingPageState extends State<TradingPage> {
 
     try {
       // Call GetOrderbook gRPC function
-      final result = await GrpcurlHelper.getOrderbook(
+      final result = await GrpcHelper.getOrderbook(
         securityIid: securityIid,
         side: 'ORDER_SIDE_ENUM_SELL',
         pageNumber: pageNumber,
@@ -2464,7 +2464,7 @@ class _TradingPageState extends State<TradingPage> {
 
     try {
       // Call GetOrderbook gRPC function
-      final result = await GrpcurlHelper.getOrderbook(
+      final result = await GrpcHelper.getOrderbook(
         securityIid: securityIid,
         side: 'ORDER_SIDE_ENUM_BUY',
         pageNumber: pageNumber,
@@ -4313,7 +4313,7 @@ class _TradingPageState extends State<TradingPage> {
                     onPressed: isRefreshing ? null : () async {
                       setDialogState(() { isRefreshing = true; });
                       try {
-                        final result = await GrpcurlHelper.getInvestorOrders(
+                        final result = await GrpcHelper.getInvestorOrders(
                           investorId: _cachedAccountId!,
                           refRequestId: 'flutter-order-detail-${DateTime.now().millisecondsSinceEpoch}',
                           pagination: {'page_size': 100},

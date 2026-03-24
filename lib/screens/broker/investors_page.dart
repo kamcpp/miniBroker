@@ -10,7 +10,7 @@ import 'package:pdf/widgets.dart' as pw;
 import 'package:provider/provider.dart';
 import '../../services/theme_service.dart';
 import '../../services/database_helper.dart';
-import '../../services/grpcurl_helper.dart';
+import '../../services/grpc_helper.dart';
 import '../../services/user_sync_service.dart';
 import '../../utils/menu_items_helper.dart';
 import '../../config/ui_constants.dart';
@@ -991,7 +991,7 @@ class _InvestorInfoDialogState extends State<_InvestorInfoDialog> {
     });
 
     try {
-      final result = await GrpcurlHelper.getInvestorInfoBatch(
+      final result = await GrpcHelper.getInvestorInfoBatch(
         externalInvestorIds: [widget.investorId],
       ).timeout(
         const Duration(minutes: 2),

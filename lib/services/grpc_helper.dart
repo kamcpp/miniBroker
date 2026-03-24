@@ -18,9 +18,8 @@ import '../generated/common.pb.dart' as common_pb;
 import '../generated/fin/trading.pbenum.dart' as fin_enum;
 
 /// Helper class to make gRPC calls using native Dart gRPC clients.
-/// Drop-in replacement for the old grpcurl-based implementation.
 /// All method signatures and return shapes are preserved.
-class GrpcurlHelper {
+class GrpcHelper {
 
   static int _toUnixTimestamp(DateTime dateTime) {
     return dateTime.millisecondsSinceEpoch ~/ 1000;
@@ -88,7 +87,7 @@ class GrpcurlHelper {
   /// Convert a protobuf message to a JSON-compatible Map.
   /// Uses proto3 JSON representation (camelCase field name keys).
   /// NOTE: writeToJson()/writeToJsonMap() use numeric tag keys — we need
-  /// toProto3Json() which produces camelCase keys matching grpcurl output.
+  /// toProto3Json() which produces camelCase keys (proto3 JSON format).
   static Map<String, dynamic> _protoToJsonMap(GeneratedMessage message) {
     try {
       final proto3 = message.toProto3Json();
