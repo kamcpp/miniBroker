@@ -250,7 +250,7 @@ class _OrdersPageState extends State<OrdersPage> {
         : o.side == fin_enum.OrderSideEnum.ORDER_SIDE_ENUM_SELL
             ? 'SELL'
             : o.side.name;
-    String statusStr = o.status;
+    String statusStr = _cleanStatusEnum(o.status);
     if (statusStr.isEmpty) {
       if (o.isFilled) {
         statusStr = 'FILLED';
@@ -902,6 +902,28 @@ class _OrdersPageState extends State<OrdersPage> {
     );
   }
 
+  /// Strip common proto enum prefixes and convert to human-readable form.
+  /// e.g. "ORDER_REQUEST_STATUS_ENUM_PARTIALLY_FILLED" → "PARTIALLY FILLED"
+  ///      "ORDER_SIDE_ENUM_BUY" → "BUY"
+  static String _cleanStatusEnum(String raw) {
+    if (raw.isEmpty) return raw;
+    // Strip known prefixes
+    const prefixes = [
+      'ORDER_REQUEST_STATUS_ENUM_',
+      'ORDER_STATUS_ENUM_',
+      'ORDER_SIDE_ENUM_',
+    ];
+    String cleaned = raw;
+    for (final prefix in prefixes) {
+      if (cleaned.startsWith(prefix)) {
+        cleaned = cleaned.substring(prefix.length);
+        break;
+      }
+    }
+    // Replace underscores with spaces for display
+    return cleaned.replaceAll('_', ' ');
+  }
+
   String _str(Map<String, dynamic> map, String key1, [String? key2]) {
     final val = map[key1] ?? (key2 != null ? map[key2] : null);
     if (val == null) return '-';
@@ -1019,28 +1041,20 @@ class _OrdersPageState extends State<OrdersPage> {
   Widget _statusBadge(String status, bool isDarkTheme) {
     final s = status.toUpperCase();
     Color color;
-    switch (s) {
-      case 'ACTIVE':
-      case 'PENDING':
-      case 'VALIDATED':
-      case 'SUBMITTED':
-        color = Colors.blue;
-        break;
-      case 'FILLED':
-        color = UIConstants.colorAccept;
-        break;
-      case 'CANCELLED':
-      case 'CANCELED':
-        color = Colors.deepOrange.shade400;
-        break;
-      case 'EXPIRED':
-        color = Colors.amber.shade700;
-        break;
-      case 'REJECTED':
-        color = Colors.red;
-        break;
-      default:
-        color = UIConstants.textSecondary(isDarkTheme);
+    if (s.contains('PARTIALLY') || s == 'PARTIAL FILL') {
+      color = Colors.orange;
+    } else if (s == 'FILLED' || s == 'FILL') {
+      color = UIConstants.colorAccept;
+    } else if (s.contains('CANCEL')) {
+      color = Colors.deepOrange.shade400;
+    } else if (s.contains('FAIL') || s.contains('REJECT')) {
+      color = Colors.red;
+    } else if (s.contains('EXPIR')) {
+      color = Colors.amber.shade700;
+    } else if (s == 'ACTIVE' || s.contains('PENDING') || s.contains('VALIDAT') || s.contains('SUBMIT') || s == 'NEW') {
+      color = Colors.blue;
+    } else {
+      color = UIConstants.textSecondary(isDarkTheme);
     }
 
     return Tooltip(

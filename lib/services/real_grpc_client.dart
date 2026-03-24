@@ -3,7 +3,7 @@ import 'dart:io';
 import 'grpcurl_helper.dart';
 import '../config/app_config.dart';
 
-/// Real gRPC client that uses grpcurl to communicate with the actual simprtagent server
+/// Real gRPC client that uses native Dart gRPC to communicate with the simprtagent server
 class RealGrpcClient {
 
   /// Convert DateTime to Unix timestamp (seconds since epoch)

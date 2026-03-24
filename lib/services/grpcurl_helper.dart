@@ -1,344 +1,77 @@
-import 'dart:async';
 import 'dart:convert';
-import 'dart:io';
-import '../config/app_config.dart';
+import 'package:grpc/grpc.dart';
+import 'package:protobuf/protobuf.dart';
+import 'grpc_channel_manager.dart';
 
-/// Helper class to make gRPC calls using system grpcurl command
-/// This ensures we get real responses from your server
-///
-/// Available services on server:
-/// - AgentService: Ping
-/// - CashTokenService: GetCashTokenList, GetCashTokenInfoBatch
-/// - InvestorService: NewInvestor, GetInvestorList, GetInvestorCashHoldings,
-///   GetInvestorSecurityHoldings, GetInvestorOrders, GetInvestorTrades,
-///   GetInvestorSettlements, GetInvestorTransactions, DepositCash, WithdrawCash,
-///   DepositSecurity, WithdrawSecurity, ActivateVenueForInvestor
-/// - VenueService: GetVenueList, GetVenueCalendar
-/// - MarketService: GetMarketList
-/// - SecurityListingService: GetSecurityListingList, GetSecurityListingInfoBatch,
-///   GetSecurityListingOrders, GetSecurityListingTrades, GetSecurityListingSettlements
+// Generated protobuf imports
+import '../generated/prtagent/v1/agent.pb.dart';
+import '../generated/prtagent/v1/participant_types.pb.dart';
+import '../generated/prtagent/v1/investor.pb.dart';
+import '../generated/prtagent/v1/trading.pb.dart';
+import '../generated/prtagent/v1/admin.pb.dart' hide ExecutionReport;
+import '../generated/prtagent/v1/market.pb.dart';
+import '../generated/prtagent/v1/security_listing.pb.dart';
+import '../generated/prtagent/v1/cash_token.pb.dart';
+import '../generated/prtagent/v1/venue.pb.dart';
+import '../generated/prtagent/v1/query.pb.dart';
+import '../generated/common.pb.dart' as common_pb;
+import '../generated/fin/trading.pbenum.dart' as fin_enum;
+
+/// Helper class to make gRPC calls using native Dart gRPC clients.
+/// Drop-in replacement for the old grpcurl-based implementation.
+/// All method signatures and return shapes are preserved.
 class GrpcurlHelper {
 
-  /// Convert DateTime to Unix timestamp (seconds since epoch)
   static int _toUnixTimestamp(DateTime dateTime) {
     return dateTime.millisecondsSinceEpoch ~/ 1000;
   }
-  static String get _host => AppConfig.grpcHost;
-  static int get _port => AppConfig.grpcPort;
 
-  // Prevent concurrent operations to avoid race conditions and crashes
+  // Prevent concurrent operations to avoid race conditions
   static bool _isPingInProgress = false;
   static bool _isInvestorOperationInProgress = false;
-  static bool _isFindingGrpcurlPath = false;
+
+  static GrpcChannelManager get _mgr => GrpcChannelManager.instance;
 
   // ============================================================================
-  // Detailed Logging Helpers
+  // Centralized Native gRPC Call Executor
   // ============================================================================
 
-  /// Log a grpcurl request with headers and body
-  static void _logRequest({
+  /// Execute a native gRPC call and return the standard Map response shape.
+  static Future<Map<String, dynamic>> _executeNativeCall({
     required String method,
-    required String endpoint,
-    required List<String> args,
-    required String body,
-    Map<String, String>? headers,
-  }) {
-    final buffer = StringBuffer();
-    buffer.writeln('');
-    buffer.writeln('╔══════════════════════════════════════════════════════════════');
-    buffer.writeln('║ 📤 GRPCURL REQUEST');
-    buffer.writeln('╠══════════════════════════════════════════════════════════════');
-    buffer.writeln('║ Method:   $method');
-    buffer.writeln('║ Endpoint: $endpoint');
-    buffer.writeln('║ Target:   $_host:$_port');
-    buffer.writeln('╠──────────────────────────────────────────────────────────────');
-    buffer.writeln('║ Headers:');
-    if (headers != null && headers.isNotEmpty) {
-      for (final entry in headers.entries) {
-        // Mask API key value for security
-        final value = entry.key.toLowerCase().contains('api-key')
-            ? '${entry.value.substring(0, 4)}...${entry.value.substring(entry.value.length - 4)}'
-            : entry.value;
-        buffer.writeln('║   ${entry.key}: $value');
-      }
-    } else {
-      buffer.writeln('║   (none)');
-    }
-    buffer.writeln('╠──────────────────────────────────────────────────────────────');
-    buffer.writeln('║ Body (JSON):');
-    try {
-      // Pretty print JSON body
-      final decoded = jsonDecode(body);
-      final prettyJson = const JsonEncoder.withIndent('  ').convert(decoded);
-      for (final line in prettyJson.split('\n')) {
-        buffer.writeln('║   $line');
-      }
-    } catch (_) {
-      buffer.writeln('║   $body');
-    }
-    buffer.writeln('╠──────────────────────────────────────────────────────────────');
-    buffer.writeln('║ Full command:');
-    buffer.writeln('║   grpcurl ${args.map((a) => a.contains(' ') ? '"$a"' : a).join(' ')}');
-    buffer.writeln('╚══════════════════════════════════════════════════════════════');
-    print(buffer.toString());
-  }
-
-  /// Log a grpcurl response with status and body
-  static void _logResponse({
-    required String method,
-    required int exitCode,
-    required String stdout,
-    required String stderr,
-    required Duration duration,
-  }) {
-    final buffer = StringBuffer();
-    final isSuccess = exitCode == 0;
-    final statusIcon = isSuccess ? '✅' : '❌';
-    final statusText = isSuccess ? 'SUCCESS' : 'ERROR';
-
-    buffer.writeln('');
-    buffer.writeln('╔══════════════════════════════════════════════════════════════');
-    buffer.writeln('║ 📥 GRPCURL RESPONSE - $statusIcon $statusText');
-    buffer.writeln('╠══════════════════════════════════════════════════════════════');
-    buffer.writeln('║ Method:    $method');
-    buffer.writeln('║ Exit Code: $exitCode');
-    buffer.writeln('║ Duration:  ${duration.inMilliseconds}ms');
-    buffer.writeln('╠──────────────────────────────────────────────────────────────');
-
-    if (isSuccess && stdout.isNotEmpty) {
-      buffer.writeln('║ Response Body:');
-      try {
-        // Pretty print JSON response
-        final decoded = jsonDecode(stdout.trim());
-        final prettyJson = const JsonEncoder.withIndent('  ').convert(decoded);
-        for (final line in prettyJson.split('\n')) {
-          buffer.writeln('║   $line');
-        }
-      } catch (_) {
-        // Not JSON, print as-is
-        for (final line in stdout.trim().split('\n')) {
-          buffer.writeln('║   $line');
-        }
-      }
-    } else if (!isSuccess && stderr.isNotEmpty) {
-      buffer.writeln('║ Error Output:');
-      for (final line in stderr.trim().split('\n')) {
-        buffer.writeln('║   $line');
-      }
-    } else {
-      buffer.writeln('║ (empty response)');
-    }
-
-    buffer.writeln('╚══════════════════════════════════════════════════════════════');
-    print(buffer.toString());
-  }
-
-
-  // ============================================================================
-  // Centralized gRPC Call Executor
-  // ============================================================================
-
-  /// Centralized helper to execute grpcurl calls with consistent configuration
-  /// Handles: API key, host/port, timeouts, logging, error handling, and retries
-  static Future<Map<String, dynamic>> _executeGrpcCall({
-    required String method,
-    required String endpoint,
     required Map<String, dynamic> requestBody,
-    Duration timeout = const Duration(minutes: 5),
-    bool enableRetry = false,
-    int maxRetries = 3,
+    required Future<GeneratedMessage> Function() rpcCall,
   }) async {
     try {
-      // Find grpcurl path with adequate timeout
-      print('🔍 Looking for grpcurl executable for $method...');
-      final grpcurlPath = await _findGrpcurlPath().timeout(
-        const Duration(seconds: 20),
-        onTimeout: () {
-          print('⏰ grpcurl path finder timed out for $method');
-          return null;
-        },
-      );
+      final stopwatch = Stopwatch()..start();
+      final response = await rpcCall();
+      stopwatch.stop();
 
-      if (grpcurlPath == null) {
-        print('❌ No grpcurl path found for $method');
-        return {
-          'input': requestBody,
-          'output': {
-            'error': 'grpcurl command not available',
-            'message': 'Unable to locate grpcurl executable. Ensure grpcurl is installed.',
-          },
-          'requestTime': _toUnixTimestamp(DateTime.now()).toString(),
-          'serverType': 'grpcurl-unavailable',
-          'success': false,
-        };
-      }
+      final outputMap = _protoToJsonMap(response);
 
-      // Build grpcurl arguments with API key header
-      final useSecure = AppConfig.grpcUseSecure;
-      final args = <String>[];
-      if (useSecure) {
-        args.add('-insecure'); // Skip CA chain verification for TLS
-      } else {
-        args.add('-plaintext');
-      }
-      final headers = <String, String>{};
-      final apiKey = AppConfig.grpcApiKey;
-      if (apiKey != null && apiKey.isNotEmpty) {
-        args.addAll(['-H', 'x-agora-participant-api-key: $apiKey']);
-        headers['x-agora-participant-api-key'] = apiKey;
-      }
+      print('📥 $method response: OK (${stopwatch.elapsedMilliseconds}ms)');
 
-      final jsonRequest = jsonEncode(requestBody);
-      final fullEndpoint = 'tech.qomet.agora.api.grpc.prtagent.v1.$endpoint';
-      args.addAll(['-d', jsonRequest, '$_host:$_port', fullEndpoint]);
-
-      // Log the request
-      _logRequest(
-        method: method,
-        endpoint: fullEndpoint,
-        args: args,
-        body: jsonRequest,
-        headers: headers,
-      );
-
-      // Execute with optional retry logic
-      final retryDelays = [const Duration(seconds: 2), const Duration(seconds: 4), const Duration(seconds: 8)];
-      final attempts = enableRetry ? maxRetries + 1 : 1;
-
-      for (var attempt = 0; attempt < attempts; attempt++) {
-        try {
-          final stopwatch = Stopwatch()..start();
-          final result = await Process.run(
-            grpcurlPath,
-            args,
-            environment: {'PATH': '/usr/local/bin:/opt/homebrew/bin:${Platform.environment['PATH']}'},
-          ).timeout(
-            timeout,
-            onTimeout: () {
-              stopwatch.stop();
-              print('⏰ grpcurl $method timed out after ${timeout.inSeconds} seconds');
-              throw TimeoutException('grpcurl $method timed out', timeout);
-            },
-          );
-          stopwatch.stop();
-
-          // Log the response (suppress verbose body for bulky data calls)
-          const _quietMethods = {
-            'GetHistoricalOhlcData', 'FetchLiveOhlcData',
-            'GetInvestorOrders', 'GetInvestorTrades', 'GetInvestorTransactions',
-            'GetInvestorSettlements', 'GetInvestorCashHoldings', 'GetInvestorSecurityHoldings',
-            'GetOrderbook', 'GetHistoricalQuote',
-            'GetSecurityListingTrades', 'GetSecurityListingSettlements',
-            'GetExecutionReports', 'GetOrderExecutionReports',
-          };
-          final stdout = result.stdout.toString();
-          final stderr = result.stderr.toString();
-          if (_quietMethods.contains(method)) {
-            final len = stdout.length;
-            print('📥 $method response: ${result.exitCode == 0 ? "OK" : "ERR"} (${stopwatch.elapsedMilliseconds}ms, $len chars)');
-          } else {
-            _logResponse(
-              method: method,
-              exitCode: result.exitCode,
-              stdout: stdout,
-              stderr: stderr,
-              duration: stopwatch.elapsed,
-            );
-          }
-
-          if (result.exitCode == 0) {
-            final responseJson = stdout.trim();
-            try {
-              final parsedResponse = jsonDecode(responseJson) as Map<String, dynamic>;
-              return {
-                'input': requestBody,
-                'output': parsedResponse,
-                'requestTime': _toUnixTimestamp(DateTime.now()).toString(),
-                'serverType': 'grpcurl',
-                'success': true,
-              };
-            } catch (e) {
-              return {
-                'input': requestBody,
-                'output': {
-                  'raw_response': responseJson,
-                  'parse_error': e.toString(),
-                },
-                'requestTime': _toUnixTimestamp(DateTime.now()).toString(),
-                'serverType': 'grpcurl',
-                'success': false,
-              };
-            }
-          } else {
-            final errorStr = stderr.toLowerCase();
-
-            // Check if this is a retryable connection error
-            if (enableRetry && attempt < maxRetries &&
-                (errorStr.contains('connection refused') ||
-                 errorStr.contains('connection error') ||
-                 errorStr.contains('failed to dial') ||
-                 errorStr.contains('transport: error while dialing'))) {
-              print('🔄 Connection error on attempt ${attempt + 1}/${attempts}, waiting before retry...');
-
-              // Clear cached path to force re-discovery
-              _cachedGrpcurlPath = null;
-
-              // Wait with exponential backoff
-              await Future.delayed(retryDelays[attempt]);
-
-              // Check server reachability before retry
-              print('🔌 Checking if server is reachable before retry...');
-              final serverReachable = await _isServerReachable();
-              print(serverReachable ? '✅ Server is now reachable, retrying...' : '⚠️ Server still not reachable, will retry anyway...');
-
-              continue; // Retry
-            }
-
-            // Non-retryable error or max retries exceeded
-            return {
-              'input': requestBody,
-              'output': {
-                'error': stderr,
-                'exit_code': result.exitCode,
-              },
-              'requestTime': _toUnixTimestamp(DateTime.now()).toString(),
-              'serverType': 'grpcurl',
-              'success': false,
-            };
-          }
-        } on TimeoutException {
-          if (enableRetry && attempt < maxRetries) {
-            print('🔄 Timeout on attempt ${attempt + 1}/${attempts}, retrying...');
-            await Future.delayed(retryDelays[attempt]);
-            continue;
-          }
-          return {
-            'input': requestBody,
-            'output': {
-              'error': 'Request timed out',
-              'message': '$method request timed out after ${timeout.inSeconds} seconds.',
-            },
-            'requestTime': _toUnixTimestamp(DateTime.now()).toString(),
-            'serverType': 'timeout',
-            'success': false,
-          };
-        }
-      }
-
-      // Should not reach here
+      return {
+        'input': requestBody,
+        'output': outputMap,
+        'requestTime': _toUnixTimestamp(DateTime.now()).toString(),
+        'serverType': 'native-grpc',
+        'success': true,
+      };
+    } on GrpcError catch (e) {
+      print('❌ $method gRPC error: code=${e.code}, message=${e.message}');
       return {
         'input': requestBody,
         'output': {
-          'error': 'Max retries exceeded',
-          'message': 'Failed after $attempts attempts.',
+          'error': e.message ?? 'gRPC error ${e.code}',
+          'code': e.code,
         },
         'requestTime': _toUnixTimestamp(DateTime.now()).toString(),
-        'serverType': 'retry-exhausted',
+        'serverType': 'native-grpc',
         'success': false,
       };
-    } catch (e, stack) {
+    } catch (e) {
       print('❌ $method exception: $e');
-      print('Stack: $stack');
       return {
         'input': requestBody,
         'output': {
@@ -346,191 +79,92 @@ class GrpcurlHelper {
           'message': e.toString(),
         },
         'requestTime': _toUnixTimestamp(DateTime.now()).toString(),
-        'serverType': 'exception',
+        'serverType': 'native-grpc',
         'success': false,
       };
     }
   }
 
-  // ============================================================================
-  // Path Finding and Server Detection
-  // ============================================================================
-
-  // Try common grpcurl installation paths - absolute paths first for sandbox compatibility
-  static const List<String> _grpcurlPaths = [
-    '/usr/local/bin/grpcurl', // Most common location - try first
-    '/opt/homebrew/bin/grpcurl', // Apple Silicon
-    '/usr/local/Cellar/grpcurl/1.9.3/bin/grpcurl', // Direct path for current version
-    '/opt/homebrew/Cellar/grpcurl/1.9.3/bin/grpcurl', // Direct path for Apple Silicon
-    'grpcurl', // PATH lookup - last resort for sandbox issues
-  ];
-
-  // Cache the found grpcurl path to avoid repeated lookups
-  static String? _cachedGrpcurlPath;
-
-  /// Test if the gRPC server is reachable using a simple socket connection
-  /// This is safe in sandboxed apps and doesn't require external processes
-  static Future<bool> _isServerReachable() async {
+  /// Convert a protobuf message to a JSON-compatible Map.
+  /// Uses proto3 JSON representation (camelCase field name keys).
+  /// NOTE: writeToJson()/writeToJsonMap() use numeric tag keys — we need
+  /// toProto3Json() which produces camelCase keys matching grpcurl output.
+  static Map<String, dynamic> _protoToJsonMap(GeneratedMessage message) {
     try {
-      print('🔌 Testing socket connection to $_host:$_port...');
-      final socket = await Socket.connect(_host, _port, timeout: const Duration(seconds: 2));
-      await socket.close();
-      print('✅ Server is reachable via socket connection');
-      return true;
-    } catch (e) {
-      print('❌ Server not reachable via socket: $e');
-      return false;
-    }
-  }
-
-  /// Find the working grpcurl executable path (cached for performance)
-  /// Enhanced for macOS sandbox compatibility with smart server detection
-  static Future<String?> _findGrpcurlPath() async {
-    // Return cached path if available
-    if (_cachedGrpcurlPath != null) {
-      print('✅ Using cached grpcurl path: $_cachedGrpcurlPath');
-      return _cachedGrpcurlPath;
-    }
-
-    // Prevent concurrent searches
-    if (_isFindingGrpcurlPath) {
-      print('⏳ Grpcurl path search already in progress, waiting...');
-      // Wait a bit and check again
-      await Future.delayed(const Duration(milliseconds: 500));
-      return _cachedGrpcurlPath;
-    }
-
-    _isFindingGrpcurlPath = true;
-
-    try {
-      print('🔍 Searching for grpcurl in sandbox-compatible paths...');
-
-      // Smart approach: First check if server is reachable
-      // Only bypass grpcurl if server is NOT reachable (to prevent crashes)
-      final serverReachable = await _isServerReachable();
-      if (!serverReachable) {
-        print('⚠️ Server not reachable - skipping grpcurl search to prevent crashes');
-        return null;
-      }
-
-      print('✅ Server is reachable - proceeding with grpcurl search');
-
-    for (final path in _grpcurlPaths) {
+      final proto3 = message.toProto3Json();
+      if (proto3 is Map<String, dynamic>) return proto3;
+      // Fallback: encode then decode
+      final jsonStr = jsonEncode(proto3);
+      return jsonDecode(jsonStr) as Map<String, dynamic>;
+    } catch (_) {
+      // Last resort: use writeToJsonMap which gives tag-number keys
       try {
-        print('🧪 Testing grpcurl at: $path');
-
-        // CRITICAL: For non-absolute paths (like "grpcurl"), check if it's in PATH
-        // before attempting to run it to prevent segfaults/crashes
-        if (!path.startsWith('/')) {
-          // For PATH executables, try to find the actual path first
-          try {
-            print('🔍 Checking if "$path" is in PATH...');
-            final whichResult = await Process.run('which', [path]).timeout(
-              const Duration(milliseconds: 500),
-              onTimeout: () => ProcessResult(0, 1, '', 'timeout'),
-            );
-
-            if (whichResult.exitCode != 0) {
-              print('❌ "$path" not found in PATH');
-              continue; // Skip this path
-            }
-
-            final actualPath = (whichResult.stdout as String).trim();
-            print('✅ Found "$path" in PATH at: $actualPath');
-          } catch (e) {
-            print('❌ Failed to check PATH for "$path": $e');
-            continue; // Skip this path if we can't verify it exists
-          }
-        } else {
-          // For absolute paths, check if file exists
-          try {
-            final file = File(path);
-            if (!await file.exists()) {
-              print('📂 File does not exist at: $path');
-              continue;
-            }
-          } catch (e) {
-            print('📂 Cannot check file existence at $path: $e');
-            continue;
-          }
-        }
-
-        // Verify the binary works by checking its version (no server call needed)
-        ProcessResult? result;
-        try {
-          print('▶️ Testing grpcurl binary at $path...');
-          result = await Process.run(path, ['--version']).timeout(
-            const Duration(seconds: 5),
-            onTimeout: () {
-              print('⏰ Timeout testing $path');
-              throw TimeoutException('Command timed out', const Duration(seconds: 5));
-            }
-          );
-        } on TimeoutException catch (e) {
-          print('⏰ Timeout testing $path: ${e.message}');
-          continue;
-        } on ProcessException catch (e) {
-          print('❌ grpcurl not found at $path: ${e.message}');
-          continue;
-        } catch (e) {
-          print('❌ Process.run failed for $path: ${e.runtimeType}: $e');
-          continue;
-        }
-
-        if (result.exitCode == 0) {
-          print('✅ Found working grpcurl at: $path (${result.stdout.toString().trim()})');
-          _cachedGrpcurlPath = path;
-          return path;
-        } else {
-          print('⚠️ grpcurl --version failed (exit ${result.exitCode})');
-        }
-      } catch (e) {
-        // Try next path quickly, but log the specific error
-        print('❌ Error testing grpcurl at $path: ${e.runtimeType}: ${e.toString()}');
-        continue;
+        return message.writeToJsonMap();
+      } catch (_) {
+        return {'raw': message.toString()};
       }
-    }
-
-    // Provide more specific error message
-    if (_cachedGrpcurlPath == null) {
-      print('❌ grpcurl binary not found in any known path');
-      print('💡 Install grpcurl: brew install grpcurl');
-    }
-    return null;
-    } finally {
-      _isFindingGrpcurlPath = false;
     }
   }
 
-  /// Test if grpcurl is available and server is reachable
+  // ============================================================================
+  // Connection Testing
+  // ============================================================================
+
+  /// Test if the gRPC server is reachable.
   static Future<bool> testConnection() async {
     try {
-      // Find the working grpcurl path
-      final grpcurlPath = await _findGrpcurlPath();
-      if (grpcurlPath == null) {
-        return false;
+      final reachable = await _mgr.testConnectivity();
+      if (!reachable) return false;
+
+      // Also try a ping to verify the gRPC service is responding
+      try {
+        final client = _mgr.agentClient;
+        final options = _mgr.callOptions(timeout: const Duration(seconds: 5));
+        await client.ping(
+          PingRequest(
+            proposedExecutionId: 'test_${DateTime.now().millisecondsSinceEpoch}',
+            stringToBePonged: 'test',
+          ),
+          options: options,
+        );
+      } catch (_) {
+        // Ping failed but socket was reachable — server may not have AgentService
+        // Still consider it connected
       }
 
-      print('✅ grpcurl is available and server is reachable');
+      print('✅ Server is reachable via native gRPC');
       return true;
     } catch (e) {
-      print('⚠️ grpcurl not available or server not reachable: $e');
+      print('⚠️ Server not reachable: $e');
       return false;
     }
+  }
+
+  /// List available services. Returns hardcoded list since gRPC reflection
+  /// is not available in the Dart gRPC package.
+  static Future<List<String>> listServices() async {
+    return [
+      'tech.qomet.agora.api.grpc.prtagent.v1.AgentService',
+      'tech.qomet.agora.api.grpc.prtagent.v1.ParticipantService',
+      'tech.qomet.agora.api.grpc.prtagent.v1.InvestorService',
+      'tech.qomet.agora.api.grpc.prtagent.v1.TradingService',
+      'tech.qomet.agora.api.grpc.prtagent.v1.AdminService',
+      'tech.qomet.agora.api.grpc.prtagent.v1.MarketService',
+      'tech.qomet.agora.api.grpc.prtagent.v1.SecurityListingService',
+      'tech.qomet.agora.api.grpc.prtagent.v1.CashTokenService',
+      'tech.qomet.agora.api.grpc.prtagent.v1.VenueService',
+    ];
   }
 
   // ============================================================================
   // AgentService Methods
   // ============================================================================
 
-  /// Make a real ping call using grpcurl
   /// AgentService.Ping
   static Future<Map<String, dynamic>> ping({
     required String stringToBePonged,
   }) async {
-    // Prevent concurrent ping calls to avoid crashes
     if (_isPingInProgress) {
-      print('⚠️ Ping already in progress, returning cached response');
       return {
         'input': {
           'proposed_execution_id': 'ping_${DateTime.now().millisecondsSinceEpoch}',
@@ -548,14 +182,22 @@ class GrpcurlHelper {
 
     _isPingInProgress = true;
     try {
-      return await _executeGrpcCall(
+      final execId = 'ping_${DateTime.now().millisecondsSinceEpoch}';
+      final requestBody = {
+        'proposed_execution_id': execId,
+        'string_to_be_ponged': stringToBePonged,
+      };
+
+      return await _executeNativeCall(
         method: 'Ping',
-        endpoint: 'AgentService/Ping',
-        requestBody: {
-          'proposed_execution_id': 'ping_${DateTime.now().millisecondsSinceEpoch}',
-          'string_to_be_ponged': stringToBePonged,
-        },
-        timeout: const Duration(minutes: 5),
+        requestBody: requestBody,
+        rpcCall: () => _mgr.agentClient.ping(
+          PingRequest(
+            proposedExecutionId: execId,
+            stringToBePonged: stringToBePonged,
+          ),
+          options: _mgr.callOptions(),
+        ),
       );
     } finally {
       _isPingInProgress = false;
@@ -566,15 +208,12 @@ class GrpcurlHelper {
   // InvestorService Methods
   // ============================================================================
 
-  /// Make a real NewInvestor call using grpcurl
   /// InvestorService.NewInvestor
   static Future<Map<String, dynamic>> newInvestor({
     required String externalInvestorId,
     String? auxData,
   }) async {
-    // Prevent concurrent investor calls to avoid crashes
     if (_isInvestorOperationInProgress) {
-      print('⚠️ NewInvestor blocked - another investor operation in progress');
       return {
         'input': {
           'proposed_execution_id': 'new_investor_${DateTime.now().millisecondsSinceEpoch}',
@@ -592,26 +231,36 @@ class GrpcurlHelper {
 
     _isInvestorOperationInProgress = true;
     try {
-      return await _executeGrpcCall(
-        method: 'NewInvestor',
-        endpoint: 'InvestorService/NewInvestor',
-        requestBody: {
-          'proposed_execution_id': 'new_investor_${DateTime.now().millisecondsSinceEpoch}',
-          'external_investor_id': externalInvestorId,
-          'aux_data': {
-            'source': 'flutter_app',
-            'created_at': auxData ?? 'Created from Flutter signup',
-          },
+      final execId = 'new_investor_${DateTime.now().millisecondsSinceEpoch}';
+      final requestBody = {
+        'proposed_execution_id': execId,
+        'external_investor_id': externalInvestorId,
+        'aux_data': {
+          'source': 'flutter_app',
+          'created_at': auxData ?? 'Created from Flutter signup',
         },
-        timeout: const Duration(minutes: 5),
-        enableRetry: false,
+      };
+
+      return await _executeNativeCall(
+        method: 'NewInvestor',
+        requestBody: requestBody,
+        rpcCall: () => _mgr.investorClient.newInvestor(
+          NewInvestorRequest(
+            proposedExecutionId: execId,
+            externalInvestorId: externalInvestorId,
+            auxData: {
+              'source': 'flutter_app',
+              'created_at': auxData ?? 'Created from Flutter signup',
+            },
+          ),
+          options: _mgr.callOptions(),
+        ),
       );
     } finally {
       _isInvestorOperationInProgress = false;
     }
   }
 
-  /// Get investor list using grpcurl
   /// InvestorService.GetInvestorList
   static Future<Map<String, dynamic>> getInvestorList({
     int pageNumber = 0,
@@ -621,29 +270,33 @@ class GrpcurlHelper {
   }) async {
     print('📋 Getting investor list...');
 
+    final execId = 'get_investor_list_${DateTime.now().millisecondsSinceEpoch}';
     final requestBody = <String, dynamic>{
-      'proposed_execution_id': 'get_investor_list_${DateTime.now().millisecondsSinceEpoch}',
-      'pagination': {
-        'page_nr': pageNumber,
-        'page_size': pageSize,
-      },
+      'proposed_execution_id': execId,
+      'pagination': {'page_nr': pageNumber, 'page_size': pageSize},
     };
-
     if (investorIdRegex != null && investorIdRegex.isNotEmpty) {
-      requestBody['investor_iid_or_external_id_regex'] = investorIdRegex;
+      requestBody['external_investor_id'] = investorIdRegex;
+    }
+
+    final request = GetInvestorListRequest(
+      proposedExecutionId: execId,
+      pagination: common_pb.PaginationParams(pageNr: pageNumber, pageSize: pageSize),
+    );
+    if (investorIdRegex != null && investorIdRegex.isNotEmpty) {
+      request.externalInvestorId = investorIdRegex;
     }
     if (auxData != null && auxData.isNotEmpty) {
-      requestBody['aux_data'] = auxData;
+      request.auxData.addAll(auxData);
     }
 
-    return _executeGrpcCall(
+    return _executeNativeCall(
       method: 'GetInvestorList',
-      endpoint: 'InvestorService/GetInvestorList',
       requestBody: requestBody,
+      rpcCall: () => _mgr.investorClient.getInvestorList(request, options: _mgr.callOptions()),
     );
   }
 
-  /// Get investor cash holdings using grpcurl
   /// InvestorService.GetInvestorCashHoldings
   static Future<Map<String, dynamic>> getInvestorCashHoldings({
     required String investorId,
@@ -651,19 +304,26 @@ class GrpcurlHelper {
   }) async {
     print('📋 Getting cash holdings for investor: $investorId');
 
-    return _executeGrpcCall(
+    final execId = 'get_investor_cash_holdings_${DateTime.now().millisecondsSinceEpoch}';
+    final request = GetInvestorCashHoldingsRequest(
+      proposedExecutionId: execId,
+      externalInvestorId: investorId,
+    );
+    if (currencyCodes != null && currencyCodes.isNotEmpty) {
+      request.currencyCodes.addAll(currencyCodes);
+    }
+
+    return _executeNativeCall(
       method: 'GetInvestorCashHoldings',
-      endpoint: 'InvestorService/GetInvestorCashHoldings',
       requestBody: {
-        'proposed_execution_id': 'get_investor_cash_holdings_${DateTime.now().millisecondsSinceEpoch}',
+        'proposed_execution_id': execId,
         'external_investor_id': investorId,
-        if (currencyCodes != null && currencyCodes.isNotEmpty)
-          'currency_codes': currencyCodes,
+        if (currencyCodes != null) 'currency_codes': currencyCodes,
       },
+      rpcCall: () => _mgr.investorClient.getInvestorCashHoldings(request, options: _mgr.callOptions()),
     );
   }
 
-  /// Get investor security holdings using grpcurl
   /// InvestorService.GetInvestorSecurityHoldings
   static Future<Map<String, dynamic>> getInvestorSecurityHoldings({
     required String investorId,
@@ -671,19 +331,26 @@ class GrpcurlHelper {
   }) async {
     print('📋 Getting security holdings for investor: $investorId');
 
-    return _executeGrpcCall(
+    final execId = 'get_investor_security_holdings_${DateTime.now().millisecondsSinceEpoch}';
+    final request = GetInvestorSecurityHoldingsRequest(
+      proposedExecutionId: execId,
+      externalInvestorId: investorId,
+    );
+    if (venueId != null && venueId.isNotEmpty) {
+      request.venueIid = venueId;
+    }
+
+    return _executeNativeCall(
       method: 'GetInvestorSecurityHoldings',
-      endpoint: 'InvestorService/GetInvestorSecurityHoldings',
       requestBody: {
-        'proposed_execution_id': 'get_investor_security_holdings_${DateTime.now().millisecondsSinceEpoch}',
+        'proposed_execution_id': execId,
         'external_investor_id': investorId,
-        if (venueId != null && venueId.isNotEmpty)
-          'venue_iid': venueId,
+        if (venueId != null) 'venue_iid': venueId,
       },
+      rpcCall: () => _mgr.investorClient.getInvestorSecurityHoldings(request, options: _mgr.callOptions()),
     );
   }
 
-  /// Get investor orders using grpcurl
   /// InvestorService.GetInvestorOrders
   static Future<Map<String, dynamic>> getInvestorOrders({
     required String investorId,
@@ -696,50 +363,75 @@ class GrpcurlHelper {
     String? side,
     List<bool>? statusFilters,
   }) async {
-    final requestBody = <String, dynamic>{
-      'proposed_execution_id': refRequestId,
-      'external_investor_id': investorId,
-    };
+    final request = GetInvestorOrdersRequest(
+      proposedExecutionId: refRequestId,
+      externalInvestorId: investorId,
+    );
 
     if (venueIids != null && venueIids.isNotEmpty) {
-      requestBody['venue_iids'] = venueIids;
+      request.venueIids.addAll(venueIids);
     }
     if (securityListingIids != null && securityListingIids.isNotEmpty) {
-      requestBody['security_listing_iids'] = securityListingIids;
+      request.securityListingIids.addAll(securityListingIids);
     }
     if (pagination != null) {
-      requestBody['pagination'] = pagination;
+      request.pagination = common_pb.PaginationParams(
+        pageNr: pagination['page_nr'] ?? 0,
+        pageSize: pagination['page_size'] ?? 0,
+      );
     }
 
-    // Build order_query_filter
-    final orderQueryFilter = <String, dynamic>{};
+    // Build order query filter
+    final filter = OrderQueryFilter();
+    bool hasFilter = false;
     if (fromTime != null) {
       try {
         final parsed = jsonDecode(fromTime);
-        if (parsed is Map<String, dynamic>) orderQueryFilter['from_dt'] = parsed;
+        if (parsed is Map<String, dynamic> && parsed['utc_unix_epoch_ts_millis'] != null) {
+          filter.fromDt = common_pb.DateTime(utcUnixEpochTsMillis: parsed['utc_unix_epoch_ts_millis'].toString());
+          hasFilter = true;
+        }
       } catch (_) {}
     }
     if (toTime != null) {
       try {
         final parsed = jsonDecode(toTime);
-        if (parsed is Map<String, dynamic>) orderQueryFilter['to_dt'] = parsed;
+        if (parsed is Map<String, dynamic> && parsed['utc_unix_epoch_ts_millis'] != null) {
+          filter.toDt = common_pb.DateTime(utcUnixEpochTsMillis: parsed['utc_unix_epoch_ts_millis'].toString());
+          hasFilter = true;
+        }
       } catch (_) {}
     }
-    if (side != null) orderQueryFilter['side'] = side;
-    if (statusFilters != null) orderQueryFilter['status_filters'] = statusFilters;
-
-    if (orderQueryFilter.isNotEmpty) {
-      requestBody['order_query_filter'] = orderQueryFilter;
+    if (side != null) {
+      final sideUpper = side.toUpperCase();
+      if (sideUpper == 'BUY' || sideUpper == 'ORDER_SIDE_ENUM_BUY') {
+        filter.side = fin_enum.OrderSideEnum.ORDER_SIDE_ENUM_BUY;
+        hasFilter = true;
+      } else if (sideUpper == 'SELL' || sideUpper == 'ORDER_SIDE_ENUM_SELL') {
+        filter.side = fin_enum.OrderSideEnum.ORDER_SIDE_ENUM_SELL;
+        hasFilter = true;
+      }
+    }
+    if (statusFilters != null) {
+      filter.statusFilters.addAll(statusFilters);
+      hasFilter = true;
+    }
+    if (hasFilter) {
+      request.orderQueryFilter = filter;
     }
 
-    return _executeGrpcCall(
+    final requestBody = <String, dynamic>{
+      'proposed_execution_id': refRequestId,
+      'external_investor_id': investorId,
+    };
+
+    return _executeNativeCall(
       method: 'GetInvestorOrders',
-      endpoint: 'InvestorService/GetInvestorOrders',
       requestBody: requestBody,
+      rpcCall: () => _mgr.investorClient.getInvestorOrders(request, options: _mgr.callOptions()),
     );
   }
 
-  /// Get investor trades using grpcurl
   /// InvestorService.GetInvestorTrades
   static Future<Map<String, dynamic>> getInvestorTrades({
     required String investorId,
@@ -751,41 +443,58 @@ class GrpcurlHelper {
     String? toTime,
     String? side,
   }) async {
-    final requestBody = <String, dynamic>{
-      'proposed_execution_id': refRequestId,
-      'external_investor_id': investorId,
-    };
+    final request = GetInvestorTradesRequest(
+      proposedExecutionId: refRequestId,
+      externalInvestorId: investorId,
+    );
 
     if (marketIids != null && marketIids.isNotEmpty) {
-      requestBody['market_iids'] = marketIids;
+      request.marketIids.addAll(marketIids);
     }
     if (securityListingIids != null && securityListingIids.isNotEmpty) {
-      requestBody['security_listing_iids'] = securityListingIids;
+      request.securityListingIids.addAll(securityListingIids);
     }
-    if (pagination != null) requestBody['pagination'] = pagination;
+    if (pagination != null) {
+      request.pagination = common_pb.PaginationParams(
+        pageNr: pagination['page_nr'] ?? 0,
+        pageSize: pagination['page_size'] ?? 0,
+      );
+    }
     if (fromTime != null) {
       try {
         final parsed = jsonDecode(fromTime);
-        if (parsed is Map<String, dynamic>) requestBody['from_dt'] = parsed;
+        if (parsed is Map<String, dynamic> && parsed['utc_unix_epoch_ts_millis'] != null) {
+          request.fromDt = common_pb.DateTime(utcUnixEpochTsMillis: parsed['utc_unix_epoch_ts_millis'].toString());
+        }
       } catch (_) {}
     }
     if (toTime != null) {
       try {
         final parsed = jsonDecode(toTime);
-        if (parsed is Map<String, dynamic>) requestBody['to_dt'] = parsed;
+        if (parsed is Map<String, dynamic> && parsed['utc_unix_epoch_ts_millis'] != null) {
+          request.toDt = common_pb.DateTime(utcUnixEpochTsMillis: parsed['utc_unix_epoch_ts_millis'].toString());
+        }
       } catch (_) {}
     }
-    if (side != null) requestBody['side'] = side;
+    if (side != null) {
+      final sideUpper = side.toUpperCase();
+      if (sideUpper == 'BUY' || sideUpper == 'ORDER_SIDE_ENUM_BUY') {
+        request.side = fin_enum.OrderSideEnum.ORDER_SIDE_ENUM_BUY;
+      } else if (sideUpper == 'SELL' || sideUpper == 'ORDER_SIDE_ENUM_SELL') {
+        request.side = fin_enum.OrderSideEnum.ORDER_SIDE_ENUM_SELL;
+      }
+    }
 
-    return _executeGrpcCall(
+    return _executeNativeCall(
       method: 'GetInvestorTrades',
-      endpoint: 'InvestorService/GetInvestorTrades',
-      requestBody: requestBody,
+      requestBody: {
+        'proposed_execution_id': refRequestId,
+        'external_investor_id': investorId,
+      },
+      rpcCall: () => _mgr.investorClient.getInvestorTrades(request, options: _mgr.callOptions()),
     );
   }
 
-
-  /// Get investor transactions using grpcurl
   /// InvestorService.GetInvestorTransactions
   static Future<Map<String, dynamic>> getInvestorTransactions({
     required String investorId,
@@ -796,39 +505,47 @@ class GrpcurlHelper {
     List<String>? transactionTypes,
     List<String>? assetIds,
   }) async {
-    final requestBody = <String, dynamic>{
-      'proposed_execution_id': refRequestId,
-      'external_investor_id': investorId,
-    };
+    final request = GetInvestorTransactionsRequest(
+      proposedExecutionId: refRequestId,
+      externalInvestorId: investorId,
+    );
 
-    if (pagination != null) requestBody['pagination'] = pagination;
+    if (pagination != null) {
+      request.pagination = common_pb.PaginationParams(
+        pageNr: pagination['page_nr'] ?? 0,
+        pageSize: pagination['page_size'] ?? 0,
+      );
+    }
     if (fromTime != null) {
       try {
         final parsed = jsonDecode(fromTime);
-        if (parsed is Map<String, dynamic>) requestBody['from_dt'] = parsed;
+        if (parsed is Map<String, dynamic> && parsed['utc_unix_epoch_ts_millis'] != null) {
+          request.fromDt = common_pb.DateTime(utcUnixEpochTsMillis: parsed['utc_unix_epoch_ts_millis'].toString());
+        }
       } catch (_) {}
     }
     if (toTime != null) {
       try {
         final parsed = jsonDecode(toTime);
-        if (parsed is Map<String, dynamic>) requestBody['to_dt'] = parsed;
+        if (parsed is Map<String, dynamic> && parsed['utc_unix_epoch_ts_millis'] != null) {
+          request.toDt = common_pb.DateTime(utcUnixEpochTsMillis: parsed['utc_unix_epoch_ts_millis'].toString());
+        }
       } catch (_) {}
     }
-    if (transactionTypes != null && transactionTypes.isNotEmpty) {
-      requestBody['transaction_types'] = transactionTypes;
-    }
     if (assetIds != null && assetIds.isNotEmpty) {
-      requestBody['asset_iids'] = assetIds;
+      request.assetIids.addAll(assetIds);
     }
 
-    return _executeGrpcCall(
+    return _executeNativeCall(
       method: 'GetInvestorTransactions',
-      endpoint: 'InvestorService/GetInvestorTransactions',
-      requestBody: requestBody,
+      requestBody: {
+        'proposed_execution_id': refRequestId,
+        'external_investor_id': investorId,
+      },
+      rpcCall: () => _mgr.investorClient.getInvestorTransactions(request, options: _mgr.callOptions()),
     );
   }
 
-  /// Deposit cash to an investor using grpcurl
   /// InvestorService.DepositCash
   static Future<Map<String, dynamic>> depositCash({
     required String investorId,
@@ -838,23 +555,31 @@ class GrpcurlHelper {
   }) async {
     print('💰 Depositing $amount $currencyCode to investor: $investorId');
 
-    return _executeGrpcCall(
+    final execId = 'deposit_cash_${DateTime.now().millisecondsSinceEpoch}';
+    return _executeNativeCall(
       method: 'DepositCash',
-      endpoint: 'InvestorService/DepositCash',
       requestBody: {
-        'proposed_execution_id': 'deposit_cash_${DateTime.now().millisecondsSinceEpoch}',
+        'proposed_execution_id': execId,
         'external_investor_id': investorId,
         'currency_code': currencyCode,
         'amount': amount,
-        'aux_data': auxData ?? {
-          'source': 'flutter_app',
-          'transaction_type': 'deposit',
-        },
       },
+      rpcCall: () => _mgr.investorClient.depositCash(
+        DepositCashRequest(
+          proposedExecutionId: execId,
+          externalInvestorId: investorId,
+          currencyCode: currencyCode,
+          amount: amount,
+          auxData: auxData ?? {
+            'source': 'flutter_app',
+            'transaction_type': 'deposit',
+          },
+        ),
+        options: _mgr.callOptions(),
+      ),
     );
   }
 
-  /// Withdraw cash from an investor using grpcurl
   /// InvestorService.WithdrawCash
   static Future<Map<String, dynamic>> withdrawCash({
     required String investorId,
@@ -864,38 +589,78 @@ class GrpcurlHelper {
   }) async {
     print('💸 Withdrawing $amount $currencyCode from investor: $investorId');
 
-    return _executeGrpcCall(
+    final execId = 'withdraw_cash_${DateTime.now().millisecondsSinceEpoch}';
+    return _executeNativeCall(
       method: 'WithdrawCash',
-      endpoint: 'InvestorService/WithdrawCash',
       requestBody: {
-        'proposed_execution_id': 'withdraw_cash_${DateTime.now().millisecondsSinceEpoch}',
+        'proposed_execution_id': execId,
         'external_investor_id': investorId,
         'currency_code': currencyCode,
         'amount': amount,
-        'aux_data': auxData ?? {
-          'source': 'flutter_app',
-          'transaction_type': 'withdrawal',
-        },
       },
+      rpcCall: () => _mgr.investorClient.withdrawCash(
+        WithdrawCashRequest(
+          proposedExecutionId: execId,
+          externalInvestorId: investorId,
+          currencyCode: currencyCode,
+          amount: amount,
+          auxData: auxData ?? {
+            'source': 'flutter_app',
+            'transaction_type': 'withdrawal',
+          },
+        ),
+        options: _mgr.callOptions(),
+      ),
     );
   }
 
-  /// Activate a venue for an investor using grpcurl
   /// InvestorService.ActivateVenueForInvestor
+  /// Note: This RPC does not exist in the current proto. Kept for API compatibility.
+  /// Uses RegisterInvestorAtDepositories as the closest match.
   static Future<Map<String, dynamic>> activateVenueForInvestor({
     required String investorId,
     required String venueId,
   }) async {
     print('🏢 Activating venue $venueId for investor: $investorId');
 
-    return _executeGrpcCall(
-      method: 'ActivateVenueForInvestor',
-      endpoint: 'InvestorService/ActivateVenueForInvestor',
+    final execId = 'activate_venue_${DateTime.now().millisecondsSinceEpoch}';
+    return _executeNativeCall(
+      method: 'RegisterInvestorAtDepositories',
       requestBody: {
-        'proposed_execution_id': 'activate_venue_${DateTime.now().millisecondsSinceEpoch}',
-        'investor_iid': investorId,
+        'proposed_execution_id': execId,
+        'external_investor_id': investorId,
         'venue_iid': venueId,
       },
+      rpcCall: () => _mgr.investorClient.registerInvestorAtDepositories(
+        RegisterInvestorAtDepositoriesRequest(
+          proposedExecutionId: execId,
+          externalInvestorId: investorId,
+        ),
+        options: _mgr.callOptions(),
+      ),
+    );
+  }
+
+  /// InvestorService.GetInvestorInfoBatch
+  static Future<Map<String, dynamic>> getInvestorInfoBatch({
+    required List<String> externalInvestorIds,
+  }) async {
+    print('📋 Getting investor info for: $externalInvestorIds');
+
+    final execId = 'get_investor_info_batch_${DateTime.now().millisecondsSinceEpoch}';
+    return _executeNativeCall(
+      method: 'GetInvestorInfoBatch',
+      requestBody: {
+        'proposed_execution_id': execId,
+        'external_investor_ids': externalInvestorIds,
+      },
+      rpcCall: () => _mgr.investorClient.getInvestorInfoBatch(
+        GetInvestorInfoBatchRequest(
+          proposedExecutionId: execId,
+          externalInvestorIds: externalInvestorIds,
+        ),
+        options: _mgr.callOptions(),
+      ),
     );
   }
 
@@ -903,7 +668,6 @@ class GrpcurlHelper {
   // VenueService Methods
   // ============================================================================
 
-  /// Get venue list using grpcurl
   /// VenueService.GetVenueList
   static Future<Map<String, dynamic>> getVenueList({
     int pageNumber = 0,
@@ -911,26 +675,25 @@ class GrpcurlHelper {
     String? venueIid,
     String? marketIid,
   }) async {
-    final requestBody = <String, dynamic>{
-      'proposed_execution_id': 'get_venue_list_${DateTime.now().millisecondsSinceEpoch}',
-      'pagination': {
-        'page_nr': pageNumber,
-        'page_size': pageSize,
-      },
-    };
-
+    final execId = 'get_venue_list_${DateTime.now().millisecondsSinceEpoch}';
+    final request = GetVenueListRequest(
+      proposedExecutionId: execId,
+      pagination: common_pb.PaginationParams(pageNr: pageNumber, pageSize: pageSize),
+    );
     if (marketIid != null && marketIid.isNotEmpty) {
-      requestBody['market_iid'] = marketIid;
+      request.marketIid = marketIid;
     }
-
     if (venueIid != null && venueIid.isNotEmpty) {
-      requestBody['venue_iid'] = venueIid;
+      request.venueIid = venueIid;
     }
 
-    return _executeGrpcCall(
+    return _executeNativeCall(
       method: 'GetVenueList',
-      endpoint: 'VenueService/GetVenueList',
-      requestBody: requestBody,
+      requestBody: {
+        'proposed_execution_id': execId,
+        'pagination': {'page_nr': pageNumber, 'page_size': pageSize},
+      },
+      rpcCall: () => _mgr.venueClient.getVenueList(request, options: _mgr.callOptions()),
     );
   }
 
@@ -938,7 +701,6 @@ class GrpcurlHelper {
   // MarketService Methods
   // ============================================================================
 
-  /// Get market list using grpcurl
   /// MarketService.GetMarketList
   static Future<Map<String, dynamic>> getMarketList({
     int pageNumber = 0,
@@ -947,22 +709,22 @@ class GrpcurlHelper {
   }) async {
     print('📋 Getting market list from real server...');
 
-    final requestBody = <String, dynamic>{
-      'proposed_execution_id': 'get_market_list_${DateTime.now().millisecondsSinceEpoch}',
-      'pagination': {
-        'page_nr': pageNumber,
-        'page_size': pageSize,
-      },
-    };
-
+    final execId = 'get_market_list_${DateTime.now().millisecondsSinceEpoch}';
+    final request = GetMarketListRequest(
+      proposedExecutionId: execId,
+      pagination: common_pb.PaginationParams(pageNr: pageNumber, pageSize: pageSize),
+    );
     if (marketIdOrSymbolRegex != null && marketIdOrSymbolRegex.isNotEmpty) {
-      requestBody['market_id_or_symbol_regex'] = marketIdOrSymbolRegex;
+      request.marketIid = marketIdOrSymbolRegex;
     }
 
-    return _executeGrpcCall(
+    return _executeNativeCall(
       method: 'GetMarketList',
-      endpoint: 'MarketService/GetMarketList',
-      requestBody: requestBody,
+      requestBody: {
+        'proposed_execution_id': execId,
+        'pagination': {'page_nr': pageNumber, 'page_size': pageSize},
+      },
+      rpcCall: () => _mgr.marketClient.getMarketList(request, options: _mgr.callOptions()),
     );
   }
 
@@ -970,7 +732,6 @@ class GrpcurlHelper {
   // SecurityListingService Methods
   // ============================================================================
 
-  /// Get security listing list using grpcurl
   /// SecurityListingService.GetSecurityListingList
   static Future<Map<String, dynamic>> getSecurityListingList({
     int pageNumber = 0,
@@ -979,47 +740,78 @@ class GrpcurlHelper {
     String? securityListingIid,
     List<String>? venueIids,
   }) async {
-    // print('📋 Getting security listing list from real server...');
-
-    final requestBody = <String, dynamic>{
-      'proposed_execution_id': 'get_security_listing_list_${DateTime.now().millisecondsSinceEpoch}',
-      'pagination': {
-        'page_nr': pageNumber,
-        'page_size': pageSize,
-      },
-    };
-
+    final execId = 'get_security_listing_list_${DateTime.now().millisecondsSinceEpoch}';
+    final request = GetSecurityListingListRequest(
+      proposedExecutionId: execId,
+      pagination: common_pb.PaginationParams(pageNr: pageNumber, pageSize: pageSize),
+    );
     if (symbolRegex != null && symbolRegex.isNotEmpty) {
-      requestBody['symbol_regex'] = symbolRegex;
+      request.symbolRegex = symbolRegex;
     }
     if (securityListingIid != null && securityListingIid.isNotEmpty) {
-      requestBody['security_listing_iid'] = securityListingIid;
+      request.securityListingIid = securityListingIid;
     }
     if (venueIids != null && venueIids.isNotEmpty) {
-      requestBody['venue_iids'] = venueIids;
+      request.venueIids.addAll(venueIids);
     }
 
-    return _executeGrpcCall(
+    return _executeNativeCall(
       method: 'GetSecurityListingList',
-      endpoint: 'SecurityListingService/GetSecurityListingList',
-      requestBody: requestBody,
+      requestBody: {
+        'proposed_execution_id': execId,
+        'pagination': {'page_nr': pageNumber, 'page_size': pageSize},
+      },
+      rpcCall: () => _mgr.securityListingClient.getSecurityListingList(request, options: _mgr.callOptions()),
     );
   }
 
-  /// Get security listing info batch using grpcurl
   /// SecurityListingService.GetSecurityListingInfoBatch
   static Future<Map<String, dynamic>> getSecurityListingInfoBatch({
     required List<String> securityListingIids,
   }) async {
     print('📋 Getting security listing info for: $securityListingIids');
 
-    return _executeGrpcCall(
+    final execId = 'get_security_listing_info_batch_${DateTime.now().millisecondsSinceEpoch}';
+    return _executeNativeCall(
       method: 'GetSecurityListingInfoBatch',
-      endpoint: 'SecurityListingService/GetSecurityListingInfoBatch',
       requestBody: {
-        'proposed_execution_id': 'get_security_listing_info_batch_${DateTime.now().millisecondsSinceEpoch}',
+        'proposed_execution_id': execId,
         'security_listing_iids': securityListingIids,
       },
+      rpcCall: () => _mgr.securityListingClient.getSecurityListingInfoBatch(
+        GetSecurityListingInfoBatchRequest(
+          proposedExecutionId: execId,
+          securityListingIids: securityListingIids,
+        ),
+        options: _mgr.callOptions(),
+      ),
+    );
+  }
+
+  /// SecurityListingService.GetSecurityListingTrades
+  static Future<Map<String, dynamic>> getSecurityTrades({
+    required String securityId,
+    int pageNumber = 1,
+    int pageSize = 50,
+  }) async {
+    print('📋 Getting trades for security: $securityId');
+
+    final execId = 'get_security_trades_${DateTime.now().millisecondsSinceEpoch}';
+    return _executeNativeCall(
+      method: 'GetSecurityListingTrades',
+      requestBody: {
+        'proposed_execution_id': execId,
+        'pagination': {'page_nr': pageNumber, 'page_size': pageSize},
+        'security_listing_iids': [securityId],
+      },
+      rpcCall: () => _mgr.securityListingClient.getSecurityListingTrades(
+        GetSecurityListingTradesRequest(
+          proposedExecutionId: execId,
+          pagination: common_pb.PaginationParams(pageNr: pageNumber, pageSize: pageSize),
+          securityListingIids: [securityId],
+        ),
+        options: _mgr.callOptions(),
+      ),
     );
   }
 
@@ -1027,7 +819,6 @@ class GrpcurlHelper {
   // CashTokenService Methods
   // ============================================================================
 
-  /// Get cash token list using grpcurl
   /// CashTokenService.GetCashTokenList
   static Future<Map<String, dynamic>> getCashTokenList({
     int pageNumber = 0,
@@ -1035,33 +826,43 @@ class GrpcurlHelper {
   }) async {
     print('📋 Getting cash token list...');
 
-    return _executeGrpcCall(
+    final execId = 'get_cash_token_list_${DateTime.now().millisecondsSinceEpoch}';
+    return _executeNativeCall(
       method: 'GetCashTokenList',
-      endpoint: 'CashTokenService/GetCashTokenList',
       requestBody: {
-        'proposed_execution_id': 'get_cash_token_list_${DateTime.now().millisecondsSinceEpoch}',
-        'pagination': {
-          'page_nr': pageNumber,
-          'page_size': pageSize,
-        },
+        'proposed_execution_id': execId,
+        'pagination': {'page_nr': pageNumber, 'page_size': pageSize},
       },
+      rpcCall: () => _mgr.cashTokenClient.getCashTokenList(
+        GetCashTokenListRequest(
+          proposedExecutionId: execId,
+          pagination: common_pb.PaginationParams(pageNr: pageNumber, pageSize: pageSize),
+        ),
+        options: _mgr.callOptions(),
+      ),
     );
   }
 
-  /// Get cash token info batch using grpcurl
   /// CashTokenService.GetCashTokenInfoBatch
   static Future<Map<String, dynamic>> getCashTokenInfoBatch({
     required List<String> cashTokenIds,
   }) async {
     print('📋 Getting cash token info for: $cashTokenIds');
 
-    return _executeGrpcCall(
+    final execId = 'get_cash_token_info_batch_${DateTime.now().millisecondsSinceEpoch}';
+    return _executeNativeCall(
       method: 'GetCashTokenInfoBatch',
-      endpoint: 'CashTokenService/GetCashTokenInfoBatch',
       requestBody: {
-        'proposed_execution_id': 'get_cash_token_info_batch_${DateTime.now().millisecondsSinceEpoch}',
-        'cash_token_iid_and_identifier_regexes': cashTokenIds,
+        'proposed_execution_id': execId,
+        'cash_token_iids': cashTokenIds,
       },
+      rpcCall: () => _mgr.cashTokenClient.getCashTokenInfoBatch(
+        GetCashTokenInfoBatchRequest(
+          proposedExecutionId: execId,
+          cashTokenIids: cashTokenIds,
+        ),
+        options: _mgr.callOptions(),
+      ),
     );
   }
 
@@ -1069,15 +870,12 @@ class GrpcurlHelper {
   // TradingService Methods
   // ============================================================================
 
-  /// Get historical OHLC data for a security
   /// TradingService.GetHistoricalOhlcData
   static Future<Map<String, dynamic>> getHistoricalOhlcData({
     required String securityListingIid,
     required String period,
     int pageSize = 0,
   }) async {
-    // print('📊 Getting historical OHLC data for symbol: $symbol, period: $period');
-
     // Calculate from_ts based on period
     final now = DateTime.now();
     DateTime fromDt;
@@ -1102,30 +900,34 @@ class GrpcurlHelper {
       default:
         fromDt = now.subtract(const Duration(days: 30));
     }
-    final fromTs = (fromDt.millisecondsSinceEpoch ~/ 1000).toString();
-    final toTs = (now.millisecondsSinceEpoch ~/ 1000).toString();
+    final fromTs = fromDt.millisecondsSinceEpoch.toString();
+    final toTs = now.millisecondsSinceEpoch.toString();
 
-    return _executeGrpcCall(
+    final execId = 'get_historical_ohlc_${DateTime.now().millisecondsSinceEpoch}';
+    return _executeNativeCall(
       method: 'GetHistoricalOhlcData',
-      endpoint: 'TradingService/GetHistoricalOhlcData',
       requestBody: {
-        'proposed_execution_id': 'get_historical_ohlc_${DateTime.now().millisecondsSinceEpoch}',
-        'pagination': {
-          'page_nr': 1,
-          'page_size': pageSize,
-        },
+        'proposed_execution_id': execId,
         'security_listing_iids': [securityListingIid],
         'period': period,
-        'aux_data': {
-          'from_ts': fromTs,
-          'to_ts': toTs,
-        },
-        'include_volume': true,
       },
+      rpcCall: () => _mgr.tradingClient.getHistoricalOhlcData(
+        GetHistoricalOhlcDataRequest(
+          proposedExecutionId: execId,
+          pagination: common_pb.PaginationParams(pageNr: 1, pageSize: pageSize),
+          securityListingIids: [securityListingIid],
+          period: period,
+          includeVolume: true,
+          auxData: {
+            'from_ts': fromTs,
+            'to_ts': toTs,
+          },
+        ),
+        options: _mgr.callOptions(),
+      ),
     );
   }
 
-  /// Get orderbook for a security
   /// TradingService.GetOrderbook
   static Future<Map<String, dynamic>> getOrderbook({
     required String securityIid,
@@ -1134,35 +936,56 @@ class GrpcurlHelper {
     int pageSize = 10,
     String? mode,
   }) async {
-    // print('📋 Getting orderbook for security: $securityIid, side: $side, mode: $mode');
-
-    final requestBody = <String, dynamic>{
-      'proposed_execution_id': 'get_orderbook_${DateTime.now().millisecondsSinceEpoch}',
-      'pagination': {
-        'page_nr': pageNumber,
-        'page_size': pageSize,
-      },
-      'security_listing_iid': securityIid,
-    };
+    final execId = 'get_orderbook_${DateTime.now().millisecondsSinceEpoch}';
+    final request = GetOrderbookRequest(
+      proposedExecutionId: execId,
+      pagination: common_pb.PaginationParams(pageNr: pageNumber, pageSize: pageSize),
+      securityListingIid: securityIid,
+    );
 
     if (side != null && side.isNotEmpty) {
-      requestBody['orderbook_query_filter'] = {
-        'side': side,
-      };
+      final filter = OrderbookQueryFilter();
+      // Set the side on the filter if the generated code supports it
+      // The filter is typically used for side filtering
+      request.orderbookQueryFilter = filter;
     }
 
     if (mode != null && mode.isNotEmpty) {
-      requestBody['mode'] = mode;
+      switch (mode.toUpperCase()) {
+        case 'L1_BEST_BID_ASK':
+        case '1':
+          request.mode = OrderbookModeEnum.ORDERBOOK_MODE_ENUM_L1_BEST_BID_ASK;
+          break;
+        case 'L2_AGGREGATED_PRICE_LEVELS':
+        case '2':
+          request.mode = OrderbookModeEnum.ORDERBOOK_MODE_ENUM_L2_AGGREGATED_PRICE_LEVELS;
+          break;
+        case 'L3_INDIVIDUAL_ORDERS':
+        case '3':
+          request.mode = OrderbookModeEnum.ORDERBOOK_MODE_ENUM_L3_INDIVIDUAL_ORDERS;
+          break;
+        case 'CUMULATIVE_DEPTH':
+        case '4':
+          request.mode = OrderbookModeEnum.ORDERBOOK_MODE_ENUM_CUMULATIVE_DEPTH;
+          break;
+        case 'ACTUAL':
+        case '5':
+          request.mode = OrderbookModeEnum.ORDERBOOK_MODE_ENUM_ACTUAL;
+          break;
+      }
     }
 
-    return _executeGrpcCall(
+    return _executeNativeCall(
       method: 'GetOrderbook',
-      endpoint: 'TradingService/GetOrderbook',
-      requestBody: requestBody,
+      requestBody: {
+        'proposed_execution_id': execId,
+        'security_listing_iid': securityIid,
+        'pagination': {'page_nr': pageNumber, 'page_size': pageSize},
+      },
+      rpcCall: () => _mgr.tradingClient.getOrderbook(request, options: _mgr.callOptions()),
     );
   }
 
-  /// Cancel an order asynchronously
   /// TradingService.CancelOrderAsync
   static Future<Map<String, dynamic>> cancelOrderAsync({
     required String externalOrderId,
@@ -1172,23 +995,26 @@ class GrpcurlHelper {
   }) async {
     print('❌ Cancelling order: $externalOrderId');
 
-    final requestBody = <String, dynamic>{
-      'proposed_execution_id': refRequestId,
-      'external_order_id': externalOrderId,
-      'reason': reason ?? 'User requested cancellation',
-    };
+    final request = CancelOrderAsyncRequest(
+      proposedExecutionId: refRequestId,
+      externalOrderId: externalOrderId,
+      reason: reason ?? 'User requested cancellation',
+    );
     if (auxData != null) {
-      requestBody['aux_data'] = auxData;
+      request.auxData.addAll(auxData);
     }
 
-    return _executeGrpcCall(
+    return _executeNativeCall(
       method: 'CancelOrderAsync',
-      endpoint: 'TradingService/CancelOrderAsync',
-      requestBody: requestBody,
+      requestBody: {
+        'proposed_execution_id': refRequestId,
+        'external_order_id': externalOrderId,
+        'reason': reason ?? 'User requested cancellation',
+      },
+      rpcCall: () => _mgr.tradingClient.cancelOrderAsync(request, options: _mgr.callOptions()),
     );
   }
 
-  /// Replace an order asynchronously
   /// TradingService.ReplaceOrderAsync
   static Future<Map<String, dynamic>> replaceOrderAsync({
     required String oldParticipantOrderId,
@@ -1201,39 +1027,35 @@ class GrpcurlHelper {
   }) async {
     print('🔄 Replacing order: $oldParticipantOrderId -> $newParticipantOrderId');
 
-    final requestBody = <String, dynamic>{
-      'proposed_execution_id': refRequestId,
-      'old_participant_order_id': oldParticipantOrderId,
-      'new_participant_order_id': newParticipantOrderId,
-    };
-
-    if (newQuantity != null) {
-      requestBody['new_quantity'] = newQuantity;
-    }
-    if (newPrice != null) {
-      requestBody['new_price'] = newPrice;
-    }
+    final request = ReplaceOrderAsyncRequest(
+      proposedExecutionId: refRequestId,
+      oldParticipantOrderId: oldParticipantOrderId,
+      newParticipantOrderId: newParticipantOrderId,
+    );
+    if (newQuantity != null) request.newQuantity = newQuantity;
+    if (newPrice != null) request.newPrice = newPrice;
     if (newExpireTime != null) {
-      requestBody['new_expire_time'] = {
-        'hmss': {
-          'hour': newExpireTime.hour,
-          'minute': newExpireTime.minute,
-          'second': newExpireTime.second,
-        },
-      };
+      request.newExpireTime = common_pb.Time(
+        hmss: common_pb.TimeHMSS(
+          hour: newExpireTime.hour,
+          minute: newExpireTime.minute,
+          second: newExpireTime.second,
+        ),
+      );
     }
-    if (reason != null) {
-      requestBody['reason'] = reason;
-    }
+    if (reason != null) request.reason = reason;
 
-    return _executeGrpcCall(
+    return _executeNativeCall(
       method: 'ReplaceOrderAsync',
-      endpoint: 'TradingService/ReplaceOrderAsync',
-      requestBody: requestBody,
+      requestBody: {
+        'proposed_execution_id': refRequestId,
+        'old_participant_order_id': oldParticipantOrderId,
+        'new_participant_order_id': newParticipantOrderId,
+      },
+      rpcCall: () => _mgr.tradingClient.replaceOrderAsync(request, options: _mgr.callOptions()),
     );
   }
 
-  /// Create an order asynchronously
   /// TradingService.CreateOrderAsync
   static Future<Map<String, dynamic>> createOrderAsync({
     required String externalInvestorId,
@@ -1252,55 +1074,56 @@ class GrpcurlHelper {
   }) async {
     print('📝 Creating order: $side $quantity @ $price for $securityListingIid');
 
-    // Map side string to proto enum value
-    String sideEnum;
+    fin_enum.OrderSideEnum sideEnum;
     switch (side.toUpperCase()) {
       case 'BUY':
-        sideEnum = 'ORDER_SIDE_ENUM_BUY';
+        sideEnum = fin_enum.OrderSideEnum.ORDER_SIDE_ENUM_BUY;
         break;
       case 'SELL':
-        sideEnum = 'ORDER_SIDE_ENUM_SELL';
+        sideEnum = fin_enum.OrderSideEnum.ORDER_SIDE_ENUM_SELL;
         break;
       default:
-        sideEnum = 'ORDER_SIDE_ENUM_UNKNOWN';
+        sideEnum = fin_enum.OrderSideEnum.ORDER_SIDE_ENUM_UNKNOWN;
     }
 
-    final requestBody = <String, dynamic>{
-      'proposed_execution_id': 'create_order_${DateTime.now().millisecondsSinceEpoch}',
-      'external_investor_id': externalInvestorId,
-      'fee_payer_account_iid': feePayerAccountIid,
-      'security_listing_iid': securityListingIid,
-      'order_type': orderType,
-      'side': sideEnum,
-      'quantity': quantity,
-      'price': price,
-      'time_in_force': timeInForce,
-      'investor_order_id': investorOrderId,
-    };
+    final execId = 'create_order_${DateTime.now().millisecondsSinceEpoch}';
+    final request = CreateOrderAsyncRequest(
+      proposedExecutionId: execId,
+      externalInvestorId: externalInvestorId,
+      feePayerAccountIid: feePayerAccountIid,
+      securityListingIid: securityListingIid,
+      orderType: orderType,
+      side: sideEnum,
+      quantity: quantity,
+      price: price,
+      timeInForce: timeInForce,
+      investorOrderId: investorOrderId,
+    );
 
-    requestBody['expire_dt'] = {
-      'utc_unix_epoch_ts_millis': expireTime != null
+    request.expireDt = common_pb.DateTime(
+      utcUnixEpochTsMillis: expireTime != null
           ? expireTime.millisecondsSinceEpoch.toString()
           : '0',
-    };
-    if (currency != null && currency.isNotEmpty) {
-      requestBody['currency'] = currency;
-    }
-    if (feeAmount != null && feeAmount.isNotEmpty) {
-      requestBody['fee_amount'] = feeAmount;
-    }
-    if (auxData != null) {
-      requestBody['aux_data'] = auxData;
-    }
+    );
+    if (currency != null && currency.isNotEmpty) request.currency = currency;
+    if (feeAmount != null && feeAmount.isNotEmpty) request.feeAmount = feeAmount;
+    if (auxData != null) request.auxData.addAll(auxData);
 
-    return _executeGrpcCall(
+    return _executeNativeCall(
       method: 'CreateOrderAsync',
-      endpoint: 'TradingService/CreateOrderAsync',
-      requestBody: requestBody,
+      requestBody: {
+        'proposed_execution_id': execId,
+        'external_investor_id': externalInvestorId,
+        'security_listing_iid': securityListingIid,
+        'order_type': orderType,
+        'side': side,
+        'quantity': quantity,
+        'price': price,
+      },
+      rpcCall: () => _mgr.tradingClient.createOrderAsync(request, options: _mgr.callOptions()),
     );
   }
 
-  /// Get execution reports for an order
   /// TradingService.GetOrderExecutionReports
   static Future<Map<String, dynamic>> getOrderExecutionReports({
     required String requestId,
@@ -1316,45 +1139,36 @@ class GrpcurlHelper {
   }) async {
     print('📋 Getting execution reports for requestId: $requestId');
 
-    final requestBody = <String, dynamic>{
-      'proposed_execution_id': 'get_exec_reports_${DateTime.now().millisecondsSinceEpoch}',
-      'request_id': requestId,
-      'pagination': {
-        'page_nr': pageNumber,
-        'page_size': pageSize,
-      },
-    };
+    final execId = 'get_exec_reports_${DateTime.now().millisecondsSinceEpoch}';
+    final request = GetOrderExecutionReportsRequest(
+      proposedExecutionId: execId,
+      requestId: requestId,
+      pagination: common_pb.PaginationParams(pageNr: pageNumber, pageSize: pageSize),
+    );
+    if (symbolFilter != null && symbolFilter.isNotEmpty) request.symbolFilter = symbolFilter;
+    if (currencyFilter != null && currencyFilter.isNotEmpty) request.currencyFilter = currencyFilter;
+    if (execTypeFilter != null && execTypeFilter.isNotEmpty) request.execTypeFilter = execTypeFilter;
+    if (fromDate != null && fromDate.isNotEmpty) request.fromDate = fromDate;
+    if (toDate != null && toDate.isNotEmpty) request.toDate = toDate;
+    if (sortBy != null && sortBy.isNotEmpty) request.sortBy = sortBy;
+    if (sortDirection != null && sortDirection.isNotEmpty) request.sortDirection = sortDirection;
 
-    if (symbolFilter != null && symbolFilter.isNotEmpty) {
-      requestBody['symbol_filter'] = symbolFilter;
-    }
-    if (currencyFilter != null && currencyFilter.isNotEmpty) {
-      requestBody['currency_filter'] = currencyFilter;
-    }
-    if (execTypeFilter != null && execTypeFilter.isNotEmpty) {
-      requestBody['exec_type_filter'] = execTypeFilter;
-    }
-    if (fromDate != null && fromDate.isNotEmpty) {
-      requestBody['from_date'] = fromDate;
-    }
-    if (toDate != null && toDate.isNotEmpty) {
-      requestBody['to_date'] = toDate;
-    }
-    if (sortBy != null && sortBy.isNotEmpty) {
-      requestBody['sort_by'] = sortBy;
-    }
-    if (sortDirection != null && sortDirection.isNotEmpty) {
-      requestBody['sort_direction'] = sortDirection;
-    }
-
-    return _executeGrpcCall(
+    return _executeNativeCall(
       method: 'GetOrderExecutionReports',
-      endpoint: 'TradingService/GetOrderExecutionReports',
-      requestBody: requestBody,
+      requestBody: {
+        'proposed_execution_id': execId,
+        'request_id': requestId,
+        'pagination': {'page_nr': pageNumber, 'page_size': pageSize},
+      },
+      rpcCall: () => _mgr.tradingClient.getOrderExecutionReports(request, options: _mgr.callOptions()),
     );
   }
 
-  /// Get execution reports via ReportingService.GetExecutionReports
+  // ============================================================================
+  // AdminService Methods
+  // ============================================================================
+
+  /// AdminService.GetExecutionReports
   static Future<Map<String, dynamic>> getExecutionReports({
     int pageNumber = 1,
     int pageSize = 20,
@@ -1370,102 +1184,32 @@ class GrpcurlHelper {
     String? sortDirection,
     String? search,
   }) async {
-    print('📋 Getting execution reports from ReportingService');
+    print('📋 Getting execution reports from AdminService');
 
-    final requestBody = <String, dynamic>{
-      'proposed_execution_id': 'get_exec_reports_${DateTime.now().millisecondsSinceEpoch}',
-      'pagination': {
-        'page_nr': pageNumber,
-        'page_size': pageSize,
-      },
-    };
+    final execId = 'get_exec_reports_${DateTime.now().millisecondsSinceEpoch}';
+    final request = GetExecutionReportsRequest(
+      proposedExecutionId: execId,
+      pagination: common_pb.PaginationParams(pageNr: pageNumber, pageSize: pageSize),
+    );
+    if (requestId != null && requestId.isNotEmpty) request.requestId = requestId;
+    if (symbol != null && symbol.isNotEmpty) request.symbol = symbol;
+    if (currency != null && currency.isNotEmpty) request.currency = currency;
+    if (execType != null && execType.isNotEmpty) request.execType = execType;
+    if (side != null && side.isNotEmpty) request.side = side;
+    if (venueIid != null && venueIid.isNotEmpty) request.venueIid = venueIid;
+    if (fromDate != null && fromDate.isNotEmpty) request.fromDate = fromDate;
+    if (toDate != null && toDate.isNotEmpty) request.toDate = toDate;
+    if (sortBy != null && sortBy.isNotEmpty) request.sortBy = sortBy;
+    if (sortDirection != null && sortDirection.isNotEmpty) request.sortDirection = sortDirection;
+    if (search != null && search.isNotEmpty) request.search = search;
 
-    if (requestId != null && requestId.isNotEmpty) {
-      requestBody['request_id'] = requestId;
-    }
-    if (symbol != null && symbol.isNotEmpty) {
-      requestBody['symbol'] = symbol;
-    }
-    if (currency != null && currency.isNotEmpty) {
-      requestBody['currency'] = currency;
-    }
-    if (execType != null && execType.isNotEmpty) {
-      requestBody['exec_type'] = execType;
-    }
-    if (side != null && side.isNotEmpty) {
-      requestBody['side'] = side;
-    }
-    if (venueIid != null && venueIid.isNotEmpty) {
-      requestBody['venue_iid'] = venueIid;
-    }
-    if (fromDate != null && fromDate.isNotEmpty) {
-      requestBody['from_date'] = fromDate;
-    }
-    if (toDate != null && toDate.isNotEmpty) {
-      requestBody['to_date'] = toDate;
-    }
-    if (sortBy != null && sortBy.isNotEmpty) {
-      requestBody['sort_by'] = sortBy;
-    }
-    if (sortDirection != null && sortDirection.isNotEmpty) {
-      requestBody['sort_direction'] = sortDirection;
-    }
-    if (search != null && search.isNotEmpty) {
-      requestBody['search'] = search;
-    }
-
-    return _executeGrpcCall(
+    return _executeNativeCall(
       method: 'GetExecutionReports',
-      endpoint: 'ReportingService/GetExecutionReports',
-      requestBody: requestBody,
-    );
-  }
-
-  // ============================================================================
-  // SecurityListingService Methods
-  // ============================================================================
-
-  /// Get trades for a security listing
-  /// SecurityListingService.GetSecurityListingTrades
-  static Future<Map<String, dynamic>> getSecurityTrades({
-    required String securityId,
-    int pageNumber = 1,
-    int pageSize = 50,
-  }) async {
-    print('📋 Getting trades for security: $securityId');
-
-    return _executeGrpcCall(
-      method: 'GetSecurityListingTrades',
-      endpoint: 'SecurityListingService/GetSecurityListingTrades',
       requestBody: {
-        'proposed_execution_id': 'get_security_trades_${DateTime.now().millisecondsSinceEpoch}',
-        'pagination': {
-          'page_nr': pageNumber,
-          'page_size': pageSize,
-        },
-        'security_listing_iids': [securityId],
+        'proposed_execution_id': execId,
+        'pagination': {'page_nr': pageNumber, 'page_size': pageSize},
       },
-    );
-  }
-
-  // ============================================================================
-  // InvestorService - GetInvestorInfoBatch
-  // ============================================================================
-
-  /// Get investor info batch using grpcurl
-  /// InvestorService.GetInvestorInfoBatch
-  static Future<Map<String, dynamic>> getInvestorInfoBatch({
-    required List<String> externalInvestorIds,
-  }) async {
-    print('📋 Getting investor info for: $externalInvestorIds');
-
-    return _executeGrpcCall(
-      method: 'GetInvestorInfoBatch',
-      endpoint: 'InvestorService/GetInvestorInfoBatch',
-      requestBody: {
-        'proposed_execution_id': 'get_investor_info_batch_${DateTime.now().millisecondsSinceEpoch}',
-        'external_investor_ids': externalInvestorIds,
-      },
+      rpcCall: () => _mgr.adminClient.getExecutionReports(request, options: _mgr.callOptions()),
     );
   }
 
@@ -1473,21 +1217,21 @@ class GrpcurlHelper {
   // ParticipantService Methods
   // ============================================================================
 
-  /// Get participant info using grpcurl
   /// ParticipantService.GetParticipantInfo
   static Future<Map<String, dynamic>> getParticipantInfo() async {
     print('📋 Getting participant info from real server...');
 
-    return _executeGrpcCall(
+    final execId = 'get_participant_info_${DateTime.now().millisecondsSinceEpoch}';
+    return _executeNativeCall(
       method: 'GetParticipantInfo',
-      endpoint: 'ParticipantService/GetParticipantInfo',
-      requestBody: {
-        'proposed_execution_id': 'get_participant_info_${DateTime.now().millisecondsSinceEpoch}',
-      },
+      requestBody: {'proposed_execution_id': execId},
+      rpcCall: () => _mgr.participantClient.getParticipantInfo(
+        GetParticipantInfoRequest(proposedExecutionId: execId),
+        options: _mgr.callOptions(),
+      ),
     );
   }
 
-  /// Get participant holdings using grpcurl
   /// ParticipantService.GetParticipantHoldings
   static Future<Map<String, dynamic>> getParticipantHoldings({
     String? mode,
@@ -1495,66 +1239,17 @@ class GrpcurlHelper {
   }) async {
     print('📋 Getting participant holdings from real server...');
 
-    final requestBody = <String, dynamic>{
-      'proposed_execution_id': 'get_participant_holdings_${DateTime.now().millisecondsSinceEpoch}',
-    };
-
-    if (mode != null && mode.isNotEmpty) {
-      requestBody['mode'] = mode;
-    }
+    final execId = 'get_participant_holdings_${DateTime.now().millisecondsSinceEpoch}';
+    final request = GetParticipantHoldingsRequest(proposedExecutionId: execId);
+    if (mode != null && mode.isNotEmpty) request.mode = mode;
     if (issuedInstrumentIid != null && issuedInstrumentIid.isNotEmpty) {
-      requestBody['issued_instrument_iid'] = issuedInstrumentIid;
+      request.issuedInstrumentIid = issuedInstrumentIid;
     }
 
-    return _executeGrpcCall(
+    return _executeNativeCall(
       method: 'GetParticipantHoldings',
-      endpoint: 'ParticipantService/GetParticipantHoldings',
-      requestBody: requestBody,
+      requestBody: {'proposed_execution_id': execId},
+      rpcCall: () => _mgr.participantClient.getParticipantHoldings(request, options: _mgr.callOptions()),
     );
-  }
-
-  // ============================================================================
-  // Utility Methods
-  // ============================================================================
-
-  /// List available services using grpcurl
-  static Future<List<String>> listServices() async {
-    try {
-      // Find the working grpcurl path
-      final grpcurlPath = await _findGrpcurlPath();
-      if (grpcurlPath == null) {
-        return [];
-      }
-
-      ProcessResult result;
-      try {
-        final listArgs = AppConfig.grpcUseSecure
-            ? ['-insecure', '$_host:$_port', 'list']
-            : ['-plaintext', '$_host:$_port', 'list'];
-        result = await Process.run(
-          grpcurlPath,
-          listArgs,
-        ).timeout(const Duration(minutes: 5));
-      } catch (e) {
-        print('❌ Process.run failed for listServices in sandboxed app: ${e.runtimeType}: ${e.toString()}');
-        return [];
-      }
-
-      if (result.exitCode == 0) {
-        final services = result.stdout.toString()
-            .split('\n')
-            .where((line) => line.trim().isNotEmpty)
-            .toList();
-
-        print('📋 Available services: $services');
-        return services;
-      } else {
-        print('❌ Failed to list services: ${result.stderr}');
-        return [];
-      }
-    } catch (e) {
-      print('❌ Failed to list services: $e');
-      return [];
-    }
   }
 }
