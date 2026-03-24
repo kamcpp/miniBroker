@@ -32,7 +32,7 @@ jobs:
           $env:Path += ";$env:LOCALAPPDATA\Pub\Cache\bin"
           New-Item -ItemType Directory -Force -Path lib/generated/fin
           New-Item -ItemType Directory -Force -Path lib/generated/prtagent/v1
-          protoc --proto_path=protos --dart_out=grpc:lib/generated protos/common.proto protos/fin/*.proto protos/prtagent/v1/*.proto
+          protoc --proto_path=proto/qomet/agora/daemons/api/grpc --dart_out=grpc:lib/generated proto/qomet/agora/daemons/api/grpc/*.proto proto/qomet/agora/daemons/api/grpc/fin/*.proto proto/qomet/agora/daemons/api/grpc/prtagent/v1/*.proto
         shell: pwsh
 
       - run: flutter build windows --release
