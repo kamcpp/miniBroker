@@ -215,7 +215,7 @@ class _InvestorInfoPageState extends State<InvestorInfoPage> {
       for (var i = 0; i < investorInfos.length; i++) {
         // Each entry is an InvestorInfo with 'investor' and 'account_relations' fields,
         // or directly an Investor object (old format)
-        final entry = investorInfos[i] as Map<String, dynamic>? ?? {};
+        final entry = _safeMap(investorInfos[i]);
         final investor = entry.containsKey('investor')
             ? entry  // new format: render the whole InvestorInfo (investor + account_relations)
             : entry; // old format: the entry IS the investor
@@ -297,7 +297,7 @@ class _InvestorInfoPageState extends State<InvestorInfoPage> {
         if (value.isEmpty) continue;
         if (value.first is Map) {
           for (var i = 0; i < value.length; i++) {
-            final item = value[i] as Map<String, dynamic>;
+            final item = _safeMap(value[i]);
             widgets.add(
               Padding(
                 padding: const EdgeInsets.only(top: 6),
@@ -320,7 +320,7 @@ class _InvestorInfoPageState extends State<InvestorInfoPage> {
           );
         }
       } else if (value is Map) {
-        final map = value as Map<String, dynamic>;
+        final map = _safeMap(value);
         if (map.isEmpty) continue;
         widgets.add(
           Padding(
@@ -357,7 +357,7 @@ class _InvestorInfoPageState extends State<InvestorInfoPage> {
               if (v is Map) {
                 return _buildNestedSection(
                   _formatFieldName(e.key),
-                  v as Map<String, dynamic>,
+                  _safeMap(v),
                   labelColor,
                   textColor,
                   isDarkTheme,
@@ -371,7 +371,7 @@ class _InvestorInfoPageState extends State<InvestorInfoPage> {
                       for (var i = 0; i < v.length; i++)
                         _buildNestedSection(
                           '${_formatFieldName(e.key)} [${i + 1}]',
-                          v[i] as Map<String, dynamic>,
+                          _safeMap(v[i]),
                           labelColor,
                           textColor,
                           isDarkTheme,
@@ -402,6 +402,14 @@ class _InvestorInfoPageState extends State<InvestorInfoPage> {
         ),
       ],
     );
+  }
+
+  /// Safely convert any Map to Map<String, dynamic> (handles proto3 JSON maps
+  /// which may have String? keys and Object? values).
+  Map<String, dynamic> _safeMap(dynamic value) {
+    if (value is Map<String, dynamic>) return value;
+    if (value is Map) return value.map((k, v) => MapEntry(k.toString(), v));
+    return {};
   }
 
   /// Convert snake_case or camelCase field names to readable labels

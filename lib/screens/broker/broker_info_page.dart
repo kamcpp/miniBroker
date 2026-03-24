@@ -444,7 +444,7 @@ class _BrokerInfoPageState extends State<BrokerInfoPage> {
         if (value.first is Map) {
           // List of objects (e.g. identifiers)
           for (var i = 0; i < value.length; i++) {
-            final item = value[i] as Map<String, dynamic>;
+            final item = _safeMap(value[i]);
             widgets.add(
               Padding(
                 padding: const EdgeInsets.only(top: 6),
@@ -468,7 +468,7 @@ class _BrokerInfoPageState extends State<BrokerInfoPage> {
           );
         }
       } else if (value is Map) {
-        final map = value as Map<String, dynamic>;
+        final map = _safeMap(value);
         if (map.isEmpty) continue;
         widgets.add(
           Padding(
@@ -505,7 +505,7 @@ class _BrokerInfoPageState extends State<BrokerInfoPage> {
               if (v is Map) {
                 return _buildNestedSection(
                   _formatFieldName(e.key),
-                  v as Map<String, dynamic>,
+                  _safeMap(v),
                   labelColor,
                   textColor,
                   isDarkTheme,
@@ -519,7 +519,7 @@ class _BrokerInfoPageState extends State<BrokerInfoPage> {
                       for (var i = 0; i < v.length; i++)
                         _buildNestedSection(
                           '${_formatFieldName(e.key)} [${i + 1}]',
-                          v[i] as Map<String, dynamic>,
+                          _safeMap(v[i]),
                           labelColor,
                           textColor,
                           isDarkTheme,
@@ -535,6 +535,12 @@ class _BrokerInfoPageState extends State<BrokerInfoPage> {
         ),
       ],
     );
+  }
+
+  Map<String, dynamic> _safeMap(dynamic value) {
+    if (value is Map<String, dynamic>) return value;
+    if (value is Map) return value.map((k, v) => MapEntry(k.toString(), v));
+    return {};
   }
 
   /// Convert snake_case or camelCase field names to readable labels

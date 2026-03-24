@@ -1067,7 +1067,7 @@ class _InvestorInfoDialogState extends State<_InvestorInfoDialog> {
       widgets.add(Text('No investor found in response', style: TextStyle(color: labelColor, fontSize: UIConstants.fontSizeSm)));
     } else {
       for (var i = 0; i < investorInfos.length; i++) {
-        final entry = investorInfos[i] as Map<String, dynamic>? ?? {};
+        final entry = _safeMap(investorInfos[i]);
         final title = investorInfos.length == 1 ? 'Investor Information' : 'Investor [${i + 1}]';
         widgets.add(
           Container(
@@ -1143,7 +1143,7 @@ class _InvestorInfoDialogState extends State<_InvestorInfoDialog> {
         if (value.isEmpty) continue;
         if (value.first is Map) {
           for (var i = 0; i < value.length; i++) {
-            final item = value[i] as Map<String, dynamic>;
+            final item = _safeMap(value[i]);
             widgets.add(
               Padding(
                 padding: const EdgeInsets.only(top: 6),
@@ -1160,7 +1160,7 @@ class _InvestorInfoDialogState extends State<_InvestorInfoDialog> {
           );
         }
       } else if (value is Map) {
-        final map = value as Map<String, dynamic>;
+        final map = _safeMap(value);
         if (map.isEmpty) continue;
         widgets.add(
           Padding(
@@ -1194,7 +1194,7 @@ class _InvestorInfoDialogState extends State<_InvestorInfoDialog> {
             children: data.entries.where((e) => e.value != null).map((e) {
               final v = e.value;
               if (v is Map) {
-                return _buildNestedSection(_formatFieldName(e.key), v as Map<String, dynamic>, labelColor, textColor, isDark);
+                return _buildNestedSection(_formatFieldName(e.key), _safeMap(v), labelColor, textColor, isDark);
               } else if (v is List) {
                 if (v.isEmpty) return const SizedBox.shrink();
                 if (v.first is Map) {
@@ -1202,7 +1202,7 @@ class _InvestorInfoDialogState extends State<_InvestorInfoDialog> {
                     crossAxisAlignment: CrossAxisAlignment.start,
                     children: [
                       for (var i = 0; i < v.length; i++)
-                        _buildNestedSection('${_formatFieldName(e.key)} [${i + 1}]', v[i] as Map<String, dynamic>, labelColor, textColor, isDark),
+                        _buildNestedSection('${_formatFieldName(e.key)} [${i + 1}]', _safeMap(v[i]), labelColor, textColor, isDark),
                     ],
                   );
                 }
@@ -1222,6 +1222,12 @@ class _InvestorInfoDialogState extends State<_InvestorInfoDialog> {
         ),
       ],
     );
+  }
+
+  Map<String, dynamic> _safeMap(dynamic value) {
+    if (value is Map<String, dynamic>) return value;
+    if (value is Map) return value.map((k, v) => MapEntry(k.toString(), v));
+    return {};
   }
 
   String _formatFieldName(String name) {

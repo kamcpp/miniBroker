@@ -84,19 +84,16 @@ class GrpcHelper {
     }
   }
 
-  /// Convert a protobuf message to a JSON-compatible Map.
+  /// Convert a protobuf message to a JSON-compatible Map<String, dynamic>.
   /// Uses proto3 JSON representation (camelCase field name keys).
-  /// NOTE: writeToJson()/writeToJsonMap() use numeric tag keys — we need
-  /// toProto3Json() which produces camelCase keys (proto3 JSON format).
+  /// Always roundtrips through jsonEncode/jsonDecode to ensure all nested
+  /// maps are proper Map<String, dynamic> (toProto3Json returns Map<String?, Object?>).
   static Map<String, dynamic> _protoToJsonMap(GeneratedMessage message) {
     try {
       final proto3 = message.toProto3Json();
-      if (proto3 is Map<String, dynamic>) return proto3;
-      // Fallback: encode then decode
       final jsonStr = jsonEncode(proto3);
       return jsonDecode(jsonStr) as Map<String, dynamic>;
     } catch (_) {
-      // Last resort: use writeToJsonMap which gives tag-number keys
       try {
         return message.writeToJsonMap();
       } catch (_) {
