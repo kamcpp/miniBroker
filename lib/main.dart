@@ -1,7 +1,9 @@
 import 'dart:async';
+import 'dart:io';
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 import 'package:package_info_plus/package_info_plus.dart';
+import 'package:sqflite_common_ffi/sqflite_ffi.dart';
 import 'screens/securities_page.dart';
 import 'screens/role_selection_page.dart';
 import 'services/auth_service.dart';
@@ -15,6 +17,12 @@ import 'widgets/config_finder_dialog.dart';
 import 'services/event_subscription_service.dart';
 
 Future<void> main() async {
+  // Initialize sqflite FFI for desktop platforms (Windows, Linux)
+  if (Platform.isWindows || Platform.isLinux) {
+    sqfliteFfiInit();
+    databaseFactory = databaseFactoryFfi;
+  }
+
   // Replace the red error screen with a subtle dark error widget
   ErrorWidget.builder = (FlutterErrorDetails details) {
     print('❌ CRITICAL: Widget error: ${details.exception}');

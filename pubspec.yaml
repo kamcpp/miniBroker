@@ -1,7 +1,7 @@
 name: mini_broker
 description: Minimal Trading Broker Application by VeroPulse GmbH
 publish_to: 'none'
-version: 0.0.46+47
+version: 0.0.47+48
 
 environment:
   sdk: '>=3.2.3 <4.0.0'
@@ -14,6 +14,7 @@ dependencies:
   path: ^1.8.3
   shared_preferences: ^2.5.3
   sqflite: ^2.3.3
+  sqflite_common_ffi: ^2.3.3
   crypto: ^3.0.5
   http: ^1.1.0
   grpc: ^3.2.4
