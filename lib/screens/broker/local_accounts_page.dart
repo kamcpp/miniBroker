@@ -26,6 +26,8 @@ class LocalAccountsPage extends StatefulWidget {
 }
 
 class _LocalAccountsPageState extends State<LocalAccountsPage> {
+  static const double _commandButtonHeight = UIConstants.buttonHeightStandard * 0.7;
+
   // Data
   List<Map<String, dynamic>> _users = [];
   List<Map<String, dynamic>> _filteredUsers = [];
@@ -45,19 +47,12 @@ class _LocalAccountsPageState extends State<LocalAccountsPage> {
 
   // Filters
   final _searchController = TextEditingController();
-  String? _serverStatusFilter;
   String _sortBy = 'username';
   String _sortDirection = 'asc';
 
   // Services
   final _userSyncService = UserSyncService();
   final _databaseHelper = DatabaseHelper();
-
-  static const _serverStatusOptions = <String, String>{
-    '': 'All Status',
-    'on_server': 'On Server',
-    'local_only': 'Local Only',
-  };
 
   static const _sortByOptions = <String, String>{
     '': 'Default',
@@ -71,7 +66,6 @@ class _LocalAccountsPageState extends State<LocalAccountsPage> {
   void _saveState() {
     PageStateService.instance.save(_pageId, {
       'search': _searchController.text,
-      'serverStatusFilter': _serverStatusFilter,
       'sortBy': _sortBy,
       'sortDirection': _sortDirection,
       'currentPage': _currentPage,
@@ -83,7 +77,6 @@ class _LocalAccountsPageState extends State<LocalAccountsPage> {
     final state = PageStateService.instance.get(_pageId);
     if (state != null) {
       _searchController.text = state['search'] ?? '';
-      _serverStatusFilter = state['serverStatusFilter'];
       _sortBy = state['sortBy'] ?? 'username';
       _sortDirection = state['sortDirection'] ?? 'asc';
       _currentPage = state['currentPage'] ?? 1;
@@ -145,13 +138,6 @@ class _LocalAccountsPageState extends State<LocalAccountsPage> {
       }).toList();
     }
 
-    // Server status filter
-    if (_serverStatusFilter == 'on_server') {
-      filtered = filtered.where((u) => u['exists_on_server'] == 1).toList();
-    } else if (_serverStatusFilter == 'local_only') {
-      filtered = filtered.where((u) => u['exists_on_server'] != 1).toList();
-    }
-
     // Sort
     filtered.sort((a, b) {
       int cmp;
@@ -205,7 +191,6 @@ class _LocalAccountsPageState extends State<LocalAccountsPage> {
   void _resetFilters() {
     setState(() {
       _searchController.clear();
-      _serverStatusFilter = null;
       _sortBy = 'username';
       _sortDirection = 'asc';
       _currentPage = 1;
@@ -364,19 +349,16 @@ class _LocalAccountsPageState extends State<LocalAccountsPage> {
   // ---- Export ----
 
   static const _exportColumns = [
-    'id', 'username', 'created_at', 'last_login', 'exists_on_server',
+    'id', 'username', 'created_at', 'last_login',
   ];
 
   static const _exportHeaders = [
-    'ID', 'Username', 'Created At', 'Last Login', 'On Server',
+    'ID', 'Username', 'Created At', 'Last Login',
   ];
 
   String _exportValue(Map<String, dynamic> user, String col) {
     if (col == 'created_at' || col == 'last_login') {
       return _formatDate(_parseUnixTimestamp(user[col]));
-    }
-    if (col == 'exists_on_server') {
-      return user[col] == 1 ? 'Yes' : 'No';
     }
     final val = user[col];
     if (val == null) return '-';
@@ -399,12 +381,6 @@ class _LocalAccountsPageState extends State<LocalAccountsPage> {
           return username.contains(search) || id.contains(search);
         }).toList();
       }
-      if (_serverStatusFilter == 'on_server') {
-        data = data.where((u) => u['exists_on_server'] == 1).toList();
-      } else if (_serverStatusFilter == 'local_only') {
-        data = data.where((u) => u['exists_on_server'] != 1).toList();
-      }
-
       if (!mounted) return;
       setState(() => _isLoading = false);
 
@@ -610,7 +586,7 @@ class _LocalAccountsPageState extends State<LocalAccountsPage> {
                               ),
                               SizedBox(height: UIConstants.spacingMd),
                               SizedBox(
-                                height: UIConstants.buttonHeightStandard,
+                                height: _commandButtonHeight,
                                 child: ElevatedButton(
                                   onPressed: _fetchUsers,
                                   style: UIConstants.buttonStyle(UIConstants.commandColor(isDarkTheme)),
@@ -652,17 +628,19 @@ class _LocalAccountsPageState extends State<LocalAccountsPage> {
             ),
           ),
         SizedBox(
-          height: UIConstants.buttonHeightStandard,
+          height: _commandButtonHeight,
           child: ElevatedButton.icon(
             onPressed: _isLoading ? null : _fetchUsers,
             icon: const Icon(Icons.refresh, size: 16),
             label: Text('Refresh', style: TextStyle(fontSize: UIConstants.fontSizeSm)),
-            style: UIConstants.buttonStyle(UIConstants.commandColor(isDarkTheme)),
+            style: UIConstants.buttonStyle(UIConstants.commandColor(isDarkTheme)).copyWith(
+              minimumSize: WidgetStatePropertyAll(Size(0, _commandButtonHeight)),
+            ),
           ),
         ),
         const SizedBox(width: 8),
         SizedBox(
-          height: UIConstants.buttonHeightStandard,
+          height: _commandButtonHeight,
           child: PopupMenuButton<String>(
             onSelected: _users.isEmpty ? null : (format) => _exportUsers(format),
             enabled: _users.isNotEmpty,
@@ -735,26 +713,6 @@ class _LocalAccountsPageState extends State<LocalAccountsPage> {
           width: 150,
           height: UIConstants.buttonHeightStandard,
           child: DropdownButtonFormField<String>(
-            value: _serverStatusFilter,
-            isDense: true,
-            isExpanded: true,
-            decoration: inputDecoration.copyWith(hintText: 'Server Status', hintStyle: hintStyle),
-            style: textStyle,
-            dropdownColor: UIConstants.dropdownBackground(isDarkTheme),
-            items: _serverStatusOptions.entries
-                .map((e) => DropdownMenuItem(
-                      value: e.key.isEmpty ? null : e.key,
-                      child: Text(e.value, style: textStyle),
-                    ))
-                .toList(),
-            onChanged: (value) => setState(() => _serverStatusFilter = value),
-          ),
-        ),
-        SizedBox(width: UIConstants.spacingSm),
-        SizedBox(
-          width: 150,
-          height: UIConstants.buttonHeightStandard,
-          child: DropdownButtonFormField<String>(
             value: _sortBy,
             isDense: true,
             isExpanded: true,
@@ -770,9 +728,9 @@ class _LocalAccountsPageState extends State<LocalAccountsPage> {
             onChanged: (value) => setState(() => _sortBy = value ?? 'username'),
           ),
         ),
-        SizedBox(width: UIConstants.spacingSm),
+        SizedBox(width: UIConstants.spacingXs),
         SizedBox(
-          height: UIConstants.buttonHeightStandard,
+          height: _commandButtonHeight,
           child: IconButton(
             icon: Icon(
               _sortDirection == 'asc' ? Icons.arrow_upward : Icons.arrow_downward,
@@ -782,21 +740,23 @@ class _LocalAccountsPageState extends State<LocalAccountsPage> {
             onPressed: () => setState(() => _sortDirection = _sortDirection == 'asc' ? 'desc' : 'asc'),
             tooltip: _sortDirection == 'asc' ? 'Ascending' : 'Descending',
             padding: EdgeInsets.zero,
-            constraints: const BoxConstraints(minWidth: 32, minHeight: 32),
+            constraints: BoxConstraints(minWidth: 32, minHeight: _commandButtonHeight),
           ),
         ),
         SizedBox(width: UIConstants.spacingSm),
         SizedBox(
-          height: UIConstants.buttonHeightStandard,
+          height: _commandButtonHeight,
           child: ElevatedButton(
             onPressed: _applyFilters,
-            style: UIConstants.buttonStyle(UIConstants.commandColor(isDarkTheme)),
+            style: UIConstants.buttonStyle(UIConstants.commandColor(isDarkTheme)).copyWith(
+              minimumSize: WidgetStatePropertyAll(Size(0, _commandButtonHeight)),
+            ),
             child: Text('Apply', style: TextStyle(fontSize: UIConstants.fontSizeSm)),
           ),
         ),
         SizedBox(width: UIConstants.spacingXs),
         SizedBox(
-          height: UIConstants.buttonHeightStandard,
+          height: _commandButtonHeight,
           child: TextButton(
             onPressed: _resetFilters,
             child: Text('Reset', style: TextStyle(fontSize: UIConstants.fontSizeSm)),
@@ -828,7 +788,6 @@ class _LocalAccountsPageState extends State<LocalAccountsPage> {
       columns: [
         StyledColumn(label: 'ID', flex: 1),
         StyledColumn(label: 'Username', flex: 2),
-        StyledColumn(label: 'Server Status', flex: 1),
         StyledColumn(label: 'Created At', flex: 2),
         StyledColumn(label: 'Last Login', flex: 2),
         StyledColumn(label: 'Actions', flex: 1),
@@ -838,7 +797,6 @@ class _LocalAccountsPageState extends State<LocalAccountsPage> {
         final user = entry.value;
         final username = (user['username'] ?? '-').toString();
         final id = (user['id'] ?? '-').toString();
-        final onServer = user['exists_on_server'] == 1;
         final createdAt = _formatDate(_parseUnixTimestamp(user['created_at']));
         final lastLogin = _formatDate(_parseUnixTimestamp(user['last_login']));
 
@@ -850,7 +808,6 @@ class _LocalAccountsPageState extends State<LocalAccountsPage> {
           cells: [
             _copyableCell(id, isDarkTheme),
             _copyableCell(username, isDarkTheme),
-            _serverStatusCell(onServer, isDarkTheme),
             _copyableCell(createdAt, isDarkTheme, noTruncate: true),
             _copyableCell(lastLogin, isDarkTheme, noTruncate: true),
             Row(
@@ -918,39 +875,6 @@ class _LocalAccountsPageState extends State<LocalAccountsPage> {
       child: InkWell(
         onTap: () => _copyToClipboard(value),
         child: child,
-      ),
-    );
-  }
-
-  Widget _serverStatusCell(bool onServer, bool isDarkTheme) {
-    final color = onServer ? Colors.blue : Colors.grey;
-    final label = onServer ? 'On Server' : 'Local Only';
-    final icon = onServer ? Icons.cloud_done : Icons.cloud_off;
-
-    return Tooltip(
-      message: label,
-      waitDuration: const Duration(milliseconds: 300),
-      child: InkWell(
-        onTap: () => _copyToClipboard(label),
-        child: Container(
-          padding: const EdgeInsets.symmetric(horizontal: 6, vertical: 2),
-          decoration: BoxDecoration(
-            color: color.withValues(alpha: 0.2),
-            borderRadius: BorderRadius.circular(4),
-            border: Border.all(color: color, width: 0.5),
-          ),
-          child: Row(
-            mainAxisSize: MainAxisSize.min,
-            children: [
-              Icon(icon, color: color, size: 12),
-              const SizedBox(width: 4),
-              Text(
-                label,
-                style: TextStyle(color: color, fontSize: 10, fontWeight: FontWeight.w600),
-              ),
-            ],
-          ),
-        ),
       ),
     );
   }
