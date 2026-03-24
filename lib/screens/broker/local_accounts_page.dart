@@ -18,14 +18,14 @@ import '../../widgets/base_page.dart';
 import '../../widgets/styled_data_table.dart';
 import '../../services/page_state_service.dart';
 
-class InvestorsPage extends StatefulWidget {
-  const InvestorsPage({super.key});
+class LocalAccountsPage extends StatefulWidget {
+  const LocalAccountsPage({super.key});
 
   @override
-  State<InvestorsPage> createState() => _InvestorsPageState();
+  State<LocalAccountsPage> createState() => _LocalAccountsPageState();
 }
 
-class _InvestorsPageState extends State<InvestorsPage> {
+class _LocalAccountsPageState extends State<LocalAccountsPage> {
   // Data
   List<Map<String, dynamic>> _users = [];
   List<Map<String, dynamic>> _filteredUsers = [];
@@ -66,7 +66,7 @@ class _InvestorsPageState extends State<InvestorsPage> {
     'last_login': 'Last Login',
   };
 
-  static const _pageId = 'investors';
+  static const _pageId = 'local_accounts';
 
   void _saveState() {
     PageStateService.instance.save(_pageId, {
@@ -418,7 +418,7 @@ class _InvestorsPageState extends State<InvestorsPage> {
       }
 
       final timestamp = DateTime.now().toIso8601String().replaceAll(':', '-').split('.').first;
-      final defaultName = 'investors_$timestamp';
+      final defaultName = 'local_accounts_$timestamp';
 
       switch (format) {
         case 'csv':
@@ -454,7 +454,7 @@ class _InvestorsPageState extends State<InvestorsPage> {
 
   Future<String?> _pickSaveLocation(String defaultName, String extension) async {
     final result = await FilePicker.platform.saveFile(
-      dialogTitle: 'Export Investors',
+      dialogTitle: 'Export Local Accounts',
       fileName: '$defaultName.$extension',
     );
     return result;
@@ -487,7 +487,7 @@ class _InvestorsPageState extends State<InvestorsPage> {
     final path = await _pickSaveLocation(defaultName, 'xlsx');
     if (path == null) return;
     final excel = xl.Excel.createExcel();
-    final sheet = excel['Investors'];
+    final sheet = excel['Local Accounts'];
     excel.delete('Sheet1');
     for (int i = 0; i < _exportHeaders.length; i++) {
       sheet.cell(xl.CellIndex.indexByColumnRow(columnIndex: i, rowIndex: 0)).value = xl.TextCellValue(_exportHeaders[i]);
@@ -515,7 +515,7 @@ class _InvestorsPageState extends State<InvestorsPage> {
         pageFormat: PdfPageFormat.a4.landscape,
         margin: const pw.EdgeInsets.all(20),
         header: (context) => pw.Text(
-          'Investors - Exported ${DateTime.now().toIso8601String().split('T').first} (${data.length} records)',
+          'Local Accounts - Exported ${DateTime.now().toIso8601String().split('T').first} (${data.length} records)',
           style: pw.TextStyle(fontSize: 12, fontWeight: pw.FontWeight.bold),
         ),
         build: (context) => [
@@ -538,7 +538,7 @@ class _InvestorsPageState extends State<InvestorsPage> {
     if (!mounted) return;
     ScaffoldMessenger.of(context).showSnackBar(
       SnackBar(
-        content: Text('Exported $count investors to: $path', style: const TextStyle(fontSize: 12)),
+        content: Text('Exported $count local accounts to: $path', style: const TextStyle(fontSize: 12)),
         duration: const Duration(seconds: 3),
         behavior: SnackBarBehavior.floating,
         action: SnackBarAction(
@@ -576,7 +576,7 @@ class _InvestorsPageState extends State<InvestorsPage> {
     final backgroundColor = UIConstants.pageBackground(isDarkTheme);
 
     return BasePage(
-      menuItems: MenuItemsHelper.buildMenuItems(context, 'investors'),
+      menuItems: MenuItemsHelper.buildMenuItems(context, 'local_accounts'),
       content: Container(
         color: backgroundColor,
         padding: UIConstants.paddingComfortable,
@@ -632,7 +632,7 @@ class _InvestorsPageState extends State<InvestorsPage> {
     return Row(
       children: [
         Text(
-          'Investors',
+          'Local Accounts',
           style: TextStyle(
             color: UIConstants.textPrimary(isDarkTheme),
             fontSize: UIConstants.fontSizeLg,
@@ -810,7 +810,7 @@ class _InvestorsPageState extends State<InvestorsPage> {
     if (_filteredUsers.isEmpty) {
       return Center(
         child: Text(
-          'No investors found.',
+          'No local accounts found.',
           style: TextStyle(
             color: UIConstants.textSecondary(isDarkTheme),
             fontSize: UIConstants.fontSizeSm,

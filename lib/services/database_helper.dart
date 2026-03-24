@@ -65,7 +65,7 @@ class DatabaseHelper {
 
       final db = await openDatabase(
         dbPath,
-        version: 3,
+        version: 4,
         onCreate: _createDatabase,
         onUpgrade: _upgradeDatabase,
       );
@@ -81,7 +81,7 @@ class DatabaseHelper {
 
   Future<void> _createDatabase(Database db, int version) async {
     await db.execute('''
-      CREATE TABLE users (
+      CREATE TABLE local_accounts (
         id INTEGER PRIMARY KEY AUTOINCREMENT,
         username TEXT UNIQUE NOT NULL,
         password TEXT NOT NULL,
@@ -129,6 +129,10 @@ class DatabaseHelper {
       await db.execute('CREATE INDEX IF NOT EXISTS idx_event_messages_received_at ON event_messages(received_at)');
       print('📊 Database upgraded to version 3: added event_messages table');
     }
+    if (oldVersion < 4) {
+      await db.execute('ALTER TABLE users RENAME TO local_accounts');
+      print('📊 Database upgraded to version 4: renamed users table to local_accounts');
+    }
   }
 
   // Hash password using SHA-256
@@ -138,14 +142,14 @@ class DatabaseHelper {
     return digest.toString();
   }
 
-  // Create a new user
+  // Create a new local account
   Future<bool> createUser(String username, String password) async {
     try {
       final db = await database;
       final hashedPassword = _hashPassword(password);
-      
+
       await db.insert(
-        'users',
+        'local_accounts',
         {
           'username': username.toLowerCase().trim(),
           'password': hashedPassword,
@@ -161,22 +165,22 @@ class DatabaseHelper {
     }
   }
 
-  // Verify user credentials
+  // Verify local account credentials
   Future<Map<String, dynamic>?> verifyUser(String username, String password) async {
     try {
       final db = await database;
       final hashedPassword = _hashPassword(password);
-      
+
       final List<Map<String, dynamic>> results = await db.query(
-        'users',
+        'local_accounts',
         where: 'username = ? AND password = ?',
         whereArgs: [username.toLowerCase().trim(), hashedPassword],
       );
-      
+
       if (results.isNotEmpty) {
         // Update last login time
         await db.update(
-          'users',
+          'local_accounts',
           {'last_login': _toUnixTimestamp(DateTime.now())},
           where: 'id = ?',
           whereArgs: [results.first['id']],
@@ -192,12 +196,12 @@ class DatabaseHelper {
     }
   }
 
-  // Check if username already exists
+  // Check if username already exists in local accounts
   Future<bool> isUsernameExists(String username) async {
     try {
       final db = await database;
       final List<Map<String, dynamic>> results = await db.query(
-        'users',
+        'local_accounts',
         where: 'username = ?',
         whereArgs: [username.toLowerCase().trim()],
       );
@@ -209,12 +213,12 @@ class DatabaseHelper {
     }
   }
 
-  // Get user by username
+  // Get local account by username
   Future<Map<String, dynamic>?> getUser(String username) async {
     try {
       final db = await database;
       final List<Map<String, dynamic>> results = await db.query(
-        'users',
+        'local_accounts',
         where: 'username = ?',
         whereArgs: [username.toLowerCase().trim()],
       );
@@ -226,23 +230,23 @@ class DatabaseHelper {
     }
   }
 
-  // Get all users (for debugging)
+  // Get all local accounts
   Future<List<Map<String, dynamic>>> getAllUsers() async {
     try {
       final db = await database;
-      return await db.query('users');
+      return await db.query('local_accounts');
     } catch (e) {
       print('Error getting all users: $e');
       return [];
     }
   }
 
-  // Delete user
+  // Delete local account
   Future<bool> deleteUser(String username) async {
     try{
       final db = await database;
       final result = await db.delete(
-        'users',
+        'local_accounts',
         where: 'username = ?',
         whereArgs: [username.toLowerCase().trim()],
       );
@@ -254,14 +258,14 @@ class DatabaseHelper {
     }
   }
 
-  // Update user password
+  // Update local account password
   Future<bool> updateUserPassword(String username, String newPassword) async {
     try {
       final db = await database;
       final hashedPassword = _hashPassword(newPassword);
-      
+
       final result = await db.update(
-        'users',
+        'local_accounts',
         {'password': hashedPassword},
         where: 'username = ?',
         whereArgs: [username.toLowerCase().trim()],
@@ -274,7 +278,7 @@ class DatabaseHelper {
     }
   }
 
-  // Update username
+  // Update local account username
   Future<bool> updateUsername(String oldUsername, String newUsername) async {
     try {
 
@@ -287,7 +291,7 @@ class DatabaseHelper {
 
       final db = await database;
       final result = await db.update(
-        'users',
+        'local_accounts',
         {'username': newUsername.toLowerCase().trim()},
         where: 'username = ?',
         whereArgs: [oldUsername.toLowerCase().trim()],
@@ -300,12 +304,12 @@ class DatabaseHelper {
     }
   }
 
-  // Synchronize local users with server accounts
+  // Synchronize local accounts with server accounts
   Future<void> syncUsersWithServer(List<Map<String, dynamic>> serverAccounts) async {
     try {
       final db = await database;
 
-      // Get all local users
+      // Get all local accounts
       final localUsers = await getAllUsers();
 
       // Create set of server external IDs for quick lookup
@@ -339,7 +343,7 @@ class DatabaseHelper {
 
         // Update the exists_on_server field
         await db.update(
-          'users',
+          'local_accounts',
           {'exists_on_server': existsOnServer},
           where: 'username = ?',
           whereArgs: [username],
