@@ -11,6 +11,7 @@ import '../screens/broker/trade_reports_page.dart';
 import '../screens/broker/treasury_activities_page.dart';
 import '../screens/broker/agora_events_page.dart';
 import '../screens/broker/security_orderbooks_page.dart';
+import '../screens/broker/orders_page.dart';
 import '../screens/broker/workflows_page.dart';
 import '../screens/investor/investor_info_page.dart';
 import '../screens/investor/event_messages_page.dart';
@@ -153,6 +154,23 @@ class MenuItemsHelper {
           },
         ),
       // Broker-only pages
+      if (role == UserRole.broker)
+        MenuItem(
+          label: 'Orders',
+          icon: Icons.shopping_cart,
+          isSelected: currentPage == 'orders',
+          onTap: () {
+            if (currentPage != 'orders') {
+              Navigator.of(context).pushReplacement(
+                PageRouteBuilder(
+                  pageBuilder: (context, animation, secondaryAnimation) => const OrdersPage(),
+                  transitionDuration: Duration.zero,
+                  reverseTransitionDuration: Duration.zero,
+                ),
+              );
+            }
+          },
+        ),
       if (role == UserRole.broker)
         MenuItem(
           label: 'Exec Reports',
