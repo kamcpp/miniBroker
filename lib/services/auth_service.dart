@@ -1,6 +1,7 @@
 import 'package:flutter/foundation.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 import 'database_helper.dart';
+import 'log_service.dart';
 import 'real_grpc_client.dart';
 import '../config/app_config.dart';
 
@@ -66,6 +67,7 @@ class AuthService extends ChangeNotifier {
     }
 
     _databaseHelper.setBrokerName(brokerName);
+    LogService.instance.init(brokerName);
     print('✅ AuthService initialized with broker: $brokerName');
 
     // Always reset to logged-out state when app starts (for fresh sessions each time)

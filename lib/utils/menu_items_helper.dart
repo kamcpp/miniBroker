@@ -6,6 +6,7 @@ import '../screens/portfolio_page.dart';
 import '../screens/trading_page.dart';
 import '../screens/broker/broker_info_page.dart';
 import '../screens/broker/execution_reports_page.dart';
+import '../screens/broker/investors_page.dart';
 import '../screens/broker/local_accounts_page.dart';
 import '../screens/broker/trade_reports_page.dart';
 import '../screens/broker/treasury_activities_page.dart';
@@ -266,6 +267,23 @@ class MenuItemsHelper {
               Navigator.of(context).pushReplacement(
                 PageRouteBuilder(
                   pageBuilder: (context, animation, secondaryAnimation) => const LocalAccountsPage(),
+                  transitionDuration: Duration.zero,
+                  reverseTransitionDuration: Duration.zero,
+                ),
+              );
+            }
+          },
+        ),
+      if (role == UserRole.broker)
+        MenuItem(
+          label: 'Investors',
+          icon: Icons.group,
+          isSelected: currentPage == 'investors',
+          onTap: () {
+            if (currentPage != 'investors') {
+              Navigator.of(context).pushReplacement(
+                PageRouteBuilder(
+                  pageBuilder: (context, animation, secondaryAnimation) => const InvestorsPage(),
                   transitionDuration: Duration.zero,
                   reverseTransitionDuration: Duration.zero,
                 ),

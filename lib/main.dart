@@ -4,6 +4,7 @@ import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 import 'package:package_info_plus/package_info_plus.dart';
 import 'package:sqflite_common_ffi/sqflite_ffi.dart';
+import 'services/log_service.dart';
 import 'screens/securities_page.dart';
 import 'screens/role_selection_page.dart';
 import 'services/auth_service.dart';
@@ -54,14 +55,21 @@ Future<void> main() async {
     print('⚠️ Could not load package info: $e');
   }
 
-  // Add comprehensive error handling to catch ALL unhandled exceptions
+  // Run in a zone that intercepts all print() calls for file logging
   runZonedGuarded(() {
     runApp(const MyApp());
   }, (error, stack) {
     print('❌ CRITICAL: Unhandled exception caught by main zone guard: $error');
     print('❌ CRITICAL: Stack trace: $stack');
     // Don't rethrow - just log and continue
-  });
+  }, zoneSpecification: ZoneSpecification(
+    print: (self, parent, zone, line) {
+      // Write to console (original print)
+      parent.print(zone, line);
+      // Write to log file (or buffer if not yet initialized)
+      LogService.instance.log(line);
+    },
+  ));
 }
 
 class MyApp extends StatelessWidget {
