@@ -140,9 +140,21 @@ class _CreateBrokerConfigDialogState extends State<CreateBrokerConfigDialog> {
       // Create client
       final client = AgentServiceClient(channel);
 
+      // Build call options with API key
+      final apiKey = _apiKeyController.text.trim();
+      final callOptions = CallOptions(
+        metadata: {
+          if (apiKey.isNotEmpty)
+            'x-agora-participant-api-key': apiKey,
+        },
+      );
+
       // Test bidirectional streaming ping
       requestController = StreamController<PingRequest>();
-      final responseStream = client.biDirStreamPing(requestController.stream);
+      final responseStream = client.biDirStreamPing(
+        requestController.stream,
+        options: callOptions,
+      );
 
       // Send a ping request
       final testRequest = PingRequest()
